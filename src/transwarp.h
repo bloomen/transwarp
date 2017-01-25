@@ -3,6 +3,7 @@
 #include <type_traits>
 #include <memory>
 #include <tuple>
+#include "cxxpool.h"
 
 
 namespace detail {
@@ -59,61 +60,30 @@ namespace detail {
     {}
 
     template<size_t i, size_t ...j, typename F, typename T, typename ...Args>
-    void tuple_for_each_index(indices<i,j...>, const F& f, T& t, const Args&... args)
-    {
+    void tuple_for_each_index(indices<i,j...>, const F& f, T& t, const Args&... args) {
         f(std::get<i>(t), args...);
         detail::tuple_for_each_index(indices<j...>(), f, t, args...);
     }
 
     template<size_t i, size_t ...j, typename F, typename T, typename ...Args>
-    void tuple_for_each_index(indices<i,j...>, const F& f, const T& t, const Args&... args)
-    {
+    void tuple_for_each_index(indices<i,j...>, const F& f, const T& t, const Args&... args) {
         f(std::get<i>(t), args...);
         detail::tuple_for_each_index(indices<j...>(), f, t, args...);
     }
 
     template<typename F, typename T, typename ...Args>
-    void apply(const F& f, T& t, const Args&... args)
-    {
+    void apply(const F& f, T& t, const Args&... args) {
         static const size_t n = std::tuple_size<T>::value;
         typedef typename index_range<0,n>::type index_list;
         detail::tuple_for_each_index(index_list(), f, t, args...);
     }
 
     template<typename F, typename T, typename ...Args>
-    void apply(const F& f, const T& t, const Args&... args)
-    {
+    void apply(const F& f, const T& t, const Args&... args) {
         static const size_t n = std::tuple_size<T>::value;
         typedef typename index_range<0,n>::type index_list;
         detail::tuple_for_each_index(index_list(), f, t, args...);
     }
-
-}
-
-
-template<typename Functor, typename... Tasks>
-class task : public std::enable_shared_from_this<task<Functor, Tasks...>> {
-public:
-    using result_type = typename std::result_of<Functor(typename Tasks::result_type...)>::type;
-
-    task(Functor functor, std::shared_ptr<Tasks>... tasks)
-    : functor_(std::move(functor)),
-      tasks_(std::make_tuple(tasks...))
-    {}
-
-    void schedule() {
-        detail::apply(schedule_functor(), tasks_);
-        auto self = this->shared_from_this();
-        pkg_ = std::packaged_task<result_type()>{std::bind(&task::evaluate, self)};
-        future_ = pkg_.get_future();
-        pkg_(); // do async
-    }
-
-    std::shared_future<result_type> future() const {
-        return future_;
-    }
-
-private:
 
     struct schedule_functor {
         template<typename Task>
@@ -122,13 +92,82 @@ private:
         }
     };
 
-    static result_type evaluate(std::shared_ptr<task> t) {
-        return detail::call<result_type>(std::move(t->functor_), t->tasks_);
+    struct reset_functor {
+        template<typename Task>
+        void operator()(std::shared_ptr<Task> task) const {
+            task->reset();
+        }
+    };
+
+    struct set_thread_pool_functor {
+        explicit set_thread_pool_functor(std::shared_ptr<cxxpool::thread_pool> pool)
+        : pool_{std::move(pool)}
+        {}
+        template<typename Task>
+        void operator()(std::shared_ptr<Task> task) const {
+            task->pool_ = pool_;
+        }
+        std::shared_ptr<cxxpool::thread_pool> pool_;
+    };
+
+}
+
+template<typename Functor, typename... Tasks>
+class task : public std::enable_shared_from_this<task<Functor, Tasks...>> {
+public:
+    using result_type = typename std::result_of<Functor(typename Tasks::result_type...)>::type;
+
+    task(Functor functor, std::shared_ptr<Tasks>... tasks)
+    : functor_{std::move(functor)},
+      tasks_(std::make_tuple(std::move(tasks)...)),
+      is_scheduled_{false}
+    {}
+
+    void set_parallel(std::size_t n_threads) {
+        if (n_threads > 0) {
+            auto pool = std::make_shared<cxxpool::thread_pool>(n_threads);
+            detail::apply(detail::set_thread_pool_functor(pool), tasks_);
+            pool_ = std::move(pool);
+        }
+    }
+
+    void schedule() {
+        if (!is_scheduled_) {
+            detail::apply(detail::schedule_functor(), tasks_);
+            auto self = this->shared_from_this();
+            if (pool_) {
+                future_ = pool_->push(&task::evaluate, self);
+            } else {
+                auto pkg = std::packaged_task<result_type()>{std::bind(&task::evaluate, self)};
+                future_ = pkg.get_future();
+                pkg();
+            }
+            is_scheduled_ = true;
+        }
+    }
+
+    void reset() {
+        detail::apply(detail::reset_functor(), tasks_);
+        future_ = std::shared_future<result_type>{};
+        is_scheduled_ = false;
+    }
+
+    std::shared_future<result_type> future() const {
+        return future_;
+    }
+
+private:
+
+    friend struct detail::set_thread_pool_functor;
+
+    static result_type evaluate(std::shared_ptr<task> task) {
+        return detail::call<result_type>(task->functor_, task->tasks_);
     }
 
     Functor functor_;
     std::tuple<std::shared_ptr<Tasks>...> tasks_;
-    std::packaged_task<result_type()> pkg_;
+    bool is_scheduled_;
+    std::shared_ptr<cxxpool::thread_pool> pool_;
     std::shared_future<result_type> future_;
 };
 
