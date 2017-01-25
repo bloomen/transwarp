@@ -99,6 +99,13 @@ namespace detail {
         }
     };
 
+    struct wait_functor {
+        template<typename Task>
+        void operator()(std::shared_ptr<Task> task) const {
+            task->wait();
+        }
+    };
+
     struct set_thread_pool_functor {
         explicit set_thread_pool_functor(std::shared_ptr<cxxpool::thread_pool> pool)
         : pool_{std::move(pool)}
@@ -119,8 +126,7 @@ public:
 
     task(Functor functor, std::shared_ptr<Tasks>... tasks)
     : functor_{std::move(functor)},
-      tasks_(std::make_tuple(std::move(tasks)...)),
-      is_scheduled_{false}
+      tasks_(std::make_tuple(std::move(tasks)...))
     {}
 
     void set_parallel(std::size_t n_threads) {
@@ -132,8 +138,8 @@ public:
     }
 
     void schedule() {
-        if (!is_scheduled_) {
-            detail::apply(detail::schedule_functor(), tasks_);
+        detail::apply(detail::schedule_functor(), tasks_);
+        if (!future_.valid()) {
             auto self = this->shared_from_this();
             if (pool_) {
                 future_ = pool_->push(&task::evaluate, self);
@@ -142,18 +148,22 @@ public:
                 future_ = pkg.get_future();
                 pkg();
             }
-            is_scheduled_ = true;
         }
     }
 
     void reset() {
         detail::apply(detail::reset_functor(), tasks_);
         future_ = std::shared_future<result_type>{};
-        is_scheduled_ = false;
     }
 
     std::shared_future<result_type> future() const {
         return future_;
+    }
+
+    void wait() const {
+        detail::apply(detail::wait_functor(), tasks_);
+        if (future_.valid())
+            future_.wait();
     }
 
 private:
@@ -166,7 +176,6 @@ private:
 
     Functor functor_;
     std::tuple<std::shared_ptr<Tasks>...> tasks_;
-    bool is_scheduled_;
     std::shared_ptr<cxxpool::thread_pool> pool_;
     std::shared_future<result_type> future_;
 };

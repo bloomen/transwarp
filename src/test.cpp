@@ -23,6 +23,7 @@ TEST(initial) {
     t3->set_parallel(4);
 
     t3->schedule();
+    t3->wait();
     std::cout<<t3->future().get()<<std::endl;
 
     ++value;
