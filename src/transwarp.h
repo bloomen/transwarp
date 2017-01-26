@@ -3,6 +3,7 @@
 #include <type_traits>
 #include <memory>
 #include <tuple>
+#include <string>
 #include "cxxpool.h"
 
 
@@ -125,8 +126,9 @@ class task : public std::enable_shared_from_this<task<Functor, Tasks...>> {
 public:
     using result_type = typename std::result_of<Functor(typename Tasks::result_type...)>::type;
 
-    task(Functor functor, std::shared_ptr<Tasks>... tasks)
-    : functor_(std::move(functor)),
+    task(std::string name, Functor functor, std::shared_ptr<Tasks>... tasks)
+    : name_(std::move(name)),
+      functor_(std::move(functor)),
       tasks_(std::make_tuple(std::move(tasks)...))
     {}
 
@@ -174,6 +176,7 @@ private:
         return detail::call<result_type>(task->functor_, task->tasks_);
     }
 
+    std::string name_;
     Functor functor_;
     std::tuple<std::shared_ptr<Tasks>...> tasks_;
     std::shared_ptr<cxxpool::thread_pool> pool_;
@@ -182,8 +185,8 @@ private:
 
 
 template<typename Functor, typename... Tasks>
-std::shared_ptr<task<Functor, Tasks...>> make_task(Functor functor, std::shared_ptr<Tasks>... tasks) {
-    return std::make_shared<task<Functor, Tasks...>>(std::move(functor), std::move(tasks)...);
+std::shared_ptr<task<Functor, Tasks...>> make_task(std::string name, Functor functor, std::shared_ptr<Tasks>... tasks) {
+    return std::make_shared<task<Functor, Tasks...>>(std::move(name), std::move(functor), std::move(tasks)...);
 }
 
 }

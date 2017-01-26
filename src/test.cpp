@@ -8,13 +8,13 @@ TEST(basic) {
     int value = 42;
 
     auto f1 = [&value]{ return value; };
-    auto task1 = transwarp::make_task(f1);
+    auto task1 = transwarp::make_task("f1", f1);
 
     auto f2 = [](int v) { return v + 2; };
-    auto task2 = transwarp::make_task(f2, task1);
+    auto task2 = transwarp::make_task("f2", f2, task1);
 
     auto f3 = [](int v, int w) { return v + w + 3; }; 
-    auto root_task = transwarp::make_task(f3, task1, task2);
+    auto root_task = transwarp::make_task("f3", f3, task1, task2);
 
     root_task->set_parallel(4);
 
