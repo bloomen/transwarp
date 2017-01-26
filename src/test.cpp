@@ -1,33 +1,31 @@
 #include <libunittest/all.hpp>
 #include "transwarp.h"
 
-int value = 42;
 
-int f1() {
-    return value;
-}
+COLLECTION(test_transwarp) {
 
-int f2(int v) {
-    return v + 2;
-}
+TEST(basic) {
+    int value = 42;
 
-int f3(int v, int w) {
-    return v + w + 3;
-}
+    auto f1 = [&value]{ return value; };
+    auto task1 = transwarp::make_task(f1);
 
-TEST(initial) {
-    auto t1 = make_task(f1);
-    auto t2 = make_task(f2, t1);
-    auto t3 = make_task(f3, t1, t2);
+    auto f2 = [](int v) { return v + 2; };
+    auto task2 = transwarp::make_task(f2, task1);
 
-    t3->set_parallel(4);
+    auto f3 = [](int v, int w) { return v + w + 3; }; 
+    auto root_task = transwarp::make_task(f3, task1, task2);
 
-    t3->schedule();
-    t3->wait();
-    std::cout<<t3->future().get()<<std::endl;
+    root_task->set_parallel(4);
+
+    root_task->schedule();
+    ASSERT_EQUAL(89, root_task->future().get());
 
     ++value;
-    t3->reset();
-    t3->schedule();
-    std::cout<<t3->future().get()<<std::endl;
+
+    root_task->reset();
+    root_task->schedule();
+    ASSERT_EQUAL(91, root_task->future().get());
+}
+
 }

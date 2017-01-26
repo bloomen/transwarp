@@ -6,6 +6,7 @@
 #include "cxxpool.h"
 
 
+namespace transwarp {
 namespace detail {
 
     template<bool Done, int Total, int... N>
@@ -125,15 +126,14 @@ public:
     using result_type = typename std::result_of<Functor(typename Tasks::result_type...)>::type;
 
     task(Functor functor, std::shared_ptr<Tasks>... tasks)
-    : functor_{std::move(functor)},
+    : functor_(std::move(functor)),
       tasks_(std::make_tuple(std::move(tasks)...))
     {}
 
     void set_parallel(std::size_t n_threads) {
-        if (n_threads > 0) {
-            auto pool = std::make_shared<cxxpool::thread_pool>(n_threads);
-            detail::apply(detail::set_thread_pool_functor(pool), tasks_);
-            pool_ = std::move(pool);
+        if (n_threads > 0 && !pool_) {
+            pool_ = std::make_shared<cxxpool::thread_pool>(n_threads);
+            detail::apply(detail::set_thread_pool_functor(pool_), tasks_);
         }
     }
 
@@ -144,7 +144,7 @@ public:
             if (pool_) {
                 future_ = pool_->push(&task::evaluate, self);
             } else {
-                auto pkg = std::packaged_task<result_type()>{std::bind(&task::evaluate, self)};
+                auto pkg = std::packaged_task<result_type()>(std::bind(&task::evaluate, self));
                 future_ = pkg.get_future();
                 pkg();
             }
@@ -153,7 +153,7 @@ public:
 
     void reset() {
         detail::apply(detail::reset_functor(), tasks_);
-        future_ = std::shared_future<result_type>{};
+        future_ = std::shared_future<result_type>();
     }
 
     std::shared_future<result_type> future() const {
@@ -184,4 +184,6 @@ private:
 template<typename Functor, typename... Tasks>
 std::shared_ptr<task<Functor, Tasks...>> make_task(Functor functor, std::shared_ptr<Tasks>... tasks) {
     return std::make_shared<task<Functor, Tasks...>>(std::move(functor), std::move(tasks)...);
+}
+
 }
