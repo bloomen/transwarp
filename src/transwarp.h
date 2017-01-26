@@ -109,7 +109,7 @@ namespace detail {
 
     struct set_thread_pool_functor {
         explicit set_thread_pool_functor(std::shared_ptr<cxxpool::thread_pool> pool)
-        : pool_{std::move(pool)}
+        : pool_(std::move(pool))
         {}
         template<typename Task>
         void operator()(std::shared_ptr<Task> task) const {
