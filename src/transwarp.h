@@ -106,7 +106,7 @@ void apply(const F& f, const T& t, const Args&... args) {
 struct schedule_functor {
     template<typename Task>
     void operator()(std::shared_ptr<Task> task) const {
-        task->schedule();
+        task->make_schedule();
     }
 };
 
@@ -127,7 +127,7 @@ struct unvisit_functor {
 struct wait_functor {
     template<typename Task>
     void operator()(std::shared_ptr<Task> task) const {
-        task->wait();
+        task->make_wait();
     }
 };
 
@@ -140,6 +140,13 @@ struct set_thread_pool_functor {
         task->set_thread_pool(pool_);
     }
     std::shared_ptr<cxxpool::thread_pool> pool_;
+};
+
+struct reset_thread_pool_functor {
+    template<typename Task>
+    void operator()(std::shared_ptr<Task> task) const {
+        task->reset_thread_pool();
+    }
 };
 
 struct make_graph_functor {
@@ -234,31 +241,24 @@ public:
     }
 
     void set_parallel(std::size_t n_threads) {
-        if (n_threads > 0 && !pool_) {
+        if (n_threads > 0) {
             auto pool = std::make_shared<cxxpool::thread_pool>(n_threads);
             set_thread_pool(std::move(pool));
+            unvisit();
+        } else {
+            reset_thread_pool();
             unvisit();
         }
     }
 
     void schedule() {
-        detail::apply(detail::schedule_functor(), tasks_);
-        if (!future_.valid()) {
-            auto self = this->shared_from_this();
-            if (pool_) {
-                future_ = pool_->push(&task::evaluate, self);
-            } else {
-                auto pkg = std::packaged_task<result_type()>(std::bind(&task::evaluate, self));
-                future_ = pkg.get_future();
-                pkg();
-            }
-        }
+        make_schedule();
+        unvisit();
     }
 
     void wait() const {
-        detail::apply(detail::wait_functor(), tasks_);
-        if (future_.valid())
-            future_.wait();
+        make_wait();
+        unvisit();
     }
 
     std::shared_future<result_type> get_future() const {
@@ -279,7 +279,10 @@ public:
 
 private:
 
+    friend struct detail::schedule_functor;
+    friend struct detail::wait_functor;
     friend struct detail::set_thread_pool_functor;
+    friend struct detail::reset_thread_pool_functor;
     friend struct detail::make_graph_functor;
     friend struct detail::make_id_functor;
 
@@ -289,8 +292,34 @@ private:
 
     void make_id(std::size_t& id) {
         if (!visited_) {
-            node_.id = id++;
             detail::apply(detail::make_id_functor(id), tasks_);
+            node_.id = id++;
+            visited_ = true;
+        }
+    }
+
+    void make_schedule() {
+        if (!visited_) {
+            detail::apply(detail::schedule_functor(), tasks_);
+            if (!future_.valid()) {
+                auto self = this->shared_from_this();
+                if (pool_) {
+                    future_ = pool_->push(&task::evaluate, self);
+                } else {
+                    auto pkg = std::packaged_task<result_type()>(std::bind(&task::evaluate, self));
+                    future_ = pkg.get_future();
+                    pkg();
+                }
+            }
+            visited_ = true;
+        }
+    }
+
+    void make_wait() const {
+        if (!visited_) {
+            detail::apply(detail::wait_functor(), tasks_);
+            if (future_.valid())
+                future_.wait();
             visited_ = true;
         }
     }
@@ -307,6 +336,14 @@ private:
         if (!visited_) {
             pool_ = std::move(pool);
             detail::apply(detail::set_thread_pool_functor(pool_), tasks_);
+            visited_ = true;
+        }
+    }
+
+    void reset_thread_pool() {
+        if (!visited_) {
+            pool_.reset();
+            detail::apply(detail::reset_thread_pool_functor(), tasks_);
             visited_ = true;
         }
     }
