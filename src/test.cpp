@@ -51,9 +51,10 @@ TEST(graph) {
     auto f1 = [](int){ return 0; };
     auto f2 = [](int, int){ return 0; };
     auto f3 = [](int, int, int){ return 0; };
+    auto task0 = transwarp::make_task("task0", f0);
     auto task1 = transwarp::make_task("task1", f0);
     auto task2 = transwarp::make_task("task2", f1, task1);
-    auto task3 = transwarp::make_task("task3", f1, task2);
+    auto task3 = transwarp::make_task("task3", f2, task2, task0);
     auto task5 = transwarp::make_task("task5", f2, task3, task2);
     auto task6 = transwarp::make_task("task6", f3, task1, task2, task5);
     auto task7 = transwarp::make_task("task7", f2, task5, task6);
