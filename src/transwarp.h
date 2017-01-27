@@ -39,7 +39,7 @@ template<int Total, int... N>
 struct call_impl<true, Total, N...> {
     template<typename Result, typename F, typename Tuple>
     static Result call(F&& f, Tuple&& t) {
-        return std::forward<F>(f)(std::get<N>(std::forward<Tuple>(t))->future().get()...);
+        return std::forward<F>(f)(std::get<N>(std::forward<Tuple>(t))->get_future().get()...);
     }
 };
 
@@ -117,6 +117,13 @@ struct reset_functor {
     }
 };
 
+struct unvisit_functor {
+    template<typename Task>
+    void operator()(std::shared_ptr<Task> task) const {
+        task->unvisit();
+    }
+};
+
 struct wait_functor {
     template<typename Task>
     void operator()(std::shared_ptr<Task> task) const {
@@ -136,26 +143,50 @@ struct set_thread_pool_functor {
 };
 
 struct make_graph_functor {
-    make_graph_functor(std::vector<edge>& graph, node before)
-    : graph_(graph), before_(std::move(before))
+    make_graph_functor(std::vector<edge>& graph)
+    : graph_(graph)
     {}
     template<typename Task>
     void operator()(std::shared_ptr<Task> task) const {
-        task->make_graph(graph_, before_);
+        task->make_graph(graph_);
     }
     std::vector<edge>& graph_;
-    node before_;
+};
+
+struct make_edges_functor {
+    make_edges_functor(std::vector<edge>& graph, node n)
+    : graph_(graph), n_(std::move(n))
+    {}
+    template<typename Task>
+    void operator()(std::shared_ptr<Task> task) const {
+        graph_.push_back({n_, task->get_node()});
+    }
+    std::vector<edge>& graph_;
+    node n_;
 };
 
 struct make_id_functor {
-    explicit make_id_functor(std::size_t id)
+    explicit make_id_functor(std::size_t& id)
     : id_(id)
     {}
     template<typename Task>
     void operator()(std::shared_ptr<Task> task) const {
         task->make_id(id_);
     }
-    std::size_t id_;
+    std::size_t& id_;
+};
+
+template<typename PreVisitor, typename PostVisitor>
+struct visit_functor {
+    visit_functor(PreVisitor* pre_visitor, PostVisitor* post_visitor)
+    : pre_visitor_(pre_visitor), post_visitor_(post_visitor)
+    {}
+    template<typename Task>
+    void operator()(std::shared_ptr<Task> task) const {
+        task->visit(pre_visitor_, post_visitor_);
+    }
+    PreVisitor* pre_visitor_;
+    PostVisitor* post_visitor_;
 };
 
 } // detail
@@ -164,23 +195,49 @@ struct make_id_functor {
 template<typename Functor, typename... Tasks>
 class task : public std::enable_shared_from_this<task<Functor, Tasks...>> {
 public:
-
     using result_type = typename std::result_of<Functor(typename Tasks::result_type...)>::type;
 
     task(std::string name, Functor functor, std::shared_ptr<Tasks>... tasks)
     : node_{0, std::move(name)},
       functor_(std::move(functor)),
-      tasks_(std::make_tuple(std::move(tasks)...))
+      tasks_(std::make_tuple(std::move(tasks)...)),
+      visited_(false)
     {}
 
     void make_ids() {
-        make_id(0);
+        std::size_t id = 0;
+        make_id(id);
+        unvisit();
+    }
+
+    template<typename PreVisitor, typename PostVisitor>
+    void visit(PreVisitor* pre_visitor, PostVisitor* post_visitor) {
+        if (!visited_) {
+            if (pre_visitor)
+                pre_visitor(this);
+            detail::apply(detail::visit_functor<PreVisitor, PostVisitor>(pre_visitor, post_visitor), tasks_);
+            if (post_visitor)
+                post_visitor(this);
+            visited_ = true;
+        }
+    }
+
+    void unvisit() const {
+        if (visited_) {
+            visited_ = false;
+            detail::apply(detail::unvisit_functor(), tasks_);
+        }
+    }
+
+    node get_node() const {
+        return node_;
     }
 
     void set_parallel(std::size_t n_threads) {
         if (n_threads > 0 && !pool_) {
             auto pool = std::make_shared<cxxpool::thread_pool>(n_threads);
             set_thread_pool(std::move(pool));
+            unvisit();
         }
     }
 
@@ -198,24 +255,25 @@ public:
         }
     }
 
-    void reset() {
-        detail::apply(detail::reset_functor(), tasks_);
-        future_ = std::shared_future<result_type>();
-    }
-
-    std::shared_future<result_type> future() const {
-        return future_;
-    }
-
     void wait() const {
         detail::apply(detail::wait_functor(), tasks_);
         if (future_.valid())
             future_.wait();
     }
 
-    std::vector<edge> graph() const {
+    std::shared_future<result_type> get_future() const {
+        return future_;
+    }
+
+    void reset() {
+        make_reset();
+        unvisit();
+    }
+
+    std::vector<edge> get_graph() const {
         std::vector<edge> graph;
-        make_graph(graph, {}, true);
+        make_graph(graph);
+        unvisit();
         return graph;
     }
 
@@ -229,25 +287,42 @@ private:
         return detail::call<result_type>(task->functor_, task->tasks_);
     }
 
-    void make_id(std::size_t id) {
-        node_.id = id++;
-        detail::apply(detail::make_id_functor(id), tasks_);
+    void make_id(std::size_t& id) {
+        if (!visited_) {
+            node_.id = id++;
+            detail::apply(detail::make_id_functor(id), tasks_);
+            visited_ = true;
+        }
     }
 
-    void make_graph(std::vector<edge>& graph, node before, bool is_root=false) const {
-        if (!is_root)
-            graph.push_back({before, node_});
-        detail::apply(detail::make_graph_functor(graph, node_), tasks_);
+    void make_graph(std::vector<edge>& graph) const {
+        if (!visited_) {
+            detail::apply(detail::make_edges_functor(graph, node_), tasks_);
+            detail::apply(detail::make_graph_functor(graph), tasks_);
+            visited_ = true;
+        }
     }
 
     void set_thread_pool(std::shared_ptr<cxxpool::thread_pool> pool) {
-        detail::apply(detail::set_thread_pool_functor(pool), tasks_);
-        pool_ = std::move(pool);
+        if (!visited_) {
+            pool_ = std::move(pool);
+            detail::apply(detail::set_thread_pool_functor(pool_), tasks_);
+            visited_ = true;
+        }
+    }
+
+    void make_reset() {
+        if (!visited_) {
+            future_ = std::shared_future<result_type>();
+            detail::apply(detail::reset_functor(), tasks_);
+            visited_ = true;
+        }
     }
 
     node node_;
     Functor functor_;
     std::tuple<std::shared_ptr<Tasks>...> tasks_;
+    mutable bool visited_;
     std::shared_ptr<cxxpool::thread_pool> pool_;
     std::shared_future<result_type> future_;
 };

@@ -34,16 +34,16 @@ TEST(basic) {
     root_task->set_parallel(4);
 
     root_task->schedule();
-    ASSERT_EQUAL(89, root_task->future().get());
+    ASSERT_EQUAL(89, root_task->get_future().get());
 
     ++value;
 
     root_task->reset();
     root_task->schedule();
-    ASSERT_EQUAL(91, root_task->future().get());
+    ASSERT_EQUAL(91, root_task->get_future().get());
 
     std::ofstream ofile("basic.dot");
-    ofile << make_dot(root_task->graph());
+    ofile << make_dot(root_task->get_graph());
 }
 
 TEST(graph) {
@@ -54,7 +54,6 @@ TEST(graph) {
     auto task1 = transwarp::make_task("task1", f0);
     auto task2 = transwarp::make_task("task2", f1, task1);
     auto task3 = transwarp::make_task("task3", f1, task2);
-    auto task4 = transwarp::make_task("task4", f2, task2, task1);
     auto task5 = transwarp::make_task("task5", f2, task3, task2);
     auto task6 = transwarp::make_task("task6", f3, task1, task2, task5);
     auto task7 = transwarp::make_task("task7", f2, task5, task6);
@@ -67,7 +66,7 @@ TEST(graph) {
 
     root->make_ids();
     std::ofstream ofile("graph.dot");
-    ofile << make_dot(root->graph());
+    ofile << make_dot(root->get_graph());
 }
 
 }
