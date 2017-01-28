@@ -8,16 +8,15 @@
 #include <vector>
 #include <functional>
 #include <thread>
+#include <mutex>
 #include <algorithm>
 #include <queue>
 #include <stdexcept>
-#include "cxxpool.h"
 
 
 // TODOs
-// - review pre vs. post visiting
 // - write tests
-// - include thread_pool
+// - avoid pause/resume of pool
 
 
 namespace transwarp {
@@ -37,15 +36,239 @@ struct edge {
 };
 
 
-class task_error : public std::runtime_error {
- public:
-  explicit task_error(const std::string& message)
-  : std::runtime_error{message}
-  {}
+class transwarp_error : public std::runtime_error {
+public:
+    explicit transwarp_error(const std::string& message)
+    : std::runtime_error(message) {}
+};
+
+
+class task_error : public transwarp::transwarp_error {
+public:
+    explicit task_error(const std::string& message)
+    : transwarp::transwarp_error(message) {}
+};
+
+
+class thread_pool_error : public transwarp::transwarp_error {
+public:
+    explicit thread_pool_error(const std::string& message)
+    : transwarp::transwarp_error(message) {}
 };
 
 
 namespace detail {
+
+template<typename Index, Index max = std::numeric_limits<Index>::max()>
+class infinite_counter {
+public:
+    infinite_counter()
+    : count_{0} {}
+
+    infinite_counter& operator++() {
+        if (count_.back() == max)
+            count_.push_back(0);
+        else
+            ++count_.back();
+        return *this;
+    }
+
+    bool operator>(const infinite_counter& other) const {
+        if (count_.size() == other.count_.size()) {
+            return count_.back() > other.count_.back();
+        } else {
+            return count_.size() > other.count_.size();
+        }
+    }
+
+private:
+    std::vector<Index> count_;
+};
+
+class priority_task {
+public:
+    typedef std::size_t counter_elem_t;
+
+    priority_task()
+    : callback_{}, priority_{}, order_{} {}
+
+    priority_task(std::function<void()> callback, std::size_t priority,
+                  transwarp::detail::infinite_counter<counter_elem_t> order)
+    : callback_{std::move(callback)}, priority_(priority),
+      order_{std::move(order)} {}
+
+    bool operator<(const priority_task& other) const {
+        if (priority_ == other.priority_) {
+            return order_ > other.order_;
+        } else {
+            return priority_ < other.priority_;
+        }
+    }
+
+    std::function<void()> callback() const {
+        return callback_;
+    }
+
+private:
+    std::function<void()> callback_;
+    std::size_t priority_;
+    transwarp::detail::infinite_counter<counter_elem_t> order_;
+};
+
+class thread_pool {
+public:
+    /**
+     * Constructor. Launches the desired number of threads
+     * @param n_threads The number of threads to launch.
+     */
+    explicit thread_pool(std::size_t n_threads)
+    : done_{false}, paused_{false}, threads_{}, tasks_{}, task_counter_{},
+      task_cond_var_{}, task_mutex_{}, thread_mutex_{},
+      thread_prioritizer_{[](std::thread&) {}}
+    {
+        if (n_threads > 0) {
+            std::lock_guard<std::mutex> thread_lock(thread_mutex_);
+            const auto n_target = threads_.size() + n_threads;
+            while (threads_.size() < n_target) {
+                threads_.emplace_back(&thread_pool::worker, this);
+                thread_prioritizer_(threads_.back());
+            }
+        }
+    }
+    /**
+     * Destructor. Joins all threads launched. Waits for all running tasks
+     * to complete
+     */
+    ~thread_pool() {
+        {
+            std::lock_guard<std::mutex> task_lock(task_mutex_);
+            done_ = true;
+            paused_ = false;
+        }
+        task_cond_var_.notify_all();
+        std::lock_guard<std::mutex> thread_lock(thread_mutex_);
+        for (auto& thread : threads_)
+            thread.join();
+    }
+
+    thread_pool(const thread_pool&) = delete;
+    thread_pool& operator=(const thread_pool&) = delete;
+    thread_pool(thread_pool&&) = delete;
+    thread_pool& operator=(thread_pool&&) = delete;
+    /**
+     * Sets the thread prioritizer to be used when launching new threads.
+     * By default, threads will be launched with the default OS priority
+     */
+    void set_thread_prioritizer(std::function<void(std::thread&)> prioritizer) {
+        thread_prioritizer_ = std::move(prioritizer);
+    }
+    /**
+     * Returns the number of threads launched
+     */
+    std::size_t n_threads() const {
+        {
+            std::lock_guard<std::mutex> task_lock(task_mutex_);
+            if (done_)
+                throw transwarp::thread_pool_error{"n_threads called while thread pool is shutting down"};
+        }
+        std::lock_guard<std::mutex> thread_lock(thread_mutex_);
+        return threads_.size();
+    }
+    /**
+     * Pushes a new task into the thread pool. The task will have a priority of 0
+     * @param functor The functor to call
+     * @param args The arguments to pass to the functor when calling it
+     * @return The future associated to the underlying task
+     */
+    template<typename Functor, typename... Args>
+    auto push(Functor&& functor, Args&&... args) -> std::future<decltype(functor(args...))> {
+        return push(0, std::forward<Functor>(functor), std::forward<Args>(args)...);
+    }
+    /**
+     * Pushes a new task into the thread pool while providing a priority
+     * @param priority A task priority. Higher priorities are processed first
+     * @param functor The functor to call
+     * @param args The arguments to pass to the functor when calling it
+     * @return The future associated to the underlying task
+     */
+    template<typename Functor, typename... Args>
+    auto push(std::size_t priority, Functor&& functor, Args&&... args) -> std::future<decltype(functor(args...))> {
+        typedef decltype(functor(args...)) result_type;
+        auto pack_task = std::make_shared<std::packaged_task<result_type()>>(
+                std::bind(std::forward<Functor>(functor), std::forward<Args>(args)...));
+        auto future = pack_task->get_future();
+        {
+            std::lock_guard<std::mutex> task_lock(task_mutex_);
+            if (done_)
+                throw transwarp::thread_pool_error{"push called while thread pool is shutting down"};
+            tasks_.emplace([pack_task]{ (*pack_task)(); }, priority, ++task_counter_);
+        }
+        task_cond_var_.notify_one();
+        return future;
+    }
+    /**
+     * Returns the current number of queued tasks
+     */
+    std::size_t n_tasks() const {
+        std::lock_guard<std::mutex> lock(task_mutex_);
+        return tasks_.size();
+    }
+    /**
+     * Clears all queued tasks. Not affecting currently running tasks
+     */
+    void clear() {
+        std::lock_guard<std::mutex> lock(task_mutex_);
+        decltype(tasks_) empty;
+        tasks_.swap(empty);
+    }
+    /**
+     * Pauses the processing of tasks. Not affecting currently running tasks
+     */
+    void pause() {
+        std::lock_guard<std::mutex> lock(task_mutex_);
+        paused_ = true;
+    }
+    /**
+     * Resumes the processing of tasks
+     */
+    void resume() {
+        {
+            std::lock_guard<std::mutex> lock(task_mutex_);
+            paused_ = false;
+        }
+        task_cond_var_.notify_all();
+    }
+
+private:
+
+    void worker() {
+        for (;;) {
+            transwarp::detail::priority_task task;
+            {
+                std::unique_lock<std::mutex> task_lock(task_mutex_);
+                task_cond_var_.wait(task_lock, [this]{
+                    return !paused_ && (done_ || !tasks_.empty());
+                });
+                if (done_ && tasks_.empty())
+                    break;
+                task = tasks_.top();
+                tasks_.pop();
+            }
+            task.callback()();
+        }
+    }
+
+    bool done_;
+    bool paused_;
+    std::vector<std::thread> threads_;
+    std::priority_queue<transwarp::detail::priority_task> tasks_;
+    transwarp::detail::infinite_counter<typename
+    transwarp::detail::priority_task::counter_elem_t> task_counter_;
+    std::condition_variable task_cond_var_;
+    mutable std::mutex task_mutex_;
+    mutable std::mutex thread_mutex_;
+    std::function<void(std::thread&)> thread_prioritizer_;
+};
 
 template<bool Done, int Total, int... N>
 struct call_impl {
@@ -179,11 +402,11 @@ struct final_visitor {
     : id_(id) {}
     template<typename Task>
     void operator()(Task* task) const {
-        if (task->finalized_)
-            throw transwarp::task_error("Found already finalized task: " + task->node_.name);
         task->node_.id = id_++;
         if (task->node_.name.empty())
             task->node_.name = "task" + std::to_string(task->node_.id);
+        if (task->finalized_)
+            throw transwarp::task_error("Found already finalized task: " + task->node_.name);
         transwarp::detail::apply(transwarp::detail::make_parents_functor(task->node_), task->tasks_);
     }
     std::size_t& id_;
@@ -223,13 +446,13 @@ struct graph_visitor {
 };
 
 struct set_pool_visitor {
-    explicit set_pool_visitor(std::shared_ptr<cxxpool::thread_pool> pool)
+    explicit set_pool_visitor(std::shared_ptr<transwarp::detail::thread_pool> pool)
     : pool_(std::move(pool)) {}
     template<typename Task>
     void operator()(Task* task) const {
         task->pool_ = pool_;
     }
-    std::shared_ptr<cxxpool::thread_pool> pool_;
+    std::shared_ptr<transwarp::detail::thread_pool> pool_;
 };
 
 struct reset_pool_visitor {
@@ -291,7 +514,7 @@ public:
         check_is_finalized();
         transwarp::pass_visitor pass;
         if (n_threads > 0) {
-            auto pool = std::make_shared<cxxpool::thread_pool>(n_threads);
+            auto pool = std::make_shared<transwarp::detail::thread_pool>(n_threads);
             if (thread_prioritizer)
                 pool->set_thread_prioritizer(std::move(thread_prioritizer));
             transwarp::detail::set_pool_visitor pre_visitor(std::move(pool));
@@ -388,7 +611,7 @@ private:
     std::tuple<std::shared_ptr<Tasks>...> tasks_;
     bool visited_;
     bool finalized_;
-    std::shared_ptr<cxxpool::thread_pool> pool_;
+    std::shared_ptr<transwarp::detail::thread_pool> pool_;
     std::shared_future<result_type> future_;
 };
 
