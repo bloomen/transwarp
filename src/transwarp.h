@@ -14,9 +14,10 @@
 
 
 // TODOs
-// - use breadth first search for task scheduling
+// - handle error cases
+// - review pre vs. post visiting
 // - write tests
-// - review handling of forwarding references
+// - include thread_pool
 
 
 namespace transwarp {
@@ -62,14 +63,12 @@ Result call(F&& f, Tuple&& t) {
             call<Result>(std::forward<F>(f), std::forward<Tuple>(t));
 }
 
-template<size_t ...> struct indices
-{};
+template<size_t ...> struct indices {};
 
 template<size_t ...> struct construct_range;
 
 template< size_t end, size_t idx, size_t ...i >
-struct construct_range<end, idx, i... >
-     : construct_range<end, idx+1, i..., idx> {};
+struct construct_range<end, idx, i...> : construct_range<end, idx+1, i..., idx> {};
 
 template< size_t end, size_t ...i >
 struct construct_range< end, end, i... > {
@@ -81,38 +80,24 @@ struct index_range {
     typedef typename transwarp::detail::construct_range<e, b>::type type;
 };
 
-template<typename F, typename T, typename ...Args>
-void tuple_for_each_index(transwarp::detail::indices<>, const F&, T&, const Args&...)
+template<typename F, typename Tuple, typename ...Args>
+void tuple_for_each_index(transwarp::detail::indices<>, F&&, Tuple&&, Args&&...)
 {}
 
-template<typename F, typename T, typename ...Args>
-void tuple_for_each_index(transwarp::detail::indices<>, const F&, const T&, const Args&...)
-{}
-
-template<size_t i, size_t ...j, typename F, typename T, typename ...Args>
-void tuple_for_each_index(transwarp::detail::indices<i,j...>, const F& f, T& t, const Args&... args) {
-    f(std::get<i>(t).get(), args...);
-    transwarp::detail::tuple_for_each_index(transwarp::detail::indices<j...>(), f, t, args...);
+template<size_t i, size_t ...j, typename F, typename Tuple, typename ...Args>
+void tuple_for_each_index(transwarp::detail::indices<i,j...>, F&& f, Tuple&& t, Args&&... args) {
+    std::forward<F>(f)(std::get<i>(std::forward<Tuple>(t)).get(), std::forward<Args>(args)...);
+    transwarp::detail::tuple_for_each_index(transwarp::detail::indices<j...>(),
+            std::forward<F>(f), std::forward<Tuple>(t), std::forward<Args>(args)...);
 }
 
-template<size_t i, size_t ...j, typename F, typename T, typename ...Args>
-void tuple_for_each_index(transwarp::detail::indices<i,j...>, const F& f, const T& t, const Args&... args) {
-    f(std::get<i>(t).get(), args...);
-    transwarp::detail::tuple_for_each_index(transwarp::detail::indices<j...>(), f, t, args...);
-}
-
-template<typename F, typename T, typename ...Args>
-void apply(const F& f, T& t, const Args&... args) {
-    static const size_t n = std::tuple_size<T>::value;
-    typedef typename transwarp::detail::index_range<0,n>::type index_list;
-    transwarp::detail::tuple_for_each_index(index_list(), f, t, args...);
-}
-
-template<typename F, typename T, typename ...Args>
-void apply(const F& f, const T& t, const Args&... args) {
-    static const size_t n = std::tuple_size<T>::value;
-    typedef typename transwarp::detail::index_range<0,n>::type index_list;
-    transwarp::detail::tuple_for_each_index(index_list(), f, t, args...);
+template<typename F, typename Tuple, typename ...Args>
+void apply(F&& f, Tuple&& t, Args&&... args) {
+    using ttype = typename std::decay<Tuple>::type;
+    static const std::size_t n = std::tuple_size<ttype>::value;
+    typedef typename transwarp::detail::index_range<0, n>::type index_list;
+    transwarp::detail::tuple_for_each_index(index_list(),
+            std::forward<F>(f), std::forward<Tuple>(t), std::forward<Args>(args)...);
 }
 
 inline
@@ -207,14 +192,6 @@ struct schedule_visitor {
                 pkg();
             }
         }
-    }
-};
-
-struct wait_visitor {
-    template<typename Task>
-    void operator()(Task* task) const {
-        if (task->future_.valid())
-            task->future_.wait();
     }
 };
 
@@ -343,22 +320,11 @@ public:
     }
 
     void schedule() {
-        if (pool_) pool_->pause();
         transwarp::pass_visitor pass;
         transwarp::detail::schedule_visitor post_visitor;
+        if (pool_) pool_->pause();
         visit(pass, post_visitor);
         if (pool_) pool_->resume();
-        unvisit();
-    }
-
-    std::shared_future<transwarp::task<Functor, Tasks...>::result_type> get_future() const {
-        return future_;
-    }
-
-    void wait() {
-        transwarp::pass_visitor pass;
-        transwarp::detail::wait_visitor post_visitor;
-        visit(pass, post_visitor);
         unvisit();
     }
 
@@ -367,6 +333,10 @@ public:
         transwarp::detail::reset_future_visitor pre_visitor;
         visit(pre_visitor, pass);
         unvisit();
+    }
+
+    std::shared_future<transwarp::task<Functor, Tasks...>::result_type> get_future() const {
+        return future_;
     }
 
     std::vector<transwarp::edge> get_graph() {
@@ -385,7 +355,6 @@ private:
     friend struct transwarp::detail::set_pool_visitor;
     friend struct transwarp::detail::graph_visitor;
     friend struct transwarp::detail::reset_future_visitor;
-    friend struct transwarp::detail::wait_visitor;
     friend struct transwarp::detail::schedule_visitor;
     friend struct transwarp::detail::final_visitor;
 
