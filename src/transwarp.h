@@ -9,7 +9,14 @@
 #include <functional>
 #include <thread>
 #include <algorithm>
+#include <queue>
 #include "cxxpool.h"
+
+
+// TODOs
+// - use breadth first search for task scheduling
+// - write tests
+// - review handling of forwarding references
 
 
 namespace transwarp {
@@ -17,7 +24,9 @@ namespace transwarp {
 
 struct node {
     std::size_t id;
+    std::size_t priority;
     std::string name;
+    std::vector<node*> parents;
 };
 
 
@@ -113,6 +122,27 @@ std::string trim(const std::string &s, const std::string& chars=" \t\n\r") {
     return std::string(it, std::find_if_not(s.rbegin(), std::string::const_reverse_iterator(it), functor).base());
 }
 
+inline
+void prioritize_by_breadth(transwarp::node* final) {
+   std::set<transwarp::node*> s;
+   std::queue<transwarp::node*> q;
+   q.push(final);
+
+   std::size_t priority = 0;
+   while (!q.empty()) {
+       auto current = q.front();
+       q.pop();
+       current->priority = priority++;
+
+       for (auto n : current->parents) {
+           if (s.find(n) == s.end()) {
+               s.insert(n);
+               q.push(n);
+           }
+       }
+   }
+}
+
 struct unvisit_functor {
     template<typename Task>
     void operator()(Task* task) const {
@@ -122,14 +152,23 @@ struct unvisit_functor {
 
 struct make_edges_functor {
     make_edges_functor(std::vector<transwarp::edge>& graph, transwarp::node n)
-    : graph_(graph), n_(std::move(n))
-    {}
+    : graph_(graph), n_(std::move(n)) {}
     template<typename Task>
     void operator()(Task* task) const {
         graph_.push_back({n_, task->get_node()});
     }
     std::vector<transwarp::edge>& graph_;
     transwarp::node n_;
+};
+
+struct make_parents_functor {
+    explicit make_parents_functor(transwarp::node& n)
+    : n_(n) {}
+    template<typename Task>
+    void operator()(Task* task) const {
+        n_.parents.push_back(&task->node_);
+    }
+    transwarp::node& n_;
 };
 
 template<typename PreVisitor, typename PostVisitor>
@@ -144,11 +183,13 @@ struct visit_functor {
     PostVisitor& post_visitor_;
 };
 
-struct id_visitor {
-    explicit id_visitor(std::size_t& id) : id_(id) {}
+struct final_visitor {
+    explicit final_visitor(std::size_t& id)
+    : id_(id) {}
     template<typename Task>
     void operator()(Task* task) const {
         task->node_.id = id_++;
+        transwarp::detail::apply(transwarp::detail::make_parents_functor(task->node_), task->tasks_);
     }
     std::size_t& id_;
 };
@@ -185,7 +226,8 @@ struct reset_future_visitor {
 };
 
 struct graph_visitor {
-    explicit graph_visitor(std::vector<transwarp::edge>& graph) : graph_(graph) {}
+    explicit graph_visitor(std::vector<transwarp::edge>& graph)
+    : graph_(graph) {}
     template<typename Task>
     void operator()(Task* task) const {
         transwarp::detail::apply(transwarp::detail::make_edges_functor(graph_, task->node_), task->tasks_);
@@ -195,8 +237,7 @@ struct graph_visitor {
 
 struct set_pool_visitor {
     explicit set_pool_visitor(std::shared_ptr<cxxpool::thread_pool> pool)
-    : pool_(std::move(pool))
-    {}
+    : pool_(std::move(pool)) {}
     template<typename Task>
     void operator()(Task* task) const {
         task->pool_ = pool_;
@@ -225,7 +266,7 @@ std::string make_dot_graph(const std::vector<transwarp::edge>& graph, const std:
     auto info = [](transwarp::node n) {
         auto name = transwarp::detail::trim(n.name);
         std::replace(name.begin(), name.end(), ' ', '\n');
-        return '"' + std::to_string(n.id) + "\n" + name + '"';
+        return '"' + std::to_string(n.id) + ", " + std::to_string(n.priority) + "\n" + name + '"';
     };
     std::string dot = "digraph " + name + " {\n";
     for (const auto& pair : graph) {
@@ -242,7 +283,7 @@ public:
     using result_type = typename std::result_of<Functor(typename Tasks::result_type...)>::type;
 
     task(std::string name, Functor functor, std::shared_ptr<Tasks>... tasks)
-    : node_{0, std::move(name)},
+    : node_{0, 0, std::move(name), {}},
       functor_(std::move(functor)),
       tasks_(std::make_tuple(std::move(tasks)...)),
       visited_(false)
@@ -251,9 +292,10 @@ public:
     void finalize() {
         std::size_t id = 0;
         transwarp::pass_visitor pass;
-        transwarp::detail::id_visitor post_visitor(id);
+        transwarp::detail::final_visitor post_visitor(id);
         visit(pass, post_visitor);
         unvisit();
+        transwarp::detail::prioritize_by_breadth(&node_);
     }
 
     const transwarp::node& get_node() const {
@@ -336,13 +378,14 @@ public:
 
 private:
 
+    friend struct transwarp::detail::make_parents_functor;
     friend struct transwarp::detail::reset_pool_visitor;
     friend struct transwarp::detail::set_pool_visitor;
     friend struct transwarp::detail::graph_visitor;
     friend struct transwarp::detail::reset_future_visitor;
     friend struct transwarp::detail::wait_visitor;
     friend struct transwarp::detail::schedule_visitor;
-    friend struct transwarp::detail::id_visitor;
+    friend struct transwarp::detail::final_visitor;
 
     static transwarp::task<Functor, Tasks...>::result_type evaluate(std::shared_ptr<transwarp::task<Functor, Tasks...>> task) {
         return transwarp::detail::call<transwarp::task<Functor, Tasks...>::result_type>(task->functor_, task->tasks_);

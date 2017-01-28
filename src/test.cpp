@@ -54,6 +54,9 @@ TEST(graph) {
 
     final->finalize();
 
+    final->schedule();
+    final->wait();
+
     std::ofstream ofile("graph.dot");
     ofile << transwarp::make_dot_graph(final->get_graph());
 }
