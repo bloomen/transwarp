@@ -15,7 +15,6 @@
 
 
 // TODOs
-// - handle error cases
 // - review pre vs. post visiting
 // - write tests
 // - include thread_pool
@@ -307,9 +306,9 @@ public:
     void schedule() {
         check_is_finalized();
         transwarp::pass_visitor pass;
-        transwarp::detail::schedule_visitor post_visitor;
+        transwarp::detail::schedule_visitor pre_visitor;
         if (pool_) pool_->pause();
-        visit(pass, post_visitor);
+        visit(pre_visitor, pass);
         if (pool_) pool_->resume();
         unvisit();
     }
