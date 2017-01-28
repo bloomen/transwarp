@@ -5,19 +5,6 @@
 
 COLLECTION(test_transwarp) {
 
-std::string make_dot(const std::vector<transwarp::edge>& graph) {
-    auto info = [](transwarp::node n) {
-        return '"' + std::to_string(n.id) + "_" + n.name + '"';
-    };
-    std::ostringstream ofile;
-    ofile << "digraph transwarp {" << std::endl;
-    for (auto pair : graph) {
-        ofile << info(pair.parent) << " -> " << info(pair.child) << std::endl;
-    }
-    ofile << "}" << std::endl;
-    return ofile.str();
-}
-
 TEST(basic) {
     int value = 42;
 
@@ -43,7 +30,7 @@ TEST(basic) {
     ASSERT_EQUAL(91, final->get_future().get());
 
     std::ofstream ofile("basic.dot");
-    ofile << make_dot(final->get_graph());
+    ofile << transwarp::make_dot_graph(final->get_graph());
 }
 
 TEST(graph) {
@@ -66,8 +53,9 @@ TEST(graph) {
     auto final = transwarp::make_task("final", f3, task10, task11, task12);
 
     final->finalize();
+
     std::ofstream ofile("graph.dot");
-    ofile << make_dot(final->get_graph());
+    ofile << transwarp::make_dot_graph(final->get_graph());
 }
 
 }

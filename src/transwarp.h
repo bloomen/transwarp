@@ -6,6 +6,9 @@
 #include <string>
 #include <cstddef>
 #include <vector>
+#include <functional>
+#include <thread>
+#include <algorithm>
 #include "cxxpool.h"
 
 
@@ -101,6 +104,13 @@ void apply(const F& f, const T& t, const Args&... args) {
     static const size_t n = std::tuple_size<T>::value;
     typedef typename index_range<0,n>::type index_list;
     detail::tuple_for_each_index(index_list(), f, t, args...);
+}
+
+inline
+std::string trim(const std::string &s, const std::string& chars=" \t\n\r") {
+    auto functor = [&chars](char c) { return chars.find(c) != std::string::npos; };
+    auto it = std::find_if_not(s.begin(), s.end(), functor);
+    return std::string(it, std::find_if_not(s.rbegin(), std::string::const_reverse_iterator(it), functor).base());
 }
 
 struct unvisit_functor {
@@ -210,6 +220,22 @@ struct pass_visitor {
 };
 
 
+inline
+std::string make_dot_graph(const std::vector<edge>& graph, const std::string& name="transwarp") {
+    auto info = [](node n) {
+        auto name = transwarp::detail::trim(n.name);
+        std::replace(name.begin(), name.end(), ' ', '\n');
+        return '"' + std::to_string(n.id) + "\n" + name + '"';
+    };
+    std::string dot = "digraph " + name + " {\n";
+    for (const auto& pair : graph) {
+        dot += info(pair.parent) + " -> " + info(pair.child) + '\n';
+    }
+    dot += "}\n";
+    return dot;
+}
+
+
 template<typename Functor, typename... Tasks>
 class task : public std::enable_shared_from_this<task<Functor, Tasks...>> {
 public:
@@ -230,15 +256,15 @@ public:
         unvisit();
     }
 
-    node get_node() const {
+    const node& get_node() const {
         return node_;
     }
 
-    Functor get_functor() const {
+    const Functor& get_functor() const {
         return functor_;
     }
 
-    std::tuple<std::shared_ptr<Tasks>...> get_tasks() const {
+    const std::tuple<std::shared_ptr<Tasks>...>& get_tasks() const {
         return tasks_;
     }
 
@@ -259,11 +285,12 @@ public:
         }
     }
 
-    // TODO: add thread prioritizer
-    void set_parallel(std::size_t n_threads) {
+    void set_parallel(std::size_t n_threads, std::function<void(std::thread&)> thread_prioritizer=nullptr) {
         pass_visitor pass;
         if (n_threads > 0) {
             auto pool = std::make_shared<cxxpool::thread_pool>(n_threads);
+            if (thread_prioritizer)
+                pool->set_thread_prioritizer(std::move(thread_prioritizer));
             detail::set_pool_visitor pre_visitor(std::move(pool));
             visit(pre_visitor, pass);
         } else {
