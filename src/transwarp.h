@@ -22,8 +22,8 @@ struct node {
 
 
 struct edge {
-    node child;
-    node parent;
+    transwarp::node child;
+    transwarp::node parent;
 };
 
 
@@ -49,7 +49,7 @@ struct call_impl<true, Total, N...> {
 template<typename Result, typename F, typename Tuple>
 Result call(F&& f, Tuple&& t) {
     using ttype = typename std::decay<Tuple>::type;
-    return detail::call_impl<0 == std::tuple_size<ttype>::value, std::tuple_size<ttype>::value>::template
+    return transwarp::detail::call_impl<0 == std::tuple_size<ttype>::value, std::tuple_size<ttype>::value>::template
             call<Result>(std::forward<F>(f), std::forward<Tuple>(t));
 }
 
@@ -64,46 +64,46 @@ struct construct_range<end, idx, i... >
 
 template< size_t end, size_t ...i >
 struct construct_range< end, end, i... > {
-    typedef indices< i... > type;
+    typedef transwarp::detail::indices< i... > type;
 };
 
 template<size_t b, size_t e>
 struct index_range {
-    typedef typename construct_range<e, b>::type type;
+    typedef typename transwarp::detail::construct_range<e, b>::type type;
 };
 
 template<typename F, typename T, typename ...Args>
-void tuple_for_each_index(indices<>, const F&, T&, const Args&...)
+void tuple_for_each_index(transwarp::detail::indices<>, const F&, T&, const Args&...)
 {}
 
 template<typename F, typename T, typename ...Args>
-void tuple_for_each_index(indices<>, const F&, const T&, const Args&...)
+void tuple_for_each_index(transwarp::detail::indices<>, const F&, const T&, const Args&...)
 {}
 
 template<size_t i, size_t ...j, typename F, typename T, typename ...Args>
-void tuple_for_each_index(indices<i,j...>, const F& f, T& t, const Args&... args) {
+void tuple_for_each_index(transwarp::detail::indices<i,j...>, const F& f, T& t, const Args&... args) {
     f(std::get<i>(t).get(), args...);
-    detail::tuple_for_each_index(indices<j...>(), f, t, args...);
+    transwarp::detail::tuple_for_each_index(transwarp::detail::indices<j...>(), f, t, args...);
 }
 
 template<size_t i, size_t ...j, typename F, typename T, typename ...Args>
-void tuple_for_each_index(indices<i,j...>, const F& f, const T& t, const Args&... args) {
+void tuple_for_each_index(transwarp::detail::indices<i,j...>, const F& f, const T& t, const Args&... args) {
     f(std::get<i>(t).get(), args...);
-    detail::tuple_for_each_index(indices<j...>(), f, t, args...);
+    transwarp::detail::tuple_for_each_index(transwarp::detail::indices<j...>(), f, t, args...);
 }
 
 template<typename F, typename T, typename ...Args>
 void apply(const F& f, T& t, const Args&... args) {
     static const size_t n = std::tuple_size<T>::value;
-    typedef typename index_range<0,n>::type index_list;
-    detail::tuple_for_each_index(index_list(), f, t, args...);
+    typedef typename transwarp::detail::index_range<0,n>::type index_list;
+    transwarp::detail::tuple_for_each_index(index_list(), f, t, args...);
 }
 
 template<typename F, typename T, typename ...Args>
 void apply(const F& f, const T& t, const Args&... args) {
     static const size_t n = std::tuple_size<T>::value;
-    typedef typename index_range<0,n>::type index_list;
-    detail::tuple_for_each_index(index_list(), f, t, args...);
+    typedef typename transwarp::detail::index_range<0,n>::type index_list;
+    transwarp::detail::tuple_for_each_index(index_list(), f, t, args...);
 }
 
 inline
@@ -121,15 +121,15 @@ struct unvisit_functor {
 };
 
 struct make_edges_functor {
-    make_edges_functor(std::vector<edge>& graph, node n)
+    make_edges_functor(std::vector<transwarp::edge>& graph, transwarp::node n)
     : graph_(graph), n_(std::move(n))
     {}
     template<typename Task>
     void operator()(Task* task) const {
         graph_.push_back({n_, task->get_node()});
     }
-    std::vector<edge>& graph_;
-    node n_;
+    std::vector<transwarp::edge>& graph_;
+    transwarp::node n_;
 };
 
 template<typename PreVisitor, typename PostVisitor>
@@ -185,12 +185,12 @@ struct reset_future_visitor {
 };
 
 struct graph_visitor {
-    explicit graph_visitor(std::vector<edge>& graph) : graph_(graph) {}
+    explicit graph_visitor(std::vector<transwarp::edge>& graph) : graph_(graph) {}
     template<typename Task>
     void operator()(Task* task) const {
-        detail::apply(detail::make_edges_functor(graph_, task->node_), task->tasks_);
+        transwarp::detail::apply(transwarp::detail::make_edges_functor(graph_, task->node_), task->tasks_);
     }
-    std::vector<edge>& graph_;
+    std::vector<transwarp::edge>& graph_;
 };
 
 struct set_pool_visitor {
@@ -221,8 +221,8 @@ struct pass_visitor {
 
 
 inline
-std::string make_dot_graph(const std::vector<edge>& graph, const std::string& name="transwarp") {
-    auto info = [](node n) {
+std::string make_dot_graph(const std::vector<transwarp::edge>& graph, const std::string& name="transwarp") {
+    auto info = [](transwarp::node n) {
         auto name = transwarp::detail::trim(n.name);
         std::replace(name.begin(), name.end(), ' ', '\n');
         return '"' + std::to_string(n.id) + "\n" + name + '"';
@@ -237,7 +237,7 @@ std::string make_dot_graph(const std::vector<edge>& graph, const std::string& na
 
 
 template<typename Functor, typename... Tasks>
-class task : public std::enable_shared_from_this<task<Functor, Tasks...>> {
+class task : public std::enable_shared_from_this<transwarp::task<Functor, Tasks...>> {
 public:
     using result_type = typename std::result_of<Functor(typename Tasks::result_type...)>::type;
 
@@ -250,13 +250,13 @@ public:
 
     void finalize() {
         std::size_t id = 0;
-        pass_visitor pass;
-        detail::id_visitor post_visitor(id);
+        transwarp::pass_visitor pass;
+        transwarp::detail::id_visitor post_visitor(id);
         visit(pass, post_visitor);
         unvisit();
     }
 
-    const node& get_node() const {
+    const transwarp::node& get_node() const {
         return node_;
     }
 
@@ -272,7 +272,7 @@ public:
     void visit(PreVisitor& pre_visitor, PostVisitor& post_visitor) {
         if (!visited_) {
             pre_visitor(this);
-            detail::apply(detail::visit_functor<PreVisitor, PostVisitor>(pre_visitor, post_visitor), tasks_);
+            transwarp::detail::apply(transwarp::detail::visit_functor<PreVisitor, PostVisitor>(pre_visitor, post_visitor), tasks_);
             post_visitor(this);
             visited_ = true;
         }
@@ -281,54 +281,54 @@ public:
     void unvisit() {
         if (visited_) {
             visited_ = false;
-            detail::apply(detail::unvisit_functor(), tasks_);
+            transwarp::detail::apply(transwarp::detail::unvisit_functor(), tasks_);
         }
     }
 
     void set_parallel(std::size_t n_threads, std::function<void(std::thread&)> thread_prioritizer=nullptr) {
-        pass_visitor pass;
+        transwarp::pass_visitor pass;
         if (n_threads > 0) {
             auto pool = std::make_shared<cxxpool::thread_pool>(n_threads);
             if (thread_prioritizer)
                 pool->set_thread_prioritizer(std::move(thread_prioritizer));
-            detail::set_pool_visitor pre_visitor(std::move(pool));
+            transwarp::detail::set_pool_visitor pre_visitor(std::move(pool));
             visit(pre_visitor, pass);
         } else {
-            detail::reset_pool_visitor pre_visitor;
+            transwarp::detail::reset_pool_visitor pre_visitor;
             visit(pre_visitor, pass);
         }
         unvisit();
     }
 
     void schedule() {
-        pass_visitor pass;
-        detail::schedule_visitor post_visitor;
+        transwarp::pass_visitor pass;
+        transwarp::detail::schedule_visitor post_visitor;
         visit(pass, post_visitor);
         unvisit();
     }
 
-    std::shared_future<result_type> get_future() const {
+    std::shared_future<transwarp::task<Functor, Tasks...>::result_type> get_future() const {
         return future_;
     }
 
     void wait() {
-        pass_visitor pass;
-        detail::wait_visitor post_visitor;
+        transwarp::pass_visitor pass;
+        transwarp::detail::wait_visitor post_visitor;
         visit(pass, post_visitor);
         unvisit();
     }
 
     void reset() {
-        pass_visitor pass;
-        detail::reset_future_visitor pre_visitor;
+        transwarp::pass_visitor pass;
+        transwarp::detail::reset_future_visitor pre_visitor;
         visit(pre_visitor, pass);
         unvisit();
     }
 
-    std::vector<edge> get_graph() {
-        std::vector<edge> graph;
-        pass_visitor pass;
-        detail::graph_visitor pre_visitor(graph);
+    std::vector<transwarp::edge> get_graph() {
+        std::vector<transwarp::edge> graph;
+        transwarp::pass_visitor pass;
+        transwarp::detail::graph_visitor pre_visitor(graph);
         visit(pre_visitor, pass);
         unvisit();
         return graph;
@@ -336,30 +336,30 @@ public:
 
 private:
 
-    friend struct detail::reset_pool_visitor;
-    friend struct detail::set_pool_visitor;
-    friend struct detail::graph_visitor;
-    friend struct detail::reset_future_visitor;
-    friend struct detail::wait_visitor;
-    friend struct detail::schedule_visitor;
-    friend struct detail::id_visitor;
+    friend struct transwarp::detail::reset_pool_visitor;
+    friend struct transwarp::detail::set_pool_visitor;
+    friend struct transwarp::detail::graph_visitor;
+    friend struct transwarp::detail::reset_future_visitor;
+    friend struct transwarp::detail::wait_visitor;
+    friend struct transwarp::detail::schedule_visitor;
+    friend struct transwarp::detail::id_visitor;
 
-    static result_type evaluate(std::shared_ptr<task> task) {
-        return detail::call<result_type>(task->functor_, task->tasks_);
+    static transwarp::task<Functor, Tasks...>::result_type evaluate(std::shared_ptr<transwarp::task<Functor, Tasks...>> task) {
+        return transwarp::detail::call<transwarp::task<Functor, Tasks...>::result_type>(task->functor_, task->tasks_);
     }
 
-    node node_;
+    transwarp::node node_;
     Functor functor_;
     std::tuple<std::shared_ptr<Tasks>...> tasks_;
     bool visited_;
     std::shared_ptr<cxxpool::thread_pool> pool_;
-    std::shared_future<result_type> future_;
+    std::shared_future<transwarp::task<Functor, Tasks...>::result_type> future_;
 };
 
 
 template<typename Functor, typename... Tasks>
-std::shared_ptr<task<Functor, Tasks...>> make_task(std::string name, Functor functor, std::shared_ptr<Tasks>... tasks) {
-    return std::make_shared<task<Functor, Tasks...>>(std::move(name), std::move(functor), std::move(tasks)...);
+std::shared_ptr<transwarp::task<Functor, Tasks...>> make_task(std::string name, Functor functor, std::shared_ptr<Tasks>... tasks) {
+    return std::make_shared<transwarp::task<Functor, Tasks...>>(std::move(name), std::move(functor), std::move(tasks)...);
 }
 
 
