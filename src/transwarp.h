@@ -24,7 +24,7 @@ namespace transwarp {
 
 struct node {
     std::size_t id;
-    std::size_t priority;
+    std::size_t level;
     std::string name;
     std::vector<node*> parents;
 };
@@ -123,22 +123,20 @@ std::string trim(const std::string &s, const std::string& chars=" \t\n\r") {
 }
 
 inline
-void prioritize_by_breadth(transwarp::node* final) {
-   std::set<transwarp::node*> s;
+void find_levels(transwarp::node* final) {
    std::queue<transwarp::node*> q;
+   std::queue<std::size_t> d;
    q.push(final);
+   d.push(0);
 
-   std::size_t priority = 0;
    while (!q.empty()) {
-       auto current = q.front();
-       q.pop();
-       current->priority = priority++;
+       const auto current = q.front(); q.pop();
+       const auto depth = d.front(); d.pop();
 
        for (auto n : current->parents) {
-           if (s.find(n) == s.end()) {
-               s.insert(n);
-               q.push(n);
-           }
+           n->level = depth + 1;
+           q.push(n);
+           d.push(n->level);
        }
    }
 }
@@ -189,6 +187,8 @@ struct final_visitor {
     template<typename Task>
     void operator()(Task* task) const {
         task->node_.id = id_++;
+        if (task->node_.name.empty())
+            task->node_.name = "task" + std::to_string(task->node_.id);
         transwarp::detail::apply(transwarp::detail::make_parents_functor(task->node_), task->tasks_);
     }
     std::size_t& id_;
@@ -264,9 +264,9 @@ struct pass_visitor {
 inline
 std::string make_dot_graph(const std::vector<transwarp::edge>& graph, const std::string& name="transwarp") {
     auto info = [](transwarp::node n) {
-        auto name = transwarp::detail::trim(n.name);
-        std::replace(name.begin(), name.end(), ' ', '\n');
-        return '"' + std::to_string(n.id) + ", " + std::to_string(n.priority) + "\n" + name + '"';
+        const auto name = transwarp::detail::trim(n.name);
+        return '"' + name + "\nid " + std::to_string(n.id) + " level " + std::to_string(n.level)
+                   + " parents " + std::to_string(n.parents.size()) + '"';
     };
     std::string dot = "digraph " + name + " {\n";
     for (const auto& pair : graph) {
@@ -295,7 +295,7 @@ public:
         transwarp::detail::final_visitor post_visitor(id);
         visit(pass, post_visitor);
         unvisit();
-        transwarp::detail::prioritize_by_breadth(&node_);
+        transwarp::detail::find_levels(&node_);
     }
 
     const transwarp::node& get_node() const {
@@ -403,6 +403,12 @@ private:
 template<typename Functor, typename... Tasks>
 std::shared_ptr<transwarp::task<Functor, Tasks...>> make_task(std::string name, Functor functor, std::shared_ptr<Tasks>... tasks) {
     return std::make_shared<transwarp::task<Functor, Tasks...>>(std::move(name), std::move(functor), std::move(tasks)...);
+}
+
+
+template<typename Functor, typename... Tasks>
+std::shared_ptr<transwarp::task<Functor, Tasks...>> make_task(Functor functor, std::shared_ptr<Tasks>... tasks) {
+    return make_task("", std::move(functor), std::move(tasks)...);
 }
 
 
