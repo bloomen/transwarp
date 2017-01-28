@@ -28,22 +28,22 @@ TEST(basic) {
     auto task2 = transwarp::make_task("t2", f2, task1);
 
     auto f3 = [](int v, int w) { return v + w + 3; }; 
-    auto root_task = transwarp::make_task("t3", f3, task1, task2);
+    auto final = transwarp::make_task("t3", f3, task1, task2);
 
-    root_task->make_ids();
-    root_task->set_parallel(4);
+    final->finalize();
+    final->set_parallel(4);
 
-    root_task->schedule();
-    ASSERT_EQUAL(89, root_task->get_future().get());
+    final->schedule();
+    ASSERT_EQUAL(89, final->get_future().get());
 
     ++value;
 
-    root_task->reset();
-    root_task->schedule();
-    ASSERT_EQUAL(91, root_task->get_future().get());
+    final->reset();
+    final->schedule();
+    ASSERT_EQUAL(91, final->get_future().get());
 
     std::ofstream ofile("basic.dot");
-    ofile << make_dot(root_task->get_graph());
+    ofile << make_dot(final->get_graph());
 }
 
 TEST(graph) {
@@ -63,11 +63,11 @@ TEST(graph) {
     auto task10 = transwarp::make_task("task10", f2, task9, task8);
     auto task11 = transwarp::make_task("task11", f2, task10, task7);
     auto task12 = transwarp::make_task("task12", f2, task11, task6);
-    auto root = transwarp::make_task("root", f3, task10, task11, task12);
+    auto final = transwarp::make_task("final", f3, task10, task11, task12);
 
-    root->make_ids();
+    final->finalize();
     std::ofstream ofile("graph.dot");
-    ofile << make_dot(root->get_graph());
+    ofile << make_dot(final->get_graph());
 }
 
 }
