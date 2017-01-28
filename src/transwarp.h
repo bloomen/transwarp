@@ -79,13 +79,13 @@ void tuple_for_each_index(indices<>, const F&, const T&, const Args&...)
 
 template<size_t i, size_t ...j, typename F, typename T, typename ...Args>
 void tuple_for_each_index(indices<i,j...>, const F& f, T& t, const Args&... args) {
-    f(std::get<i>(t), args...);
+    f(std::get<i>(t).get(), args...);
     detail::tuple_for_each_index(indices<j...>(), f, t, args...);
 }
 
 template<size_t i, size_t ...j, typename F, typename T, typename ...Args>
 void tuple_for_each_index(indices<i,j...>, const F& f, const T& t, const Args&... args) {
-    f(std::get<i>(t), args...);
+    f(std::get<i>(t).get(), args...);
     detail::tuple_for_each_index(indices<j...>(), f, t, args...);
 }
 
@@ -105,7 +105,7 @@ void apply(const F& f, const T& t, const Args&... args) {
 
 struct unvisit_functor {
     template<typename Task>
-    void operator()(std::shared_ptr<Task> task) const {
+    void operator()(Task* task) const {
         task->unvisit();
     }
 };
@@ -115,7 +115,7 @@ struct make_edges_functor {
     : graph_(graph), n_(std::move(n))
     {}
     template<typename Task>
-    void operator()(std::shared_ptr<Task> task) const {
+    void operator()(Task* task) const {
         graph_.push_back({n_, task->get_node()});
     }
     std::vector<edge>& graph_;
@@ -127,7 +127,7 @@ struct visit_functor {
     visit_functor(PreVisitor& pre_visitor, PostVisitor& post_visitor)
     : pre_visitor_(pre_visitor), post_visitor_(post_visitor) {}
     template<typename Task>
-    void operator()(std::shared_ptr<Task> task) const {
+    void operator()(Task* task) const {
         task->visit(pre_visitor_, post_visitor_);
     }
     PreVisitor& pre_visitor_;
@@ -137,7 +137,7 @@ struct visit_functor {
 struct id_visitor {
     explicit id_visitor(std::size_t& id) : id_(id) {}
     template<typename Task>
-    void operator()(std::shared_ptr<Task> task) const {
+    void operator()(Task* task) const {
         task->node_.id = id_++;
     }
     std::size_t& id_;
@@ -145,12 +145,13 @@ struct id_visitor {
 
 struct schedule_visitor {
     template<typename Task>
-    void operator()(std::shared_ptr<Task> task) const {
+    void operator()(Task* task) const {
         if (!task->future_.valid()) {
+            auto self = task->shared_from_this();
             if (task->pool_) {
-                task->future_ = task->pool_->push(&Task::evaluate, task);
+                task->future_ = task->pool_->push(&Task::evaluate, self);
             } else {
-                auto pkg = std::packaged_task<typename Task::result_type()>(std::bind(&Task::evaluate, task));
+                auto pkg = std::packaged_task<typename Task::result_type()>(std::bind(&Task::evaluate, self));
                 task->future_ = pkg.get_future();
                 pkg();
             }
@@ -160,7 +161,7 @@ struct schedule_visitor {
 
 struct wait_visitor {
     template<typename Task>
-    void operator()(std::shared_ptr<Task> task) const {
+    void operator()(Task* task) const {
         if (task->future_.valid())
             task->future_.wait();
     }
@@ -168,7 +169,7 @@ struct wait_visitor {
 
 struct reset_future_visitor {
     template<typename Task>
-    void operator()(std::shared_ptr<Task> task) const {
+    void operator()(Task* task) const {
         task->future_ = std::shared_future<typename Task::result_type>();
     }
 };
@@ -176,7 +177,7 @@ struct reset_future_visitor {
 struct graph_visitor {
     explicit graph_visitor(std::vector<edge>& graph) : graph_(graph) {}
     template<typename Task>
-    void operator()(std::shared_ptr<Task> task) const {
+    void operator()(Task* task) const {
         detail::apply(detail::make_edges_functor(graph_, task->node_), task->tasks_);
     }
     std::vector<edge>& graph_;
@@ -187,7 +188,7 @@ struct set_pool_visitor {
     : pool_(std::move(pool))
     {}
     template<typename Task>
-    void operator()(std::shared_ptr<Task> task) const {
+    void operator()(Task* task) const {
         task->pool_ = pool_;
     }
     std::shared_ptr<cxxpool::thread_pool> pool_;
@@ -195,7 +196,7 @@ struct set_pool_visitor {
 
 struct reset_pool_visitor {
     template<typename Task>
-    void operator()(std::shared_ptr<Task> task) const {
+    void operator()(Task* task) const {
         task->pool_.reset();
     }
 };
@@ -205,7 +206,7 @@ struct reset_pool_visitor {
 
 struct pass_visitor {
     template<typename Task>
-    void operator()(std::shared_ptr<Task> task) const {}
+    void operator()(Task* task) const {}
 };
 
 
@@ -244,10 +245,9 @@ public:
     template<typename PreVisitor, typename PostVisitor>
     void visit(PreVisitor& pre_visitor, PostVisitor& post_visitor) {
         if (!visited_) {
-            auto self = this->shared_from_this();
-            pre_visitor(self);
+            pre_visitor(this);
             detail::apply(detail::visit_functor<PreVisitor, PostVisitor>(pre_visitor, post_visitor), tasks_);
-            post_visitor(self);
+            post_visitor(this);
             visited_ = true;
         }
     }
