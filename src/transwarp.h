@@ -10,6 +10,7 @@
 #include <thread>
 #include <algorithm>
 #include <queue>
+#include <stdexcept>
 #include "cxxpool.h"
 
 
@@ -34,6 +35,14 @@ struct node {
 struct edge {
     transwarp::node child;
     transwarp::node parent;
+};
+
+
+class task_error : public std::runtime_error {
+ public:
+  explicit task_error(const std::string& message)
+  : std::runtime_error{message}
+  {}
 };
 
 
@@ -171,6 +180,8 @@ struct final_visitor {
     : id_(id) {}
     template<typename Task>
     void operator()(Task* task) const {
+        if (task->finalized_)
+            throw transwarp::task_error("Found already finalized task: " + task->node_.name);
         task->node_.id = id_++;
         if (task->node_.name.empty())
             task->node_.name = "task" + std::to_string(task->node_.id);
@@ -263,7 +274,8 @@ public:
     : node_{0, 0, std::move(name), {}},
       functor_(std::move(functor)),
       tasks_(std::make_tuple(std::move(tasks)...)),
-      visited_(false)
+      visited_(false),
+      finalized_(false)
     {}
 
     void finalize() {
@@ -273,6 +285,45 @@ public:
         visit(pass, post_visitor);
         unvisit();
         transwarp::detail::find_levels(&node_);
+        finalized_ = true;
+    }
+
+    void set_parallel(std::size_t n_threads, std::function<void(std::thread&)> thread_prioritizer=nullptr) {
+        check_is_finalized();
+        transwarp::pass_visitor pass;
+        if (n_threads > 0) {
+            auto pool = std::make_shared<cxxpool::thread_pool>(n_threads);
+            if (thread_prioritizer)
+                pool->set_thread_prioritizer(std::move(thread_prioritizer));
+            transwarp::detail::set_pool_visitor pre_visitor(std::move(pool));
+            visit(pre_visitor, pass);
+        } else {
+            transwarp::detail::reset_pool_visitor pre_visitor;
+            visit(pre_visitor, pass);
+        }
+        unvisit();
+    }
+
+    void schedule() {
+        check_is_finalized();
+        transwarp::pass_visitor pass;
+        transwarp::detail::schedule_visitor post_visitor;
+        if (pool_) pool_->pause();
+        visit(pass, post_visitor);
+        if (pool_) pool_->resume();
+        unvisit();
+    }
+
+    void reset() {
+        check_is_finalized();
+        transwarp::pass_visitor pass;
+        transwarp::detail::reset_future_visitor pre_visitor;
+        visit(pre_visitor, pass);
+        unvisit();
+    }
+
+    std::shared_future<result_type> get_future() const {
+        return future_;
     }
 
     const transwarp::node& get_node() const {
@@ -285,6 +336,16 @@ public:
 
     const std::tuple<std::shared_ptr<Tasks>...>& get_tasks() const {
         return tasks_;
+    }
+
+    std::vector<transwarp::edge> get_graph() {
+        check_is_finalized();
+        std::vector<transwarp::edge> graph;
+        transwarp::pass_visitor pass;
+        transwarp::detail::graph_visitor pre_visitor(graph);
+        visit(pre_visitor, pass);
+        unvisit();
+        return graph;
     }
 
     template<typename PreVisitor, typename PostVisitor>
@@ -304,50 +365,6 @@ public:
         }
     }
 
-    void set_parallel(std::size_t n_threads, std::function<void(std::thread&)> thread_prioritizer=nullptr) {
-        transwarp::pass_visitor pass;
-        if (n_threads > 0) {
-            auto pool = std::make_shared<cxxpool::thread_pool>(n_threads);
-            if (thread_prioritizer)
-                pool->set_thread_prioritizer(std::move(thread_prioritizer));
-            transwarp::detail::set_pool_visitor pre_visitor(std::move(pool));
-            visit(pre_visitor, pass);
-        } else {
-            transwarp::detail::reset_pool_visitor pre_visitor;
-            visit(pre_visitor, pass);
-        }
-        unvisit();
-    }
-
-    void schedule() {
-        transwarp::pass_visitor pass;
-        transwarp::detail::schedule_visitor post_visitor;
-        if (pool_) pool_->pause();
-        visit(pass, post_visitor);
-        if (pool_) pool_->resume();
-        unvisit();
-    }
-
-    void reset() {
-        transwarp::pass_visitor pass;
-        transwarp::detail::reset_future_visitor pre_visitor;
-        visit(pre_visitor, pass);
-        unvisit();
-    }
-
-    std::shared_future<transwarp::task<Functor, Tasks...>::result_type> get_future() const {
-        return future_;
-    }
-
-    std::vector<transwarp::edge> get_graph() {
-        std::vector<transwarp::edge> graph;
-        transwarp::pass_visitor pass;
-        transwarp::detail::graph_visitor pre_visitor(graph);
-        visit(pre_visitor, pass);
-        unvisit();
-        return graph;
-    }
-
 private:
 
     friend struct transwarp::detail::make_parents_functor;
@@ -358,16 +375,22 @@ private:
     friend struct transwarp::detail::schedule_visitor;
     friend struct transwarp::detail::final_visitor;
 
-    static transwarp::task<Functor, Tasks...>::result_type evaluate(std::shared_ptr<transwarp::task<Functor, Tasks...>> task) {
-        return transwarp::detail::call<transwarp::task<Functor, Tasks...>::result_type>(task->functor_, task->tasks_);
+    static result_type evaluate(std::shared_ptr<transwarp::task<Functor, Tasks...>> task) {
+        return transwarp::detail::call<result_type>(task->functor_, task->tasks_);
+    }
+
+    void check_is_finalized() const {
+        if (!finalized_)
+            throw transwarp::task_error("task is not finalized: " + node_.name);
     }
 
     transwarp::node node_;
     Functor functor_;
     std::tuple<std::shared_ptr<Tasks>...> tasks_;
     bool visited_;
+    bool finalized_;
     std::shared_ptr<cxxpool::thread_pool> pool_;
-    std::shared_future<transwarp::task<Functor, Tasks...>::result_type> future_;
+    std::shared_future<result_type> future_;
 };
 
 
