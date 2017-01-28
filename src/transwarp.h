@@ -200,7 +200,7 @@ struct schedule_visitor {
         if (!task->future_.valid()) {
             auto self = task->shared_from_this();
             if (task->pool_) {
-                task->future_ = task->pool_->push(&Task::evaluate, self);
+                task->future_ = task->pool_->push(task->node_.level, &Task::evaluate, self);
             } else {
                 auto pkg = std::packaged_task<typename Task::result_type()>(std::bind(&Task::evaluate, self));
                 task->future_ = pkg.get_future();
@@ -343,9 +343,11 @@ public:
     }
 
     void schedule() {
+        if (pool_) pool_->pause();
         transwarp::pass_visitor pass;
         transwarp::detail::schedule_visitor post_visitor;
         visit(pass, post_visitor);
+        if (pool_) pool_->resume();
         unvisit();
     }
 
