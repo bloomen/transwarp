@@ -16,7 +16,7 @@
 
 // TODOs
 // - write tests
-// - avoid pause/resume of pool
+// - avoid pause/resume of pool (need to push tasks in level order)
 
 
 namespace transwarp {
@@ -94,8 +94,7 @@ public:
 
     priority_task(std::function<void()> callback, std::size_t priority,
                   transwarp::detail::infinite_counter<counter_elem_t> order)
-    : callback_{std::move(callback)}, priority_(priority),
-      order_{std::move(order)} {}
+    : callback_{std::move(callback)}, priority_(priority), order_{std::move(order)} {}
 
     bool operator<(const priority_task& other) const {
         if (priority_ == other.priority_) {
@@ -123,8 +122,7 @@ public:
      */
     explicit thread_pool(std::size_t n_threads)
     : done_{false}, paused_{false}, threads_{}, tasks_{}, task_counter_{},
-      task_cond_var_{}, task_mutex_{}, thread_mutex_{},
-      thread_prioritizer_{[](std::thread&) {}}
+      task_cond_var_{}, task_mutex_{}, thread_mutex_{}, thread_prioritizer_{[](std::thread&) {}}
     {
         if (n_threads > 0) {
             std::lock_guard<std::mutex> thread_lock(thread_mutex_);
@@ -415,23 +413,14 @@ struct final_visitor {
 struct schedule_visitor {
     template<typename Task>
     void operator()(Task* task) const {
-        if (!task->future_.valid()) {
-            auto self = task->shared_from_this();
-            if (task->pool_) {
-                task->future_ = task->pool_->push(task->node_.level, &Task::evaluate, self);
-            } else {
-                auto pkg = std::packaged_task<typename Task::result_type()>(std::bind(&Task::evaluate, self));
-                task->future_ = pkg.get_future();
-                pkg();
-            }
+        auto self = task->shared_from_this();
+        if (task->pool_) {
+            task->future_ = task->pool_->push(task->node_.level, &Task::evaluate, self);
+        } else {
+            auto pkg = std::packaged_task<typename Task::result_type()>(std::bind(&Task::evaluate, self));
+            task->future_ = pkg.get_future();
+            pkg();
         }
-    }
-};
-
-struct reset_future_visitor {
-    template<typename Task>
-    void operator()(Task* task) const {
-        task->future_ = std::shared_future<typename Task::result_type>();
     }
 };
 
@@ -513,6 +502,7 @@ public:
     void set_parallel(std::size_t n_threads, std::function<void(std::thread&)> thread_prioritizer=nullptr) {
         check_is_finalized();
         transwarp::pass_visitor pass;
+        wait_for_completion();
         if (n_threads > 0) {
             auto pool = std::make_shared<transwarp::detail::thread_pool>(n_threads);
             if (thread_prioritizer)
@@ -530,17 +520,10 @@ public:
         check_is_finalized();
         transwarp::pass_visitor pass;
         transwarp::detail::schedule_visitor pre_visitor;
+        wait_for_completion();
         if (pool_) pool_->pause();
         visit(pre_visitor, pass);
         if (pool_) pool_->resume();
-        unvisit();
-    }
-
-    void reset() {
-        check_is_finalized();
-        transwarp::pass_visitor pass;
-        transwarp::detail::reset_future_visitor pre_visitor;
-        visit(pre_visitor, pass);
         unvisit();
     }
 
@@ -593,7 +576,6 @@ private:
     friend struct transwarp::detail::reset_pool_visitor;
     friend struct transwarp::detail::set_pool_visitor;
     friend struct transwarp::detail::graph_visitor;
-    friend struct transwarp::detail::reset_future_visitor;
     friend struct transwarp::detail::schedule_visitor;
     friend struct transwarp::detail::final_visitor;
 
@@ -604,6 +586,10 @@ private:
     void check_is_finalized() const {
         if (!finalized_)
             throw transwarp::task_error("task is not finalized: " + node_.name);
+    }
+
+    void wait_for_completion() const {
+        if (future_.valid()) future_.wait();
     }
 
     transwarp::node node_;

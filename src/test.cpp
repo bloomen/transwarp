@@ -25,7 +25,6 @@ TEST(basic) {
 
     ++value;
 
-    final->reset();
     final->schedule();
     ASSERT_EQUAL(91, final->get_future().get());
 
