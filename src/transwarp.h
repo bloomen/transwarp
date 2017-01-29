@@ -589,7 +589,8 @@ private:
     }
 
     void wait_for_completion() const {
-        if (future_.valid()) future_.wait();
+        if (future_.valid())
+            future_.wait();
     }
 
     transwarp::node node_;
