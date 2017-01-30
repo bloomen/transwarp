@@ -168,7 +168,7 @@ template<int Total, int... N>
 struct call_impl<true, Total, N...> {
     template<typename Result, typename F, typename Tuple>
     static Result call(F&& f, Tuple&& t) {
-        return std::forward<F>(f)(std::get<N>(std::forward<Tuple>(t))->get_future().get()...);
+        return std::forward<F>(f)(std::get<N>(std::forward<Tuple>(t)).get()...);
     }
 };
 
@@ -214,6 +214,26 @@ void apply(F&& f, Tuple&& t, Args&&... args) {
     typedef typename transwarp::detail::index_range<0, n>::type index_list;
     transwarp::detail::tuple_for_each_index(index_list(),
             std::forward<F>(f), std::forward<Tuple>(t), std::forward<Args>(args)...);
+}
+
+template<int offset, typename... Tasks>
+struct convert_to_futures_helper {
+    static void copy(const std::tuple<std::shared_ptr<Tasks>...>& source, std::tuple<std::shared_future<typename Tasks::result_type>...>& target) {
+        std::get<offset>(target) = std::get<offset>(source)->get_future();
+        convert_to_futures_helper<offset - 1, Tasks...>::copy(source, target);
+    }
+};
+
+template<typename... Tasks>
+struct convert_to_futures_helper<-1, Tasks...> {
+    static void copy(const std::tuple<std::shared_ptr<Tasks>...>& source, std::tuple<std::shared_future<typename Tasks::result_type>...>& target) {}
+};
+
+template<typename... Tasks>
+std::tuple<std::shared_future<typename Tasks::result_type>...> convert_to_futures(const std::tuple<std::shared_ptr<Tasks>...>& input) {
+    std::tuple<std::shared_future<typename Tasks::result_type>...> result;
+    convert_to_futures_helper<static_cast<int>(sizeof...(Tasks)) - 1, Tasks...>::copy(input, result);
+    return result;
 }
 
 inline
@@ -313,8 +333,9 @@ struct callback_visitor {
     : queue_(queue) {}
     template<typename Task>
     void operator()(Task* task) const noexcept {
+        auto futures = transwarp::detail::convert_to_futures(task->tasks_);
         auto pack_task = std::make_shared<std::packaged_task<typename Task::result_type()>>(
-                              std::bind(&Task::evaluate, task->shared_from_this()));
+                              std::bind(&Task::evaluate, task->shared_from_this(), std::move(futures)));
         task->future_ = pack_task->get_future();
         queue_.emplace([pack_task]{ (*pack_task)(); }, task->node_.level, task->node_.id);
     }
@@ -477,8 +498,8 @@ private:
     friend struct transwarp::detail::callback_visitor;
     friend struct transwarp::detail::final_visitor;
 
-    static result_type evaluate(std::shared_ptr<transwarp::task<Functor, Tasks...>> task) {
-        return transwarp::detail::call<result_type>(task->functor_, task->tasks_);
+    static result_type evaluate(std::shared_ptr<transwarp::task<Functor, Tasks...>> task, std::tuple<std::shared_future<typename Tasks::result_type>...> futures) {
+        return transwarp::detail::call<result_type>(task->functor_, std::move(futures));
     }
 
     void check_is_finalized() const {
