@@ -3,114 +3,145 @@
 #include <fstream>
 
 
+using transwarp::make_task;
+
+
 COLLECTION(test_transwarp) {
 
-TEST(basic) {
+void make_test_one_task(std::size_t threads) {
+    const int value = 42;
+    auto f1 = [value]{ return value; };
+    auto task = make_task(f1);
+    task->finalize();
+    task->set_parallel(threads);
+    ASSERT_EQUAL(0u, task->get_node().id);
+    ASSERT_EQUAL(0u, task->get_node().level);
+    ASSERT_EQUAL(0u, task->get_node().parents.size());
+    ASSERT_EQUAL("task0", task->get_node().name);
+    const auto graph = task->get_graph();
+    ASSERT_EQUAL(0u, graph.size());
+    task->schedule();
+    auto future = task->get_future();
+    ASSERT_EQUAL(42, future.get());
+}
+
+TEST(one_task) {
+    make_test_one_task(0);
+    make_test_one_task(1);
+    make_test_one_task(2);
+    make_test_one_task(3);
+    make_test_one_task(4);
+}
+
+void make_test_three_tasks(std::size_t threads) {
     int value = 42;
 
     auto f1 = [&value]{ return value; };
-    auto task1 = transwarp::make_task("t1", f1);
+    auto task1 = make_task("t1", f1);
 
     auto f2 = [](int v) { return v + 2; };
-    auto task2 = transwarp::make_task("t2", f2, task1);
+    auto task2 = make_task("t2", f2, task1);
 
     auto f3 = [](int v, int w) { return v + w + 3; }; 
-    auto final = transwarp::make_task("t3", f3, task1, task2);
+    auto task3 = make_task("t3", f3, task1, task2);
 
-    final->finalize();
-    final->set_parallel(4);
+    task3->finalize();
+    task3->set_parallel(threads);
 
-    final->schedule();
-    ASSERT_EQUAL(89, final->get_future().get());
+    ASSERT_EQUAL(1u, task1->get_node().id);
+    ASSERT_EQUAL(2u, task1->get_node().level);
+    ASSERT_EQUAL(0u, task1->get_node().parents.size());
+    ASSERT_EQUAL("t1", task1->get_node().name);
+
+    ASSERT_EQUAL(2u, task2->get_node().id);
+    ASSERT_EQUAL(1u, task2->get_node().level);
+    ASSERT_EQUAL(1u, task2->get_node().parents.size());
+    ASSERT_EQUAL("t2", task2->get_node().name);
+
+    ASSERT_EQUAL(0u, task3->get_node().id);
+    ASSERT_EQUAL(0u, task3->get_node().level);
+    ASSERT_EQUAL(2u, task3->get_node().parents.size());
+    ASSERT_EQUAL("t3", task3->get_node().name);
+
+    task3->schedule();
+    ASSERT_EQUAL(89, task3->get_future().get());
+    ASSERT_EQUAL(42, task1->get_future().get());
 
     ++value;
 
-    final->schedule();
-    ASSERT_EQUAL(91, final->get_future().get());
+    task3->schedule();
+    ASSERT_EQUAL(91, task3->get_future().get());
+    ASSERT_EQUAL(43, task1->get_future().get());
 
-    std::ofstream ofile("basic.dot");
-    ofile << transwarp::make_dot_graph(final->get_graph());
+    const auto graph = task3->get_graph();
+    ASSERT_EQUAL(3u, graph.size());
+    const auto dot_graph = transwarp::make_dot_graph(graph);
+
+    const std::string exp_dot_graph = "digraph transwarp {\n"
+"\"t1\n"
+"id 1 level 2 parents 0\" -> \"t3\n"
+"id 0 level 0 parents 2\"\n"
+"\"t2\n"
+"id 2 level 1 parents 1\" -> \"t3\n"
+"id 0 level 0 parents 2\"\n"
+"\"t1\n"
+"id 1 level 2 parents 0\" -> \"t2\n"
+"id 2 level 1 parents 1\"\n"
+"}\n";
+
+    ASSERT_EQUAL(exp_dot_graph, dot_graph);
 }
 
-TEST(graph) {
-    auto f0 = []{ return 0; };
-    auto f1 = [](int){ return 0; };
-    auto f2 = [](int, int){ return 0; };
-    auto f3 = [](int, int, int){ return 0; };
-    auto task0 = transwarp::make_task("compute stuff", f0);
-    auto task1 = transwarp::make_task("wicked task", f0);
-    auto task2 = transwarp::make_task("generating random data", f1, task1);
-    auto task3 = transwarp::make_task("task3", f2, task2, task0);
-    auto task5 = transwarp::make_task("task5", f2, task3, task2);
-    auto task6 = transwarp::make_task("task6", f3, task1, task2, task5);
-    auto task7 = transwarp::make_task("task7", f2, task5, task6);
-    auto task8 = transwarp::make_task(f2, task6, task7);
-    auto task9 = transwarp::make_task("task9", f2, task8, task7);
-    auto task10 = transwarp::make_task("task10", f2, task9, task8);
-    auto task11 = transwarp::make_task("task11", f2, task10, task7);
-    auto task12 = transwarp::make_task("task12", f2, task11, task6);
-    auto final = transwarp::make_task("final", f3, task10, task11, task12);
-
-    final->finalize();
-
-    final->set_parallel(2);
-
-    final->schedule();
-
-    std::ofstream ofile("graph.dot");
-    ofile << transwarp::make_dot_graph(final->get_graph());
+TEST(three_tasks) {
+    make_test_three_tasks(0);
+    make_test_three_tasks(1);
+    make_test_three_tasks(2);
+    make_test_three_tasks(3);
+    make_test_three_tasks(4);
 }
 
-TEST(big_graph) {
-    auto f0 = []{ return 0; };
-    auto f1 = [](int){ return 0; };
-    auto f2 = [](int, int){ return 0; };
-    auto f3 = [](int, int, int){ return 0; };
-    auto master = transwarp::make_task("master", f0);
+void make_test_bunch_of_tasks(std::size_t threads) {
+    auto f0 = []{ return 42; };
+    auto f1 = [](int a){ return 3 * a; };
+    auto f2 = [](int a, int b){ return a + b; };
+    auto f3 = [](int a, int b, int c){ return a + 2*b + c; };
 
-    auto task0 = transwarp::make_task(f1, master);
-    auto task1 = transwarp::make_task(f0);
-    auto task2 = transwarp::make_task(f1, task1);
-    auto task3 = transwarp::make_task(f2, task2, task0);
-    auto task5 = transwarp::make_task(f2, task3, task2);
-    auto task6 = transwarp::make_task(f3, task1, task2, task5);
-    auto task7 = transwarp::make_task(f2, task5, task6);
-    auto task8 = transwarp::make_task(f2, task6, task7);
-    auto task9 = transwarp::make_task(f2, task8, task7);
-    auto task10 = transwarp::make_task(f2, task9, task8);
-    auto task11 = transwarp::make_task(f2, task10, task7);
-    auto task12 = transwarp::make_task(f2, task11, task6);
+    auto task0 = make_task(f0);
+    auto task1 = make_task(f0);
+    auto task2 = make_task(f1, task1);
+    auto task3 = make_task(f2, task2, task0);
+    auto task5 = make_task(f2, task3, task2);
+    auto task6 = make_task(f3, task1, task2, task5);
+    auto task7 = make_task(f2, task5, task6);
+    auto task8 = make_task(f2, task6, task7);
+    auto task9 = make_task(f1, task7);
+    auto task10 = make_task(f1, task9);
+    auto task11 = make_task(f3, task10, task7, task8);
+    auto task12 = make_task(f2, task11, task6);
+    auto task13 = make_task(f3, task10, task11, task12);
 
-    auto tas0 = transwarp::make_task(f1, master);
-    auto tas1 = transwarp::make_task(f0);
-    auto tas2 = transwarp::make_task(f1, tas1);
-    auto tas3 = transwarp::make_task(f2, tas2, tas0);
-    auto tas5 = transwarp::make_task(f2, tas3, tas2);
-    auto tas6 = transwarp::make_task(f3, tas1, tas2, tas5);
-    auto tas7 = transwarp::make_task(f2, tas5, tas6);
-    auto tas8 = transwarp::make_task(f2, tas6, tas7);
-    auto tas9 = transwarp::make_task(f2, tas8, tas7);
-    auto tas10 = transwarp::make_task(f2, tas9, tas8);
-    auto tas11 = transwarp::make_task(f2, tas10, tas7);
-    auto tas12 = transwarp::make_task(f2, tas11, tas6);
+    task13->finalize();
 
-    auto ta2 = transwarp::make_task(f1, master);
-    auto ta3 = transwarp::make_task(f1, ta2);
-    auto ta5 = transwarp::make_task(f2, ta3, ta2);
-    auto ta6 = transwarp::make_task(f2, ta2, ta5);
-    auto ta7 = transwarp::make_task(f2, ta5, ta6);
-    auto ta8 = transwarp::make_task(f2, ta6, ta7);
+    const auto exp_result = 42042;
 
-    auto final = transwarp::make_task("final", f3, ta8, tas12, task12);
+    task13->schedule();
+    ASSERT_EQUAL(exp_result, task13->get_future().get());
 
-    final->finalize();
+    task13->set_parallel(threads);
 
-    final->set_parallel(3);
-
-    final->schedule();
-
-    std::ofstream ofile("big_graph.dot");
-    ofile << transwarp::make_dot_graph(final->get_graph());
+    for (auto i=0; i<100; ++i) {
+        task13->schedule();
+        ASSERT_EQUAL(exp_result, task13->get_future().get());
+    }
 }
+
+TEST(bunch_of_tasks) {
+    make_test_bunch_of_tasks(0);
+    make_test_bunch_of_tasks(1);
+    make_test_bunch_of_tasks(2);
+    make_test_bunch_of_tasks(3);
+    make_test_bunch_of_tasks(4);
+}
+
 
 }
