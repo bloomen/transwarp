@@ -63,13 +63,13 @@ namespace detail {
 class priority_functor {
 public:
 
-    priority_functor()
+    priority_functor() noexcept
     : callback_{}, priority_{}, order_{} {}
 
-    priority_functor(std::function<void()> callback, std::size_t priority, std::size_t order)
+    priority_functor(std::function<void()> callback, std::size_t priority, std::size_t order) noexcept
     : callback_{std::move(callback)}, priority_{priority}, order_{order} {}
 
-    bool operator<(const priority_functor& other) const {
+    bool operator<(const priority_functor& other) const noexcept {
         if (priority_ == other.priority_) {
             return order_ < other.order_;
         } else {
@@ -77,7 +77,7 @@ public:
         }
     }
 
-    void operator()() const {
+    void operator()() const noexcept {
         callback_();
     }
 
@@ -224,7 +224,7 @@ std::string trim(const std::string &s, const std::string& chars=" \t\n\r") {
 }
 
 inline
-void find_levels(transwarp::node* final) {
+void find_levels(const transwarp::node* final) noexcept {
    std::queue<const transwarp::node*> q;
    std::queue<std::size_t> d;
    q.push(final);
@@ -243,17 +243,18 @@ void find_levels(transwarp::node* final) {
 }
 
 struct unvisit_functor {
+    unvisit_functor() noexcept = default;
     template<typename Task>
-    void operator()(Task* task) const {
+    void operator()(Task* task) const noexcept {
         task->unvisit();
     }
 };
 
 struct make_edges_functor {
-    make_edges_functor(std::vector<transwarp::edge>& graph, transwarp::node& n)
+    make_edges_functor(std::vector<transwarp::edge>& graph, transwarp::node& n) noexcept
     : graph_(graph), n_(n) {}
     template<typename Task>
-    void operator()(Task* task) const {
+    void operator()(Task* task) const noexcept {
         graph_.push_back({&n_, &task->node_});
     }
     std::vector<transwarp::edge>& graph_;
@@ -261,10 +262,10 @@ struct make_edges_functor {
 };
 
 struct make_parents_functor {
-    explicit make_parents_functor(transwarp::node& n)
+    explicit make_parents_functor(transwarp::node& n) noexcept
     : n_(n) {}
     template<typename Task>
-    void operator()(Task* task) const {
+    void operator()(Task* task) const noexcept {
         n_.parents.push_back(&task->node_);
     }
     transwarp::node& n_;
@@ -272,7 +273,7 @@ struct make_parents_functor {
 
 template<typename PreVisitor, typename PostVisitor>
 struct visit_functor {
-    visit_functor(PreVisitor& pre_visitor, PostVisitor& post_visitor)
+    visit_functor(PreVisitor& pre_visitor, PostVisitor& post_visitor) noexcept
     : pre_visitor_(pre_visitor), post_visitor_(post_visitor) {}
     template<typename Task>
     void operator()(Task* task) const {
@@ -283,7 +284,7 @@ struct visit_functor {
 };
 
 struct final_visitor {
-    explicit final_visitor(std::size_t& id)
+    explicit final_visitor(std::size_t& id) noexcept
     : id_(id) {}
     template<typename Task>
     void operator()(Task* task) const {
@@ -298,20 +299,20 @@ struct final_visitor {
 };
 
 struct graph_visitor {
-    explicit graph_visitor(std::vector<transwarp::edge>& graph)
+    explicit graph_visitor(std::vector<transwarp::edge>& graph) noexcept
     : graph_(graph) {}
     template<typename Task>
-    void operator()(Task* task) const {
+    void operator()(Task* task) const noexcept {
         transwarp::detail::apply(transwarp::detail::make_edges_functor(graph_, task->node_), task->tasks_);
     }
     std::vector<transwarp::edge>& graph_;
 };
 
 struct callback_visitor {
-    explicit callback_visitor(std::priority_queue<transwarp::detail::priority_functor>& queue)
+    explicit callback_visitor(std::priority_queue<transwarp::detail::priority_functor>& queue) noexcept
     : queue_(queue) {}
     template<typename Task>
-    void operator()(Task* task) const {
+    void operator()(Task* task) const noexcept {
         auto pack_task = std::make_shared<std::packaged_task<typename Task::result_type()>>(
                               std::bind(&Task::evaluate, task->shared_from_this()));
         task->future_ = pack_task->get_future();
@@ -321,16 +322,17 @@ struct callback_visitor {
 };
 
 struct set_pool_visitor {
-    explicit set_pool_visitor(std::shared_ptr<transwarp::detail::thread_pool> pool)
+    explicit set_pool_visitor(std::shared_ptr<transwarp::detail::thread_pool> pool) noexcept
     : pool_(std::move(pool)) {}
     template<typename Task>
-    void operator()(Task* task) const {
+    void operator()(Task* task) const noexcept {
         task->pool_ = pool_;
     }
     std::shared_ptr<transwarp::detail::thread_pool> pool_;
 };
 
 struct reset_pool_visitor {
+    reset_pool_visitor() noexcept = default;
     template<typename Task>
     void operator()(Task* task) const {
         task->pool_.reset();
@@ -341,8 +343,9 @@ struct reset_pool_visitor {
 
 
 struct pass_visitor {
+    pass_visitor() noexcept = default;
     template<typename Task>
-    void operator()(Task* task) const {}
+    void operator()(Task* task) const noexcept {}
 };
 
 
