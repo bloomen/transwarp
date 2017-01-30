@@ -428,16 +428,16 @@ public:
         return future_;
     }
 
-    const transwarp::node& get_node() const {
-        return node_;
-    }
-
-    const Functor& get_functor() const {
+    Functor get_functor() const {
         return functor_;
     }
 
-    const std::tuple<std::shared_ptr<Tasks>...>& get_tasks() const {
+    std::tuple<std::shared_ptr<Tasks>...> get_tasks() const {
         return tasks_;
+    }
+
+    const transwarp::node& get_node() const {
+        return node_;
     }
 
     std::vector<transwarp::edge> get_graph() {
