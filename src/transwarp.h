@@ -77,7 +77,7 @@ public:
         }
     }
 
-    void operator()() const noexcept {
+    void operator()() const {
         callback_();
     }
 
@@ -407,12 +407,10 @@ public:
     void schedule() {
         check_is_finalized();
         transwarp::pass_visitor pass;
-
         std::priority_queue<transwarp::detail::priority_functor> queue;
         transwarp::detail::callback_visitor post_visitor(queue);
         visit(pass, post_visitor);
         unvisit();
-
         if (pool_) {
             while (!queue.empty()) {
                 pool_->push(queue.top());
