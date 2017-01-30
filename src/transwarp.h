@@ -254,7 +254,7 @@ struct make_edges_functor {
     : graph_(graph), n_(n) {}
     template<typename Task>
     void operator()(Task* task) const {
-        graph_.push_back({&n_, &task->get_node()});
+        graph_.push_back({&n_, &task->node_});
     }
     std::vector<transwarp::edge>& graph_;
     transwarp::node& n_;
@@ -312,11 +312,10 @@ struct callback_visitor {
     : queue_(queue) {}
     template<typename Task>
     void operator()(Task* task) const {
-        const auto& node = task->get_node();
         auto pack_task = std::make_shared<std::packaged_task<typename Task::result_type()>>(
                               std::bind(&Task::evaluate, task->shared_from_this()));
         task->future_ = pack_task->get_future();
-        queue_.emplace([pack_task]{ (*pack_task)(); }, node.level, node.id);
+        queue_.emplace([pack_task]{ (*pack_task)(); }, task->node_.level, task->node_.id);
     }
     std::priority_queue<transwarp::detail::priority_functor>& queue_;
 };
@@ -469,6 +468,7 @@ public:
 
 private:
 
+    friend struct transwarp::detail::make_edges_functor;
     friend struct transwarp::detail::make_parents_functor;
     friend struct transwarp::detail::reset_pool_visitor;
     friend struct transwarp::detail::set_pool_visitor;
