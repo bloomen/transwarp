@@ -16,6 +16,8 @@
 
 // TODOs
 // - write tests
+// - write code doc
+// - create examples
 
 
 namespace transwarp {
@@ -69,14 +71,14 @@ public:
 
     bool operator<(const priority_functor& other) const {
         if (priority_ == other.priority_) {
-            return order_ > other.order_;
+            return order_ < other.order_;
         } else {
             return priority_ < other.priority_;
         }
     }
 
-    std::function<void()> callback() const {
-        return callback_;
+    void operator()() const {
+        callback_();
     }
 
 private:
@@ -117,7 +119,7 @@ public:
         }
     }
 
-    void push(std::function<void()> functor) {
+    void push(transwarp::detail::priority_functor functor) {
         {
             std::lock_guard<std::mutex> lock(mutex_);
             if (done_)
@@ -131,7 +133,7 @@ private:
 
     void worker() {
         for (;;) {
-            std::function<void()> functor;
+            transwarp::detail::priority_functor functor;
             {
                 std::unique_lock<std::mutex> lock(mutex_);
                 cond_var_.wait(lock, [this]{
@@ -148,7 +150,7 @@ private:
 
     bool done_;
     std::vector<std::thread> threads_;
-    std::queue<std::function<void()>> functors_;
+    std::queue<transwarp::detail::priority_functor> functors_;
     std::condition_variable cond_var_;
     std::mutex mutex_;
 };
@@ -411,12 +413,12 @@ public:
 
         if (pool_) {
             while (!queue.empty()) {
-                pool_->push(queue.top().callback());
+                pool_->push(queue.top());
                 queue.pop();
             }
         } else {
             while (!queue.empty()) {
-                queue.top().callback()();
+                queue.top()();
                 queue.pop();
             }
         }

@@ -53,6 +53,10 @@ TEST(graph) {
 
     final->finalize();
 
+    final->set_parallel(2);
+
+    final->schedule();
+
     std::ofstream ofile("graph.dot");
     ofile << transwarp::make_dot_graph(final->get_graph());
 }
@@ -100,6 +104,10 @@ TEST(big_graph) {
     auto final = transwarp::make_task("final", f3, ta8, tas12, task12);
 
     final->finalize();
+
+    final->set_parallel(3);
+
+    final->schedule();
 
     std::ofstream ofile("big_graph.dot");
     ofile << transwarp::make_dot_graph(final->get_graph());
