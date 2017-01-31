@@ -143,5 +143,18 @@ TEST(bunch_of_tasks) {
     make_test_bunch_of_tasks(4);
 }
 
+TEST(not_finalized) {
+    auto f1 = []{ return 42; };
+    auto task1 = make_task(f1);
+    auto f2 = [](int v) { return v + 2; };
+    auto task2 = make_task(f2, task1);
+    auto f3 = [](int v, int w) { return v + w + 3; };
+    auto task3 = make_task(f3, task1, task2);
+
+    ASSERT_THROW(transwarp::task_error, [&task3]{ task3->set_parallel(2); });
+    ASSERT_THROW(transwarp::task_error, [&task3]{ task3->schedule(); });
+    ASSERT_THROW(transwarp::task_error, [&task3]{ task3->get_graph(); });
+}
+
 
 }
