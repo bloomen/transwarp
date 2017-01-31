@@ -14,15 +14,9 @@
 #include <stdexcept>
 
 
-// TODOs
-// - write tests
-// - write code doc
-// - create examples
-
-
 namespace transwarp {
 
-
+// A node carrying meta-data of a task
 struct node {
     std::size_t id;
     std::size_t level;
@@ -30,30 +24,23 @@ struct node {
     std::vector<const node*> parents;
 };
 
-
+// An edge between two nodes or tasks
 struct edge {
     const transwarp::node* child;
     const transwarp::node* parent;
 };
 
-
+// Base class for exceptions
 class transwarp_error : public std::runtime_error {
 public:
     explicit transwarp_error(const std::string& message)
     : std::runtime_error(message) {}
 };
 
-
+// Exception thrown from a task
 class task_error : public transwarp::transwarp_error {
 public:
     explicit task_error(const std::string& message)
-    : transwarp::transwarp_error(message) {}
-};
-
-
-class thread_pool_error : public transwarp::transwarp_error {
-public:
-    explicit thread_pool_error(const std::string& message)
     : transwarp::transwarp_error(message) {}
 };
 
@@ -87,6 +74,12 @@ private:
     std::size_t order_;
 };
 
+class thread_pool_error : public transwarp::transwarp_error {
+public:
+    explicit thread_pool_error(const std::string& message)
+    : transwarp::transwarp_error(message) {}
+};
+
 class thread_pool {
 public:
 
@@ -99,7 +92,7 @@ public:
                 threads_.emplace_back(&thread_pool::worker, this);
             }
         } else {
-            throw transwarp::thread_pool_error{"number of threads must be larger than zero"};
+            throw transwarp::detail::thread_pool_error{"number of threads must be larger than zero"};
         }
     }
 
@@ -123,7 +116,7 @@ public:
         {
             std::lock_guard<std::mutex> lock(mutex_);
             if (done_)
-                throw transwarp::thread_pool_error{"push called while thread pool is shutting down"};
+                throw transwarp::detail::thread_pool_error{"push called while thread pool is shutting down"};
             functors_.push(std::move(functor));
         }
         cond_var_.notify_one();
@@ -197,8 +190,7 @@ struct index_range {
 };
 
 template<typename F, typename Tuple, typename ...Args>
-void tuple_for_each_index(transwarp::detail::indices<>, F&&, Tuple&&, Args&&...)
-{}
+void tuple_for_each_index(transwarp::detail::indices<>, F&&, Tuple&&, Args&&...) {}
 
 template<size_t i, size_t ...j, typename F, typename Tuple, typename ...Args>
 void tuple_for_each_index(transwarp::detail::indices<i,j...>, F&& f, Tuple&& t, Args&&... args) {
@@ -236,15 +228,13 @@ std::tuple<std::shared_future<typename Tasks::result_type>...> convert_to_future
     return result;
 }
 
-inline
-std::string trim(const std::string &s, const std::string& chars=" \t\n\r") {
+inline std::string trim(const std::string &s, const std::string& chars=" \t\n\r") {
     auto functor = [&chars](char c) { return chars.find(c) != std::string::npos; };
     auto it = std::find_if_not(s.begin(), s.end(), functor);
     return std::string(it, std::find_if_not(s.rbegin(), std::string::const_reverse_iterator(it), functor).base());
 }
 
-inline
-void find_levels(const transwarp::node* final) noexcept {
+inline void find_levels(const transwarp::node* final) noexcept {
    std::queue<const transwarp::node*> q;
    std::queue<std::size_t> d;
    q.push(final);
@@ -363,15 +353,15 @@ struct reset_pool_visitor {
 } // detail
 
 
+// A visitor to be used to do nothing
 struct pass_visitor {
     pass_visitor() noexcept = default;
     template<typename Task>
     void operator()(Task* task) const noexcept {}
 };
 
-
-inline
-std::string make_dot_graph(const std::vector<transwarp::edge>& graph, const std::string& name="transwarp") {
+// Creates a dot-style string from the given graph
+inline std::string make_dot_graph(const std::vector<transwarp::edge>& graph, const std::string& name="transwarp") {
     auto info = [](const transwarp::node* n) {
         const auto name = transwarp::detail::trim(n->name);
         return '"' + name + "\nid " + std::to_string(n->id) + " level " + std::to_string(n->level)
@@ -385,7 +375,10 @@ std::string make_dot_graph(const std::vector<transwarp::edge>& graph, const std:
     return dot;
 }
 
-
+// A task representing a piece work given by a functor and parent tasks.
+// Depending on how tasks are arranged they can be run in parallel by design
+// if set_parallel is called. If not, all tasks are run sequentially.
+// Tasks may run in parallel when they do not depend on each other.
 template<typename Functor, typename... Tasks>
 class task : public std::enable_shared_from_this<transwarp::task<Functor, Tasks...>> {
 public:
@@ -399,6 +392,8 @@ public:
       finalized_(false)
     {}
 
+    // Finalizes the task which should only be called for the final task.
+    // The final task does not have any children.
     void finalize() {
         std::size_t id = 0;
         transwarp::pass_visitor pass;
@@ -409,6 +404,10 @@ public:
         finalized_ = true;
     }
 
+    // If n_threads > 0 then assigns a parallel execution to the final task
+    // and all its parent tasks. If n_threads == 0 then the parallel execution
+    // is removed. The thread_prioritizer prioritizes the threads launched.
+    // Only to be called by the final task.
     void set_parallel(std::size_t n_threads, std::function<void(std::thread&)> thread_prioritizer=nullptr) {
         check_is_finalized();
         transwarp::pass_visitor pass;
@@ -425,6 +424,9 @@ public:
         unvisit();
     }
 
+    // Schedules the final task and all its parent tasks for execution.
+    // The execution is either sequential or in parallel.
+    // Only to be called by the final task.
     void schedule() {
         check_is_finalized();
         transwarp::pass_visitor pass;
@@ -445,22 +447,30 @@ public:
         }
     }
 
+    // Returns the future associated to the underlying execution
     std::shared_future<result_type> get_future() const {
         return future_;
     }
 
+    // Returns the functor
     Functor get_functor() const {
         return functor_;
     }
 
+    // Returns the parent tasks
     std::tuple<std::shared_ptr<Tasks>...> get_tasks() const {
         return tasks_;
     }
 
+    // Returns the associated node
     const transwarp::node& get_node() const {
         return node_;
     }
 
+    // Creates a graph of the task structure. This is mainly for visualizing
+    // the tasks and their interdependencies. Pass the result into make_dot_graph
+    // to retrieve a dot-style graph representation for easy viewing.
+    // Only to be called by the final task.
     std::vector<transwarp::edge> get_graph() {
         check_is_finalized();
         std::vector<transwarp::edge> graph;
@@ -471,6 +481,10 @@ public:
         return graph;
     }
 
+    // Visits each task in a depth-first traversal. The pre_visitor is called
+    // before traversing through parents and the post_visitor after. A visitor
+    // takes a pointer to a task (task*) as it's only input argument.
+    // Only to be called by the final task.
     template<typename PreVisitor, typename PostVisitor>
     void visit(PreVisitor& pre_visitor, PostVisitor& post_visitor) {
         if (!visited_) {
@@ -481,6 +495,8 @@ public:
         }
     }
 
+    // Traverses through all tasks and marks them as not visited.
+    // Only to be called by the final task.
     void unvisit() {
         if (visited_) {
             visited_ = false;
@@ -516,13 +532,13 @@ private:
     std::shared_ptr<transwarp::detail::thread_pool> pool_;
 };
 
-
+// A factory function to easily create new tasks
 template<typename Functor, typename... Tasks>
 std::shared_ptr<transwarp::task<Functor, Tasks...>> make_task(std::string name, Functor functor, std::shared_ptr<Tasks>... tasks) {
     return std::make_shared<transwarp::task<Functor, Tasks...>>(std::move(name), std::move(functor), std::move(tasks)...);
 }
 
-
+// A factory function to easily create new tasks. Overload for auto-naming
 template<typename Functor, typename... Tasks>
 std::shared_ptr<transwarp::task<Functor, Tasks...>> make_task(Functor functor, std::shared_ptr<Tasks>... tasks) {
     return make_task("", std::move(functor), std::move(tasks)...);
