@@ -24,7 +24,7 @@ struct node {
     std::vector<const node*> parents;
 };
 
-// An edge between two nodes or tasks
+// An edge between two nodes
 struct edge {
     const transwarp::node* child;
     const transwarp::node* parent;
@@ -483,7 +483,7 @@ public:
 
     // Visits each task in a depth-first traversal. The pre_visitor is called
     // before traversing through parents and the post_visitor after. A visitor
-    // takes a pointer to a task (task*) as it's only input argument.
+    // takes a pointer to a task (task*) as its only input argument.
     // Only to be called by the final task.
     template<typename PreVisitor, typename PostVisitor>
     void visit(PreVisitor& pre_visitor, PostVisitor& post_visitor) {
