@@ -218,7 +218,7 @@ struct convert_to_futures_helper {
 
 template<typename... Tasks>
 struct convert_to_futures_helper<-1, Tasks...> {
-    static void copy(const std::tuple<std::shared_ptr<Tasks>...>& source, std::tuple<std::shared_future<typename Tasks::result_type>...>& target) {}
+    static void copy(const std::tuple<std::shared_ptr<Tasks>...>&, std::tuple<std::shared_future<typename Tasks::result_type>...>&) {}
 };
 
 template<typename... Tasks>
@@ -357,7 +357,7 @@ struct reset_pool_visitor {
 struct pass_visitor {
     pass_visitor() noexcept = default;
     template<typename Task>
-    void operator()(Task* task) const noexcept {}
+    void operator()(Task*) const noexcept {}
 };
 
 // Creates a dot-style string from the given graph
