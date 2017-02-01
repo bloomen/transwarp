@@ -13,8 +13,6 @@ to your project and off you go!
 #include <iostream>
 #include "transwarp.h"
 
-using namespace transwarp;
-
 double compute_something() {
     return 13.3;
 }
@@ -28,9 +26,9 @@ double add_em_up(double x, int y) {
 }
 
 int main() {
-    auto task1 = make_task(compute_something);
-    auto task2 = make_task(compute_something_else);
-    auto task3 = make_task(add_em_up, task1, task2);
+    auto task1 = transwarp::make_task(compute_something);
+    auto task2 = transwarp::make_task(compute_something_else);
+    auto task3 = transwarp::make_task(add_em_up, task1, task2);
     task3->finalize();  // make task3 the final task
     task3->set_parallel(4);  // turns on parallel execution with 4 threads for 
                              // tasks that do not depent on each other 
