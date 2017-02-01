@@ -37,7 +37,7 @@ quote_generator::quote_generator(int seed)
 quote
 quote_generator::next() const
 {
-    std::uniform_int_distribution<int> dist(0, quotes_.size() - 1);
+    std::uniform_int_distribution<int> dist(0, static_cast<int>(quotes_.size()) - 1);
     return quotes_[dist(generator_)];
 }
 

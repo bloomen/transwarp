@@ -135,7 +135,7 @@ int
 call_functions(const std::vector<std::function<void()>>& functions,
                int n_threads)
 {
-    const int n_runs = functions.size();
+    const int n_runs = static_cast<int>(functions.size());
     if (n_threads > n_runs)
         n_threads = n_runs;
 
