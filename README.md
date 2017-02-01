@@ -31,7 +31,7 @@ int main() {
     auto task3 = transwarp::make_task(add_em_up, task1, task2);
     task3->finalize();  // make task3 the final task
     task3->set_parallel(4);  // turns on parallel execution with 4 threads for 
-                             // tasks that do not depent on each other 
+                             // tasks that do not depend on each other 
     
     const auto graph = task3->get_graph();
     std::ofstream("graph.dot") << transwarp::make_dot_graph(graph);
