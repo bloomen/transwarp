@@ -42,6 +42,7 @@ int main() {
 ```
 
 **Running the tests**
+
 In order to build the tests using, e.g., GCC:
 ```
 g++ -std=c++11 -pthread src/test.cpp -o test
@@ -50,3 +51,5 @@ Then to run:
 ```
 ./test -v
 ```
+
+**Enjoy!**
