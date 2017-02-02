@@ -39,7 +39,7 @@ int main() {
     std::ofstream("graph.dot") << transwarp::make_dot_graph(graph);
     
     task3->schedule();  // schedules all tasks for execution
-    std::cout << "result = " << task3->get_future().get() << std::endl;
+    std::cout << "result = " << task3->get_future().get() << std::endl;  // result = 55.3
 }
 ```
 
