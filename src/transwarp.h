@@ -361,13 +361,13 @@ struct pass_visitor {
 };
 
 // Creates a dot-style string from the given graph
-inline std::string make_dot_graph(const std::vector<transwarp::edge>& graph, const std::string& name="transwarp") {
+inline std::string make_dot_graph(const std::vector<transwarp::edge>& graph) {
     auto info = [](const transwarp::node* n) {
         const auto name = transwarp::detail::trim(n->name);
         return '"' + name + "\nid " + std::to_string(n->id) + " level " + std::to_string(n->level)
                    + " parents " + std::to_string(n->parents.size()) + '"';
     };
-    std::string dot = "digraph " + name + " {\n";
+    std::string dot = "digraph {\n";
     for (const auto& pair : graph) {
         dot += info(pair.parent) + " -> " + info(pair.child) + '\n';
     }
