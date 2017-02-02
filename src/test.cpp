@@ -333,4 +333,39 @@ TEST(visit_and_unvisit) {
     ASSERT_EQUAL(4, post.count);
 }
 
+void make_test_task_with_exception_thrown(std::size_t threads) {
+    auto f1 = [] {
+        throw std::runtime_error("from f1");
+        return 42;
+    };
+    auto f2 = [] (int x) {
+        throw std::runtime_error("from f2");
+        return x + 13;
+    };
+    auto f3 = [] (int x) {
+        throw std::runtime_error("from f3");
+        return x + 1;
+    };
+    auto task1 = make_task(f1);
+    auto task2 = make_task(f2, task1);
+    auto task3 = make_task(f3, task2);
+    task3->finalize();
+    task3->set_parallel(threads);
+    task3->schedule();
+    try {
+        task3->get_future().get();
+        ASSERT_TRUE(false);
+    } catch (const std::runtime_error& e) {
+        ASSERT_EQUAL(std::string("from f1"), e.what());
+    }
+}
+
+TEST(task_with_exception_thrown) {
+    make_test_task_with_exception_thrown(0);
+    make_test_task_with_exception_thrown(1);
+    make_test_task_with_exception_thrown(2);
+    make_test_task_with_exception_thrown(3);
+    make_test_task_with_exception_thrown(4);
+}
+
 }
