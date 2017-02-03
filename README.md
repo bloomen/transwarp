@@ -15,31 +15,41 @@ to your project and off you go!
 #include <iostream>
 #include "transwarp.h"
 
-double compute_something() {
-    return 13.3;
-}
-
-int compute_something_else() {
-    return 42;
-}
-
 double add_em_up(double x, int y) {
     return x + y;
 }
 
 int main() {
-    auto task1 = transwarp::make_task(compute_something);
-    auto task2 = transwarp::make_task(compute_something_else);
-    auto task3 = transwarp::make_task(add_em_up, task1, task2);
+    double value1 = 13.3;
+    int value2 = 42;
+
+    auto compute_something = [&value1] { return value1; };
+    auto compute_something_else = [&value2] { return value2; };
+
+    // building the task graph
+    auto task1 = transwarp::make_task("something", compute_something);
+    auto task2 = transwarp::make_task("something else", compute_something_else);
+    auto task3 = transwarp::make_task("adder", add_em_up, task1, task2);
     task3->finalize();  // make task3 the final task
     task3->set_parallel(4);  // turns on parallel execution with 4 threads for 
                              // tasks that do not depend on each other 
-    
+
+    // creating a dot-style graph for visualization
     const auto graph = task3->get_graph();
     std::ofstream("graph.dot") << transwarp::make_dot_graph(graph);
+
+    // task::schedule() can now be called as much as desired. The task graph
+    // only has to be built once
     
-    task3->schedule();  // schedules all tasks for execution
+    task3->schedule();  // schedules all tasks for execution, assigning a future to each task
     std::cout << "result = " << task3->get_future().get() << std::endl;  // result = 55.3
+
+    // modifying data input
+    value1 += 2.5;
+    value2 += 1;
+
+    task3->schedule();  // schedules all tasks for execution, replacing the existing futures
+    std::cout << "result = " << task3->get_future().get() << std::endl;  // result = 58.8
 }
 ```
 
