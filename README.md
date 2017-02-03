@@ -1,11 +1,12 @@
 # transwarp
 
 transwarp is a header-only C++ library for task concurrency. It enables you to define
-task dependencies and run those task in parallel that do not depend on each other.
-This is concurrency by design!
+task dependencies and run those tasks in parallel that do not depend on each other.
+Under the hood, a directed acyclic graph is built at compile-time enabling efficient 
+traversal and type-safe dependencies.
 
 transwarp is designed for ease of use, portability, and scalability. It is written in 
-C++11 and does not have any external dependencies. Just copy `src/transwarp.h` 
+C++11 and only depends on the standard library. Just copy `src/transwarp.h` 
 to your project and off you go!
 
 **Example**
