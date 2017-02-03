@@ -379,6 +379,7 @@ inline std::string make_dot_graph(const std::vector<transwarp::edge>& graph) {
 // Depending on how tasks are arranged they can be run in parallel by design
 // if set_parallel is called. If not, all tasks are run sequentially.
 // Tasks may run in parallel when they do not depend on each other.
+// By connecting tasks a directed acyclic graph is built.
 template<typename Functor, typename... Tasks>
 class task : public std::enable_shared_from_this<transwarp::task<Functor, Tasks...>> {
 public:
