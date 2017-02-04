@@ -393,8 +393,8 @@ inline std::string make_dot(const std::vector<transwarp::edge>& graph) {
     return dot;
 }
 
-// An interface for the task class containing all task methods that do not
-// rely on template parameters
+// An interface for the task class
+template<typename ResultType>
 class itask {
 public:
     virtual ~itask() = default;
@@ -402,6 +402,7 @@ public:
     virtual void set_parallel(std::size_t n_threads, std::function<void(std::thread&)> thread_prioritizer=nullptr) = 0;
     virtual void schedule() = 0;
     virtual void set_cancel(bool enabled) = 0;
+    virtual std::shared_future<ResultType> get_future() const = 0;
     virtual const transwarp::node& get_node() const = 0;
     virtual std::vector<transwarp::edge> get_graph() = 0;
 };
@@ -412,7 +413,8 @@ public:
 // Tasks may run in parallel when they do not depend on each other.
 // By connecting tasks a directed acyclic graph is built.
 template<typename Functor, typename... Tasks>
-class task : public transwarp::itask, public std::enable_shared_from_this<transwarp::task<Functor, Tasks...>> {
+class task : public transwarp::itask<typename std::result_of<Functor(typename Tasks::result_type...)>::type>,
+             public std::enable_shared_from_this<transwarp::task<Functor, Tasks...>> {
 public:
     // This is the result type of this task.
     // Getting a compiler error here means that the result types of the parent tasks
@@ -501,7 +503,7 @@ public:
     }
 
     // Returns the future associated to the underlying execution
-    std::shared_future<result_type> get_future() const {
+    std::shared_future<result_type> get_future() const override {
         return future_;
     }
 

@@ -397,6 +397,21 @@ TEST(cancel_with_scheduled_called_after) {
     ASSERT_FALSE(task2->get_future().valid());
 }
 
+TEST(itask) {
+    std::shared_ptr<transwarp::itask<int>> final;
+    {
+        auto f0 = [] { return 42; };
+        auto f1 = [] (int x) { return x + 13; };
+        auto task1 = make_task(f0);
+        auto task2 = make_task(f1, task1);
+        final = task2;
+    }
+    final->finalize();
+    final->set_parallel(2);
+    final->schedule();
+    ASSERT_EQUAL(55, final->get_future().get());
+}
+
 COLLECTION(test_examples) {
 
 TEST(basic_with_three_tasks) {
