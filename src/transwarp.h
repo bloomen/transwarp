@@ -383,8 +383,13 @@ inline std::string make_dot_graph(const std::vector<transwarp::edge>& graph) {
 template<typename Functor, typename... Tasks>
 class task : public std::enable_shared_from_this<transwarp::task<Functor, Tasks...>> {
 public:
+    // This is the result type of this task.
+    // Getting a compiler error here means that the result types of the parent tasks
+    // do not match or cannot be converted into the functors parameters of this task
     using result_type = typename std::result_of<Functor(typename Tasks::result_type...)>::type;
 
+    // A task is defined by its name (can be empty), a function object, and
+    // an arbitrary number of parent tasks
     task(std::string name, Functor functor, std::shared_ptr<Tasks>... tasks)
     : node_{0, 0, std::move(name), {}},
       functor_(std::move(functor)),
