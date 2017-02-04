@@ -92,7 +92,7 @@ class thread_pool {
 public:
 
     explicit thread_pool(std::size_t n_threads)
-    : done_{false}, pause_{false}
+    : done_{false}, paused_{false}
     {
         if (n_threads > 0) {
             const auto n_target = threads_.size() + n_threads;
@@ -108,7 +108,7 @@ public:
         {
             std::lock_guard<std::mutex> lock(mutex_);
             done_ = true;
-            pause_ = false;
+            paused_ = false;
         }
         cond_var_.notify_all();
         for (auto& thread : threads_)
@@ -134,9 +134,9 @@ public:
     void set_pause(bool enabled) {
         {
             std::lock_guard<std::mutex> lock(mutex_);
-            pause_ = enabled;
+            paused_ = enabled;
         }
-        if (!pause_)
+        if (!paused_)
             cond_var_.notify_all();
     }
 
@@ -148,7 +148,7 @@ private:
             {
                 std::unique_lock<std::mutex> lock(mutex_);
                 cond_var_.wait(lock, [this]{
-                    return !pause_ && (done_ || !functors_.empty());
+                    return !paused_ && (done_ || !functors_.empty());
                 });
                 if (done_ && functors_.empty())
                     break;
@@ -160,7 +160,7 @@ private:
     }
 
     bool done_;
-    bool pause_;
+    bool paused_;
     std::vector<std::thread> threads_;
     std::queue<transwarp::detail::priority_functor> functors_;
     std::condition_variable cond_var_;
@@ -327,14 +327,14 @@ struct final_visitor {
     std::size_t& id_;
 };
 
-struct cancel_visitor {
-    explicit cancel_visitor(bool enabled) noexcept
-    : cancel_(enabled) {}
+struct canceled_visitor {
+    explicit canceled_visitor(bool enabled) noexcept
+    : canceled_(enabled) {}
     template<typename Task>
     void operator()(Task* task) const {
-        task->cancel_ = cancel_;
+        task->canceled_ = canceled_;
     }
-    bool cancel_;
+    bool canceled_;
 };
 
 struct graph_visitor {
@@ -443,8 +443,8 @@ public:
       tasks_(std::make_tuple(std::move(tasks)...)),
       visited_(false),
       finalized_(false),
-      cancel_(false),
-      pause_(false)
+      canceled_(false),
+      paused_(false)
     {}
 
     // Finalizes the task which must only be called by the final task.
@@ -484,7 +484,7 @@ public:
     // Only to be called by the final task.
     void schedule() override {
         check_is_finalized();
-        if (!cancel_) {
+        if (!canceled_) {
             transwarp::pass_visitor pass;
             std::priority_queue<transwarp::detail::priority_functor> queue;
             transwarp::detail::callback_visitor post_visitor(queue);
@@ -497,7 +497,7 @@ public:
                 }
             } else {
                 while (!queue.empty()) {
-                    while (pause_) {};
+                    while (paused_) {};
                     queue.top()();
                     queue.pop();
                 }
@@ -512,9 +512,9 @@ public:
     // Only to be called by the final task
     void set_pause(bool enabled) override {
         check_is_finalized();
-        pause_ = enabled;
+        paused_ = enabled;
         if (pool_)
-            pool_->set_pause(pause_);
+            pool_->set_pause(paused_);
     }
 
     // If enabled then all pending tasks are canceled which will
@@ -525,7 +525,7 @@ public:
     void set_cancel(bool enabled) override {
         check_is_finalized();
         transwarp::pass_visitor pass;
-        transwarp::detail::cancel_visitor pre_visitor(enabled);
+        transwarp::detail::canceled_visitor pre_visitor(enabled);
         visit(pre_visitor, pass);
         unvisit();
     }
@@ -596,11 +596,11 @@ private:
     friend struct transwarp::detail::graph_visitor;
     friend struct transwarp::detail::callback_visitor;
     friend struct transwarp::detail::final_visitor;
-    friend struct transwarp::detail::cancel_visitor;
+    friend struct transwarp::detail::canceled_visitor;
 
     static result_type evaluate(std::shared_ptr<transwarp::task<Functor, Tasks...>> task,
                                 std::tuple<std::shared_future<typename Tasks::result_type>...> futures) {
-        if (task->cancel_)
+        if (task->canceled_)
             throw transwarp::task_canceled(task->get_node());
         return transwarp::detail::call<result_type>(task->functor_, std::move(futures));
     }
@@ -615,8 +615,8 @@ private:
     std::tuple<std::shared_ptr<Tasks>...> tasks_;
     bool visited_;
     bool finalized_;
-    std::atomic_bool cancel_;
-    bool pause_;
+    std::atomic_bool canceled_;
+    bool paused_;
     std::shared_future<result_type> future_;
     std::shared_ptr<transwarp::detail::thread_pool> pool_;
 };
