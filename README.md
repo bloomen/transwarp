@@ -60,6 +60,6 @@ int main() {
 
 The resulting graph of this example looks like this:
 
-![graph](https://github.com/bloomen/transwarp/blob/master/examples/basic_with_three_tasks.svg)
+![graph](https://raw.githubusercontent.com/bloomen/transwarp/master/examples/basic_with_three_tasks.png)
 
 **Enjoy!**
