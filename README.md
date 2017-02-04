@@ -11,6 +11,10 @@ to your project and off you go!
 
 **Example**
 
+This example creates three tasks and connects them with each other to form
+a two-level graph. The last task in the graph is then finalized marking it
+as the _final_ task. The tasks are then scheduled twice for computation 
+while using 4 threads.
 ```cpp
 #include <fstream>
 #include <iostream>
@@ -32,16 +36,16 @@ int main() {
     auto task2 = transwarp::make_task("something else", compute_something_else);
     auto task3 = transwarp::make_task("adder", add_em_up, task1, task2);
     task3->finalize();  // make task3 the final task
-    task3->set_parallel(4);  // turns on parallel execution with 4 threads for 
-                             // tasks that do not depend on each other 
+    task3->set_parallel(4);  // turns on parallel execution with 4 threads for
+                             // tasks that do not depend on each other
 
     // creating a dot-style graph for visualization
     const auto graph = task3->get_graph();
-    std::ofstream("graph.dot") << transwarp::make_dot_graph(graph);
+    std::ofstream("basic_with_three_tasks.dot") << transwarp::make_dot(graph);
 
     // task::schedule() can now be called as much as desired. The task graph
     // only has to be built once
-    
+
     task3->schedule();  // schedules all tasks for execution, assigning a future to each task
     std::cout << "result = " << task3->get_future().get() << std::endl;  // result = 55.3
 
@@ -54,15 +58,8 @@ int main() {
 }
 ```
 
-**Running the tests**
+The resulting graph of this example looks like this:
 
-Given [libunittest](http://libunittest.sourceforge.net/) is present you can build the tests using, e.g., GCC:
-```
-g++ -std=c++11 -pthread -lunittest src/test.cpp -o test
-```
-Then to run:
-```
-./test -v
-```
+![graph]()
 
 **Enjoy!**

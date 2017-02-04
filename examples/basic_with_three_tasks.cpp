@@ -8,6 +8,10 @@ double add_em_up(double x, int y) {
     return x + y;
 }
 
+// This example creates three tasks and connects them with each other to form
+// a two-level graph. The last task in the graph is then finalized marking it
+// as the final task. The tasks are then scheduled twice for computation
+// while using 4 threads.
 void basic_with_three_tasks(std::ostream& os) {
     double value1 = 13.3;
     int value2 = 42;
