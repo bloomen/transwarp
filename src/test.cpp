@@ -1,6 +1,7 @@
 #include <libunittest/all.hpp>
 #include "transwarp.h"
 #include "../examples/basic_with_three_tasks.h"
+#include "../examples/statistical_key_facts.h"
 
 
 using transwarp::make_task;
@@ -369,24 +370,24 @@ TEST(task_with_exception_thrown) {
     make_test_task_with_exception_thrown(4);
 }
 
-TEST(cancel_with_scheduled_called_before_in_parallel_and_uncancel) {
-    std::atomic_bool start(false);
-    auto f0 = [&start] { while (!start) {}; return 42; };
+TEST(cancel_with_schedule_called_before_in_parallel_and_uncancel) {
+    auto f0 = [] { return 42; };
     auto f1 = [] (int x) { return x + 13; };
     auto task1 = make_task(f0);
     auto task2 = make_task(f1, task1);
     task2->finalize();
     task2->set_parallel(2);
+    task2->set_pause(true);
     task2->schedule();
     task2->set_cancel(true);
-    start = true;
+    task2->set_pause(false);
     ASSERT_THROW(transwarp::task_canceled, [task2] { task2->get_future().get(); });
     task2->set_cancel(false);
     task2->schedule();
     ASSERT_EQUAL(55, task2->get_future().get());
 }
 
-TEST(cancel_with_scheduled_called_after) {
+TEST(cancel_with_schedule_called_after) {
     auto f0 = [] { return 42; };
     auto f1 = [] (int x) { return x + 13; };
     auto task1 = make_task(f0);
@@ -456,6 +457,13 @@ TEST(basic_with_three_tasks) {
     std::ostringstream os;
     examples::basic_with_three_tasks(os);
     const std::string expected = "result = 55.3\nresult = 58.8\n";
+    ASSERT_EQUAL(expected, os.str());
+}
+
+TEST(statistical_key_facts) {
+    std::ostringstream os;
+    examples::statistical_key_facts(os);
+    const std::string expected = "";
     ASSERT_EQUAL(expected, os.str());
 }
 

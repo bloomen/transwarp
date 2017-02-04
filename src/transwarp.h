@@ -514,7 +514,7 @@ public:
         check_is_finalized();
         paused_ = enabled;
         if (pool_)
-            pool_->set_pause(paused_);
+            pool_->set_pause(paused_.load());
     }
 
     // If enabled then all pending tasks are canceled which will
@@ -616,7 +616,7 @@ private:
     bool visited_;
     bool finalized_;
     std::atomic_bool canceled_;
-    bool paused_;
+    std::atomic_bool paused_;
     std::shared_future<result_type> future_;
     std::shared_ptr<transwarp::detail::thread_pool> pool_;
 };
