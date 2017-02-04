@@ -393,13 +393,26 @@ inline std::string make_dot(const std::vector<transwarp::edge>& graph) {
     return dot;
 }
 
+// An interface for the task class containing all task methods that do not
+// rely on template parameters
+class itask {
+public:
+    virtual ~itask() = default;
+    virtual void finalize() = 0;
+    virtual void set_parallel(std::size_t n_threads, std::function<void(std::thread&)> thread_prioritizer=nullptr) = 0;
+    virtual void schedule() = 0;
+    virtual void set_cancel(bool enabled) = 0;
+    virtual const transwarp::node& get_node() const = 0;
+    virtual std::vector<transwarp::edge> get_graph() = 0;
+};
+
 // A task representing a piece work given by a functor and parent tasks.
 // Depending on how tasks are arranged they can be run in parallel by design
 // if set_parallel is called. If not, all tasks are run sequentially.
 // Tasks may run in parallel when they do not depend on each other.
 // By connecting tasks a directed acyclic graph is built.
 template<typename Functor, typename... Tasks>
-class task : public std::enable_shared_from_this<transwarp::task<Functor, Tasks...>> {
+class task : public transwarp::itask, public std::enable_shared_from_this<transwarp::task<Functor, Tasks...>> {
 public:
     // This is the result type of this task.
     // Getting a compiler error here means that the result types of the parent tasks
@@ -419,7 +432,7 @@ public:
 
     // Finalizes the task which must only be called by the final task.
     // The final task does not have any children.
-    void finalize() {
+    void finalize() override {
         std::size_t id = 0;
         transwarp::pass_visitor pass;
         transwarp::detail::final_visitor pre_visitor(id);
@@ -433,7 +446,7 @@ public:
     // and all its parent tasks. If n_threads == 0 then the parallel execution
     // is removed. The thread_prioritizer prioritizes the threads launched.
     // Only to be called by the final task.
-    void set_parallel(std::size_t n_threads, std::function<void(std::thread&)> thread_prioritizer=nullptr) {
+    void set_parallel(std::size_t n_threads, std::function<void(std::thread&)> thread_prioritizer=nullptr) override {
         check_is_finalized();
         transwarp::pass_visitor pass;
         if (n_threads > 0) {
@@ -452,7 +465,7 @@ public:
     // Schedules the final task and all its parent tasks for execution.
     // The execution is either sequential or in parallel.
     // Only to be called by the final task.
-    void schedule() {
+    void schedule() override {
         check_is_finalized();
         if (!cancel_) {
             transwarp::pass_visitor pass;
@@ -479,7 +492,7 @@ public:
     // Canceling pending tasks does not affect currently running tasks.
     // As long as cancel is enabled new computations cannot be scheduled.
     // Only to be called by the final task
-    void set_cancel(bool enabled) {
+    void set_cancel(bool enabled) override {
         check_is_finalized();
         transwarp::pass_visitor pass;
         transwarp::detail::cancel_visitor pre_visitor(enabled);
@@ -503,7 +516,7 @@ public:
     }
 
     // Returns the associated node
-    const transwarp::node& get_node() const {
+    const transwarp::node& get_node() const override {
         return node_;
     }
 
@@ -511,7 +524,7 @@ public:
     // the tasks and their interdependencies. Pass the result into make_dot_graph
     // to retrieve a dot-style graph representation for easy viewing.
     // Only to be called by the final task.
-    std::vector<transwarp::edge> get_graph() {
+    std::vector<transwarp::edge> get_graph() override {
         check_is_finalized();
         std::vector<transwarp::edge> graph;
         transwarp::pass_visitor pass;
