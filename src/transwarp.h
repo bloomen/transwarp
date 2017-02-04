@@ -12,6 +12,7 @@
 #include <algorithm>
 #include <queue>
 #include <stdexcept>
+#include <atomic>
 
 
 namespace transwarp {
@@ -42,6 +43,13 @@ class task_error : public transwarp::transwarp_error {
 public:
     explicit task_error(const std::string& message)
     : transwarp::transwarp_error(message) {}
+};
+
+// Exception thrown when a task is canceled
+class task_canceled : public transwarp::task_error {
+public:
+    task_canceled(const transwarp::node& n)
+    : transwarp::task_error(n.name + " is canceled") {}
 };
 
 
@@ -308,6 +316,16 @@ struct final_visitor {
     std::size_t& id_;
 };
 
+struct cancel_visitor {
+    explicit cancel_visitor(bool enabled) noexcept
+    : cancel_(enabled) {}
+    template<typename Task>
+    void operator()(Task* task) const {
+        task->cancel_ = cancel_;
+    }
+    bool cancel_;
+};
+
 struct graph_visitor {
     explicit graph_visitor(std::vector<transwarp::edge>& graph) noexcept
     : graph_(graph) {}
@@ -395,10 +413,11 @@ public:
       functor_(std::move(functor)),
       tasks_(std::make_tuple(std::move(tasks)...)),
       visited_(false),
-      finalized_(false)
+      finalized_(false),
+      cancel_(false)
     {}
 
-    // Finalizes the task which should only be called for the final task.
+    // Finalizes the task which must only be called by the final task.
     // The final task does not have any children.
     void finalize() {
         std::size_t id = 0;
@@ -435,22 +454,37 @@ public:
     // Only to be called by the final task.
     void schedule() {
         check_is_finalized();
-        transwarp::pass_visitor pass;
-        std::priority_queue<transwarp::detail::priority_functor> queue;
-        transwarp::detail::callback_visitor post_visitor(queue);
-        visit(pass, post_visitor);
-        unvisit();
-        if (pool_) {
-            while (!queue.empty()) {
-                pool_->push(queue.top());
-                queue.pop();
-            }
-        } else {
-            while (!queue.empty()) {
-                queue.top()();
-                queue.pop();
+        if (!cancel_) {
+            transwarp::pass_visitor pass;
+            std::priority_queue<transwarp::detail::priority_functor> queue;
+            transwarp::detail::callback_visitor post_visitor(queue);
+            visit(pass, post_visitor);
+            unvisit();
+            if (pool_) {
+                while (!queue.empty()) {
+                    pool_->push(queue.top());
+                    queue.pop();
+                }
+            } else {
+                while (!queue.empty()) {
+                    queue.top()();
+                    queue.pop();
+                }
             }
         }
+    }
+
+    // If enabled then all pending tasks are canceled which will
+    // throw transwarp::task_canceled when asking a future for its result.
+    // Canceling pending tasks does not affect currently running tasks.
+    // As long as cancel is enabled new computations cannot be scheduled.
+    // Only to be called by the final task
+    void set_cancel(bool enabled) {
+        check_is_finalized();
+        transwarp::pass_visitor pass;
+        transwarp::detail::cancel_visitor pre_visitor(enabled);
+        visit(pre_visitor, pass);
+        unvisit();
     }
 
     // Returns the future associated to the underlying execution
@@ -519,8 +553,12 @@ private:
     friend struct transwarp::detail::graph_visitor;
     friend struct transwarp::detail::callback_visitor;
     friend struct transwarp::detail::final_visitor;
+    friend struct transwarp::detail::cancel_visitor;
 
-    static result_type evaluate(std::shared_ptr<transwarp::task<Functor, Tasks...>> task, std::tuple<std::shared_future<typename Tasks::result_type>...> futures) {
+    static result_type evaluate(std::shared_ptr<transwarp::task<Functor, Tasks...>> task,
+                                std::tuple<std::shared_future<typename Tasks::result_type>...> futures) {
+        if (task->cancel_)
+            throw transwarp::task_canceled(task->get_node());
         return transwarp::detail::call<result_type>(task->functor_, std::move(futures));
     }
 
@@ -534,6 +572,7 @@ private:
     std::tuple<std::shared_ptr<Tasks>...> tasks_;
     bool visited_;
     bool finalized_;
+    std::atomic_bool cancel_;
     std::shared_future<result_type> future_;
     std::shared_ptr<transwarp::detail::thread_pool> pool_;
 };

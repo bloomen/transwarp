@@ -162,6 +162,7 @@ TEST(not_finalized) {
     ASSERT_THROW(transwarp::task_error, [&task3]{ task3->set_parallel(2); });
     ASSERT_THROW(transwarp::task_error, [&task3]{ task3->schedule(); });
     ASSERT_THROW(transwarp::task_error, [&task3]{ task3->get_graph(); });
+    ASSERT_THROW(transwarp::task_error, [&task3]{ task3->set_cancel(true); });
 }
 
 TEST(already_finalized) {
@@ -335,15 +336,15 @@ TEST(visit_and_unvisit) {
 
 void make_test_task_with_exception_thrown(std::size_t threads) {
     auto f1 = [] {
-        throw std::runtime_error("from f1");
+        throw std::logic_error("from f1");
         return 42;
     };
     auto f2 = [] (int x) {
-        throw std::runtime_error("from f2");
+        throw std::logic_error("from f2");
         return x + 13;
     };
     auto f3 = [] (int x) {
-        throw std::runtime_error("from f3");
+        throw std::logic_error("from f3");
         return x + 1;
     };
     auto task1 = make_task(f1);
@@ -355,7 +356,7 @@ void make_test_task_with_exception_thrown(std::size_t threads) {
     try {
         task3->get_future().get();
         ASSERT_TRUE(false);
-    } catch (const std::runtime_error& e) {
+    } catch (const std::logic_error& e) {
         ASSERT_EQUAL(std::string("from f1"), e.what());
     }
 }
@@ -368,11 +369,43 @@ TEST(task_with_exception_thrown) {
     make_test_task_with_exception_thrown(4);
 }
 
-TEST(example_basic_with_three_tasks) {
+TEST(cancel_with_scheduled_called_before_in_parallel_and_uncancel) {
+    std::atomic_bool start(false);
+    auto f0 = [&start] { while (!start) {}; return 42; };
+    auto f1 = [] (int x) { return x + 13; };
+    auto task1 = make_task(f0);
+    auto task2 = make_task(f1, task1);
+    task2->finalize();
+    task2->set_parallel(2);
+    task2->schedule();
+    task2->set_cancel(true);
+    start = true;
+    ASSERT_THROW(transwarp::task_canceled, [task2] { task2->get_future().get(); });
+    task2->set_cancel(false);
+    task2->schedule();
+    ASSERT_EQUAL(55, task2->get_future().get());
+}
+
+TEST(cancel_with_scheduled_called_after) {
+    auto f0 = [] { return 42; };
+    auto f1 = [] (int x) { return x + 13; };
+    auto task1 = make_task(f0);
+    auto task2 = make_task(f1, task1);
+    task2->finalize();
+    task2->set_cancel(true);
+    task2->schedule();
+    ASSERT_FALSE(task2->get_future().valid());
+}
+
+COLLECTION(test_examples) {
+
+TEST(basic_with_three_tasks) {
     std::ostringstream os;
     examples::basic_with_three_tasks(os);
     const std::string expected = "result = 55.3\nresult = 58.8\n";
     ASSERT_EQUAL(expected, os.str());
 }
 
-}
+} // test_examples
+} // test_transwarp
+
