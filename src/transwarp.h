@@ -385,7 +385,7 @@ class task : public std::enable_shared_from_this<transwarp::task<Functor, Tasks.
 public:
     // This is the result type of this task.
     // Getting a compiler error here means that the result types of the parent tasks
-    // do not match or cannot be converted into the functors parameters of this task
+    // do not match or cannot be converted into the functor's parameters of this task
     using result_type = typename std::result_of<Functor(typename Tasks::result_type...)>::type;
 
     // A task is defined by its name (can be empty), a function object, and
