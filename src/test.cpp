@@ -1,5 +1,6 @@
 #include <libunittest/all.hpp>
 #include "transwarp.h"
+#include "../examples/basic_with_three_tasks.h"
 
 
 using transwarp::make_task;
@@ -74,7 +75,7 @@ void make_test_three_tasks(std::size_t threads) {
 
     const auto graph = task3->get_graph();
     ASSERT_EQUAL(3u, graph.size());
-    const auto dot_graph = transwarp::make_dot_graph(graph);
+    const auto dot_graph = transwarp::make_dot(graph);
 
     const std::string exp_dot_graph = "digraph {\n"
 "\"t1\n"
@@ -200,7 +201,7 @@ TEST(pass_visitor) {
 
 TEST(make_dot_graph_with_empty_graph) {
     const std::vector<transwarp::edge> graph;
-    const auto dot_graph = transwarp::make_dot_graph(graph);
+    const auto dot_graph = transwarp::make_dot(graph);
     const std::string exp_dot_graph = "digraph {\n}\n";
     ASSERT_EQUAL(exp_dot_graph, dot_graph);
 }
@@ -212,7 +213,7 @@ TEST(make_dot_graph_with_three_nodes) {
     std::vector<transwarp::edge> graph;
     graph.push_back({&node1, &node2});
     graph.push_back({&node1, &node3});
-    const auto dot_graph = transwarp::make_dot_graph(graph);
+    const auto dot_graph = transwarp::make_dot(graph);
     const std::string exp_dot_graph = "digraph {\n"
 "\"node2\n"
 "id 1 level 1 parents 0\" -> \"node1\n"
@@ -365,6 +366,13 @@ TEST(task_with_exception_thrown) {
     make_test_task_with_exception_thrown(2);
     make_test_task_with_exception_thrown(3);
     make_test_task_with_exception_thrown(4);
+}
+
+TEST(example_basic_with_three_tasks) {
+    std::ostringstream os;
+    examples::basic_with_three_tasks(os);
+    const std::string expected = "result = 55.3\nresult = 58.8\n";
+    ASSERT_EQUAL(expected, os.str());
 }
 
 }
