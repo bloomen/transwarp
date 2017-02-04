@@ -535,16 +535,6 @@ public:
         return future_;
     }
 
-    // Returns the functor
-    Functor get_functor() const {
-        return functor_;
-    }
-
-    // Returns the parent tasks
-    std::tuple<std::shared_ptr<Tasks>...> get_tasks() const {
-        return tasks_;
-    }
-
     // Returns the associated node
     const transwarp::node& get_node() const override {
         return node_;
@@ -585,6 +575,16 @@ public:
             visited_ = false;
             transwarp::detail::apply(transwarp::detail::unvisit_functor(), tasks_);
         }
+    }
+
+    // Returns the functor
+    Functor get_functor() const {
+        return functor_;
+    }
+
+    // Returns the parent tasks
+    std::tuple<std::shared_ptr<Tasks>...> get_tasks() const {
+        return tasks_;
     }
 
 private:

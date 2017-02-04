@@ -412,6 +412,44 @@ TEST(itask) {
     ASSERT_EQUAL(55, final->get_future().get());
 }
 
+TEST(set_pause_without_thread_pool) {
+    auto f0 = [] { return 42; };
+    auto f1 = [] (int x) { return x + 13; };
+    auto task1 = make_task(f0);
+    auto task2 = make_task(f1, task1);
+    task2->finalize();
+    task2->set_pause(true);
+
+    std::thread([task2] {
+        task2->schedule();
+    }).detach();
+
+    while (!task2->get_future().valid()) {}
+
+    auto future = task2->get_future();
+    ASSERT_TRUE(std::future_status::timeout == future.wait_for(std::chrono::microseconds(50)));
+
+    task2->set_pause(false);
+    ASSERT_EQUAL(55, future.get());
+}
+
+TEST(set_pause_with_thread_pool) {
+    auto f0 = [] { return 42; };
+    auto f1 = [] (int x) { return x + 13; };
+    auto task1 = make_task(f0);
+    auto task2 = make_task(f1, task1);
+    task2->finalize();
+    task2->set_parallel(2);
+    task2->set_pause(true);
+    task2->schedule();
+
+    auto future = task2->get_future();
+    ASSERT_TRUE(std::future_status::timeout == future.wait_for(std::chrono::microseconds(50)));
+
+    task2->set_pause(false);
+    ASSERT_EQUAL(55, future.get());
+}
+
 COLLECTION(test_examples) {
 
 TEST(basic_with_three_tasks) {
