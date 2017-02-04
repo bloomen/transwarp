@@ -23,7 +23,7 @@ void basic_with_three_tasks(std::ostream& os) {
     auto task1 = transwarp::make_task("something", compute_something);
     auto task2 = transwarp::make_task("something else", compute_something_else);
     auto task3 = transwarp::make_task("adder", add_em_up, task1, task2);
-    task3->finalize();  // make task3 the final task
+    task3->finalize();  // marking task3 as the final task
     task3->set_parallel(4);  // turns on parallel execution with 4 threads for
                              // tasks that do not depend on each other
 
