@@ -99,6 +99,9 @@ std::shared_ptr<transwarp::itask<result>> build_graph(bool parallel, std::size_t
     return final_task;
 }
 
+// This example computes statistical key measures from numbers sampled
+// from a gamma distribution. The example computes average, standard deviation,
+// median, and mode for varying values of alpha and beta.
 void statistical_key_facts(std::ostream& os, std::size_t sample_size, bool parallel) {
     os.precision(3);
 
