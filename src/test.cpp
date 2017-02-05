@@ -460,11 +460,19 @@ TEST(basic_with_three_tasks) {
     ASSERT_EQUAL(expected, os.str());
 }
 
-TEST(statistical_key_facts) {
+void make_test_statistical_keys_facts(bool parallel) {
     std::ostringstream os;
-    examples::statistical_key_facts(os);
-    const std::string expected = "";
+    examples::statistical_key_facts(os, 10000, parallel);
+    const std::string expected =
+"avg=0.995, stddev=1, median=0.689, mode=0\n"
+"avg=6.02, stddev=4.25, median=5.07, mode=3\n"
+"avg=11.9, stddev=6.87, median=10.6, mode=7\n";
     ASSERT_EQUAL(expected, os.str());
+}
+
+TEST(statistical_key_facts) {
+    make_test_statistical_keys_facts(false);
+    make_test_statistical_keys_facts(true);
 }
 
 } // test_examples
