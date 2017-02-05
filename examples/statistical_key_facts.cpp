@@ -106,21 +106,28 @@ void statistical_key_facts(std::ostream& os, std::size_t sample_size, bool paral
     double beta = 1;
     result res;
 
+    // building the graph and retrieving the final task
     auto final_task = build_graph(parallel, sample_size, alpha, beta);
 
+    // output the graph for visualization
     const auto graph = final_task->get_graph();
     std::ofstream("statistical_key_facts.dot") << transwarp::make_dot(graph);
 
+    // Now we start calculating stuff ...
+
+    // First computation with initial values
     final_task->schedule();
     res = final_task->get_future().get();
     os << res << std::endl;
 
+    // Second computation with new input
     alpha = 2;
     beta = 3;
     final_task->schedule();
     res = final_task->get_future().get();
     os << res << std::endl;
 
+    // Third computation with new input
     alpha = 3;
     beta = 4;
     final_task->schedule();
@@ -132,6 +139,7 @@ void statistical_key_facts(std::ostream& os, std::size_t sample_size, bool paral
 
 #ifndef USE_LIBUNITTEST
 int main() {
+    std::cout << "Running example: statistical_key_facts ..." << std::endl;
     examples::statistical_key_facts(std::cout);
 }
 #endif

@@ -49,6 +49,7 @@ void basic_with_three_tasks(std::ostream& os) {
 
 #ifndef USE_LIBUNITTEST
 int main() {
+    std::cout << "Running example: basic_with_three_tasks ..." << std::endl;
     examples::basic_with_three_tasks(std::cout);
 }
 #endif
