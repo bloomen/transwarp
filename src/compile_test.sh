@@ -13,4 +13,4 @@ if [ "$user_mode" = "debug" ];then
 fi
 
 echo "Compiling $cpp ..."
-g++ -pthread -std=c++11 $opt -g -lunittest -DUSE_LIBUNITTEST -pedantic -pedantic-errors -Wall -Wextra -Werror -Wconversion -pthread -Wno-maybe-uninitialized $examples $cpp -o ${cpp%.cpp}.$mode
+g++ -std=c++11 $opt -g -lunittest -DUSE_LIBUNITTEST -pedantic -Wall -Wextra -Wconversion -pthread $examples $cpp -o ${cpp%.cpp}.$mode

@@ -17,4 +17,4 @@ if [ "$user_mode" = "debug" ];then
 fi
 
 echo "Compiling $cpp ..."
-g++ -pthread -std=c++11 $opt -g -pedantic -pedantic-errors -Wall -Wextra -Werror -Wconversion -pthread -Wno-maybe-uninitialized -I"$thisdir/../src/transwarp" $cpp -o ${cpp%.cpp}.$mode
+g++ -std=c++11 $opt -g -pedantic -Wall -Wextra -Wconversion -pthread -I"$thisdir/../src/transwarp" $cpp -o ${cpp%.cpp}.$mode
