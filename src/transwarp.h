@@ -120,12 +120,6 @@ public:
             thread.join();
     }
 
-    void prioritize_threads(std::function<void(std::thread&)>& prioritizer) {
-        for (auto& thread : threads_) {
-            prioritizer(thread);
-        }
-    }
-
     void push(transwarp::detail::priority_functor functor) {
         {
             std::lock_guard<std::mutex> lock(mutex_);
@@ -415,7 +409,7 @@ class itask {
 public:
     virtual ~itask() = default;
     virtual void finalize() = 0;
-    virtual void set_parallel(std::size_t n_threads, std::function<void(std::thread&)> thread_prioritizer=nullptr) = 0;
+    virtual void set_parallel(std::size_t n_threads) = 0;
     virtual void schedule() = 0;
     virtual void set_pause(bool enabled) = 0;
     virtual void set_cancel(bool enabled) = 0;
@@ -466,15 +460,12 @@ public:
 
     // If n_threads > 0 then assigns a parallel execution to the final task
     // and all its parent tasks. If n_threads == 0 then the parallel execution
-    // is removed. The thread_prioritizer prioritizes the threads launched.
-    // Only to be called by the final task.
-    void set_parallel(std::size_t n_threads, std::function<void(std::thread&)> thread_prioritizer=nullptr) override {
+    // is removed. Only to be called by the final task.
+    void set_parallel(std::size_t n_threads) override {
         check_is_finalized();
         transwarp::pass_visitor pass;
         if (n_threads > 0) {
             auto pool = std::make_shared<transwarp::detail::thread_pool>(n_threads);
-            if (thread_prioritizer)
-                pool->prioritize_threads(thread_prioritizer);
             transwarp::detail::set_pool_visitor pre_visitor(std::move(pool));
             visit(pre_visitor, pass);
         } else {
