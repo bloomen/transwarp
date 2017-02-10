@@ -466,6 +466,12 @@ public:
 
     virtual ~task() = default;
 
+    // delete copy/move semantics
+    task(const task&) = delete;
+    task& operator=(const task&) = delete;
+    task(task&&) = delete;
+    task& operator=(task&&) = delete;
+
     // Returns the future associated to the underlying execution
     std::shared_future<result_type> get_future() const override {
         return future_;
@@ -564,6 +570,12 @@ public:
     }
 
     virtual ~final_task() = default;
+
+    // delete copy/move semantics
+    final_task(const final_task&) = delete;
+    final_task& operator=(const final_task&) = delete;
+    final_task(final_task&&) = delete;
+    final_task& operator=(final_task&&) = delete;
 
     // Returns the future associated to the underlying execution
     std::shared_future<result_type> get_future() const override {
