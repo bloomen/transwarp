@@ -250,22 +250,22 @@ void apply(F&& f, Tuple&& t, Args&&... args) {
 }
 
 template<int offset, typename... Tasks>
-struct get_futures_helper {
-    static void copy(const std::tuple<std::shared_ptr<Tasks>...>& source, std::tuple<std::shared_future<typename Tasks::result_type>...>& target) {
+struct assign_futures_impl {
+    static void assign_futures(const std::tuple<std::shared_ptr<Tasks>...>& source, std::tuple<std::shared_future<typename Tasks::result_type>...>& target) {
         std::get<offset>(target) = std::get<offset>(source)->get_future();
-        get_futures_helper<offset - 1, Tasks...>::copy(source, target);
+        assign_futures_impl<offset - 1, Tasks...>::assign_futures(source, target);
     }
 };
 
 template<typename... Tasks>
-struct get_futures_helper<-1, Tasks...> {
-    static void copy(const std::tuple<std::shared_ptr<Tasks>...>&, std::tuple<std::shared_future<typename Tasks::result_type>...>&) {}
+struct assign_futures_impl<-1, Tasks...> {
+    static void assign_futures(const std::tuple<std::shared_ptr<Tasks>...>&, std::tuple<std::shared_future<typename Tasks::result_type>...>&) {}
 };
 
 template<typename... Tasks>
 std::tuple<std::shared_future<typename Tasks::result_type>...> get_futures(const std::tuple<std::shared_ptr<Tasks>...>& input) {
     std::tuple<std::shared_future<typename Tasks::result_type>...> result;
-    get_futures_helper<static_cast<int>(sizeof...(Tasks)) - 1, Tasks...>::copy(input, result);
+    assign_futures_impl<static_cast<int>(sizeof...(Tasks)) - 1, Tasks...>::assign_futures(input, result);
     return result;
 }
 
@@ -275,8 +275,8 @@ inline std::string trim(const std::string &s, const std::string& chars=" \t\n\r"
     return std::string(it, std::find_if_not(s.rbegin(), std::string::const_reverse_iterator(it), functor).base());
 }
 
-inline void find_levels(const transwarp::node* final) noexcept {
-   std::queue<const transwarp::node*> q;
+inline void assign_levels(transwarp::node* final) noexcept {
+   std::queue<transwarp::node*> q;
    std::queue<std::size_t> d;
    q.push(final);
    d.push(0);
@@ -285,8 +285,9 @@ inline void find_levels(const transwarp::node* final) noexcept {
        const auto current = q.front(); q.pop();
        const auto depth = d.front(); d.pop();
 
-       for (auto n : current->parents) {
-           const_cast<transwarp::node*>(n)->level = depth + 1;
+       for (auto n_const : current->parents) {
+           auto n = const_cast<transwarp::node*>(n_const);
+           n->level = depth + 1;
            q.push(n);
            d.push(n->level);
        }
@@ -552,7 +553,7 @@ public:
         transwarp::detail::final_visitor pre_visitor(id);
         this->visit(pre_visitor, pass);
         this->unvisit();
-        transwarp::detail::find_levels(&this->node_);
+        transwarp::detail::assign_levels(&this->node_);
     }
 
     // Returns the future associated to the underlying execution
