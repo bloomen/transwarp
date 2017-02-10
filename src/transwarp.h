@@ -89,7 +89,7 @@ public:
     priority_functor() noexcept
     : callback_{}, priority_{}, order_{} {}
 
-    priority_functor(std::function<void()> callback, std::size_t priority, std::size_t order) noexcept
+    priority_functor(std::function<std::function<void()>()> callback, std::size_t priority, std::size_t order) noexcept
     : callback_{std::move(callback)}, priority_{priority}, order_{order} {}
 
     bool operator<(const priority_functor& other) const noexcept {
@@ -100,12 +100,12 @@ public:
         }
     }
 
-    void operator()() const {
-        callback_();
+    std::function<void()> operator()() const {
+        return callback_();
     }
 
 private:
-    std::function<void()> callback_;
+    std::function<std::function<void()>()> callback_;
     std::size_t priority_;
     std::size_t order_;
 };
@@ -143,12 +143,12 @@ public:
             thread.join();
     }
 
-    void push(transwarp::detail::priority_functor functor) {
+    void push(const std::function<void()>& functor) {
         {
             std::lock_guard<std::mutex> lock(mutex_);
             if (done_)
                 throw transwarp::detail::thread_pool_error{"push called while thread pool is shutting down"};
-            functors_.push(std::move(functor));
+            functors_.push(functor);
         }
         cond_var_.notify_one();
     }
@@ -166,7 +166,7 @@ private:
 
     void worker() {
         for (;;) {
-            transwarp::detail::priority_functor functor;
+            std::function<void()> functor;
             {
                 std::unique_lock<std::mutex> lock(mutex_);
                 cond_var_.wait(lock, [this]{
@@ -184,7 +184,7 @@ private:
     bool done_;
     bool paused_;
     std::vector<std::thread> threads_;
-    std::queue<transwarp::detail::priority_functor> functors_;
+    std::queue<std::function<void()>> functors_;
     std::condition_variable cond_var_;
     std::mutex mutex_;
 };
@@ -382,11 +382,15 @@ struct callback_visitor {
     : queue_(queue) {}
     template<typename Task>
     void operator()(Task* task) const noexcept {
-        auto futures = transwarp::detail::get_futures(task->tasks_);
-        auto pack_task = std::make_shared<std::packaged_task<typename Task::result_type()>>(
-                              std::bind(&Task::evaluate, task->shared_from_this(), std::move(futures)));
-        task->future_ = pack_task->get_future();
-        queue_.emplace([pack_task]{ (*pack_task)(); }, task->node_.level, task->node_.id);
+        auto shared_task = task->shared_from_this();
+        auto functor = [shared_task]() {
+            auto futures = transwarp::detail::get_futures(shared_task->tasks_);
+            auto pack_task = std::make_shared<std::packaged_task<typename Task::result_type()>>(
+                                  std::bind(&Task::evaluate, shared_task, std::move(futures)));
+            shared_task->future_ = pack_task->get_future();
+            return [pack_task]{ (*pack_task)(); };
+        };
+        queue_.emplace(std::move(functor), task->node_.level, task->node_.id);
     }
     std::priority_queue<transwarp::detail::priority_functor>& queue_;
 };
@@ -459,6 +463,8 @@ public:
     {
         transwarp::detail::apply(transwarp::detail::validate_functor(), tasks_);
     }
+
+    virtual ~task() = default;
 
     // Returns the future associated to the underlying execution
     std::shared_future<result_type> get_future() const override {
@@ -557,6 +563,8 @@ public:
         transwarp::detail::assign_levels(&this->node_);
     }
 
+    virtual ~final_task() = default;
+
     // Returns the future associated to the underlying execution
     std::shared_future<result_type> get_future() const override {
         return this->future_;
@@ -584,24 +592,20 @@ public:
     }
 
     // Schedules the final task and all its parent tasks for execution.
-    // The execution is either sequential or in parallel. Complexity is n*log(n)
+    // The execution is either sequential or in parallel.
     void schedule() override {
+        if (functors_.empty())
+            prepare_functors();
         if (!this->canceled_) {
-            transwarp::pass_visitor pass;
-            std::priority_queue<transwarp::detail::priority_functor> queue;
-            transwarp::detail::callback_visitor post_visitor(queue);
-            this->visit(pass, post_visitor);
-            this->unvisit();
+            const auto callbacks = make_callbacks();
             if (this->pool_) {
-                while (!queue.empty()) {
-                    this->pool_->push(queue.top());
-                    queue.pop();
+                for (const auto& callback : callbacks) {
+                    this->pool_->push(callback);
                 }
             } else {
-                while (!queue.empty()) {
+                for (const auto& callback : callbacks) {
                     while (this->paused_) {};
-                    queue.top()();
-                    queue.pop();
+                    callback();
                 }
             }
         }
@@ -640,6 +644,31 @@ public:
         return graph;
     }
 
+protected:
+
+    void prepare_functors() {
+        transwarp::pass_visitor pass;
+        std::priority_queue<transwarp::detail::priority_functor> queue;
+        transwarp::detail::callback_visitor post_visitor(queue);
+        this->visit(pass, post_visitor);
+        this->unvisit();
+        functors_.reserve(queue.size());
+        while (!queue.empty()) {
+            functors_.push_back(queue.top());
+            queue.pop();
+        }
+    }
+
+    std::vector<std::function<void()>> make_callbacks() {
+        std::vector<std::function<void()>> callbacks;
+        callbacks.reserve(functors_.size());
+        for (const auto& functor : functors_) {
+            callbacks.push_back(functor());
+        }
+        return callbacks;
+    }
+
+    std::vector<transwarp::detail::priority_functor> functors_;
 };
 
 // A factory function to create a new task
