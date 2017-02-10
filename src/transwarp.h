@@ -250,22 +250,22 @@ void apply(F&& f, Tuple&& t, Args&&... args) {
 }
 
 template<int offset, typename... Tasks>
-struct convert_to_futures_helper {
+struct get_futures_helper {
     static void copy(const std::tuple<std::shared_ptr<Tasks>...>& source, std::tuple<std::shared_future<typename Tasks::result_type>...>& target) {
         std::get<offset>(target) = std::get<offset>(source)->get_future();
-        convert_to_futures_helper<offset - 1, Tasks...>::copy(source, target);
+        get_futures_helper<offset - 1, Tasks...>::copy(source, target);
     }
 };
 
 template<typename... Tasks>
-struct convert_to_futures_helper<-1, Tasks...> {
+struct get_futures_helper<-1, Tasks...> {
     static void copy(const std::tuple<std::shared_ptr<Tasks>...>&, std::tuple<std::shared_future<typename Tasks::result_type>...>&) {}
 };
 
 template<typename... Tasks>
-std::tuple<std::shared_future<typename Tasks::result_type>...> convert_to_futures(const std::tuple<std::shared_ptr<Tasks>...>& input) {
+std::tuple<std::shared_future<typename Tasks::result_type>...> get_futures(const std::tuple<std::shared_ptr<Tasks>...>& input) {
     std::tuple<std::shared_future<typename Tasks::result_type>...> result;
-    convert_to_futures_helper<static_cast<int>(sizeof...(Tasks)) - 1, Tasks...>::copy(input, result);
+    get_futures_helper<static_cast<int>(sizeof...(Tasks)) - 1, Tasks...>::copy(input, result);
     return result;
 }
 
@@ -381,7 +381,7 @@ struct callback_visitor {
     : queue_(queue) {}
     template<typename Task>
     void operator()(Task* task) const noexcept {
-        auto futures = transwarp::detail::convert_to_futures(task->tasks_);
+        auto futures = transwarp::detail::get_futures(task->tasks_);
         auto pack_task = std::make_shared<std::packaged_task<typename Task::result_type()>>(
                               std::bind(&Task::evaluate, task->shared_from_this(), std::move(futures)));
         task->future_ = pack_task->get_future();
