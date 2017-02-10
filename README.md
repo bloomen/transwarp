@@ -12,8 +12,7 @@ to your project and off you go!
 **Example**
 
 This example creates three tasks and connects them with each other to form
-a two-level graph. The last task in the graph is then finalized marking it
-as the _final_ task. The tasks are then scheduled twice for computation 
+a two-level graph. The tasks are then scheduled twice for computation 
 while using 4 threads.
 ```cpp
 #include <fstream>
@@ -34,8 +33,7 @@ int main() {
     // building the task graph
     auto task1 = transwarp::make_task("something", compute_something);
     auto task2 = transwarp::make_task("something else", compute_something_else);
-    auto task3 = transwarp::make_task("adder", add_em_up, task1, task2);
-    task3->finalize();  // marking task3 as the final task
+    auto task3 = transwarp::make_final_task("adder", add_em_up, task1, task2);
     task3->set_parallel(4);  // turns on parallel execution with 4 threads for
                              // tasks that do not depend on each other
 
