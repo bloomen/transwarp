@@ -36,6 +36,29 @@ struct edge {
     const transwarp::node* parent;
 };
 
+// An interface for the task class
+template<typename ResultType>
+class itask {
+public:
+    virtual ~itask() = default;
+    virtual std::shared_future<ResultType> get_future() const = 0;
+    virtual const transwarp::node& get_node() const = 0;
+};
+
+// An interface for the final_task class
+template<typename ResultType>
+class ifinal_task {
+public:
+    virtual ~ifinal_task() = default;
+    virtual std::shared_future<ResultType> get_future() const = 0;
+    virtual const transwarp::node& get_node() const = 0;
+    virtual void set_parallel(std::size_t n_threads) = 0;
+    virtual void schedule() = 0;
+    virtual void set_pause(bool enabled) = 0;
+    virtual void set_cancel(bool enabled) = 0;
+    virtual std::vector<transwarp::edge> get_graph() = 0;
+};
+
 // Base class for exceptions
 class transwarp_error : public std::runtime_error {
 public:
@@ -278,6 +301,15 @@ struct unvisit_functor {
     }
 };
 
+struct validate_functor {
+    validate_functor() noexcept = default;
+    template<typename Task>
+    void operator()(Task*) const noexcept {
+        static_assert(!std::is_base_of<transwarp::ifinal_task<typename Task::result_type>, Task>::value,
+                      "input task cannot be a final task");
+    }
+};
+
 struct make_edges_functor {
     make_edges_functor(std::vector<transwarp::edge>& graph, transwarp::node& n) noexcept
     : graph_(graph), n_(n) {}
@@ -401,29 +433,6 @@ inline std::string make_dot(const std::vector<transwarp::edge>& graph) {
     return dot;
 }
 
-// An interface for the task class
-template<typename ResultType>
-class itask {
-public:
-    virtual ~itask() = default;
-    virtual std::shared_future<ResultType> get_future() const = 0;
-    virtual const transwarp::node& get_node() const = 0;
-};
-
-// An interface for the final_task class
-template<typename ResultType>
-class ifinal_task {
-public:
-    virtual ~ifinal_task() = default;
-    virtual std::shared_future<ResultType> get_future() const = 0;
-    virtual const transwarp::node& get_node() const = 0;
-    virtual void set_parallel(std::size_t n_threads) = 0;
-    virtual void schedule() = 0;
-    virtual void set_pause(bool enabled) = 0;
-    virtual void set_cancel(bool enabled) = 0;
-    virtual std::vector<transwarp::edge> get_graph() = 0;
-};
-
 // A task representing a piece work given by a functor and parent tasks.
 // Depending on how tasks are arranged they can be run in parallel by design
 // if set_parallel is called. If not, all tasks are run sequentially.
@@ -449,7 +458,9 @@ public:
       visited_(false),
       canceled_(false),
       paused_(false)
-    {}
+    {
+        transwarp::detail::apply(transwarp::detail::validate_functor(), tasks_);
+    }
 
     // Returns the future associated to the underlying execution
     std::shared_future<result_type> get_future() const override {
