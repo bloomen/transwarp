@@ -435,11 +435,8 @@ inline std::string make_dot(const std::vector<transwarp::edge>& graph) {
 }
 
 // A task representing a piece work given by a functor and parent tasks.
-// Depending on how tasks are arranged they can be run in parallel by design
-// if set_parallel is called. If not, all tasks are run sequentially.
-// Tasks may run in parallel when they do not depend on each other.
 // By connecting tasks a directed acyclic graph is built.
-// Note that the task class is currently not thread-safe, i.e., all methods
+// Note that this class is currently not thread-safe, i.e., all methods
 // should be called from the same thread.
 template<typename Functor, typename... Tasks>
 class task : public transwarp::itask<typename std::result_of<Functor(typename Tasks::result_type...)>::type>,
@@ -476,7 +473,6 @@ public:
     // Visits each task in a depth-first traversal. The pre_visitor is called
     // before traversing through parents and the post_visitor after. A visitor
     // takes a pointer to a task (task*) as its only input argument.
-    // Only to be called by the final task.
     template<typename PreVisitor, typename PostVisitor>
     void visit(PreVisitor& pre_visitor, PostVisitor& post_visitor) {
         if (!visited_) {
@@ -488,7 +484,6 @@ public:
     }
 
     // Traverses through all tasks and marks them as not visited.
-    // Only to be called by the final task.
     void unvisit() {
         if (visited_) {
             visited_ = false;
@@ -534,6 +529,12 @@ protected:
     std::shared_ptr<transwarp::detail::thread_pool> pool_;
 };
 
+// The final task is the very last task in the graph. The final task has no children.
+// Depending on how tasks are arranged they can be run in parallel by design
+// if set_parallel is called. If not, all tasks are run sequentially.
+// Tasks may run in parallel when they do not depend on each other.
+// Note that this class is currently not thread-safe, i.e., all methods
+// should be called from the same thread.
 template<typename Functor, typename... Tasks>
 class final_task : public transwarp::task<Functor, Tasks...>,
                    public transwarp::ifinal_task<typename transwarp::task<Functor, Tasks...>::result_type> {
