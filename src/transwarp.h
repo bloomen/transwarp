@@ -458,8 +458,7 @@ public:
       functor_(std::move(functor)),
       tasks_(std::make_tuple(std::move(tasks)...)),
       visited_(false),
-      canceled_(false),
-      paused_(false)
+      canceled_(false)
     {
         transwarp::detail::apply(transwarp::detail::validate_functor(), tasks_);
     }
@@ -536,7 +535,6 @@ protected:
     std::tuple<std::shared_ptr<Tasks>...> tasks_;
     bool visited_;
     std::atomic_bool canceled_;
-    std::atomic_bool paused_;
     std::shared_future<result_type> future_;
     std::shared_ptr<transwarp::detail::thread_pool> pool_;
 };
@@ -559,7 +557,8 @@ public:
     // A task is defined by its name (can be empty), a function object, and
     // an arbitrary number of parent tasks
     final_task(std::string name, Functor functor, std::shared_ptr<Tasks>... tasks)
-    : transwarp::task<Functor, Tasks...>(std::move(name), std::move(functor), std::move(tasks)...)
+    : transwarp::task<Functor, Tasks...>(std::move(name), std::move(functor), std::move(tasks)...),
+      paused_(false)
     {
         std::size_t id = 0;
         transwarp::pass_visitor pass;
@@ -616,7 +615,7 @@ public:
                 }
             } else {
                 for (const auto& callback : callbacks) {
-                    while (this->paused_) {};
+                    while (paused_) {};
                     callback();
                 }
             }
@@ -628,9 +627,9 @@ public:
     // then a call to schedule will queue up new tasks in the underlying thread
     // pool but not process them. Pausing does not affect currently running tasks.
     void set_pause(bool enabled) override {
-        this->paused_ = enabled;
+        paused_ = enabled;
         if (this->pool_)
-            this->pool_->set_pause(this->paused_.load());
+            this->pool_->set_pause(paused_.load());
     }
 
     // If enabled then all pending tasks are canceled which will
@@ -680,6 +679,7 @@ protected:
         return callbacks;
     }
 
+    std::atomic_bool paused_;
     std::vector<transwarp::detail::priority_functor> functors_;
 };
 
