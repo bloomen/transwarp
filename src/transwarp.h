@@ -319,8 +319,6 @@ struct final_visitor {
         task->node_.id = id_++;
         if (task->node_.name.empty())
             task->node_.name = "task" + std::to_string(task->node_.id);
-        if (task->finalized_)
-            throw transwarp::task_error("Found already finalized task: " + task->node_.name);
         transwarp::detail::apply(transwarp::detail::make_parents_functor(task->node_), task->tasks_);
     }
     std::size_t& id_;
@@ -408,13 +406,21 @@ template<typename ResultType>
 class itask {
 public:
     virtual ~itask() = default;
-    virtual void finalize() = 0;
+    virtual std::shared_future<ResultType> get_future() const = 0;
+    virtual const transwarp::node& get_node() const = 0;
+};
+
+// An interface for the final_task class
+template<typename ResultType>
+class ifinal_task {
+public:
+    virtual ~ifinal_task() = default;
+    virtual std::shared_future<ResultType> get_future() const = 0;
+    virtual const transwarp::node& get_node() const = 0;
     virtual void set_parallel(std::size_t n_threads) = 0;
     virtual void schedule() = 0;
     virtual void set_pause(bool enabled) = 0;
     virtual void set_cancel(bool enabled) = 0;
-    virtual std::shared_future<ResultType> get_future() const = 0;
-    virtual const transwarp::node& get_node() const = 0;
     virtual std::vector<transwarp::edge> get_graph() = 0;
 };
 
@@ -441,90 +447,9 @@ public:
       functor_(std::move(functor)),
       tasks_(std::make_tuple(std::move(tasks)...)),
       visited_(false),
-      finalized_(false),
       canceled_(false),
       paused_(false)
     {}
-
-    // Finalizes the task which must only be called by the final task.
-    // The final task does not have any children.
-    void finalize() override {
-        std::size_t id = 0;
-        transwarp::pass_visitor pass;
-        transwarp::detail::final_visitor pre_visitor(id);
-        visit(pre_visitor, pass);
-        unvisit();
-        transwarp::detail::find_levels(&node_);
-        finalized_ = true;
-    }
-
-    // If n_threads > 0 then assigns a parallel execution to the final task
-    // and all its parent tasks. If n_threads == 0 then the parallel execution
-    // is removed. Only to be called by the final task.
-    void set_parallel(std::size_t n_threads) override {
-        check_is_finalized();
-        transwarp::pass_visitor pass;
-        if (n_threads > 0) {
-            auto pool = std::make_shared<transwarp::detail::thread_pool>(n_threads);
-            transwarp::detail::set_pool_visitor pre_visitor(std::move(pool));
-            visit(pre_visitor, pass);
-        } else {
-            transwarp::detail::reset_pool_visitor pre_visitor;
-            visit(pre_visitor, pass);
-        }
-        unvisit();
-    }
-
-    // Schedules the final task and all its parent tasks for execution.
-    // The execution is either sequential or in parallel.
-    // Only to be called by the final task.
-    void schedule() override {
-        check_is_finalized();
-        if (!canceled_) {
-            transwarp::pass_visitor pass;
-            std::priority_queue<transwarp::detail::priority_functor> queue;
-            transwarp::detail::callback_visitor post_visitor(queue);
-            visit(pass, post_visitor);
-            unvisit();
-            if (pool_) {
-                while (!queue.empty()) {
-                    pool_->push(queue.top());
-                    queue.pop();
-                }
-            } else {
-                while (!queue.empty()) {
-                    while (paused_) {};
-                    queue.top()();
-                    queue.pop();
-                }
-            }
-        }
-    }
-
-    // If enabled then all pending tasks are paused. If running sequentially
-    // then a call to schedule will block indefinitely. If running in parallel
-    // then a call to schedule will queue up new tasks in the underlying thread
-    // pool but not process them. Pausing does not affect currently running tasks.
-    // Only to be called by the final task
-    void set_pause(bool enabled) override {
-        check_is_finalized();
-        paused_ = enabled;
-        if (pool_)
-            pool_->set_pause(paused_.load());
-    }
-
-    // If enabled then all pending tasks are canceled which will
-    // throw transwarp::task_canceled when asking a future for its result.
-    // Canceling pending tasks does not affect currently running tasks.
-    // As long as cancel is enabled new computations cannot be scheduled.
-    // Only to be called by the final task
-    void set_cancel(bool enabled) override {
-        check_is_finalized();
-        transwarp::pass_visitor pass;
-        transwarp::detail::canceled_visitor pre_visitor(enabled);
-        visit(pre_visitor, pass);
-        unvisit();
-    }
 
     // Returns the future associated to the underlying execution
     std::shared_future<result_type> get_future() const override {
@@ -534,20 +459,6 @@ public:
     // Returns the associated node
     const transwarp::node& get_node() const override {
         return node_;
-    }
-
-    // Creates a graph of the task structure. This is mainly for visualizing
-    // the tasks and their interdependencies. Pass the result into make_dot_graph
-    // to retrieve a dot-style graph representation for easy viewing.
-    // Only to be called by the final task.
-    std::vector<transwarp::edge> get_graph() override {
-        check_is_finalized();
-        std::vector<transwarp::edge> graph;
-        transwarp::pass_visitor pass;
-        transwarp::detail::graph_visitor pre_visitor(graph);
-        visit(pre_visitor, pass);
-        unvisit();
-        return graph;
     }
 
     // Visits each task in a depth-first traversal. The pre_visitor is called
@@ -583,7 +494,7 @@ public:
         return tasks_;
     }
 
-private:
+protected:
 
     friend struct transwarp::detail::make_edges_functor;
     friend struct transwarp::detail::make_parents_functor;
@@ -601,32 +512,145 @@ private:
         return transwarp::detail::call<result_type>(task->functor_, std::move(futures));
     }
 
-    void check_is_finalized() const {
-        if (!finalized_)
-            throw transwarp::task_error("task is not finalized: " + node_.name);
-    }
-
     transwarp::node node_;
     Functor functor_;
     std::tuple<std::shared_ptr<Tasks>...> tasks_;
     bool visited_;
-    bool finalized_;
     std::atomic_bool canceled_;
     std::atomic_bool paused_;
     std::shared_future<result_type> future_;
     std::shared_ptr<transwarp::detail::thread_pool> pool_;
 };
 
-// A factory function to easily create new tasks
+template<typename Functor, typename... Tasks>
+class final_task : public transwarp::task<Functor, Tasks...>,
+                   public transwarp::ifinal_task<typename transwarp::task<Functor, Tasks...>::result_type> {
+public:
+    // This is the result type of this final task.
+    // Getting a compiler error here means that the result types of the parent tasks
+    // do not match or cannot be converted into the functor's parameters of this task
+    using result_type = typename transwarp::task<Functor, Tasks...>::result_type;
+
+    // A task is defined by its name (can be empty), a function object, and
+    // an arbitrary number of parent tasks
+    final_task(std::string name, Functor functor, std::shared_ptr<Tasks>... tasks)
+    : transwarp::task<Functor, Tasks...>(std::move(name), std::move(functor), std::move(tasks)...)
+    {
+        std::size_t id = 0;
+        transwarp::pass_visitor pass;
+        transwarp::detail::final_visitor pre_visitor(id);
+        this->visit(pre_visitor, pass);
+        this->unvisit();
+        transwarp::detail::find_levels(&this->node_);
+    }
+
+    // Returns the future associated to the underlying execution
+    std::shared_future<result_type> get_future() const override {
+        return this->future_;
+    }
+
+    // Returns the associated node
+    const transwarp::node& get_node() const override {
+        return this->node_;
+    }
+
+    // If n_threads > 0 then assigns a parallel execution to the final task
+    // and all its parent tasks. If n_threads == 0 then the parallel execution
+    // is removed.
+    void set_parallel(std::size_t n_threads) override {
+        transwarp::pass_visitor pass;
+        if (n_threads > 0) {
+            auto pool = std::make_shared<transwarp::detail::thread_pool>(n_threads);
+            transwarp::detail::set_pool_visitor pre_visitor(std::move(pool));
+            this->visit(pre_visitor, pass);
+        } else {
+            transwarp::detail::reset_pool_visitor pre_visitor;
+            this->visit(pre_visitor, pass);
+        }
+        this->unvisit();
+    }
+
+    // Schedules the final task and all its parent tasks for execution.
+    // The execution is either sequential or in parallel.
+    void schedule() override {
+        if (!this->canceled_) {
+            transwarp::pass_visitor pass;
+            std::priority_queue<transwarp::detail::priority_functor> queue;
+            transwarp::detail::callback_visitor post_visitor(queue);
+            this->visit(pass, post_visitor);
+            this->unvisit();
+            if (this->pool_) {
+                while (!queue.empty()) {
+                    this->pool_->push(queue.top());
+                    queue.pop();
+                }
+            } else {
+                while (!queue.empty()) {
+                    while (this->paused_) {};
+                    queue.top()();
+                    queue.pop();
+                }
+            }
+        }
+    }
+
+    // If enabled then all pending tasks are paused. If running sequentially
+    // then a call to schedule will block indefinitely. If running in parallel
+    // then a call to schedule will queue up new tasks in the underlying thread
+    // pool but not process them. Pausing does not affect currently running tasks.
+    void set_pause(bool enabled) override {
+        this->paused_ = enabled;
+        if (this->pool_)
+            this->pool_->set_pause(this->paused_.load());
+    }
+
+    // If enabled then all pending tasks are canceled which will
+    // throw transwarp::task_canceled when asking a future for its result.
+    // Canceling pending tasks does not affect currently running tasks.
+    // As long as cancel is enabled new computations cannot be scheduled.
+    void set_cancel(bool enabled) override {
+        transwarp::pass_visitor pass;
+        transwarp::detail::canceled_visitor pre_visitor(enabled);
+        this->visit(pre_visitor, pass);
+        this->unvisit();
+    }
+
+    // Creates a graph of the task structure. This is mainly for visualizing
+    // the tasks and their interdependencies. Pass the result into transwarp::make_dot
+    // to retrieve a dot-style graph representation for easy viewing.
+    std::vector<transwarp::edge> get_graph() override {
+        std::vector<transwarp::edge> graph;
+        transwarp::pass_visitor pass;
+        transwarp::detail::graph_visitor pre_visitor(graph);
+        this->visit(pre_visitor, pass);
+        this->unvisit();
+        return graph;
+    }
+
+};
+
+// A factory function to create a new task
 template<typename Functor, typename... Tasks>
 std::shared_ptr<transwarp::task<Functor, Tasks...>> make_task(std::string name, Functor functor, std::shared_ptr<Tasks>... tasks) {
     return std::make_shared<transwarp::task<Functor, Tasks...>>(std::move(name), std::move(functor), std::move(tasks)...);
 }
 
-// A factory function to easily create new tasks. Overload for auto-naming
+// A factory function to create a new task. Overload for auto-naming
 template<typename Functor, typename... Tasks>
 std::shared_ptr<transwarp::task<Functor, Tasks...>> make_task(Functor functor, std::shared_ptr<Tasks>... tasks) {
     return make_task("", std::move(functor), std::move(tasks)...);
+}
+
+// A factory function to create a new final task
+template<typename Functor, typename... Tasks>
+std::shared_ptr<transwarp::final_task<Functor, Tasks...>> make_final_task(std::string name, Functor functor, std::shared_ptr<Tasks>... tasks) {
+    return std::make_shared<transwarp::final_task<Functor, Tasks...>>(std::move(name), std::move(functor), std::move(tasks)...);
+}
+
+// A factory function to create a new final task. Overload for auto-naming
+template<typename Functor, typename... Tasks>
+std::shared_ptr<transwarp::final_task<Functor, Tasks...>> make_final_task(Functor functor, std::shared_ptr<Tasks>... tasks) {
+    return make_final_task("", std::move(functor), std::move(tasks)...);
 }
 
 
