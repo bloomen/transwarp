@@ -383,12 +383,12 @@ struct callback_visitor {
     template<typename Task>
     void operator()(Task* task) const noexcept {
         auto shared_task = task->shared_from_this();
-        auto functor = [shared_task]() {
+        auto functor = [shared_task] {
             auto futures = transwarp::detail::get_futures(shared_task->tasks_);
             auto pack_task = std::make_shared<std::packaged_task<typename Task::result_type()>>(
                                   std::bind(&Task::evaluate, shared_task, std::move(futures)));
             shared_task->future_ = pack_task->get_future();
-            return [pack_task]{ (*pack_task)(); };
+            return [pack_task] { (*pack_task)(); };
         };
         queue_.emplace(std::move(functor), task->node_.level, task->node_.id);
     }
@@ -608,13 +608,12 @@ public:
         if (functors_.empty())
             prepare_functors();
         if (!this->canceled_) {
-            const auto callbacks = make_callbacks();
             if (this->pool_) {
-                for (const auto& callback : callbacks) {
+                for (const auto& callback : make_callbacks()) {
                     this->pool_->push(callback);
                 }
             } else {
-                for (const auto& callback : callbacks) {
+                for (const auto& callback : make_callbacks()) {
                     while (paused_) {};
                     callback();
                 }
