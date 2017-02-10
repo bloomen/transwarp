@@ -584,7 +584,7 @@ public:
     }
 
     // Schedules the final task and all its parent tasks for execution.
-    // The execution is either sequential or in parallel.
+    // The execution is either sequential or in parallel. Complexity is n*log(n)
     void schedule() override {
         if (!this->canceled_) {
             transwarp::pass_visitor pass;
