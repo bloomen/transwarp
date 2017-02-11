@@ -213,19 +213,19 @@ Result call(F&& f, Tuple&& t) {
             call<Result>(std::forward<F>(f), std::forward<Tuple>(t));
 }
 
-template<size_t ...> struct indices {};
+template<std::size_t ...> struct indices {};
 
-template<size_t ...> struct construct_range;
+template<std::size_t ...> struct construct_range;
 
-template< size_t end, size_t idx, size_t ...i >
+template<std::size_t end, std::size_t idx, std::size_t ...i >
 struct construct_range<end, idx, i...> : construct_range<end, idx+1, i..., idx> {};
 
-template< size_t end, size_t ...i >
+template<std::size_t end, std::size_t ...i >
 struct construct_range< end, end, i... > {
     typedef transwarp::detail::indices< i... > type;
 };
 
-template<size_t b, size_t e>
+template<std::size_t b, std::size_t e>
 struct index_range {
     typedef typename transwarp::detail::construct_range<e, b>::type type;
 };
@@ -233,7 +233,7 @@ struct index_range {
 template<typename F, typename Tuple, typename ...Args>
 void tuple_for_each_index(transwarp::detail::indices<>, F&&, Tuple&&, Args&&...) {}
 
-template<size_t i, size_t ...j, typename F, typename Tuple, typename ...Args>
+template<std::size_t i, std::size_t ...j, typename F, typename Tuple, typename ...Args>
 void tuple_for_each_index(transwarp::detail::indices<i,j...>, F&& f, Tuple&& t, Args&&... args) {
     std::forward<F>(f)(std::get<i>(std::forward<Tuple>(t)).get(), std::forward<Args>(args)...);
     transwarp::detail::tuple_for_each_index(transwarp::detail::indices<j...>(),
