@@ -603,17 +603,19 @@ public:
     }
 
     // Schedules the final task and all its parent tasks for execution.
-    // The execution is either sequential or in parallel.
+    // The execution is either sequential or in parallel. Complexity is O(n)
+    // with n being the number of tasks in the graph
     void schedule() override {
         if (functors_.empty())
             prepare_functors();
         if (!this->canceled_) {
+            prepare_callbacks();
             if (this->pool_) {
-                for (const auto& callback : make_callbacks()) {
+                for (const auto& callback : callbacks_) {
                     this->pool_->push(callback);
                 }
             } else {
-                for (const auto& callback : make_callbacks()) {
+                for (const auto& callback : callbacks_) {
                     while (paused_) {};
                     callback();
                 }
@@ -667,19 +669,17 @@ protected:
             functors_.push_back(queue.top());
             queue.pop();
         }
+        callbacks_.resize(functors_.size());
     }
 
-    std::vector<std::function<void()>> make_callbacks() {
-        std::vector<std::function<void()>> callbacks;
-        callbacks.reserve(functors_.size());
-        for (const auto& functor : functors_) {
-            callbacks.push_back(functor());
-        }
-        return callbacks;
+    void prepare_callbacks() {
+        std::transform(functors_.begin(), functors_.end(), callbacks_.begin(),
+                [](const transwarp::detail::priority_functor& f) { return f(); });
     }
 
     std::atomic_bool paused_;
     std::vector<transwarp::detail::priority_functor> functors_;
+    std::vector<std::function<void()>> callbacks_;
 };
 
 // A factory function to create a new task
