@@ -12,5 +12,10 @@ if [ "$user_mode" = "debug" ];then
     opt=-O0
 fi
 
-echo "Compiling $cpp ..."
-g++ -std=c++11 $opt -g -lunittest -DUSE_LIBUNITTEST -pedantic -Wall -Wextra -Wconversion -pthread $examples $cpp -o ${cpp%.cpp}.$mode
+compiler=g++
+if [ "x$CXX" != "x" ];then
+	compiler=$CXX
+fi
+
+echo "Compiling $cpp with $compiler ..."
+$compiler -std=c++11 $opt -g -lunittest -DUSE_LIBUNITTEST -pedantic -Wall -Wextra -Wconversion -pthread $examples $cpp -o ${cpp%.cpp}.$mode
