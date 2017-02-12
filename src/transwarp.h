@@ -56,7 +56,7 @@ public:
     virtual void schedule() = 0;
     virtual void set_pause(bool enabled) = 0;
     virtual void set_cancel(bool enabled) = 0;
-    virtual std::vector<transwarp::edge> get_graph() = 0;
+    virtual const std::vector<transwarp::edge>& get_graph() const = 0;
 };
 
 // Base class for exceptions
@@ -66,38 +66,44 @@ public:
     : std::runtime_error(message) {}
 };
 
-// Exception thrown from a task
-class task_error : public transwarp::transwarp_error {
-public:
-    explicit task_error(const std::string& message)
-    : transwarp::transwarp_error(message) {}
-};
-
 // Exception thrown when a task is canceled
-class task_canceled : public transwarp::task_error {
+class task_canceled : public transwarp::transwarp_error {
 public:
     task_canceled(const transwarp::node& n)
-    : transwarp::task_error(n.name + " is canceled") {}
+    : transwarp::transwarp_error(n.name + " is canceled") {}
 };
 
 
 namespace detail {
 
+template<typename T, typename... Args>
+std::unique_ptr<T> make_unique_helper(std::false_type, Args&&... args) {
+    return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
+}
+
+template<typename T, typename... Args>
+std::unique_ptr<T> make_unique_helper(std::true_type, Args&&... args) {
+    static_assert(std::extent<T>::value == 0, "use make_unique<T[]>().");
+    typedef typename std::remove_extent<T>::type U;
+    return std::unique_ptr<T>(new U[sizeof...(Args)]{std::forward<Args>(args)...});
+}
+
+template<typename T, typename... Args>
+std::unique_ptr<T> make_unique(Args&&... args) {
+    return transwarp::detail::make_unique_helper<T>(std::is_array<T>(), std::forward<Args>(args)...);
+}
+
 class priority_functor {
 public:
 
     priority_functor() noexcept
-    : callback_{}, priority_{}, order_{} {}
+    : callback_{}, node_{0, 0, "", {}} {}
 
-    priority_functor(std::function<std::function<void()>()> callback, std::size_t priority, std::size_t order) noexcept
-    : callback_{std::move(callback)}, priority_{priority}, order_{order} {}
+    priority_functor(std::function<std::function<void()>()> callback, transwarp::node node) noexcept
+    : callback_(std::move(callback)), node_(std::move(node)) {}
 
-    bool operator<(const priority_functor& other) const noexcept {
-        if (priority_ == other.priority_) {
-            return order_ < other.order_;
-        } else {
-            return priority_ < other.priority_;
-        }
+    bool operator>(const priority_functor& other) const noexcept {
+        return std::tie(node_.level, node_.id) > std::tie(other.node_.level, other.node_.id);
     }
 
     std::function<void()> operator()() const {
@@ -106,8 +112,7 @@ public:
 
 private:
     std::function<std::function<void()>()> callback_;
-    std::size_t priority_;
-    std::size_t order_;
+    transwarp::node node_;
 };
 
 class thread_pool_error : public transwarp::transwarp_error {
@@ -275,40 +280,18 @@ inline std::string trim(const std::string &s, const std::string& chars=" \t\n\r"
     return std::string(it, std::find_if_not(s.rbegin(), std::string::const_reverse_iterator(it), functor).base());
 }
 
-inline void assign_levels(transwarp::node* final) noexcept {
-   std::queue<transwarp::node*> q;
-   std::queue<std::size_t> d;
-   q.push(final);
-   d.push(0);
-
-   while (!q.empty()) {
-       const auto current = q.front(); q.pop();
-       const auto depth = d.front(); d.pop();
-
-       for (auto n_const : current->parents) {
-           auto n = const_cast<transwarp::node*>(n_const);
-           n->level = depth + 1;
-           q.push(n);
-           d.push(n->level);
-       }
-   }
-}
-
-struct unvisit_functor {
-    unvisit_functor() noexcept = default;
+struct parent_functor {
+    explicit parent_functor(transwarp::node& node)
+    : node_(node) {}
     template<typename Task>
     void operator()(Task* task) const noexcept {
-        task->unvisit();
-    }
-};
-
-struct validate_functor {
-    validate_functor() noexcept = default;
-    template<typename Task>
-    void operator()(Task*) const noexcept {
         static_assert(!std::is_base_of<transwarp::ifinal_task<typename Task::result_type>, Task>::value,
                       "input task cannot be a final task");
+        if (node_.level < task->node_.level)
+            node_.level = task->node_.level;
+        node_.parents.push_back(&task->node_);
     }
+    transwarp::node& node_;
 };
 
 struct make_edges_functor {
@@ -319,16 +302,6 @@ struct make_edges_functor {
         graph_.push_back({&n_, &task->node_});
     }
     std::vector<transwarp::edge>& graph_;
-    transwarp::node& n_;
-};
-
-struct make_parents_functor {
-    explicit make_parents_functor(transwarp::node& n) noexcept
-    : n_(n) {}
-    template<typename Task>
-    void operator()(Task* task) const noexcept {
-        n_.parents.push_back(&task->node_);
-    }
     transwarp::node& n_;
 };
 
@@ -344,73 +317,31 @@ struct visit_functor {
     PostVisitor& post_visitor_;
 };
 
+struct unvisit_functor {
+    unvisit_functor() noexcept = default;
+    template<typename Task>
+    void operator()(Task* task) const noexcept {
+        task->unvisit();
+    }
+};
+
 struct final_visitor {
-    explicit final_visitor(std::size_t& id) noexcept
-    : id_(id) {}
+    final_visitor(std::size_t& id, std::vector<transwarp::detail::priority_functor>& functors,
+                  std::shared_ptr<std::atomic_bool>& canceled, std::vector<transwarp::edge>& graph) noexcept
+    : id_(id), functors_(functors), canceled_(canceled), graph_(graph) {}
     template<typename Task>
     void operator()(Task* task) const {
         task->node_.id = id_++;
         if (task->node_.name.empty())
             task->node_.name = "task" + std::to_string(task->node_.id);
-        transwarp::detail::apply(transwarp::detail::make_parents_functor(task->node_), task->tasks_);
-    }
-    std::size_t& id_;
-};
-
-struct canceled_visitor {
-    explicit canceled_visitor(bool enabled) noexcept
-    : canceled_(enabled) {}
-    template<typename Task>
-    void operator()(Task* task) const {
+        functors_.push_back(task->priority_functor_);
         task->canceled_ = canceled_;
-    }
-    bool canceled_;
-};
-
-struct graph_visitor {
-    explicit graph_visitor(std::vector<transwarp::edge>& graph) noexcept
-    : graph_(graph) {}
-    template<typename Task>
-    void operator()(Task* task) const noexcept {
         transwarp::detail::apply(transwarp::detail::make_edges_functor(graph_, task->node_), task->tasks_);
     }
+    std::size_t& id_;
+    std::vector<transwarp::detail::priority_functor>& functors_;
+    std::shared_ptr<std::atomic_bool>& canceled_;
     std::vector<transwarp::edge>& graph_;
-};
-
-struct callback_visitor {
-    explicit callback_visitor(std::priority_queue<transwarp::detail::priority_functor>& queue) noexcept
-    : queue_(queue) {}
-    template<typename Task>
-    void operator()(Task* task) const noexcept {
-        auto shared_task = task->shared_from_this();
-        auto functor = [shared_task] {
-            auto futures = transwarp::detail::get_futures(shared_task->tasks_);
-            auto pack_task = std::make_shared<std::packaged_task<typename Task::result_type()>>(
-                                  std::bind(&Task::evaluate, shared_task, std::move(futures)));
-            shared_task->future_ = pack_task->get_future();
-            return [pack_task] { (*pack_task)(); };
-        };
-        queue_.emplace(std::move(functor), task->node_.level, task->node_.id);
-    }
-    std::priority_queue<transwarp::detail::priority_functor>& queue_;
-};
-
-struct set_pool_visitor {
-    explicit set_pool_visitor(std::shared_ptr<transwarp::detail::thread_pool> pool) noexcept
-    : pool_(std::move(pool)) {}
-    template<typename Task>
-    void operator()(Task* task) const noexcept {
-        task->pool_ = pool_;
-    }
-    std::shared_ptr<transwarp::detail::thread_pool> pool_;
-};
-
-struct reset_pool_visitor {
-    reset_pool_visitor() noexcept = default;
-    template<typename Task>
-    void operator()(Task* task) const {
-        task->pool_.reset();
-    }
 };
 
 } // detail
@@ -443,8 +374,7 @@ inline std::string make_dot(const std::vector<transwarp::edge>& graph) {
 // Note that this class is currently not thread-safe, i.e., all methods
 // should be called from the same thread.
 template<typename Functor, typename... Tasks>
-class task : public transwarp::itask<typename std::result_of<Functor(typename Tasks::result_type...)>::type>,
-             public std::enable_shared_from_this<transwarp::task<Functor, Tasks...>> {
+class task : public transwarp::itask<typename std::result_of<Functor(typename Tasks::result_type...)>::type> {
 public:
     // This is the result type of this task.
     // Getting a compiler error here means that the result types of the parent tasks
@@ -458,9 +388,17 @@ public:
       functor_(std::move(functor)),
       tasks_(std::make_tuple(std::move(tasks)...)),
       visited_(false),
-      canceled_(false)
+      priority_functor_([this] {
+        auto functor = transwarp::detail::get_futures(tasks_);
+        auto pack_task = std::make_shared<std::packaged_task<result_type()>>(
+                std::bind(&task::evaluate, this, std::move(functor)));
+        future_ = pack_task->get_future();
+        return [pack_task] { (*pack_task)(); };
+      }, node_)
     {
-        transwarp::detail::apply(transwarp::detail::validate_functor(), tasks_);
+        transwarp::detail::apply(transwarp::detail::parent_functor(node_), tasks_);
+        if (sizeof...(Tasks) > 0)
+            ++node_.level;
     }
 
     virtual ~task() = default;
@@ -514,18 +452,13 @@ public:
 
 protected:
 
+    friend struct transwarp::detail::parent_functor;
     friend struct transwarp::detail::make_edges_functor;
-    friend struct transwarp::detail::make_parents_functor;
-    friend struct transwarp::detail::reset_pool_visitor;
-    friend struct transwarp::detail::set_pool_visitor;
-    friend struct transwarp::detail::graph_visitor;
-    friend struct transwarp::detail::callback_visitor;
     friend struct transwarp::detail::final_visitor;
-    friend struct transwarp::detail::canceled_visitor;
 
-    static result_type evaluate(std::shared_ptr<transwarp::task<Functor, Tasks...>> task,
+    static result_type evaluate(transwarp::task<Functor, Tasks...>* task,
                                 std::tuple<std::shared_future<typename Tasks::result_type>...> futures) {
-        if (task->canceled_)
+        if (*task->canceled_)
             throw transwarp::task_canceled(task->get_node());
         return transwarp::detail::call<result_type>(task->functor_, std::move(futures));
     }
@@ -534,9 +467,9 @@ protected:
     Functor functor_;
     std::tuple<std::shared_ptr<Tasks>...> tasks_;
     bool visited_;
-    std::atomic_bool canceled_;
+    transwarp::detail::priority_functor priority_functor_;
     std::shared_future<result_type> future_;
-    std::shared_ptr<transwarp::detail::thread_pool> pool_;
+    std::shared_ptr<std::atomic_bool> canceled_;
 };
 
 // The final task is the very last task in the graph. The final task has no children.
@@ -561,11 +494,14 @@ public:
       paused_(false)
     {
         std::size_t id = 0;
+        this->canceled_ = std::make_shared<std::atomic_bool>(false);
         transwarp::pass_visitor pass;
-        transwarp::detail::final_visitor pre_visitor(id);
-        this->visit(pre_visitor, pass);
+        transwarp::detail::final_visitor post_visitor(id, priority_functors_, this->canceled_, graph_);
+        this->visit(pass, post_visitor);
         this->unvisit();
-        transwarp::detail::assign_levels(&this->node_);
+        callbacks_.resize(id);
+        std::sort(priority_functors_.begin(), priority_functors_.end(),
+                  std::greater<transwarp::detail::priority_functor>());
     }
 
     virtual ~final_task() = default;
@@ -590,25 +526,18 @@ public:
     // and all its parent tasks. If n_threads == 0 then the parallel execution
     // is removed.
     void set_parallel(std::size_t n_threads) override {
-        transwarp::pass_visitor pass;
         if (n_threads > 0) {
-            auto pool = std::make_shared<transwarp::detail::thread_pool>(n_threads);
-            transwarp::detail::set_pool_visitor pre_visitor(std::move(pool));
-            this->visit(pre_visitor, pass);
+            pool_ = transwarp::detail::make_unique<transwarp::detail::thread_pool>(n_threads);
         } else {
-            transwarp::detail::reset_pool_visitor pre_visitor;
-            this->visit(pre_visitor, pass);
+            pool_.reset();
         }
-        this->unvisit();
     }
 
     // Schedules the final task and all its parent tasks for execution.
     // The execution is either sequential or in parallel. Complexity is O(n)
     // with n being the number of tasks in the graph
     void schedule() override {
-        if (functors_.empty())
-            prepare_functors();
-        if (!this->canceled_) {
+        if (!*this->canceled_) {
             prepare_callbacks();
             if (this->pool_) {
                 for (const auto& callback : callbacks_) {
@@ -638,48 +567,28 @@ public:
     // Canceling pending tasks does not affect currently running tasks.
     // As long as cancel is enabled new computations cannot be scheduled.
     void set_cancel(bool enabled) override {
-        transwarp::pass_visitor pass;
-        transwarp::detail::canceled_visitor pre_visitor(enabled);
-        this->visit(pre_visitor, pass);
-        this->unvisit();
+        *this->canceled_ = enabled;
     }
 
-    // Creates a graph of the task structure. This is mainly for visualizing
+    // Returns the graph of the task structure. This is mainly for visualizing
     // the tasks and their interdependencies. Pass the result into transwarp::make_dot
     // to retrieve a dot-style graph representation for easy viewing.
-    std::vector<transwarp::edge> get_graph() override {
-        std::vector<transwarp::edge> graph;
-        transwarp::pass_visitor pass;
-        transwarp::detail::graph_visitor pre_visitor(graph);
-        this->visit(pre_visitor, pass);
-        this->unvisit();
-        return graph;
+    const std::vector<transwarp::edge>& get_graph() const override {
+        return graph_;
     }
 
 protected:
 
-    void prepare_functors() {
-        transwarp::pass_visitor pass;
-        std::priority_queue<transwarp::detail::priority_functor> queue;
-        transwarp::detail::callback_visitor post_visitor(queue);
-        this->visit(pass, post_visitor);
-        this->unvisit();
-        functors_.reserve(queue.size());
-        while (!queue.empty()) {
-            functors_.push_back(queue.top());
-            queue.pop();
-        }
-        callbacks_.resize(functors_.size());
-    }
-
     void prepare_callbacks() {
-        std::transform(functors_.begin(), functors_.end(), callbacks_.begin(),
+        std::transform(priority_functors_.begin(), priority_functors_.end(), callbacks_.begin(),
                 [](const transwarp::detail::priority_functor& f) { return f(); });
     }
 
     std::atomic_bool paused_;
-    std::vector<transwarp::detail::priority_functor> functors_;
+    std::vector<transwarp::detail::priority_functor> priority_functors_;
     std::vector<std::function<void()>> callbacks_;
+    std::unique_ptr<transwarp::detail::thread_pool> pool_;
+    std::vector<transwarp::edge> graph_;
 };
 
 // A factory function to create a new task

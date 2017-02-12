@@ -48,18 +48,18 @@ void make_test_three_tasks(std::size_t threads) {
 
     task3->set_parallel(threads);
 
-    ASSERT_EQUAL(1u, task1->get_node().id);
-    ASSERT_EQUAL(2u, task1->get_node().level);
+    ASSERT_EQUAL(0u, task1->get_node().id);
+    ASSERT_EQUAL(0u, task1->get_node().level);
     ASSERT_EQUAL(0u, task1->get_node().parents.size());
     ASSERT_EQUAL("t1", task1->get_node().name);
 
-    ASSERT_EQUAL(2u, task2->get_node().id);
+    ASSERT_EQUAL(1u, task2->get_node().id);
     ASSERT_EQUAL(1u, task2->get_node().level);
     ASSERT_EQUAL(1u, task2->get_node().parents.size());
     ASSERT_EQUAL("\nt2\t", task2->get_node().name);
 
-    ASSERT_EQUAL(0u, task3->get_node().id);
-    ASSERT_EQUAL(0u, task3->get_node().level);
+    ASSERT_EQUAL(2u, task3->get_node().id);
+    ASSERT_EQUAL(2u, task3->get_node().level);
     ASSERT_EQUAL(2u, task3->get_node().parents.size());
     ASSERT_EQUAL("t3 ", task3->get_node().name);
 
@@ -79,14 +79,14 @@ void make_test_three_tasks(std::size_t threads) {
 
     const std::string exp_dot_graph = "digraph {\n"
 "\"t1\n"
-"id 1 level 2 parents 0\" -> \"t3\n"
-"id 0 level 0 parents 2\"\n"
-"\"t2\n"
-"id 2 level 1 parents 1\" -> \"t3\n"
-"id 0 level 0 parents 2\"\n"
+"id 0 level 0 parents 0\" -> \"t2\n"
+"id 1 level 1 parents 1\"\n"
 "\"t1\n"
-"id 1 level 2 parents 0\" -> \"t2\n"
-"id 2 level 1 parents 1\"\n"
+"id 0 level 0 parents 0\" -> \"t3\n"
+"id 2 level 2 parents 2\"\n"
+"\"t2\n"
+"id 1 level 1 parents 1\" -> \"t3\n"
+"id 2 level 2 parents 2\"\n"
 "}\n";
 
     ASSERT_EQUAL(exp_dot_graph, dot_graph);
@@ -159,10 +159,11 @@ TEST(transwarp_error) {
     }
 }
 
-TEST(task_error) {
-    const std::string msg = "text";
+TEST(task_canceled) {
+    const std::string msg = "cool is canceled";
+    const transwarp::node node{1, 2, "cool", {}};
     try {
-        throw transwarp::task_error(msg);
+        throw transwarp::task_canceled(node);
     } catch (const transwarp::transwarp_error& e) {
         ASSERT_EQUAL(msg, e.what());
     }
@@ -232,23 +233,23 @@ TEST(get_node) {
     auto task3 = make_final_task(f3, task1, task2);
 
     // task3
-    ASSERT_EQUAL(0, task3->get_node().id);
-    ASSERT_EQUAL(0, task3->get_node().level);
-    ASSERT_EQUAL("task0", task3->get_node().name);
+    ASSERT_EQUAL(2, task3->get_node().id);
+    ASSERT_EQUAL(1, task3->get_node().level);
+    ASSERT_EQUAL("task2", task3->get_node().name);
     ASSERT_EQUAL(2u, task3->get_node().parents.size());
     ASSERT_EQUAL(&task1->get_node(), task3->get_node().parents[0]);
     ASSERT_EQUAL(&task2->get_node(), task3->get_node().parents[1]);
 
     // task1
-    ASSERT_EQUAL(1, task1->get_node().id);
-    ASSERT_EQUAL(1, task1->get_node().level);
-    ASSERT_EQUAL("task1", task1->get_node().name);
+    ASSERT_EQUAL(0, task1->get_node().id);
+    ASSERT_EQUAL(0, task1->get_node().level);
+    ASSERT_EQUAL("task0", task1->get_node().name);
     ASSERT_EQUAL(0u, task1->get_node().parents.size());
 
     // task2
-    ASSERT_EQUAL(2, task2->get_node().id);
-    ASSERT_EQUAL(1, task2->get_node().level);
-    ASSERT_EQUAL("task2", task2->get_node().name);
+    ASSERT_EQUAL(1, task2->get_node().id);
+    ASSERT_EQUAL(0, task2->get_node().level);
+    ASSERT_EQUAL("task1", task2->get_node().name);
     ASSERT_EQUAL(0u, task2->get_node().parents.size());
 }
 
@@ -290,8 +291,8 @@ TEST(visit_and_unvisit) {
     level_visitor post;
 
     task3->visit(pre, post);
-    ASSERT_EQUAL(4, pre.count);
-    ASSERT_EQUAL(4, post.count);
+    ASSERT_EQUAL(6, pre.count);
+    ASSERT_EQUAL(2, post.count);
 
     pre.count = 1;
     post.count = 1;
@@ -303,8 +304,8 @@ TEST(visit_and_unvisit) {
     task3->unvisit();
 
     task3->visit(pre, post);
-    ASSERT_EQUAL(4, pre.count);
-    ASSERT_EQUAL(4, post.count);
+    ASSERT_EQUAL(6, pre.count);
+    ASSERT_EQUAL(2, post.count);
 }
 
 void make_test_task_with_exception_thrown(std::size_t threads) {
