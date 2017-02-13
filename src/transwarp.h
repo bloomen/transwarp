@@ -284,7 +284,7 @@ struct parent_functor {
     explicit parent_functor(transwarp::node& node)
     : node_(node) {}
     template<typename Task>
-    void operator()(Task* task) const noexcept {
+    void operator()(const Task* task) const noexcept {
         static_assert(!std::is_base_of<transwarp::ifinal_task<typename Task::result_type>, Task>::value,
                       "input task cannot be a final task");
         if (node_.level < task->node_.level)
@@ -294,15 +294,15 @@ struct parent_functor {
     transwarp::node& node_;
 };
 
-struct make_edges_functor {
-    make_edges_functor(std::vector<transwarp::edge>& graph, transwarp::node& n) noexcept
+struct edges_functor {
+    edges_functor(std::vector<transwarp::edge>& graph, const transwarp::node& n) noexcept
     : graph_(graph), n_(n) {}
     template<typename Task>
-    void operator()(Task* task) const noexcept {
+    void operator()(const Task* task) const noexcept {
         graph_.push_back({&n_, &task->node_});
     }
     std::vector<transwarp::edge>& graph_;
-    transwarp::node& n_;
+    const transwarp::node& n_;
 };
 
 template<typename PreVisitor, typename PostVisitor>
@@ -327,7 +327,7 @@ struct unvisit_functor {
 
 struct final_visitor {
     final_visitor(std::size_t& id, std::vector<transwarp::detail::priority_functor>& functors,
-                  std::shared_ptr<std::atomic_bool>& canceled, std::vector<transwarp::edge>& graph) noexcept
+                  const std::shared_ptr<std::atomic_bool>& canceled, std::vector<transwarp::edge>& graph) noexcept
     : id_(id), functors_(functors), canceled_(canceled), graph_(graph) {}
     template<typename Task>
     void operator()(Task* task) const {
@@ -336,11 +336,11 @@ struct final_visitor {
             task->node_.name = "task" + std::to_string(task->node_.id);
         functors_.push_back(task->priority_functor_);
         task->canceled_ = canceled_;
-        transwarp::detail::apply(transwarp::detail::make_edges_functor(graph_, task->node_), task->tasks_);
+        transwarp::detail::apply(transwarp::detail::edges_functor(graph_, task->node_), task->tasks_);
     }
     std::size_t& id_;
     std::vector<transwarp::detail::priority_functor>& functors_;
-    std::shared_ptr<std::atomic_bool>& canceled_;
+    const std::shared_ptr<std::atomic_bool>& canceled_;
     std::vector<transwarp::edge>& graph_;
 };
 
@@ -453,7 +453,7 @@ public:
 protected:
 
     friend struct transwarp::detail::parent_functor;
-    friend struct transwarp::detail::make_edges_functor;
+    friend struct transwarp::detail::edges_functor;
     friend struct transwarp::detail::final_visitor;
 
     static result_type evaluate(transwarp::task<Functor, Tasks...>* task,
