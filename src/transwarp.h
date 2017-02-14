@@ -499,7 +499,7 @@ public:
         transwarp::detail::final_visitor post_visitor(id, priority_functors_, this->canceled_, graph_);
         this->visit(pass, post_visitor);
         this->unvisit();
-        callbacks_.resize(id);
+        callbacks_.resize(priority_functors_.size());
         std::sort(priority_functors_.begin(), priority_functors_.end(),
                   std::greater<transwarp::detail::priority_functor>());
     }
