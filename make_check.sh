@@ -4,7 +4,7 @@ thisdir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 compiler=g++
 if [ "x$1" != "x" ];then
-	compiler=$1
+    compiler=$1
 fi
 export CXX=$compiler
 

@@ -14,7 +14,7 @@ fi
 
 compiler=g++
 if [ "x$CXX" != "x" ];then
-	compiler=$CXX
+    compiler=$CXX
 fi
 
 echo "Compiling $cpp with $compiler ..."
