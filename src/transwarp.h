@@ -539,9 +539,9 @@ public:
     void schedule() override {
         if (!*this->canceled_) {
             prepare_callbacks();
-            if (this->pool_) {
+            if (pool_) {
                 for (const auto& callback : callbacks_) {
-                    this->pool_->push(callback);
+                    pool_->push(callback);
                 }
             } else {
                 for (const auto& callback : callbacks_) {
@@ -558,8 +558,8 @@ public:
     // pool but not process them. Pausing does not affect currently running tasks.
     void set_pause(bool enabled) override {
         paused_ = enabled;
-        if (this->pool_)
-            this->pool_->set_pause(paused_.load());
+        if (pool_)
+            pool_->set_pause(paused_.load());
     }
 
     // If enabled then all pending tasks are canceled which will
