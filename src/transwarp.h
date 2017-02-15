@@ -440,16 +440,6 @@ public:
         }
     }
 
-    // Returns the functor
-    Functor get_functor() const {
-        return functor_;
-    }
-
-    // Returns the parent tasks
-    std::tuple<std::shared_ptr<Tasks>...> get_tasks() const {
-        return tasks_;
-    }
-
 protected:
 
     friend struct transwarp::detail::parent_functor;

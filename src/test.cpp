@@ -203,27 +203,6 @@ TEST(make_dot_graph_with_three_nodes) {
     ASSERT_EQUAL(exp_dot_graph, dot_graph);
 }
 
-TEST(get_functor) {
-    auto f1 = [] { return 42; };
-    auto task1 = make_task(f1);
-    ASSERT_TRUE(f1 == task1->get_functor());
-}
-
-TEST(get_tasks) {
-    auto f1 = [] { return 42; };
-    auto task1 = make_task(f1);
-    static_assert(std::tuple_size<decltype(task1->get_tasks())>::value == 0, "");
-    auto f2 = [] { return 13; };
-    auto task2 = make_task(f2);
-    static_assert(std::tuple_size<decltype(task2->get_tasks())>::value == 0, "");
-    auto f3 = [](int v, int w) { return v + w; };
-    auto task3 = make_task(f3, task1, task2);
-    static_assert(std::tuple_size<decltype(task3->get_tasks())>::value == 2, "");
-    auto tasks = task3->get_tasks();
-    ASSERT_EQUAL(task1.get(), std::get<0>(tasks).get());
-    ASSERT_EQUAL(task2.get(), std::get<1>(tasks).get());
-}
-
 TEST(get_node) {
     auto f1 = [] { return 42; };
     auto task1 = make_task(f1);
