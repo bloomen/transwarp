@@ -209,11 +209,6 @@ TEST(get_functor) {
     ASSERT_TRUE(f1 == task1->get_functor());
 }
 
-//template<typename T>
-//struct parents {
-//    static const std::size_t count = std::tuple_size<typename std::decay<T>::type>::value;
-//};
-
 template<typename Task>
 constexpr std::size_t n_parents() {
     using result_t = decltype(std::declval<Task>().get_tasks());
