@@ -211,11 +211,11 @@ TEST(get_functor) {
 
 template<typename Task>
 constexpr std::size_t n_parents() {
-    using result_t = decltype(std::declval<Task>().get_tasks());
+    using result_t = decltype(std::declval<Task>().get_parents());
     return std::tuple_size<typename std::decay<result_t>::type>::value;
 }
 
-TEST(get_tasks) {
+TEST(get_parents) {
     auto f1 = [] { return 42; };
     auto task1 = make_task(f1);
     static_assert(n_parents<decltype(*task1)>() == 0, "");
@@ -225,7 +225,7 @@ TEST(get_tasks) {
     auto f3 = [](int v, int w) { return v + w; };
     auto task3 = make_task(f3, task1, task2);
     static_assert(n_parents<decltype(*task3)>() == 2, "");
-    auto tasks = task3->get_tasks();
+    auto tasks = task3->get_parents();
     ASSERT_EQUAL(task1.get(), std::get<0>(tasks).get());
     ASSERT_EQUAL(task2.get(), std::get<1>(tasks).get());
 }

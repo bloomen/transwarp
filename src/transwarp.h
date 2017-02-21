@@ -336,7 +336,7 @@ struct final_visitor {
             task->node_.name = "task" + std::to_string(task->node_.id);
         functors_.push_back(task->priority_functor_);
         task->canceled_ = canceled_;
-        transwarp::detail::apply(transwarp::detail::edges_functor(graph_, task->node_), task->tasks_);
+        transwarp::detail::apply(transwarp::detail::edges_functor(graph_, task->node_), task->parents_);
     }
     std::size_t& id_;
     std::vector<transwarp::detail::priority_functor>& functors_;
@@ -383,20 +383,20 @@ public:
 
     // A task is defined by its name (can be empty), a function object, and
     // an arbitrary number of parent tasks
-    task(std::string name, Functor functor, std::shared_ptr<Tasks>... tasks)
+    task(std::string name, Functor functor, std::shared_ptr<Tasks>... parents)
     : node_{0, 0, std::move(name), {}},
       functor_(std::move(functor)),
-      tasks_(std::make_tuple(std::move(tasks)...)),
+      parents_(std::make_tuple(std::move(parents)...)),
       visited_(false),
       priority_functor_([this] {
-        auto functor = transwarp::detail::get_futures(tasks_);
+        auto functor = transwarp::detail::get_futures(parents_);
         auto pack_task = std::make_shared<std::packaged_task<result_type()>>(
                 std::bind(&task::evaluate, this, std::move(functor)));
         future_ = pack_task->get_future();
         return [pack_task] { (*pack_task)(); };
       }, node_)
     {
-        transwarp::detail::apply(transwarp::detail::parent_functor(node_), tasks_);
+        transwarp::detail::apply(transwarp::detail::parent_functor(node_), parents_);
         if (sizeof...(Tasks) > 0)
             ++node_.level;
     }
@@ -426,7 +426,7 @@ public:
     void visit(PreVisitor& pre_visitor, PostVisitor& post_visitor) {
         if (!visited_) {
             pre_visitor(this);
-            transwarp::detail::apply(transwarp::detail::visit_functor<PreVisitor, PostVisitor>(pre_visitor, post_visitor), tasks_);
+            transwarp::detail::apply(transwarp::detail::visit_functor<PreVisitor, PostVisitor>(pre_visitor, post_visitor), parents_);
             post_visitor(this);
             visited_ = true;
         }
@@ -436,7 +436,7 @@ public:
     void unvisit() {
         if (visited_) {
             visited_ = false;
-            transwarp::detail::apply(transwarp::detail::unvisit_functor(), tasks_);
+            transwarp::detail::apply(transwarp::detail::unvisit_functor(), parents_);
         }
     }
 
@@ -446,8 +446,8 @@ public:
     }
 
     // Returns the parent tasks
-    const std::tuple<std::shared_ptr<Tasks>...>& get_tasks() const {
-        return tasks_;
+    const std::tuple<std::shared_ptr<Tasks>...>& get_parents() const {
+        return parents_;
     }
 
 protected:
@@ -465,7 +465,7 @@ protected:
 
     transwarp::node node_;
     Functor functor_;
-    std::tuple<std::shared_ptr<Tasks>...> tasks_;
+    std::tuple<std::shared_ptr<Tasks>...> parents_;
     bool visited_;
     transwarp::detail::priority_functor priority_functor_;
     std::shared_future<result_type> future_;
@@ -489,8 +489,8 @@ public:
 
     // A task is defined by its name (can be empty), a function object, and
     // an arbitrary number of parent tasks
-    final_task(std::string name, Functor functor, std::shared_ptr<Tasks>... tasks)
-    : transwarp::task<Functor, Tasks...>(std::move(name), std::move(functor), std::move(tasks)...),
+    final_task(std::string name, Functor functor, std::shared_ptr<Tasks>... parents)
+    : transwarp::task<Functor, Tasks...>(std::move(name), std::move(functor), std::move(parents)...),
       paused_(false)
     {
         std::size_t id = 0;
@@ -593,26 +593,26 @@ protected:
 
 // A factory function to create a new task
 template<typename Functor, typename... Tasks>
-std::shared_ptr<transwarp::task<Functor, Tasks...>> make_task(std::string name, Functor functor, std::shared_ptr<Tasks>... tasks) {
-    return std::make_shared<transwarp::task<Functor, Tasks...>>(std::move(name), std::move(functor), std::move(tasks)...);
+std::shared_ptr<transwarp::task<Functor, Tasks...>> make_task(std::string name, Functor functor, std::shared_ptr<Tasks>... parents) {
+    return std::make_shared<transwarp::task<Functor, Tasks...>>(std::move(name), std::move(functor), std::move(parents)...);
 }
 
 // A factory function to create a new task. Overload for auto-naming
 template<typename Functor, typename... Tasks>
-std::shared_ptr<transwarp::task<Functor, Tasks...>> make_task(Functor functor, std::shared_ptr<Tasks>... tasks) {
-    return make_task("", std::move(functor), std::move(tasks)...);
+std::shared_ptr<transwarp::task<Functor, Tasks...>> make_task(Functor functor, std::shared_ptr<Tasks>... parents) {
+    return make_task("", std::move(functor), std::move(parents)...);
 }
 
 // A factory function to create a new final task
 template<typename Functor, typename... Tasks>
-std::shared_ptr<transwarp::final_task<Functor, Tasks...>> make_final_task(std::string name, Functor functor, std::shared_ptr<Tasks>... tasks) {
-    return std::make_shared<transwarp::final_task<Functor, Tasks...>>(std::move(name), std::move(functor), std::move(tasks)...);
+std::shared_ptr<transwarp::final_task<Functor, Tasks...>> make_final_task(std::string name, Functor functor, std::shared_ptr<Tasks>... parents) {
+    return std::make_shared<transwarp::final_task<Functor, Tasks...>>(std::move(name), std::move(functor), std::move(parents)...);
 }
 
 // A factory function to create a new final task. Overload for auto-naming
 template<typename Functor, typename... Tasks>
-std::shared_ptr<transwarp::final_task<Functor, Tasks...>> make_final_task(Functor functor, std::shared_ptr<Tasks>... tasks) {
-    return make_final_task("", std::move(functor), std::move(tasks)...);
+std::shared_ptr<transwarp::final_task<Functor, Tasks...>> make_final_task(Functor functor, std::shared_ptr<Tasks>... parents) {
+    return make_final_task("", std::move(functor), std::move(parents)...);
 }
 
 
