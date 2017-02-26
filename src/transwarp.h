@@ -326,20 +326,20 @@ struct unvisit_functor {
 };
 
 struct final_visitor {
-    final_visitor(std::size_t& id, std::vector<transwarp::detail::priority_functor>& functors,
+    final_visitor(std::size_t& id, std::vector<transwarp::detail::priority_functor>& packagers,
                   const std::shared_ptr<std::atomic_bool>& canceled, std::vector<transwarp::edge>& graph) noexcept
-    : id_(id), functors_(functors), canceled_(canceled), graph_(graph) {}
+    : id_(id), packagers_(packagers), canceled_(canceled), graph_(graph) {}
     template<typename Task>
     void operator()(Task* task) const {
         task->node_.id = id_++;
         if (task->node_.name.empty())
             task->node_.name = "task" + std::to_string(task->node_.id);
-        functors_.push_back(task->priority_functor_);
+        packagers_.push_back(task->packager_);
         task->canceled_ = canceled_;
         transwarp::detail::apply(transwarp::detail::edges_functor(graph_, task->node_), task->parents_);
     }
     std::size_t& id_;
-    std::vector<transwarp::detail::priority_functor>& functors_;
+    std::vector<transwarp::detail::priority_functor>& packagers_;
     const std::shared_ptr<std::atomic_bool>& canceled_;
     std::vector<transwarp::edge>& graph_;
 };
@@ -388,7 +388,7 @@ public:
       functor_(std::move(functor)),
       parents_(std::make_tuple(std::move(parents)...)),
       visited_(false),
-      priority_functor_([this] {
+      packager_([this] {
         auto functor = transwarp::detail::get_futures(parents_);
         auto pack_task = std::make_shared<std::packaged_task<result_type()>>(
                 std::bind(&task::evaluate, this, std::move(functor)));
@@ -467,7 +467,7 @@ protected:
     Functor functor_;
     std::tuple<std::shared_ptr<Tasks>...> parents_;
     bool visited_;
-    transwarp::detail::priority_functor priority_functor_;
+    transwarp::detail::priority_functor packager_;
     std::shared_future<result_type> future_;
     std::shared_ptr<std::atomic_bool> canceled_;
 };
@@ -496,11 +496,11 @@ public:
         std::size_t id = 0;
         this->canceled_ = std::make_shared<std::atomic_bool>(false);
         transwarp::pass_visitor pass;
-        transwarp::detail::final_visitor post_visitor(id, priority_functors_, this->canceled_, graph_);
+        transwarp::detail::final_visitor post_visitor(id, packagers_, this->canceled_, graph_);
         this->visit(pass, post_visitor);
         this->unvisit();
-        callbacks_.resize(priority_functors_.size());
-        std::sort(priority_functors_.begin(), priority_functors_.end(),
+        callbacks_.resize(packagers_.size());
+        std::sort(packagers_.begin(), packagers_.end(),
                   std::greater<transwarp::detail::priority_functor>());
     }
 
@@ -580,12 +580,12 @@ public:
 protected:
 
     void prepare_callbacks() {
-        std::transform(priority_functors_.begin(), priority_functors_.end(), callbacks_.begin(),
-                [](const transwarp::detail::priority_functor& f) { return f(); });
+        std::transform(packagers_.begin(), packagers_.end(), callbacks_.begin(),
+                       [](const transwarp::detail::priority_functor& f) { return f(); });
     }
 
     std::atomic_bool paused_;
-    std::vector<transwarp::detail::priority_functor> priority_functors_;
+    std::vector<transwarp::detail::priority_functor> packagers_;
     std::vector<std::function<void()>> callbacks_;
     std::unique_ptr<transwarp::detail::thread_pool> pool_;
     std::vector<transwarp::edge> graph_;
