@@ -389,9 +389,9 @@ public:
       parents_(std::make_tuple(std::move(parents)...)),
       visited_(false),
       packager_([this] {
-        auto functor = transwarp::detail::get_futures(parents_);
+        auto futures = transwarp::detail::get_futures(parents_);
         auto pack_task = std::make_shared<std::packaged_task<result_type()>>(
-                std::bind(&task::evaluate, this, std::move(functor)));
+                std::bind(&task::evaluate, this, std::move(futures)));
         future_ = pack_task->get_future();
         return [pack_task] { (*pack_task)(); };
       }, node_)
