@@ -84,7 +84,7 @@ std::unique_ptr<T> make_unique_helper(std::false_type, Args&&... args) {
 template<typename T, typename... Args>
 std::unique_ptr<T> make_unique_helper(std::true_type, Args&&... args) {
     static_assert(std::extent<T>::value == 0, "use make_unique<T[]>().");
-    typedef typename std::remove_extent<T>::type U;
+    using U = typename std::remove_extent<T>::type;
     return std::unique_ptr<T>(new U[sizeof...(Args)]{std::forward<Args>(args)...});
 }
 
@@ -227,12 +227,12 @@ struct construct_range<end, idx, i...> : construct_range<end, idx+1, i..., idx> 
 
 template<std::size_t end, std::size_t ...i >
 struct construct_range< end, end, i... > {
-    typedef transwarp::detail::indices< i... > type;
+    using type = transwarp::detail::indices< i... >;
 };
 
 template<std::size_t b, std::size_t e>
 struct index_range {
-    typedef typename transwarp::detail::construct_range<e, b>::type type;
+    using type = typename transwarp::detail::construct_range<e, b>::type;
 };
 
 template<typename F, typename Tuple, typename ...Args>
@@ -249,7 +249,7 @@ template<typename F, typename Tuple, typename ...Args>
 void apply(F&& f, Tuple&& t, Args&&... args) {
     using ttype = typename std::decay<Tuple>::type;
     static const std::size_t n = std::tuple_size<ttype>::value;
-    typedef typename transwarp::detail::index_range<0, n>::type index_list;
+    using index_list = typename transwarp::detail::index_range<0, n>::type;
     transwarp::detail::tuple_for_each_index(index_list(),
             std::forward<F>(f), std::forward<Tuple>(t), std::forward<Args>(args)...);
 }
