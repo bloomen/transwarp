@@ -41,7 +41,7 @@ int main() {
     const auto graph = task3->get_graph();
     std::ofstream("basic_with_three_tasks.dot") << transwarp::make_dot(graph);
 
-    // task::schedule() can now be called as much as desired. The task graph
+    // schedule() can now be called as much as desired. The task graph
     // only has to be built once
 
     task3->schedule();  // schedules all tasks for execution, assigning a future to each task
