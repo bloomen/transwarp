@@ -473,8 +473,8 @@ protected:
 };
 
 // The final task is the very last task in the graph. The final task has no children.
-// Depending on how tasks are arranged they can be run in parallel by design
-// if set_parallel is called. If not, all tasks are run sequentially.
+// Depending on how tasks in the graph are arranged they can be run in parallel
+// by design if set_parallel is called. If not, all tasks are run sequentially.
 // Tasks may run in parallel when they do not depend on each other.
 // Note that this class is currently not thread-safe, i.e., all methods
 // should be called from the same thread.
@@ -487,7 +487,7 @@ public:
     // do not match or cannot be converted into the functor's parameters of this task
     using result_type = typename transwarp::task<Functor, Tasks...>::result_type;
 
-    // A task is defined by its name (can be empty), a function object, and
+    // A final task is defined by its name (can be empty), a function object, and
     // an arbitrary number of parent tasks
     final_task(std::string name, Functor functor, std::shared_ptr<Tasks>... parents)
     : transwarp::task<Functor, Tasks...>(std::move(name), std::move(functor), std::move(parents)...),
@@ -600,7 +600,7 @@ std::shared_ptr<transwarp::task<Functor, Tasks...>> make_task(std::string name, 
 // A factory function to create a new task. Overload for auto-naming
 template<typename Functor, typename... Tasks>
 std::shared_ptr<transwarp::task<Functor, Tasks...>> make_task(Functor functor, std::shared_ptr<Tasks>... parents) {
-    return make_task("", std::move(functor), std::move(parents)...);
+    return transwarp::make_task("", std::move(functor), std::move(parents)...);
 }
 
 // A factory function to create a new final task
@@ -612,7 +612,7 @@ std::shared_ptr<transwarp::final_task<Functor, Tasks...>> make_final_task(std::s
 // A factory function to create a new final task. Overload for auto-naming
 template<typename Functor, typename... Tasks>
 std::shared_ptr<transwarp::final_task<Functor, Tasks...>> make_final_task(Functor functor, std::shared_ptr<Tasks>... parents) {
-    return make_final_task("", std::move(functor), std::move(parents)...);
+    return transwarp::make_final_task("", std::move(functor), std::move(parents)...);
 }
 
 
