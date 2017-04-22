@@ -262,8 +262,8 @@ TEST(get_node) {
 struct id_visitor {
     id_visitor() : count{1} {}
     template<typename Task>
-    void operator()(Task* task) noexcept {
-        const auto value = task->get_node().id;
+    void operator()(Task& task) noexcept {
+        const auto value = task.get_node().id;
         if (value % 2 == 0)
             count += value;
         else
@@ -275,8 +275,8 @@ struct id_visitor {
 struct level_visitor {
     level_visitor() : count{1} {}
     template<typename Task>
-    void operator()(Task* task) noexcept {
-        const auto value = task->get_node().level;
+    void operator()(Task& task) noexcept {
+        const auto value = task.get_node().level;
         if (value % 2 == 0)
             count += value ;
         else

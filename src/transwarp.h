@@ -240,7 +240,7 @@ void tuple_for_each_index(transwarp::detail::indices<>, F&&, Tuple&&, Args&&...)
 
 template<std::size_t i, std::size_t ...j, typename F, typename Tuple, typename ...Args>
 void tuple_for_each_index(transwarp::detail::indices<i,j...>, F&& f, Tuple&& t, Args&&... args) {
-    std::forward<F>(f)(std::get<i>(std::forward<Tuple>(t)).get(), std::forward<Args>(args)...);
+    std::forward<F>(f)(*std::get<i>(std::forward<Tuple>(t)), std::forward<Args>(args)...);
     transwarp::detail::tuple_for_each_index(transwarp::detail::indices<j...>(),
             std::forward<F>(f), std::forward<Tuple>(t), std::forward<Args>(args)...);
 }
@@ -284,12 +284,12 @@ struct parent_functor {
     explicit parent_functor(transwarp::node& node)
     : node_(node) {}
     template<typename Task>
-    void operator()(const Task* task) const noexcept {
+    void operator()(const Task& task) const noexcept {
         static_assert(!std::is_base_of<transwarp::ifinal_task<typename Task::result_type>, Task>::value,
                       "input task cannot be a final task");
-        if (node_.level < task->node_.level)
-            node_.level = task->node_.level;
-        node_.parents.push_back(&task->node_);
+        if (node_.level < task.node_.level)
+            node_.level = task.node_.level;
+        node_.parents.push_back(&task.node_);
     }
     transwarp::node& node_;
 };
@@ -298,8 +298,8 @@ struct edges_functor {
     edges_functor(std::vector<transwarp::edge>& graph, const transwarp::node& n) noexcept
     : graph_(graph), n_(n) {}
     template<typename Task>
-    void operator()(const Task* task) const noexcept {
-        graph_.push_back({&n_, &task->node_});
+    void operator()(const Task& task) const noexcept {
+        graph_.push_back({&n_, &task.node_});
     }
     std::vector<transwarp::edge>& graph_;
     const transwarp::node& n_;
@@ -310,8 +310,8 @@ struct visit_functor {
     visit_functor(PreVisitor& pre_visitor, PostVisitor& post_visitor) noexcept
     : pre_visitor_(pre_visitor), post_visitor_(post_visitor) {}
     template<typename Task>
-    void operator()(Task* task) const {
-        task->visit(pre_visitor_, post_visitor_);
+    void operator()(Task& task) const {
+        task.visit(pre_visitor_, post_visitor_);
     }
     PreVisitor& pre_visitor_;
     PostVisitor& post_visitor_;
@@ -320,8 +320,8 @@ struct visit_functor {
 struct unvisit_functor {
     unvisit_functor() noexcept = default;
     template<typename Task>
-    void operator()(Task* task) const noexcept {
-        task->unvisit();
+    void operator()(Task& task) const noexcept {
+        task.unvisit();
     }
 };
 
@@ -330,13 +330,13 @@ struct final_visitor {
                   const std::shared_ptr<std::atomic_bool>& canceled, std::vector<transwarp::edge>& graph) noexcept
     : id_(id), packagers_(packagers), canceled_(canceled), graph_(graph) {}
     template<typename Task>
-    void operator()(Task* task) const {
-        task->node_.id = id_++;
-        if (task->node_.name.empty())
-            task->node_.name = "task" + std::to_string(task->node_.id);
-        packagers_.push_back(task->packager_);
-        task->canceled_ = canceled_;
-        transwarp::detail::apply(transwarp::detail::edges_functor(graph_, task->node_), task->parents_);
+    void operator()(Task& task) const {
+        task.node_.id = id_++;
+        if (task.node_.name.empty())
+            task.node_.name = "task" + std::to_string(task.node_.id);
+        packagers_.push_back(task.packager_);
+        task.canceled_ = canceled_;
+        transwarp::detail::apply(transwarp::detail::edges_functor(graph_, task.node_), task.parents_);
     }
     std::size_t& id_;
     std::vector<transwarp::detail::priority_functor>& packagers_;
@@ -351,7 +351,7 @@ struct final_visitor {
 struct pass_visitor {
     pass_visitor() noexcept = default;
     template<typename Task>
-    void operator()(Task*) const noexcept {}
+    void operator()(const Task&) const noexcept {}
 };
 
 // Creates a dot-style string from the given graph
@@ -421,13 +421,13 @@ public:
 
     // Visits each task in a depth-first traversal. The pre_visitor is called
     // before traversing through parents and the post_visitor after. A visitor
-    // takes a pointer to a task (task*) as its only input argument.
+    // takes a reference to a task (task&) as its only input argument.
     template<typename PreVisitor, typename PostVisitor>
     void visit(PreVisitor& pre_visitor, PostVisitor& post_visitor) {
         if (!visited_) {
-            pre_visitor(this);
+            pre_visitor(*this);
             transwarp::detail::apply(transwarp::detail::visit_functor<PreVisitor, PostVisitor>(pre_visitor, post_visitor), parents_);
-            post_visitor(this);
+            post_visitor(*this);
             visited_ = true;
         }
     }
