@@ -356,14 +356,14 @@ struct pass_visitor {
 
 // Creates a dot-style string from the given graph
 inline std::string make_dot(const std::vector<transwarp::edge>& graph) {
-    auto info = [](const transwarp::node* n) {
-        const auto name = transwarp::detail::trim(n->name);
-        return '"' + name + "\nid " + std::to_string(n->id) + " level " + std::to_string(n->level)
-                   + " parents " + std::to_string(n->parents.size()) + '"';
+    auto info = [](const transwarp::node& n) {
+        const auto name = transwarp::detail::trim(n.name);
+        return '"' + name + "\nid " + std::to_string(n.id) + " level " + std::to_string(n.level)
+                   + " parents " + std::to_string(n.parents.size()) + '"';
     };
     std::string dot = "digraph {\n";
     for (const auto& pair : graph) {
-        dot += info(pair.parent) + " -> " + info(pair.child) + '\n';
+        dot += info(*pair.parent) + " -> " + info(*pair.child) + '\n';
     }
     dot += "}\n";
     return dot;
@@ -456,6 +456,8 @@ protected:
     friend struct transwarp::detail::edges_functor;
     friend struct transwarp::detail::final_visitor;
 
+    // Calls the functor of the given task with the results from the futures.
+    // Throws transwarp::task_canceled if the task is canceled.
     static result_type evaluate(transwarp::task<Functor, Tasks...>& task,
                                 std::tuple<std::shared_future<typename Tasks::result_type>...> futures) {
         if (*task.canceled_)
@@ -493,15 +495,7 @@ public:
     : transwarp::task<Functor, Tasks...>(std::move(name), std::move(functor), std::move(parents)...),
       paused_(false)
     {
-        std::size_t id = 0;
-        this->canceled_ = std::make_shared<std::atomic_bool>(false);
-        transwarp::pass_visitor pass;
-        transwarp::detail::final_visitor post_visitor(id, packagers_, this->canceled_, graph_);
-        this->visit(pass, post_visitor);
-        this->unvisit();
-        callbacks_.resize(packagers_.size());
-        std::sort(packagers_.begin(), packagers_.end(),
-                  std::greater<transwarp::detail::priority_functor>());
+        finalize();
     }
 
     virtual ~final_task() = default;
@@ -539,11 +533,11 @@ public:
     void schedule() override {
         if (!*this->canceled_) {
             prepare_callbacks();
-            if (pool_) {
+            if (pool_) { // parallel execution
                 for (const auto& callback : callbacks_) {
                     pool_->push(callback);
                 }
-            } else {
+            } else { // sequential execution
                 for (const auto& callback : callbacks_) {
                     while (paused_) {};
                     callback();
@@ -579,6 +573,27 @@ public:
 
 protected:
 
+    // Finalizes the graph of tasks by computing IDs, collecting the packager of
+    // each task, populating a vector of edges, etc. The packagers are then
+    // sorted by level and ID which ensures that tasks higher in the graph
+    // are executed first.
+    void finalize() {
+        std::size_t id = 0;
+        this->canceled_ = std::make_shared<std::atomic_bool>(false);
+        transwarp::pass_visitor pass;
+        transwarp::detail::final_visitor post_visitor(id, packagers_, this->canceled_, graph_);
+        this->visit(pass, post_visitor);
+        this->unvisit();
+        callbacks_.resize(packagers_.size());
+        std::sort(packagers_.begin(), packagers_.end(),
+                  std::greater<transwarp::detail::priority_functor>());
+    }
+
+    // Calls all packagers and stores the results as callbacks. Every task has
+    // a packager which, when called, wraps the task and assigns a new future.
+    // Calling the callback will then actually run the functor associated to the
+    // task and store the result in the future. The callbacks are dealt with
+    // by the schedule function.
     void prepare_callbacks() {
         std::transform(packagers_.begin(), packagers_.end(), callbacks_.begin(),
                        [](const transwarp::detail::priority_functor& f) { return f(); });
