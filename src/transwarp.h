@@ -391,7 +391,7 @@ public:
       packager_([this] {
         auto futures = transwarp::detail::get_futures(parents_);
         auto pack_task = std::make_shared<std::packaged_task<result_type()>>(
-                std::bind(&task::evaluate, this, std::move(futures)));
+                std::bind(&task::evaluate, std::ref(*this), std::move(futures)));
         future_ = pack_task->get_future();
         return [pack_task] { (*pack_task)(); };
       }, node_)
@@ -456,11 +456,11 @@ protected:
     friend struct transwarp::detail::edges_functor;
     friend struct transwarp::detail::final_visitor;
 
-    static result_type evaluate(transwarp::task<Functor, Tasks...>* task,
+    static result_type evaluate(transwarp::task<Functor, Tasks...>& task,
                                 std::tuple<std::shared_future<typename Tasks::result_type>...> futures) {
-        if (*task->canceled_)
-            throw transwarp::task_canceled(task->get_node());
-        return transwarp::detail::call<result_type>(task->functor_, std::move(futures));
+        if (*task.canceled_)
+            throw transwarp::task_canceled(task.get_node());
+        return transwarp::detail::call<result_type>(task.functor_, std::move(futures));
     }
 
     transwarp::node node_;
