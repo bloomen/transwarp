@@ -76,22 +76,6 @@ public:
 
 namespace detail {
 
-template<typename T, typename... Args>
-std::unique_ptr<T> make_unique_helper(std::false_type, Args&&... args) {
-    return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
-}
-
-template<typename T, typename... Args>
-std::unique_ptr<T> make_unique_helper(std::true_type, Args&&... args) {
-    static_assert(std::extent<T>::value == 0, "use make_unique<T[]>().");
-    using U = typename std::remove_extent<T>::type;
-    return std::unique_ptr<T>(new U[sizeof...(Args)]{std::forward<Args>(args)...});
-}
-
-template<typename T, typename... Args>
-std::unique_ptr<T> make_unique(Args&&... args) {
-    return transwarp::detail::make_unique_helper<T>(std::is_array<T>(), std::forward<Args>(args)...);
-}
 
 class priority_functor {
 public:
@@ -521,7 +505,8 @@ public:
     // is removed.
     void set_parallel(std::size_t n_threads) override {
         if (n_threads > 0) {
-            pool_ = transwarp::detail::make_unique<transwarp::detail::thread_pool>(n_threads);
+            using pool_t = transwarp::detail::thread_pool;
+            pool_ = std::unique_ptr<pool_t>(new pool_t(n_threads));
         } else {
             pool_.reset();
         }
