@@ -76,7 +76,8 @@ public:
 
 namespace detail {
 
-
+// A wrapper for a callback that is associated to a node. Sorting objects of
+// this class will be first by node level and then by node id.
 class priority_functor {
 public:
 
@@ -99,17 +100,19 @@ private:
     transwarp::node node_;
 };
 
+// An exception for errors in the thread_pool class
 class thread_pool_error : public transwarp::transwarp_error {
 public:
     explicit thread_pool_error(const std::string& message)
     : transwarp::transwarp_error(message) {}
 };
 
+// A simple thread pool used to execute tasks in parallel
 class thread_pool {
 public:
 
     explicit thread_pool(std::size_t n_threads)
-    : done_{false}, paused_{false}
+    : done_(false), paused_(false)
     {
         if (n_threads > 0) {
             const auto n_target = threads_.size() + n_threads;
@@ -128,15 +131,17 @@ public:
             paused_ = false;
         }
         cond_var_.notify_all();
-        for (auto& thread : threads_)
+        for (auto& thread : threads_) {
             thread.join();
+        }
     }
 
     void push(const std::function<void()>& functor) {
         {
             std::lock_guard<std::mutex> lock(mutex_);
-            if (done_)
+            if (done_) {
                 throw transwarp::detail::thread_pool_error{"push called while thread pool is shutting down"};
+            }
             functors_.push(functor);
         }
         cond_var_.notify_one();
@@ -147,8 +152,9 @@ public:
             std::lock_guard<std::mutex> lock(mutex_);
             paused_ = enabled;
         }
-        if (!paused_)
+        if (!paused_) {
             cond_var_.notify_all();
+        }
     }
 
 private:
@@ -161,8 +167,9 @@ private:
                 cond_var_.wait(lock, [this]{
                     return !paused_ && (done_ || !functors_.empty());
                 });
-                if (done_ && functors_.empty())
+                if (done_ && functors_.empty()) {
                     break;
+                }
                 functor = functors_.front();
                 functors_.pop();
             }
@@ -178,40 +185,43 @@ private:
     std::mutex mutex_;
 };
 
-template<bool Done, int Total, int... N>
-struct call_impl {
-    template<typename Result, typename F, typename Tuple>
-    static Result call(F&& f, Tuple&& t) {
-        return call_impl<Total == 1 + sizeof...(N), Total, N..., sizeof...(N)>::template
-                call<Result>(std::forward<F>(f), std::forward<Tuple>(t));
+template<bool done, int total, int... n>
+struct call_with_futures_impl {
+    template<typename Result, typename Functor, typename Tuple>
+    static Result work(Functor&& f, Tuple&& t) {
+        return call_with_futures_impl<total == 1 + sizeof...(n), total, n..., sizeof...(n)>::template
+                work<Result>(std::forward<Functor>(f), std::forward<Tuple>(t));
     }
 };
 
-template<int Total, int... N>
-struct call_impl<true, Total, N...> {
-    template<typename Result, typename F, typename Tuple>
-    static Result call(F&& f, Tuple&& t) {
-        return std::forward<F>(f)(std::get<N>(std::forward<Tuple>(t)).get()...);
+template<int total, int... n>
+struct call_with_futures_impl<true, total, n...> {
+    template<typename Result, typename Functor, typename Tuple>
+    static Result work(Functor&& f, Tuple&& t) {
+        return std::forward<Functor>(f)(std::get<n>(std::forward<Tuple>(t)).get()...);
     }
 };
 
-template<typename Result, typename F, typename Tuple>
-Result call(F&& f, Tuple&& t) {
-    using ttype = typename std::decay<Tuple>::type;
-    return transwarp::detail::call_impl<0 == std::tuple_size<ttype>::value, std::tuple_size<ttype>::value>::template
-            call<Result>(std::forward<F>(f), std::forward<Tuple>(t));
+// Calls the functor with the given tuple of futures. get() is called on every
+// future and the results are then passed into the functor.
+template<typename Result, typename Functor, typename Tuple>
+Result call_with_futures(Functor&& f, Tuple&& t) {
+    using tuple_t = typename std::decay<Tuple>::type;
+    static const std::size_t n = std::tuple_size<tuple_t>::value;
+    return transwarp::detail::call_with_futures_impl<0 == n, n>::template
+            work<Result>(std::forward<Functor>(f), std::forward<Tuple>(t));
 }
 
-template<std::size_t ...> struct indices {};
+template<std::size_t...> struct indices {};
 
-template<std::size_t ...> struct construct_range;
+template<std::size_t...> struct construct_range;
 
-template<std::size_t end, std::size_t idx, std::size_t ...i >
-struct construct_range<end, idx, i...> : construct_range<end, idx+1, i..., idx> {};
+template<std::size_t end, std::size_t idx, std::size_t... i>
+struct construct_range<end, idx, i...> : construct_range<end, idx + 1, i..., idx> {};
 
-template<std::size_t end, std::size_t ...i >
-struct construct_range< end, end, i... > {
-    using type = transwarp::detail::indices< i... >;
+template<std::size_t end, std::size_t... i>
+struct construct_range<end, end, i...> {
+    using type = transwarp::detail::indices<i...>;
 };
 
 template<std::size_t b, std::size_t e>
@@ -219,54 +229,59 @@ struct index_range {
     using type = typename transwarp::detail::construct_range<e, b>::type;
 };
 
-template<typename F, typename Tuple, typename ...Args>
-void tuple_for_each_index(transwarp::detail::indices<>, F&&, Tuple&&, Args&&...) {}
+template<typename Functor, typename Tuple>
+void call_with_each_index(transwarp::detail::indices<>, Functor&&, Tuple&&) {}
 
-template<std::size_t i, std::size_t ...j, typename F, typename Tuple, typename ...Args>
-void tuple_for_each_index(transwarp::detail::indices<i,j...>, F&& f, Tuple&& t, Args&&... args) {
-    std::forward<F>(f)(*std::get<i>(std::forward<Tuple>(t)), std::forward<Args>(args)...);
-    transwarp::detail::tuple_for_each_index(transwarp::detail::indices<j...>(),
-            std::forward<F>(f), std::forward<Tuple>(t), std::forward<Args>(args)...);
+template<std::size_t i, std::size_t... j, typename Functor, typename Tuple>
+void call_with_each_index(transwarp::detail::indices<i, j...>, Functor&& f, Tuple&& t) {
+    std::forward<Functor>(f)(*std::get<i>(std::forward<Tuple>(t)));
+    transwarp::detail::call_with_each_index(transwarp::detail::indices<j...>(), std::forward<Functor>(f), std::forward<Tuple>(t));
 }
 
-template<typename F, typename Tuple, typename ...Args>
-void apply(F&& f, Tuple&& t, Args&&... args) {
-    using ttype = typename std::decay<Tuple>::type;
-    static const std::size_t n = std::tuple_size<ttype>::value;
-    using index_list = typename transwarp::detail::index_range<0, n>::type;
-    transwarp::detail::tuple_for_each_index(index_list(),
-            std::forward<F>(f), std::forward<Tuple>(t), std::forward<Args>(args)...);
+// Calls the functor with every element in the tuple. Expects the tuple to contain
+// pointers only and dereferences each element before passing it into the functor
+template<typename Functor, typename Tuple>
+void call_with_each(Functor&& f, Tuple&& t) {
+    using tuple_t = typename std::decay<Tuple>::type;
+    static const std::size_t n = std::tuple_size<tuple_t>::value;
+    using index_t = typename transwarp::detail::index_range<0, n>::type;
+    transwarp::detail::call_with_each_index(index_t(), std::forward<Functor>(f), std::forward<Tuple>(t));
 }
 
 template<int offset, typename... Tasks>
 struct assign_futures_impl {
-    static void assign_futures(const std::tuple<std::shared_ptr<Tasks>...>& source, std::tuple<std::shared_future<typename Tasks::result_type>...>& target) {
+    static void work(const std::tuple<std::shared_ptr<Tasks>...>& source, std::tuple<std::shared_future<typename Tasks::result_type>...>& target) {
         std::get<offset>(target) = std::get<offset>(source)->get_future();
-        assign_futures_impl<offset - 1, Tasks...>::assign_futures(source, target);
+        assign_futures_impl<offset - 1, Tasks...>::work(source, target);
     }
 };
 
 template<typename... Tasks>
 struct assign_futures_impl<-1, Tasks...> {
-    static void assign_futures(const std::tuple<std::shared_ptr<Tasks>...>&, std::tuple<std::shared_future<typename Tasks::result_type>...>&) {}
+    static void work(const std::tuple<std::shared_ptr<Tasks>...>&, std::tuple<std::shared_future<typename Tasks::result_type>...>&) {}
 };
 
+// Returns the futures from the given tasks
 template<typename... Tasks>
 std::tuple<std::shared_future<typename Tasks::result_type>...> get_futures(const std::tuple<std::shared_ptr<Tasks>...>& input) {
     std::tuple<std::shared_future<typename Tasks::result_type>...> result;
-    assign_futures_impl<static_cast<int>(sizeof...(Tasks)) - 1, Tasks...>::assign_futures(input, result);
+    assign_futures_impl<static_cast<int>(sizeof...(Tasks)) - 1, Tasks...>::work(input, result);
     return result;
 }
 
+// Trims the given characters from the input string
 inline std::string trim(const std::string &s, const std::string& chars=" \t\n\r") {
     auto functor = [&chars](char c) { return chars.find(c) != std::string::npos; };
     auto it = std::find_if_not(s.begin(), s.end(), functor);
     return std::string(it, std::find_if_not(s.rbegin(), std::string::const_reverse_iterator(it), functor).base());
 }
 
+// Sets level and parents of the node given in the constructor through
+// the task given in the ()-operator
 struct parent_functor {
     explicit parent_functor(transwarp::node& node)
     : node_(node) {}
+
     template<typename Task>
     void operator()(const Task& task) const noexcept {
         static_assert(!std::is_base_of<transwarp::ifinal_task<typename Task::result_type>, Task>::value,
@@ -275,44 +290,58 @@ struct parent_functor {
             node_.level = task.node_.level;
         node_.parents.push_back(&task.node_);
     }
+
     transwarp::node& node_;
 };
 
+// Collects edges from the given node and task objects. The node in the
+// constructor is the child and the task in the ()-operator is the parent.
 struct edges_functor {
     edges_functor(std::vector<transwarp::edge>& graph, const transwarp::node& n) noexcept
     : graph_(graph), n_(n) {}
+
     template<typename Task>
     void operator()(const Task& task) const noexcept {
         graph_.push_back({&n_, &task.node_});
     }
+
     std::vector<transwarp::edge>& graph_;
     const transwarp::node& n_;
 };
 
+// Visits the task given in the ()-operator using the visitors given in
+// the constructor
 template<typename PreVisitor, typename PostVisitor>
 struct visit_functor {
     visit_functor(PreVisitor& pre_visitor, PostVisitor& post_visitor) noexcept
     : pre_visitor_(pre_visitor), post_visitor_(post_visitor) {}
+
     template<typename Task>
     void operator()(Task& task) const {
         task.visit(pre_visitor_, post_visitor_);
     }
+
     PreVisitor& pre_visitor_;
     PostVisitor& post_visitor_;
 };
 
+// Unvisits the task given in the ()-operator
 struct unvisit_functor {
     unvisit_functor() noexcept = default;
+
     template<typename Task>
     void operator()(Task& task) const noexcept {
         task.unvisit();
     }
 };
 
+// Applies final bookkeeping to the task given in the ()-operator. This includes
+// setting id, name, and canceled flag. Also, packager functors and edges are collected.
 struct final_visitor {
     final_visitor(std::size_t& id, std::vector<transwarp::detail::priority_functor>& packagers,
                   const std::shared_ptr<std::atomic_bool>& canceled, std::vector<transwarp::edge>& graph) noexcept
     : id_(id), packagers_(packagers), canceled_(canceled), graph_(graph) {}
+
     template<typename Task>
     void operator()(Task& task) const {
         task.node_.id = id_++;
@@ -320,8 +349,9 @@ struct final_visitor {
             task.node_.name = "task" + std::to_string(task.node_.id);
         packagers_.push_back(task.packager_);
         task.canceled_ = canceled_;
-        transwarp::detail::apply(transwarp::detail::edges_functor(graph_, task.node_), task.parents_);
+        transwarp::detail::call_with_each(transwarp::detail::edges_functor(graph_, task.node_), task.parents_);
     }
+
     std::size_t& id_;
     std::vector<transwarp::detail::priority_functor>& packagers_;
     const std::shared_ptr<std::atomic_bool>& canceled_;
@@ -334,6 +364,7 @@ struct final_visitor {
 // A visitor to be used to do nothing
 struct pass_visitor {
     pass_visitor() noexcept = default;
+
     template<typename Task>
     void operator()(const Task&) const noexcept {}
 };
@@ -372,17 +403,9 @@ public:
       functor_(std::move(functor)),
       parents_(std::make_tuple(std::move(parents)...)),
       visited_(false),
-      packager_([this] {
-        auto futures = transwarp::detail::get_futures(parents_);
-        auto pack_task = std::make_shared<std::packaged_task<result_type()>>(
-                std::bind(&task::evaluate, std::ref(*this), std::move(futures)));
-        future_ = pack_task->get_future();
-        return [pack_task] { (*pack_task)(); };
-      }, node_)
+      packager_(make_packager())
     {
-        transwarp::detail::apply(transwarp::detail::parent_functor(node_), parents_);
-        if (sizeof...(Tasks) > 0)
-            ++node_.level;
+        bookkeeping();
     }
 
     virtual ~task() = default;
@@ -410,7 +433,7 @@ public:
     void visit(PreVisitor& pre_visitor, PostVisitor& post_visitor) {
         if (!visited_) {
             pre_visitor(*this);
-            transwarp::detail::apply(transwarp::detail::visit_functor<PreVisitor, PostVisitor>(pre_visitor, post_visitor), parents_);
+            transwarp::detail::call_with_each(transwarp::detail::visit_functor<PreVisitor, PostVisitor>(pre_visitor, post_visitor), parents_);
             post_visitor(*this);
             visited_ = true;
         }
@@ -420,7 +443,7 @@ public:
     void unvisit() {
         if (visited_) {
             visited_ = false;
-            transwarp::detail::apply(transwarp::detail::unvisit_functor(), parents_);
+            transwarp::detail::call_with_each(transwarp::detail::unvisit_functor(), parents_);
         }
     }
 
@@ -446,7 +469,27 @@ protected:
                                 std::tuple<std::shared_future<typename Tasks::result_type>...> futures) {
         if (*task.canceled_)
             throw transwarp::task_canceled(task.get_node());
-        return transwarp::detail::call<result_type>(task.functor_, std::move(futures));
+        return transwarp::detail::call_with_futures<result_type>(task.functor_, std::move(futures));
+    }
+
+    // Creates a wrapped packager. Calling the packager will create a packaged
+    // task given the parent futures, then assign a new future to this task
+    // and finally returns a callback to run the packaged task.
+    transwarp::detail::priority_functor make_packager() {
+        return transwarp::detail::priority_functor([this] {
+            auto futures = transwarp::detail::get_futures(parents_);
+            auto pack_task = std::make_shared<std::packaged_task<result_type()>>(
+                    std::bind(&task::evaluate, std::ref(*this), std::move(futures)));
+            future_ = pack_task->get_future();
+            return [pack_task] { (*pack_task)(); };
+        }, node_);
+    }
+
+    // Assigns level and parents of this task via the node object
+    void bookkeeping() {
+        transwarp::detail::call_with_each(transwarp::detail::parent_functor(node_), parents_);
+        if (sizeof...(Tasks) > 0)
+            ++node_.level;
     }
 
     transwarp::node node_;
@@ -537,8 +580,9 @@ public:
     // pool but not process them. Pausing does not affect currently running tasks.
     void set_pause(bool enabled) override {
         paused_ = enabled;
-        if (pool_)
+        if (pool_) {
             pool_->set_pause(paused_.load());
+        }
     }
 
     // If enabled then all pending tasks are canceled which will
