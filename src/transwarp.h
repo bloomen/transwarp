@@ -81,13 +81,13 @@ namespace detail {
 class priority_functor {
 public:
 
-    priority_functor() noexcept
+    priority_functor()
     : callback_{}, node_{0, 0, "", {}} {}
 
-    priority_functor(std::function<std::function<void()>()> callback, transwarp::node node) noexcept
+    priority_functor(std::function<std::function<void()>()> callback, transwarp::node node)
     : callback_(std::move(callback)), node_(std::move(node)) {}
 
-    bool operator>(const priority_functor& other) const noexcept {
+    bool operator>(const priority_functor& other) const {
         return std::tie(node_.level, node_.id) > std::tie(other.node_.level, other.node_.id);
     }
 
@@ -283,7 +283,7 @@ struct parent_functor {
     : node_(node) {}
 
     template<typename Task>
-    void operator()(const Task& task) const noexcept {
+    void operator()(const Task& task) const {
         static_assert(!std::is_base_of<transwarp::ifinal_task<typename Task::result_type>, Task>::value,
                       "input task cannot be a final task");
         if (node_.level < task.node_.level)
@@ -297,11 +297,11 @@ struct parent_functor {
 // Collects edges from the given node and task objects. The node in the
 // constructor is the child and the task in the ()-operator is the parent.
 struct edges_functor {
-    edges_functor(std::vector<transwarp::edge>& graph, const transwarp::node& n) noexcept
+    edges_functor(std::vector<transwarp::edge>& graph, const transwarp::node& n)
     : graph_(graph), n_(n) {}
 
     template<typename Task>
-    void operator()(const Task& task) const noexcept {
+    void operator()(const Task& task) const {
         graph_.push_back({&n_, &task.node_});
     }
 
@@ -313,7 +313,7 @@ struct edges_functor {
 // the constructor
 template<typename PreVisitor, typename PostVisitor>
 struct visit_functor {
-    visit_functor(PreVisitor& pre_visitor, PostVisitor& post_visitor) noexcept
+    visit_functor(PreVisitor& pre_visitor, PostVisitor& post_visitor)
     : pre_visitor_(pre_visitor), post_visitor_(post_visitor) {}
 
     template<typename Task>
@@ -327,10 +327,9 @@ struct visit_functor {
 
 // Unvisits the task given in the ()-operator
 struct unvisit_functor {
-    unvisit_functor() noexcept = default;
 
     template<typename Task>
-    void operator()(Task& task) const noexcept {
+    void operator()(Task& task) const {
         task.unvisit();
     }
 };
@@ -339,7 +338,7 @@ struct unvisit_functor {
 // setting id, name, and canceled flag. Also, packager functors and edges are collected.
 struct final_visitor {
     final_visitor(std::size_t& id, std::vector<transwarp::detail::priority_functor>& packagers,
-                  const std::shared_ptr<std::atomic_bool>& canceled, std::vector<transwarp::edge>& graph) noexcept
+                  const std::shared_ptr<std::atomic_bool>& canceled, std::vector<transwarp::edge>& graph)
     : id_(id), packagers_(packagers), canceled_(canceled), graph_(graph) {}
 
     template<typename Task>
@@ -363,10 +362,9 @@ struct final_visitor {
 
 // A visitor to be used to do nothing
 struct pass_visitor {
-    pass_visitor() noexcept = default;
 
     template<typename Task>
-    void operator()(const Task&) const noexcept {}
+    void operator()(const Task&) const {}
 };
 
 // Creates a dot-style string from the given graph
@@ -476,13 +474,14 @@ protected:
     // task given the parent futures, then assign a new future to this task
     // and finally returns a callback to run the packaged task.
     transwarp::detail::priority_functor make_packager() {
-        return transwarp::detail::priority_functor([this] {
+        auto packager = [this] {
             auto futures = transwarp::detail::get_futures(parents_);
             auto pack_task = std::make_shared<std::packaged_task<result_type()>>(
                     std::bind(&task::evaluate, std::ref(*this), std::move(futures)));
             future_ = pack_task->get_future();
             return [pack_task] { (*pack_task)(); };
-        }, node_);
+        };
+        return transwarp::detail::priority_functor(packager, node_);
     }
 
     // Assigns level and parents of this task via the node object
