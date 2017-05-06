@@ -278,8 +278,8 @@ inline std::string trim(const std::string &s, const std::string& chars=" \t\n\r"
 
 // Sets level and parents of the node given in the constructor through
 // the task given in the ()-operator
-struct parent_functor {
-    explicit parent_functor(transwarp::node& node)
+struct parent_visitor {
+    explicit parent_visitor(transwarp::node& node)
     : node_(node) {}
 
     template<typename Task>
@@ -296,8 +296,8 @@ struct parent_functor {
 
 // Collects edges from the given node and task objects. The node in the
 // constructor is the child and the task in the ()-operator is the parent.
-struct edges_functor {
-    edges_functor(std::vector<transwarp::edge>& graph, const transwarp::node& n)
+struct edges_visitor {
+    edges_visitor(std::vector<transwarp::edge>& graph, const transwarp::node& n)
     : graph_(graph), n_(n) {}
 
     template<typename Task>
@@ -307,31 +307,6 @@ struct edges_functor {
 
     std::vector<transwarp::edge>& graph_;
     const transwarp::node& n_;
-};
-
-// Visits the task given in the ()-operator using the visitors given in
-// the constructor
-template<typename PreVisitor, typename PostVisitor>
-struct visit_functor {
-    visit_functor(PreVisitor& pre_visitor, PostVisitor& post_visitor)
-    : pre_visitor_(pre_visitor), post_visitor_(post_visitor) {}
-
-    template<typename Task>
-    void operator()(Task& task) const {
-        task.visit(pre_visitor_, post_visitor_);
-    }
-
-    PreVisitor& pre_visitor_;
-    PostVisitor& post_visitor_;
-};
-
-// Unvisits the task given in the ()-operator
-struct unvisit_functor {
-
-    template<typename Task>
-    void operator()(Task& task) const {
-        task.unvisit();
-    }
 };
 
 // Applies final bookkeeping to the task given in the ()-operator. This includes
@@ -348,7 +323,7 @@ struct final_visitor {
             task.node_.name = "task" + std::to_string(task.node_.id);
         packagers_.push_back(task.packager_);
         task.canceled_ = canceled_;
-        transwarp::detail::call_with_each(transwarp::detail::edges_functor(graph_, task.node_), task.parents_);
+        transwarp::detail::call_with_each(transwarp::detail::edges_visitor(graph_, task.node_), task.parents_);
     }
 
     std::size_t& id_;
@@ -356,6 +331,32 @@ struct final_visitor {
     const std::shared_ptr<std::atomic_bool>& canceled_;
     std::vector<transwarp::edge>& graph_;
 };
+
+// Visits the task given in the ()-operator using the visitors given in
+// the constructor
+template<typename PreVisitor, typename PostVisitor>
+struct visit {
+    visit(PreVisitor& pre_visitor, PostVisitor& post_visitor)
+    : pre_visitor_(pre_visitor), post_visitor_(post_visitor) {}
+
+    template<typename Task>
+    void operator()(Task& task) const {
+        task.visit(pre_visitor_, post_visitor_);
+    }
+
+    PreVisitor& pre_visitor_;
+    PostVisitor& post_visitor_;
+};
+
+// Unvisits the task given in the ()-operator
+struct unvisit {
+
+    template<typename Task>
+    void operator()(Task& task) const {
+        task.unvisit();
+    }
+};
+
 
 } // detail
 
@@ -431,7 +432,7 @@ public:
     void visit(PreVisitor& pre_visitor, PostVisitor& post_visitor) {
         if (!visited_) {
             pre_visitor(*this);
-            transwarp::detail::call_with_each(transwarp::detail::visit_functor<PreVisitor, PostVisitor>(pre_visitor, post_visitor), parents_);
+            transwarp::detail::call_with_each(transwarp::detail::visit<PreVisitor, PostVisitor>(pre_visitor, post_visitor), parents_);
             post_visitor(*this);
             visited_ = true;
         }
@@ -441,7 +442,7 @@ public:
     void unvisit() {
         if (visited_) {
             visited_ = false;
-            transwarp::detail::call_with_each(transwarp::detail::unvisit_functor(), parents_);
+            transwarp::detail::call_with_each(transwarp::detail::unvisit(), parents_);
         }
     }
 
@@ -457,8 +458,8 @@ public:
 
 protected:
 
-    friend struct transwarp::detail::parent_functor;
-    friend struct transwarp::detail::edges_functor;
+    friend struct transwarp::detail::parent_visitor;
+    friend struct transwarp::detail::edges_visitor;
     friend struct transwarp::detail::final_visitor;
 
     // Calls the functor of the given task with the results from the futures.
@@ -486,7 +487,7 @@ protected:
 
     // Assigns level and parents of this task via the node object
     void bookkeeping() {
-        transwarp::detail::call_with_each(transwarp::detail::parent_functor(node_), parents_);
+        transwarp::detail::call_with_each(transwarp::detail::parent_visitor(node_), parents_);
         if (sizeof...(Tasks) > 0)
             ++node_.level;
     }
@@ -606,8 +607,8 @@ protected:
     // sorted by level and ID which ensures that tasks higher in the graph
     // are executed first.
     void finalize() {
-        std::size_t id = 0;
         this->canceled_ = std::make_shared<std::atomic_bool>(false);
+        std::size_t id = 0;
         transwarp::pass_visitor pass;
         transwarp::detail::final_visitor post_visitor(id, packagers_, this->canceled_, graph_);
         this->visit(pass, post_visitor);
