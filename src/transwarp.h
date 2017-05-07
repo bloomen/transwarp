@@ -76,27 +76,27 @@ public:
 
 namespace detail {
 
-// A wrapper for a callback that is associated to a node. Sorting objects of
+// A wrapper for a packager that is associated to a node. Sorting objects of
 // this class will be first by node level and then by node id.
-class priority_functor {
+class wrapped_packager {
 public:
 
-    priority_functor()
-    : callback_{}, node_{0, 0, "", {}} {}
+    wrapped_packager()
+    : packager_{}, node_{0, 0, "", {}} {}
 
-    priority_functor(std::function<std::function<void()>()> callback, transwarp::node node)
-    : callback_(std::move(callback)), node_(std::move(node)) {}
+    wrapped_packager(std::function<std::function<void()>()> packager, transwarp::node node)
+    : packager_(std::move(packager)), node_(std::move(node)) {}
 
-    bool operator>(const priority_functor& other) const {
+    bool operator>(const wrapped_packager& other) const {
         return std::tie(node_.level, node_.id) > std::tie(other.node_.level, other.node_.id);
     }
 
-    std::function<void()> operator()() const {
-        return callback_();
+    std::function<void()> make_package() const {
+        return packager_();
     }
 
 private:
-    std::function<std::function<void()>()> callback_;
+    std::function<std::function<void()>()> packager_;
     transwarp::node node_;
 };
 
@@ -312,7 +312,7 @@ struct edges_visitor {
 // Applies final bookkeeping to the task given in the ()-operator. This includes
 // setting id, name, and canceled flag. Also, packager functors and edges are collected.
 struct final_visitor {
-    final_visitor(std::size_t& id, std::vector<transwarp::detail::priority_functor>& packagers,
+    final_visitor(std::size_t& id, std::vector<transwarp::detail::wrapped_packager>& packagers,
                   const std::shared_ptr<std::atomic_bool>& canceled, std::vector<transwarp::edge>& graph)
     : id_(id), packagers_(packagers), canceled_(canceled), graph_(graph) {}
 
@@ -327,7 +327,7 @@ struct final_visitor {
     }
 
     std::size_t& id_;
-    std::vector<transwarp::detail::priority_functor>& packagers_;
+    std::vector<transwarp::detail::wrapped_packager>& packagers_;
     const std::shared_ptr<std::atomic_bool>& canceled_;
     std::vector<transwarp::edge>& graph_;
 };
@@ -473,8 +473,8 @@ protected:
 
     // Creates a wrapped packager. Calling the packager will create a packaged
     // task given the parent futures, then assign a new future to this task
-    // and finally returns a callback to run the packaged task.
-    transwarp::detail::priority_functor make_packager() {
+    // and finally return a callback to run the packaged task.
+    transwarp::detail::wrapped_packager make_packager() {
         auto packager = [this] {
             auto futures = transwarp::detail::get_futures(parents_);
             auto pack_task = std::make_shared<std::packaged_task<result_type()>>(
@@ -482,7 +482,7 @@ protected:
             future_ = pack_task->get_future();
             return [pack_task] { (*pack_task)(); };
         };
-        return transwarp::detail::priority_functor(packager, node_);
+        return transwarp::detail::wrapped_packager(packager, node_);
     }
 
     // Assigns level and parents of this task via the node object
@@ -496,7 +496,7 @@ protected:
     Functor functor_;
     std::tuple<std::shared_ptr<Tasks>...> parents_;
     bool visited_;
-    transwarp::detail::priority_functor packager_;
+    transwarp::detail::wrapped_packager packager_;
     std::shared_future<result_type> future_;
     std::shared_ptr<std::atomic_bool> canceled_;
 };
@@ -615,7 +615,7 @@ protected:
         this->unvisit();
         callbacks_.resize(packagers_.size());
         std::sort(packagers_.begin(), packagers_.end(),
-                  std::greater<transwarp::detail::priority_functor>());
+                  std::greater<transwarp::detail::wrapped_packager>());
     }
 
     // Calls all packagers and stores the results as callbacks. Every task has
@@ -625,11 +625,13 @@ protected:
     // by the schedule function.
     void prepare_callbacks() {
         std::transform(packagers_.begin(), packagers_.end(), callbacks_.begin(),
-                       [](const transwarp::detail::priority_functor& f) { return f(); });
+                       [](const transwarp::detail::wrapped_packager& p) {
+                           return p.make_package();
+                       });
     }
 
     std::atomic_bool paused_;
-    std::vector<transwarp::detail::priority_functor> packagers_;
+    std::vector<transwarp::detail::wrapped_packager> packagers_;
     std::vector<std::function<void()>> callbacks_;
     std::unique_ptr<transwarp::detail::thread_pool> pool_;
     std::vector<transwarp::edge> graph_;
