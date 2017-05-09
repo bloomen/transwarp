@@ -51,11 +51,9 @@ public:
 
 // An interface for the final_task class
 template<typename ResultType>
-class ifinal_task {
+class ifinal_task : public itask<ResultType> {
 public:
     virtual ~ifinal_task() = default;
-    virtual std::shared_future<ResultType> get_future() const = 0;
-    virtual const transwarp::node& get_node() const = 0;
     virtual void schedule() = 0;
     virtual void set_pause(bool enabled) = 0;
     virtual void set_cancel(bool enabled) = 0;
