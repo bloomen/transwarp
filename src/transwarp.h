@@ -425,27 +425,6 @@ public:
         return node_;
     }
 
-    // Visits each task in a depth-first traversal. The pre_visitor is called
-    // before traversing through parents and the post_visitor after. A visitor
-    // takes a reference to a task (task&) as its only input argument.
-    template<typename PreVisitor, typename PostVisitor>
-    void visit(PreVisitor& pre_visitor, PostVisitor& post_visitor) {
-        if (!visited_) {
-            pre_visitor(*this);
-            transwarp::detail::call_with_each(transwarp::detail::visit<PreVisitor, PostVisitor>(pre_visitor, post_visitor), parents_);
-            post_visitor(*this);
-            visited_ = true;
-        }
-    }
-
-    // Traverses through all tasks and marks them as not visited.
-    void unvisit() {
-        if (visited_) {
-            visited_ = false;
-            transwarp::detail::call_with_each(transwarp::detail::unvisit(), parents_);
-        }
-    }
-
     // Returns the functor
     const Functor& get_functor() const {
         return functor_;
@@ -457,6 +436,10 @@ public:
     }
 
 protected:
+
+    template<typename T, typename U>
+    friend struct transwarp::detail::visit;
+    friend struct transwarp::detail::unvisit;
 
     friend struct transwarp::detail::parent_visitor;
     friend struct transwarp::detail::edges_visitor;
@@ -490,6 +473,27 @@ protected:
         transwarp::detail::call_with_each(transwarp::detail::parent_visitor(node_), parents_);
         if (sizeof...(Tasks) > 0)
             ++node_.level;
+    }
+
+    // Visits each task in a depth-first traversal. The pre_visitor is called
+    // before traversing through parents and the post_visitor after. A visitor
+    // takes a reference to a task (task&) as its only input argument.
+    template<typename PreVisitor, typename PostVisitor>
+    void visit(PreVisitor& pre_visitor, PostVisitor& post_visitor) {
+        if (!visited_) {
+            pre_visitor(*this);
+            transwarp::detail::call_with_each(transwarp::detail::visit<PreVisitor, PostVisitor>(pre_visitor, post_visitor), parents_);
+            post_visitor(*this);
+            visited_ = true;
+        }
+    }
+
+    // Traverses through all tasks and marks them as not visited.
+    void unvisit() {
+        if (visited_) {
+            visited_ = false;
+            transwarp::detail::call_with_each(transwarp::detail::unvisit(), parents_);
+        }
     }
 
     transwarp::node node_;

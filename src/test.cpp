@@ -259,61 +259,6 @@ TEST(get_node) {
     ASSERT_EQUAL(0u, task2->get_node().parents.size());
 }
 
-struct id_visitor {
-    id_visitor() : count{1} {}
-    template<typename Task>
-    void operator()(Task& task) noexcept {
-        const auto value = task.get_node().id;
-        if (value % 2 == 0)
-            count += value;
-        else
-            count *= value + 1;
-    }
-    std::size_t count;
-};
-
-struct level_visitor {
-    level_visitor() : count{1} {}
-    template<typename Task>
-    void operator()(Task& task) noexcept {
-        const auto value = task.get_node().level;
-        if (value % 2 == 0)
-            count += value ;
-        else
-            count *= value + 1;
-    }
-    std::size_t count;
-};
-
-TEST(visit_and_unvisit) {
-    auto f1 = [] { return 0; };
-    auto task1 = make_task(f1);
-    auto f2 = [] { return 0; };
-    auto task2 = make_task(f2);
-    auto f3 = [](int, int) { return 0; };
-    auto task3 = make_final_task(f3, task1, task2);
-
-    id_visitor pre;
-    level_visitor post;
-
-    task3->visit(pre, post);
-    ASSERT_EQUAL(6, pre.count);
-    ASSERT_EQUAL(2, post.count);
-
-    pre.count = 1;
-    post.count = 1;
-
-    task3->visit(pre, post);
-    ASSERT_EQUAL(1, pre.count);
-    ASSERT_EQUAL(1, post.count);
-
-    task3->unvisit();
-
-    task3->visit(pre, post);
-    ASSERT_EQUAL(6, pre.count);
-    ASSERT_EQUAL(2, post.count);
-}
-
 void make_test_task_with_exception_thrown(std::size_t threads) {
     auto f1 = [] {
         throw std::logic_error("from f1");
