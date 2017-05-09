@@ -21,9 +21,8 @@ void basic_with_three_tasks(std::ostream& os) {
     // building the task graph
     auto task1 = transwarp::make_task("something", compute_something);
     auto task2 = transwarp::make_task("something else", compute_something_else);
-    auto task3 = transwarp::make_final_task("adder", add_em_up, task1, task2);
-    task3->set_parallel(4);  // turns on parallel execution with 4 threads for
-                             // tasks that do not depend on each other
+    // parallel execution with 4 threads for independent tasks
+    auto task3 = transwarp::make_final_task("adder", transwarp::parallel{4}, add_em_up, task1, task2);
 
     // creating a dot-style graph for visualization
     const auto graph = task3->get_graph();

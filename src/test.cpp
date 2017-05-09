@@ -13,8 +13,7 @@ COLLECTION(test_transwarp) {
 void make_test_one_task(std::size_t threads) {
     const int value = 42;
     auto f1 = [value]{ return value; };
-    auto task = make_final_task(f1);
-    task->set_parallel(threads);
+    auto task = make_final_task(transwarp::parallel{threads}, f1);
     ASSERT_EQUAL(0u, task->get_node().id);
     ASSERT_EQUAL(0u, task->get_node().level);
     ASSERT_EQUAL(0u, task->get_node().parents.size());
@@ -44,9 +43,7 @@ void make_test_three_tasks(std::size_t threads) {
     auto task2 = make_task("\nt2\t", f2, task1);
 
     auto f3 = [](int v, int w) { return v + w + 3; }; 
-    auto task3 = make_final_task("t3 ", f3, task1, task2);
-
-    task3->set_parallel(threads);
+    auto task3 = make_final_task("t3 ", transwarp::parallel{threads}, f3, task1, task2);
 
     ASSERT_EQUAL(0u, task1->get_node().id);
     ASSERT_EQUAL(0u, task1->get_node().level);
@@ -118,7 +115,7 @@ void make_test_bunch_of_tasks(std::size_t threads) {
     auto task10 = make_task(f1, task9);
     auto task11 = make_task(f3, task10, task7, task8);
     auto task12 = make_task(f2, task11, task6);
-    auto task13 = make_final_task(f3, task10, task11, task12);
+    auto task13 = make_final_task(transwarp::parallel{threads}, f3, task10, task11, task12);
 
     const auto task0_result = 42;
     const auto task3_result = 168;
@@ -130,8 +127,6 @@ void make_test_bunch_of_tasks(std::size_t threads) {
     ASSERT_EQUAL(task0_result, task0->get_future().get());
     ASSERT_EQUAL(task3_result, task3->get_future().get());
     ASSERT_EQUAL(task11_result, task11->get_future().get());
-
-    task13->set_parallel(threads);
 
     for (auto i=0; i<100; ++i) {
         task13->schedule();
@@ -236,7 +231,7 @@ TEST(get_node) {
     auto f2 = [] { return 13; };
     auto task2 = make_task(f2);
     auto f3 = [](int v, int w) { return v + w; };
-    auto task3 = make_final_task(f3, task1, task2);
+    auto task3 = make_final_task(transwarp::sequenced{}, f3, task1, task2);
 
     // task3
     ASSERT_EQUAL(2, task3->get_node().id);
@@ -274,8 +269,7 @@ void make_test_task_with_exception_thrown(std::size_t threads) {
     };
     auto task1 = make_task(f1);
     auto task2 = make_task(f2, task1);
-    auto task3 = make_final_task(f3, task2);
-    task3->set_parallel(threads);
+    auto task3 = make_final_task(transwarp::parallel{threads}, f3, task2);
     task3->schedule();
     try {
         task3->get_future().get();
@@ -297,8 +291,7 @@ TEST(cancel_with_schedule_called_before_in_parallel_and_uncancel) {
     auto f0 = [] { return 42; };
     auto f1 = [] (int x) { return x + 13; };
     auto task1 = make_task(f0);
-    auto task2 = make_final_task(f1, task1);
-    task2->set_parallel(2);
+    auto task2 = make_final_task(transwarp::parallel{2}, f1, task1);
     task2->set_pause(true);
     task2->schedule();
     task2->set_cancel(true);
@@ -313,7 +306,7 @@ TEST(cancel_with_schedule_called_after) {
     auto f0 = [] { return 42; };
     auto f1 = [] (int x) { return x + 13; };
     auto task1 = make_task(f0);
-    auto task2 = make_final_task(f1, task1);
+    auto task2 = make_final_task(transwarp::sequenced{}, f1, task1);
     task2->set_cancel(true);
     task2->schedule();
     ASSERT_FALSE(task2->get_future().valid());
@@ -325,10 +318,9 @@ TEST(itask) {
         auto f0 = [] { return 42; };
         auto f1 = [] (int x) { return x + 13; };
         auto task1 = make_task(f0);
-        auto task2 = make_final_task(f1, task1);
+        auto task2 = make_final_task(transwarp::parallel{2}, f1, task1);
         final = task2;
     }
-    final->set_parallel(2);
     final->schedule();
     ASSERT_EQUAL(55, final->get_future().get());
 }
@@ -337,7 +329,7 @@ TEST(set_pause_without_thread_pool) {
     auto f0 = [] { return 42; };
     auto f1 = [] (int x) { return x + 13; };
     auto task1 = make_task(f0);
-    auto task2 = make_final_task(f1, task1);
+    auto task2 = make_final_task(transwarp::sequenced{}, f1, task1);
     task2->set_pause(true);
 
     std::thread([task2] {
@@ -357,8 +349,7 @@ TEST(set_pause_with_thread_pool) {
     auto f0 = [] { return 42; };
     auto f1 = [] (int x) { return x + 13; };
     auto task1 = make_task(f0);
-    auto task2 = make_final_task(f1, task1);
-    task2->set_parallel(2);
+    auto task2 = make_final_task(transwarp::parallel{2}, f1, task1);
     task2->set_pause(true);
     task2->schedule();
 

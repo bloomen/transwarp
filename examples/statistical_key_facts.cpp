@@ -91,11 +91,13 @@ std::shared_ptr<transwarp::ifinal_task<result>> build_graph(bool parallel, std::
     auto median_task = transwarp::make_task("median", median, data_task);
     auto mode_task = transwarp::make_task("mode", mode, data_task);
 
-    auto final_task = transwarp::make_final_task("aggregate results", aggregate_results,
-                                                 avg_task, stddev_task, median_task, mode_task);
-    if (parallel)
-        final_task->set_parallel(4);
-    return final_task;
+    if (parallel) {
+        return transwarp::make_final_task("aggregate results", transwarp::parallel{4}, aggregate_results,
+                                          avg_task, stddev_task, median_task, mode_task);
+    } else {
+        return transwarp::make_final_task("aggregate results", transwarp::sequenced{}, aggregate_results,
+                                          avg_task, stddev_task, median_task, mode_task);
+    }
 }
 
 // This example computes statistical key measures from numbers sampled
