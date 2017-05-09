@@ -384,8 +384,6 @@ inline std::string make_dot(const std::vector<transwarp::edge>& graph) {
 
 // A task representing a piece work given by a functor and parent tasks.
 // By connecting tasks a directed acyclic graph is built.
-// Note that this class is currently not thread-safe, i.e., all methods
-// should be called from the same thread.
 template<typename Functor, typename... Tasks>
 class task : public transwarp::itask<typename std::result_of<Functor(typename Tasks::result_type...)>::type> {
 public:
@@ -394,6 +392,7 @@ public:
     // do not match or cannot be converted into the functor's parameters of this task
     using result_type = typename std::result_of<Functor(typename Tasks::result_type...)>::type;
 
+    // A task is defined by name, functor, and parent tasks
     task(std::string name, Functor functor, std::shared_ptr<Tasks>... parents)
     : node_{0, 0, std::move(name), {}},
       functor_(std::move(functor)),
@@ -404,6 +403,7 @@ public:
         bookkeeping();
     }
 
+    // This overload is for auto-naming
     task(Functor functor, std::shared_ptr<Tasks>... parents)
     : task("", std::move(functor), std::move(parents)...)
     {}
@@ -509,8 +509,10 @@ private:
     std::shared_future<result_type> future_;
 };
 
+// Policy for sequential execution
 class sequenced {};
 
+// Policy for parallel execution
 class parallel {
 public:
     explicit parallel(std::size_t n_threads)
@@ -525,10 +527,8 @@ private:
 
 // The final task is the very last task in the graph. The final task has no children.
 // Depending on how tasks in the graph are arranged they can be run in parallel
-// by design if set_parallel is called. If not, all tasks are run sequentially.
-// Tasks may run in parallel when they do not depend on each other.
-// Note that this class is currently not thread-safe, i.e., all methods
-// should be called from the same thread.
+// by design if the parallel execution policy is used. Tasks may run in parallel
+// when they do not depend on each other.
 template<typename Functor, typename... Tasks>
 class final_task : public transwarp::task<Functor, Tasks...>,
                    public transwarp::ifinal_task<typename transwarp::task<Functor, Tasks...>::result_type> {
@@ -538,18 +538,23 @@ public:
     // do not match or cannot be converted into the functor's parameters of this task
     using result_type = typename transwarp::task<Functor, Tasks...>::result_type;
 
+    // A final task is defined by name, execution policy, functor, and parent tasks.
+    // This overload is used for sequential execution
     final_task(std::string name, transwarp::sequenced, Functor functor, std::shared_ptr<Tasks>... parents)
     : transwarp::final_task<Functor, Tasks...>(std::move(name), 0, std::move(functor), std::move(parents)...)
     {}
 
+    // This overload is used for auto-naming and sequential execution
     final_task(transwarp::sequenced, Functor functor, std::shared_ptr<Tasks>... parents)
     : transwarp::final_task<Functor, Tasks...>("", 0, std::move(functor), std::move(parents)...)
     {}
 
+    // This overload is used for parallel execution
     final_task(std::string name, transwarp::parallel par, Functor functor, std::shared_ptr<Tasks>... parents)
     : transwarp::final_task<Functor, Tasks...>(std::move(name), par.n_threads(), std::move(functor), std::move(parents)...)
     {}
 
+    // This overload is used for auto-naming and parallel execution
     final_task(transwarp::parallel par, Functor functor, std::shared_ptr<Tasks>... parents)
     : transwarp::final_task<Functor, Tasks...>("", par.n_threads(), std::move(functor), std::move(parents)...)
     {}
@@ -619,6 +624,7 @@ public:
 
 private:
 
+    // A central constructor to rule them all
     final_task(std::string name, std::size_t n_threads, Functor functor, std::shared_ptr<Tasks>... parents)
     : transwarp::task<Functor, Tasks...>(std::move(name), std::move(functor), std::move(parents)...),
       paused_(false)
