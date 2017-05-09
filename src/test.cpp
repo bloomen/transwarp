@@ -164,13 +164,6 @@ TEST(task_canceled) {
     }
 }
 
-TEST(pass_visitor) {
-    transwarp::pass_visitor visitor;
-    int value = 42;
-    visitor(&value);
-    ASSERT_EQUAL(42, value);
-}
-
 TEST(make_dot_graph_with_empty_graph) {
     const std::vector<transwarp::edge> graph;
     const auto dot_graph = transwarp::make_dot(graph);

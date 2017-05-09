@@ -331,6 +331,13 @@ struct final_visitor {
     std::vector<transwarp::edge>& graph_;
 };
 
+// A visitor to be used to do nothing
+struct pass_visitor {
+
+    template<typename Task>
+    void operator()(const Task&) const {}
+};
+
 // Visits the task given in the ()-operator using the visitors given in
 // the constructor
 template<typename PreVisitor, typename PostVisitor>
@@ -359,13 +366,6 @@ struct unvisit {
 
 } // detail
 
-
-// A visitor to be used to do nothing
-struct pass_visitor {
-
-    template<typename Task>
-    void operator()(const Task&) const {}
-};
 
 // Creates a dot-style string from the given graph
 inline std::string make_dot(const std::vector<transwarp::edge>& graph) {
@@ -442,6 +442,31 @@ protected:
     friend struct transwarp::detail::visit;
     friend struct transwarp::detail::unvisit;
 
+    // Visits each task in a depth-first traversal. The pre_visitor is called
+    // before traversing through parents and the post_visitor after. A visitor
+    // takes a reference to a task (task&) as its only input argument.
+    template<typename PreVisitor, typename PostVisitor>
+    void visit(PreVisitor& pre_visitor, PostVisitor& post_visitor) {
+        if (!visited_) {
+            pre_visitor(*this);
+            transwarp::detail::call_with_each(transwarp::detail::visit<PreVisitor, PostVisitor>(pre_visitor, post_visitor), parents_);
+            post_visitor(*this);
+            visited_ = true;
+        }
+    }
+
+    // Traverses through all tasks and marks them as not visited.
+    void unvisit() {
+        if (visited_) {
+            visited_ = false;
+            transwarp::detail::call_with_each(transwarp::detail::unvisit(), parents_);
+        }
+    }
+
+    std::shared_ptr<std::atomic_bool> canceled_;
+
+private:
+
     friend struct transwarp::detail::parent_visitor;
     friend struct transwarp::detail::edges_visitor;
     friend struct transwarp::detail::final_visitor;
@@ -476,34 +501,12 @@ protected:
             ++node_.level;
     }
 
-    // Visits each task in a depth-first traversal. The pre_visitor is called
-    // before traversing through parents and the post_visitor after. A visitor
-    // takes a reference to a task (task&) as its only input argument.
-    template<typename PreVisitor, typename PostVisitor>
-    void visit(PreVisitor& pre_visitor, PostVisitor& post_visitor) {
-        if (!visited_) {
-            pre_visitor(*this);
-            transwarp::detail::call_with_each(transwarp::detail::visit<PreVisitor, PostVisitor>(pre_visitor, post_visitor), parents_);
-            post_visitor(*this);
-            visited_ = true;
-        }
-    }
-
-    // Traverses through all tasks and marks them as not visited.
-    void unvisit() {
-        if (visited_) {
-            visited_ = false;
-            transwarp::detail::call_with_each(transwarp::detail::unvisit(), parents_);
-        }
-    }
-
     transwarp::node node_;
     Functor functor_;
     std::tuple<std::shared_ptr<Tasks>...> parents_;
     bool visited_;
     transwarp::detail::wrapped_packager packager_;
     std::shared_future<result_type> future_;
-    std::shared_ptr<std::atomic_bool> canceled_;
 };
 
 class sequenced {};
@@ -513,11 +516,9 @@ public:
     explicit parallel(std::size_t n_threads)
     : n_threads_(n_threads)
     {}
-
     std::size_t n_threads() const {
         return n_threads_;
     }
-
 private:
     std::size_t n_threads_;
 };
@@ -563,12 +564,12 @@ public:
 
     // Returns the future associated to the underlying execution
     std::shared_future<result_type> get_future() const override {
-        return this->future_;
+        return transwarp::task<Functor, Tasks...>::get_future();
     }
 
     // Returns the associated node
     const transwarp::node& get_node() const override {
-        return this->node_;
+        return transwarp::task<Functor, Tasks...>::get_node();
     }
 
     // Schedules the final task and all its parent tasks for execution.
@@ -616,7 +617,7 @@ public:
         return graph_;
     }
 
-protected:
+private:
 
     final_task(std::string name, std::size_t n_threads, Functor functor, std::shared_ptr<Tasks>... parents)
     : transwarp::task<Functor, Tasks...>(std::move(name), std::move(functor), std::move(parents)...),
@@ -636,7 +637,7 @@ protected:
     void finalize() {
         this->canceled_ = std::make_shared<std::atomic_bool>(false);
         std::size_t id = 0;
-        transwarp::pass_visitor pass;
+        transwarp::detail::pass_visitor pass;
         transwarp::detail::final_visitor post_visitor(id, packagers_, this->canceled_, graph_);
         this->visit(pass, post_visitor);
         this->unvisit();
