@@ -22,6 +22,7 @@
 
 namespace transwarp {
 
+
 // A node carrying meta-data of a task
 struct node {
     std::size_t id;
@@ -30,11 +31,13 @@ struct node {
     std::vector<const node*> parents;
 };
 
+
 // An edge between two nodes
 struct edge {
     const transwarp::node* child;
     const transwarp::node* parent;
 };
+
 
 // An interface for the task class
 template<typename ResultType>
@@ -44,6 +47,7 @@ public:
     virtual std::shared_future<ResultType> get_future() const = 0;
     virtual const transwarp::node& get_node() const = 0;
 };
+
 
 // An interface for the final_task class
 template<typename ResultType>
@@ -58,12 +62,14 @@ public:
     virtual const std::vector<transwarp::edge>& get_graph() const = 0;
 };
 
+
 // Base class for exceptions
 class transwarp_error : public std::runtime_error {
 public:
     explicit transwarp_error(const std::string& message)
     : std::runtime_error(message) {}
 };
+
 
 // Exception thrown when a task is canceled
 class task_canceled : public transwarp::transwarp_error {
@@ -74,6 +80,7 @@ public:
 
 
 namespace detail {
+
 
 // A wrapper for a packager that is associated to a node. Sorting objects of
 // this class will be first by node level and then by node id.
@@ -382,6 +389,7 @@ inline std::string make_dot(const std::vector<transwarp::edge>& graph) {
     return dot;
 }
 
+
 // A task representing a piece work given by a functor and parent tasks.
 // By connecting tasks a directed acyclic graph is built.
 template<typename Functor, typename... Tasks>
@@ -418,6 +426,7 @@ public:
 
     // Returns the future associated to the underlying execution
     std::shared_future<result_type> get_future() const override {
+        std::lock_guard<std::mutex> lock(future_mutex_);
         return future_;
     }
 
@@ -488,7 +497,10 @@ private:
             auto futures = transwarp::detail::get_futures(parents_);
             auto pack_task = std::make_shared<std::packaged_task<result_type()>>(
                     std::bind(&task::evaluate, std::ref(*this), std::move(futures)));
-            future_ = pack_task->get_future();
+            {
+                std::lock_guard<std::mutex> lock(future_mutex_);
+                future_ = pack_task->get_future();
+            }
             return [pack_task] { (*pack_task)(); };
         };
         return transwarp::detail::wrapped_packager(packager, node_);
@@ -507,10 +519,13 @@ private:
     bool visited_;
     transwarp::detail::wrapped_packager packager_;
     std::shared_future<result_type> future_;
+    mutable std::mutex future_mutex_;
 };
+
 
 // Policy for sequential execution
 class sequenced {};
+
 
 // Policy for parallel execution
 class parallel {
@@ -524,6 +539,7 @@ public:
 private:
     std::size_t n_threads_;
 };
+
 
 // The final task is the very last task in the graph. The final task has no children.
 // Depending on how tasks in the graph are arranged they can be run in parallel
@@ -671,6 +687,7 @@ private:
     std::vector<transwarp::edge> graph_;
 };
 
+
 // A factory function to create a new task
 template<typename Functor, typename... Tasks>
 std::shared_ptr<transwarp::task<Functor, Tasks...>> make_task(std::string name, Functor functor, std::shared_ptr<Tasks>... parents) {
@@ -683,13 +700,14 @@ std::shared_ptr<transwarp::task<Functor, Tasks...>> make_task(Functor functor, s
     return std::make_shared<transwarp::task<Functor, Tasks...>>(std::move(functor), std::move(parents)...);
 }
 
-// A factory function to create a new final task with sequenced execution policy
+
+// A factory function to create a new final task with sequential execution
 template<typename Functor, typename... Tasks>
 std::shared_ptr<transwarp::final_task<Functor, Tasks...>> make_final_task(std::string name, transwarp::sequenced seq, Functor functor, std::shared_ptr<Tasks>... parents) {
     return std::make_shared<transwarp::final_task<Functor, Tasks...>>(std::move(name), std::move(seq), std::move(functor), std::move(parents)...);
 }
 
-// A factory function to create a new final task with sequenced execution policy. Overload for auto-naming
+// A factory function to create a new final task with sequential execution. Overload for auto-naming
 template<typename Functor, typename... Tasks>
 std::shared_ptr<transwarp::final_task<Functor, Tasks...>> make_final_task(transwarp::sequenced seq, Functor functor, std::shared_ptr<Tasks>... parents) {
     return std::make_shared<transwarp::final_task<Functor, Tasks...>>(std::move(seq), std::move(functor), std::move(parents)...);
