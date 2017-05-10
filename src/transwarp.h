@@ -86,13 +86,16 @@ class wrapped_packager {
 public:
 
     wrapped_packager()
-    : packager_(), node_{0, 0, "", {}} {}
+    : packager_(), node_{} {}
 
-    wrapped_packager(std::function<std::function<void()>()> packager, transwarp::node node)
-    : packager_(std::move(packager)), node_(std::move(node)) {}
+    wrapped_packager(std::function<std::function<void()>()> packager, const transwarp::node* node)
+    : packager_(std::move(packager)), node_(node) {}
 
-    bool operator>(const wrapped_packager& other) const {
-        return std::tie(node_.level, node_.id) > std::tie(other.node_.level, other.node_.id);
+    bool operator<(const wrapped_packager& other) const {
+        if (!node_) {
+            throw transwarp::transwarp_error("assign node pointer before calling");
+        }
+        return std::tie(node_->level, node_->id) < std::tie(other.node_->level, other.node_->id);
     }
 
     std::function<void()> make_package() const {
@@ -101,7 +104,7 @@ public:
 
 private:
     std::function<std::function<void()>()> packager_;
-    transwarp::node node_;
+    const transwarp::node* node_;
 };
 
 // An exception for errors in the thread_pool class
@@ -495,7 +498,7 @@ private:
             }
             return [pack_task] { (*pack_task)(); };
         };
-        return transwarp::detail::wrapped_packager(packager, node_);
+        return transwarp::detail::wrapped_packager(packager, &node_);
     }
 
     // Assigns level and parents of this task via the node object
@@ -660,8 +663,7 @@ private:
         this->visit(pass, post_visitor);
         this->unvisit();
         callbacks_.resize(packagers_.size());
-        std::sort(packagers_.begin(), packagers_.end(),
-                  std::greater<transwarp::detail::wrapped_packager>());
+        std::sort(packagers_.begin(), packagers_.end());
     }
 
     // Calls all packagers and stores the results as callbacks. Every task has
