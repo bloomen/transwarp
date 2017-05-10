@@ -13,7 +13,12 @@ COLLECTION(test_transwarp) {
 void make_test_one_task(std::size_t threads) {
     const int value = 42;
     auto f1 = [value]{ return value; };
-    auto task = make_final_task(transwarp::parallel{threads}, f1);
+    std::shared_ptr<transwarp::ifinal_task<int>> task;
+    if (threads > 0) {
+        task = make_final_task(transwarp::parallel{threads}, f1);
+    } else {
+        task = make_final_task(transwarp::sequenced{}, f1);
+    }
     ASSERT_EQUAL(0u, task->get_node().id);
     ASSERT_EQUAL(0u, task->get_node().level);
     ASSERT_EQUAL(0u, task->get_node().parents.size());
@@ -43,7 +48,12 @@ void make_test_three_tasks(std::size_t threads) {
     auto task2 = make_task("\nt2\t", f2, task1);
 
     auto f3 = [](int v, int w) { return v + w + 3; }; 
-    auto task3 = make_final_task("t3 ", transwarp::parallel{threads}, f3, task1, task2);
+    std::shared_ptr<transwarp::ifinal_task<int>> task3;
+    if (threads > 0) {
+        task3 = make_final_task("t3 ", transwarp::parallel{threads}, f3, task1, task2);
+    } else {
+        task3 = make_final_task("t3 ", transwarp::sequenced{}, f3, task1, task2);
+    }
 
     ASSERT_EQUAL(0u, task1->get_node().id);
     ASSERT_EQUAL(0u, task1->get_node().level);
@@ -115,7 +125,12 @@ void make_test_bunch_of_tasks(std::size_t threads) {
     auto task10 = make_task(f1, task9);
     auto task11 = make_task(f3, task10, task7, task8);
     auto task12 = make_task(f2, task11, task6);
-    auto task13 = make_final_task(transwarp::parallel{threads}, f3, task10, task11, task12);
+    std::shared_ptr<transwarp::ifinal_task<int>> task13;
+    if (threads > 0) {
+        task13 = make_final_task(transwarp::parallel{threads}, f3, task10, task11, task12);
+    } else {
+        task13 = make_final_task(transwarp::sequenced{}, f3, task10, task11, task12);
+    }
 
     const auto task0_result = 42;
     const auto task3_result = 168;
@@ -262,7 +277,12 @@ void make_test_task_with_exception_thrown(std::size_t threads) {
     };
     auto task1 = make_task(f1);
     auto task2 = make_task(f2, task1);
-    auto task3 = make_final_task(transwarp::parallel{threads}, f3, task2);
+    std::shared_ptr<transwarp::ifinal_task<int>> task3;
+    if (threads > 0) {
+        task3 = make_final_task(transwarp::parallel{threads}, f3, task2);
+    } else {
+        task3 = make_final_task(transwarp::sequenced{}, f3, task2);
+    }
     task3->schedule();
     try {
         task3->get_future().get();
@@ -351,6 +371,17 @@ TEST(set_pause_with_thread_pool) {
 
     task2->set_pause(false);
     ASSERT_EQUAL(55, future.get());
+}
+
+TEST(sequenced) {
+    transwarp::sequenced seq;
+    ASSERT_TRUE(typeid(seq).hash_code() > 0);
+}
+
+TEST(parallel) {
+    transwarp::parallel par{2};
+    ASSERT_EQUAL(2, par.n_threads());
+    ASSERT_THROW(transwarp::transwarp_error, []{ transwarp::parallel{0}; });
 }
 
 COLLECTION(test_examples) {

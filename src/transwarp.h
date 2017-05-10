@@ -525,7 +525,11 @@ class parallel {
 public:
     explicit parallel(std::size_t n_threads)
     : n_threads_(n_threads)
-    {}
+    {
+        if (n_threads_ == 0) {
+            throw transwarp::transwarp_error("parallel execution requires at least one thread");
+        }
+    }
     std::size_t n_threads() const {
         return n_threads_;
     }
