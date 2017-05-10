@@ -86,7 +86,7 @@ class wrapped_packager {
 public:
 
     wrapped_packager()
-    : packager_{}, node_{0, 0, "", {}} {}
+    : packager_(), node_{0, 0, "", {}} {}
 
     wrapped_packager(std::function<std::function<void()>()> packager, transwarp::node node)
     : packager_(std::move(packager)), node_(std::move(node)) {}
@@ -124,7 +124,7 @@ public:
                 threads_.emplace_back(&thread_pool::worker, this);
             }
         } else {
-            throw transwarp::detail::thread_pool_error{"number of threads must be larger than zero"};
+            throw transwarp::detail::thread_pool_error("number of threads must be larger than zero");
         }
     }
 
@@ -144,7 +144,7 @@ public:
         {
             std::lock_guard<std::mutex> lock(mutex_);
             if (done_) {
-                throw transwarp::detail::thread_pool_error{"push called while thread pool is shutting down"};
+                throw transwarp::detail::thread_pool_error("push called while thread pool is shutting down");
             }
             functors_.push(functor);
         }
