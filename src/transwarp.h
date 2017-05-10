@@ -316,12 +316,13 @@ struct edges_visitor {
 // Applies final bookkeeping to the task given in the ()-operator. This includes
 // setting id, name, and canceled flag. Also, packager functors and edges are collected.
 struct final_visitor {
-    final_visitor(std::size_t& id, std::vector<transwarp::detail::wrapped_packager>& packagers,
-                  const std::shared_ptr<std::atomic_bool>& canceled, std::vector<transwarp::edge>& graph)
-    : id_(id), packagers_(packagers), canceled_(canceled), graph_(graph) {}
+    final_visitor(std::vector<transwarp::detail::wrapped_packager>& packagers,
+                  std::vector<transwarp::edge>& graph)
+    : packagers_(packagers), graph_(graph), id_(0),
+      canceled_(std::make_shared<std::atomic_bool>(false)) {}
 
     template<typename Task>
-    void operator()(Task& task) const {
+    void operator()(Task& task) {
         task.node_.id = id_++;
         if (task.node_.name.empty())
             task.node_.name = "task" + std::to_string(task.node_.id);
@@ -330,10 +331,10 @@ struct final_visitor {
         transwarp::detail::call_with_each(transwarp::detail::edges_visitor(graph_, task.node_), task.parents_);
     }
 
-    std::size_t& id_;
     std::vector<transwarp::detail::wrapped_packager>& packagers_;
-    const std::shared_ptr<std::atomic_bool>& canceled_;
     std::vector<transwarp::edge>& graph_;
+    std::size_t id_;
+    std::shared_ptr<std::atomic_bool> canceled_;
 };
 
 // A visitor to be used to do nothing
@@ -655,10 +656,8 @@ private:
     // sorted by level and ID which ensures that tasks higher in the graph
     // are executed first.
     void finalize() {
-        this->canceled_ = std::make_shared<std::atomic_bool>(false);
-        std::size_t id = 0;
         transwarp::detail::pass_visitor pass;
-        transwarp::detail::final_visitor post_visitor(id, packagers_, this->canceled_, graph_);
+        transwarp::detail::final_visitor post_visitor(packagers_, graph_);
         this->visit(pass, post_visitor);
         this->unvisit();
         callbacks_.resize(packagers_.size());
