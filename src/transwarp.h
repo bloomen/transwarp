@@ -337,13 +337,6 @@ struct final_visitor {
     std::shared_ptr<std::atomic_bool> canceled_;
 };
 
-// A visitor to be used to do nothing
-struct pass_visitor {
-
-    template<typename Task>
-    void operator()(const Task&) const {}
-};
-
 // Visits the task given in the ()-operator using the visitors given in
 // the constructor
 template<typename PreVisitor, typename PostVisitor>
@@ -371,6 +364,14 @@ struct unvisit {
 
 
 } // detail
+
+
+// A visitor to be used to do nothing
+struct pass_visitor {
+
+    template<typename Task>
+    void operator()(const Task&) const {}
+};
 
 
 // Creates a dot-style string from the given graph
@@ -444,12 +445,6 @@ public:
         return parents_;
     }
 
-protected:
-
-    template<typename T, typename U>
-    friend struct transwarp::detail::visit;
-    friend struct transwarp::detail::unvisit;
-
     // Visits each task in a depth-first traversal. The pre_visitor is called
     // before traversing through parents and the post_visitor after. A visitor
     // takes a reference to a task (task&) as its only input argument.
@@ -470,7 +465,6 @@ protected:
             transwarp::detail::call_with_each(transwarp::detail::unvisit(), parents_);
         }
     }
-
 
 private:
 
@@ -656,7 +650,7 @@ private:
     // sorted by level and ID which ensures that tasks higher in the graph
     // are executed first.
     void finalize() {
-        transwarp::detail::pass_visitor pass;
+        transwarp::pass_visitor pass;
         transwarp::detail::final_visitor post_visitor(packagers_, graph_);
         canceled_ = post_visitor.canceled_;
         this->visit(pass, post_visitor);
