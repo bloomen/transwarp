@@ -471,7 +471,6 @@ protected:
         }
     }
 
-    std::shared_ptr<std::atomic_bool> canceled_;
 
 private:
 
@@ -517,6 +516,7 @@ private:
     std::tuple<std::shared_ptr<Tasks>...> parents_;
     bool visited_;
     transwarp::detail::wrapped_packager packager_;
+    std::shared_ptr<std::atomic_bool> canceled_;
     std::shared_future<result_type> future_;
     mutable std::mutex future_mutex_;
 };
@@ -596,7 +596,7 @@ public:
     // The execution is either sequential or in parallel. Complexity is O(n)
     // with n being the number of tasks in the graph
     void schedule() override {
-        if (!*this->canceled_) {
+        if (!*canceled_) {
             prepare_callbacks();
             if (pool_) { // parallel execution
                 for (const auto& callback : callbacks_) {
@@ -627,7 +627,7 @@ public:
     // Canceling pending tasks does not affect currently running tasks.
     // As long as cancel is enabled new computations cannot be scheduled.
     void set_cancel(bool enabled) override {
-        *this->canceled_ = enabled;
+        *canceled_ = enabled;
     }
 
     // Returns the graph of the task structure. This is mainly for visualizing
@@ -658,6 +658,7 @@ private:
     void finalize() {
         transwarp::detail::pass_visitor pass;
         transwarp::detail::final_visitor post_visitor(packagers_, graph_);
+        canceled_ = post_visitor.canceled_;
         this->visit(pass, post_visitor);
         this->unvisit();
         callbacks_.resize(packagers_.size());
@@ -678,6 +679,7 @@ private:
     }
 
     std::atomic_bool paused_;
+    std::shared_ptr<std::atomic_bool> canceled_;
     std::vector<transwarp::detail::wrapped_packager> packagers_;
     std::vector<std::function<void()>> callbacks_;
     std::unique_ptr<transwarp::detail::thread_pool> pool_;
