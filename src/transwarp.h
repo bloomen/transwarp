@@ -85,16 +85,10 @@ namespace detail {
 class wrapped_packager {
 public:
 
-    wrapped_packager()
-    : packager_(), node_{} {}
-
     wrapped_packager(std::function<std::function<void()>()> packager, const transwarp::node* node)
     : packager_(std::move(packager)), node_(node) {}
 
     bool operator<(const wrapped_packager& other) const {
-        if (!node_) {
-            throw transwarp::transwarp_error("assign node pointer before calling");
-        }
         return std::tie(node_->level, node_->id) < std::tie(other.node_->level, other.node_->id);
     }
 
@@ -498,7 +492,7 @@ private:
             }
             return [pack_task] { (*pack_task)(); };
         };
-        return transwarp::detail::wrapped_packager(packager, &node_);
+        return {packager, &node_};
     }
 
     // Assigns level and parents of this task via the node object
