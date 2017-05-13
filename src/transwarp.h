@@ -72,7 +72,7 @@ public:
 // Exception thrown when a task is canceled
 class task_canceled : public transwarp::transwarp_error {
 public:
-    task_canceled(const transwarp::node& n)
+    explicit task_canceled(const transwarp::node& n)
     : transwarp::transwarp_error(n.name + " is canceled") {}
 };
 
@@ -80,24 +80,27 @@ public:
 namespace detail {
 
 
+// The type used for callbacks
+using callback_t = std::function<void()>;
+
 // A wrapper for a packager that is associated to a node. Sorting objects of
 // this class will be first by node level and then by node id.
 class wrapped_packager {
 public:
 
-    wrapped_packager(std::function<std::function<void()>()> packager, const transwarp::node* node)
+    wrapped_packager(std::function<transwarp::detail::callback_t()> packager, const transwarp::node* node)
     : packager_(std::move(packager)), node_(node) {}
 
     bool operator<(const wrapped_packager& other) const {
         return std::tie(node_->level, node_->id) < std::tie(other.node_->level, other.node_->id);
     }
 
-    std::function<void()> make_package() const {
+    transwarp::detail::callback_t make_callback() const {
         return packager_();
     }
 
 private:
-    std::function<std::function<void()>()> packager_;
+    std::function<transwarp::detail::callback_t()> packager_;
     const transwarp::node* node_;
 };
 
@@ -137,7 +140,7 @@ public:
         }
     }
 
-    void push(const std::function<void()>& functor) {
+    void push(const transwarp::detail::callback_t& functor) {
         {
             std::lock_guard<std::mutex> lock(mutex_);
             if (done_) {
@@ -162,7 +165,7 @@ private:
 
     void worker() {
         for (;;) {
-            std::function<void()> functor;
+            transwarp::detail::callback_t functor;
             {
                 std::unique_lock<std::mutex> lock(mutex_);
                 cond_var_.wait(lock, [this]{
@@ -181,7 +184,7 @@ private:
     bool done_;
     bool paused_;
     std::vector<std::thread> threads_;
-    std::queue<std::function<void()>> functors_;
+    std::queue<transwarp::detail::callback_t> functors_;
     std::condition_variable cond_var_;
     std::mutex mutex_;
 };
@@ -311,7 +314,7 @@ struct edges_visitor {
 };
 
 // Applies final bookkeeping to the task given in the ()-operator. This includes
-// setting id, name, and canceled flag. Also, packager functors and edges are collected.
+// setting id, name, and canceled flag. Also, packagers and edges are collected.
 struct final_visitor {
     final_visitor(std::vector<transwarp::detail::wrapped_packager>& packagers,
                   std::vector<transwarp::edge>& graph)
@@ -668,14 +671,14 @@ private:
     void prepare_callbacks() {
         std::transform(packagers_.begin(), packagers_.end(), callbacks_.begin(),
                        [](const transwarp::detail::wrapped_packager& p) {
-                           return p.make_package();
+                           return p.make_callback();
                        });
     }
 
     std::atomic_bool paused_;
     std::shared_ptr<std::atomic_bool> canceled_;
     std::vector<transwarp::detail::wrapped_packager> packagers_;
-    std::vector<std::function<void()>> callbacks_;
+    std::vector<transwarp::detail::callback_t> callbacks_;
     std::unique_ptr<transwarp::detail::thread_pool> pool_;
     std::vector<transwarp::edge> graph_;
 };
