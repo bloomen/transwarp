@@ -1,5 +1,5 @@
 // transwarp is a header-only C++ library for task concurrency
-// Version: in development
+// Version: 0.1.0
 // Author: Christian Blume (chr.blume@gmail.com)
 // Repository: https://github.com/bloomen/transwarp
 // License: http://www.opensource.org/licenses/mit-license.php
