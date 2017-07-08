@@ -1,5 +1,5 @@
 // transwarp is a header-only C++ library for task concurrency
-// Version: 0.1.0
+// Version: under development
 // Author: Christian Blume (chr.blume@gmail.com)
 // Repository: https://github.com/bloomen/transwarp
 // License: http://www.opensource.org/licenses/mit-license.php
@@ -26,6 +26,7 @@ namespace transwarp {
 // A node carrying meta-data of a task
 struct node {
     std::size_t id;
+    std::size_t priority;
     std::size_t level;
     std::string name;
     std::vector<const node*> parents;
@@ -92,7 +93,8 @@ public:
     : packager_(std::move(packager)), node_(node) {}
 
     bool operator<(const wrapped_packager& other) const {
-        return std::tie(node_->level, node_->id) < std::tie(other.node_->level, other.node_->id);
+        return std::tie(node_->level, node_->priority, node_->id) <
+               std::tie(other.node_->level, other.node_->priority, other.node_->id);
     }
 
     transwarp::detail::callback_t make_callback() const {
@@ -378,8 +380,10 @@ struct pass_visitor {
 inline std::string make_dot(const std::vector<transwarp::edge>& graph) {
     auto info = [](const transwarp::node& n) {
         const auto name = transwarp::detail::trim(n.name);
-        return '"' + name + "\nid " + std::to_string(n.id) + " level " + std::to_string(n.level)
-                   + " parents " + std::to_string(n.parents.size()) + '"';
+        return '"' + name + "\nid " + std::to_string(n.id)
+                   + " pri " + std::to_string(n.priority)
+                   + " lev " + std::to_string(n.level)
+                   + " par " + std::to_string(n.parents.size()) + '"';
     };
     std::string dot = "digraph {\n";
     for (const auto& pair : graph) {
@@ -400,9 +404,9 @@ public:
     // do not match or cannot be converted into the functor's parameters of this task
     using result_type = typename std::result_of<Functor(typename Tasks::result_type...)>::type;
 
-    // A task is defined by name, functor, and parent tasks
-    task(std::string name, Functor functor, std::shared_ptr<Tasks>... parents)
-    : node_{0, 0, std::move(name), {}},
+    // A task is defined by name, priority, functor, and parent tasks
+    task(std::string name, std::size_t priority, Functor functor, std::shared_ptr<Tasks>... parents)
+    : node_{0, priority, 0, std::move(name), {}},
       functor_(std::move(functor)),
       parents_(std::make_tuple(std::move(parents)...)),
       visited_(false),
@@ -411,9 +415,19 @@ public:
         bookkeeping();
     }
 
+    // This overload is for lowest priority of zero
+    task(std::string name, Functor functor, std::shared_ptr<Tasks>... parents)
+    : task(std::move(name), 0, std::move(functor), std::move(parents)...)
+    {}
+
     // This overload is for auto-naming
+    task(std::size_t priority, Functor functor, std::shared_ptr<Tasks>... parents)
+    : task("", priority, std::move(functor), std::move(parents)...)
+    {}
+
+    // This overload is for auto-naming and lowest priority of zero
     task(Functor functor, std::shared_ptr<Tasks>... parents)
-    : task("", std::move(functor), std::move(parents)...)
+    : task("", 0, std::move(functor), std::move(parents)...)
     {}
 
     virtual ~task() = default;
@@ -686,11 +700,23 @@ private:
 
 // A factory function to create a new task
 template<typename Functor, typename... Tasks>
+std::shared_ptr<transwarp::task<Functor, Tasks...>> make_task(std::string name, std::size_t priority, Functor functor, std::shared_ptr<Tasks>... parents) {
+    return std::make_shared<transwarp::task<Functor, Tasks...>>(std::move(name), priority, std::move(functor), std::move(parents)...);
+}
+
+// A factory function to create a new task. Overload for lowest priority of zero
+template<typename Functor, typename... Tasks>
 std::shared_ptr<transwarp::task<Functor, Tasks...>> make_task(std::string name, Functor functor, std::shared_ptr<Tasks>... parents) {
-    return std::make_shared<transwarp::task<Functor, Tasks...>>(std::move(name), std::move(functor), std::move(parents)...);
+    return std::make_shared<transwarp::task<Functor, Tasks...>>(std::move(name), 0, std::move(functor), std::move(parents)...);
 }
 
 // A factory function to create a new task. Overload for auto-naming
+template<typename Functor, typename... Tasks>
+std::shared_ptr<transwarp::task<Functor, Tasks...>> make_task(std::size_t priority, Functor functor, std::shared_ptr<Tasks>... parents) {
+    return std::make_shared<transwarp::task<Functor, Tasks...>>("", priority, std::move(functor), std::move(parents)...);
+}
+
+// A factory function to create a new task. Overload for auto-naming and lowest priority of zero
 template<typename Functor, typename... Tasks>
 std::shared_ptr<transwarp::task<Functor, Tasks...>> make_task(Functor functor, std::shared_ptr<Tasks>... parents) {
     return std::make_shared<transwarp::task<Functor, Tasks...>>(std::move(functor), std::move(parents)...);

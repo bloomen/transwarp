@@ -42,10 +42,10 @@ void make_test_three_tasks(std::size_t threads) {
     int value = 42;
 
     auto f1 = [&value]{ return value; };
-    auto task1 = make_task("t1", f1);
+    auto task1 = make_task("t1", 13, f1);
 
     auto f2 = [](int v) { return v + 2; };
-    auto task2 = make_task("\nt2\t", f2, task1);
+    auto task2 = make_task("\nt2\t", 42, f2, task1);
 
     auto f3 = [](int v, int w) { return v + w + 3; }; 
     std::shared_ptr<transwarp::ifinal_task<int>> task3;
@@ -86,14 +86,14 @@ void make_test_three_tasks(std::size_t threads) {
 
     const std::string exp_dot_graph = "digraph {\n"
 "\"t1\n"
-"id 0 level 0 parents 0\" -> \"t2\n"
-"id 1 level 1 parents 1\"\n"
+"id 0 pri 13 lev 0 par 0\" -> \"t2\n"
+"id 1 pri 42 lev 1 par 1\"\n"
 "\"t1\n"
-"id 0 level 0 parents 0\" -> \"t3\n"
-"id 2 level 2 parents 2\"\n"
+"id 0 pri 13 lev 0 par 0\" -> \"t3\n"
+"id 2 pri 0 lev 2 par 2\"\n"
 "\"t2\n"
-"id 1 level 1 parents 1\" -> \"t3\n"
-"id 2 level 2 parents 2\"\n"
+"id 1 pri 42 lev 1 par 1\" -> \"t3\n"
+"id 2 pri 0 lev 2 par 2\"\n"
 "}\n";
 
     ASSERT_EQUAL(exp_dot_graph, dot_graph);
@@ -119,10 +119,10 @@ void make_test_bunch_of_tasks(std::size_t threads) {
     auto task3 = make_task(f2, task2, task0);
     auto task5 = make_task(f2, task3, task2);
     auto task6 = make_task(f3, task1, task2, task5);
-    auto task7 = make_task(f2, task5, task6);
-    auto task8 = make_task(f2, task6, task7);
+    auto task7 = make_task(3, f2, task5, task6);
+    auto task8 = make_task(2, f2, task6, task7);
     auto task9 = make_task(f1, task7);
-    auto task10 = make_task(f1, task9);
+    auto task10 = make_task(0, f1, task9);
     auto task11 = make_task(f3, task10, task7, task8);
     auto task12 = make_task(f2, task11, task6);
     std::shared_ptr<transwarp::ifinal_task<int>> task13;
@@ -171,7 +171,7 @@ TEST(transwarp_error) {
 
 TEST(task_canceled) {
     const std::string msg = "cool is canceled";
-    const transwarp::node node{1, 2, "cool", {}};
+    const transwarp::node node{1, 2, 3, "cool", {}};
     try {
         throw transwarp::task_canceled(node);
     } catch (const transwarp::transwarp_error& e) {
@@ -187,20 +187,20 @@ TEST(make_dot_graph_with_empty_graph) {
 }
 
 TEST(make_dot_graph_with_three_nodes) {
-    const transwarp::node node2{1, 1, "node2", {}};
-    const transwarp::node node3{2, 1, "node3", {}};
-    const transwarp::node node1{0, 0, "node1", {&node2, &node3}};
+    const transwarp::node node2{1, 10, 1, "node2", {}};
+    const transwarp::node node3{2, 11, 1, "node3", {}};
+    const transwarp::node node1{0, 12, 0, "node1", {&node2, &node3}};
     std::vector<transwarp::edge> graph;
     graph.push_back({&node1, &node2});
     graph.push_back({&node1, &node3});
     const auto dot_graph = transwarp::make_dot(graph);
     const std::string exp_dot_graph = "digraph {\n"
 "\"node2\n"
-"id 1 level 1 parents 0\" -> \"node1\n"
-"id 0 level 0 parents 2\"\n"
+"id 1 pri 10 lev 1 par 0\" -> \"node1\n"
+"id 0 pri 12 lev 0 par 2\"\n"
 "\"node3\n"
-"id 2 level 1 parents 0\" -> \"node1\n"
-"id 0 level 0 parents 2\"\n"
+"id 2 pri 11 lev 1 par 0\" -> \"node1\n"
+"id 0 pri 12 lev 0 par 2\"\n"
 "}\n";
 
     ASSERT_EQUAL(exp_dot_graph, dot_graph);
