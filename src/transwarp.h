@@ -526,7 +526,7 @@ public:
 
 
 // Executor for sequential execution
-class sequenced : public transwarp::executor {
+class sequential : public transwarp::executor {
 public:
 
     void execute(const std::function<void()>& functor) noexcept override {

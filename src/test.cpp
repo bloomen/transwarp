@@ -17,7 +17,7 @@ void make_test_one_task(std::size_t threads) {
     if (threads > 0) {
         task = make_final_task(std::make_shared<transwarp::parallel>(threads), f1);
     } else {
-        task = make_final_task(std::make_shared<transwarp::sequenced>(), f1);
+        task = make_final_task(std::make_shared<transwarp::sequential>(), f1);
     }
     ASSERT_EQUAL(0u, task->get_node().id);
     ASSERT_EQUAL(0u, task->get_node().level);
@@ -52,7 +52,7 @@ void make_test_three_tasks(std::size_t threads) {
     if (threads > 0) {
         task3 = make_final_task("t3 ", std::make_shared<transwarp::parallel>(threads), f3, task1, task2);
     } else {
-        task3 = make_final_task("t3 ", std::make_shared<transwarp::sequenced>(), f3, task1, task2);
+        task3 = make_final_task("t3 ", std::make_shared<transwarp::sequential>(), f3, task1, task2);
     }
 
     ASSERT_EQUAL(0u, task1->get_node().id);
@@ -129,7 +129,7 @@ void make_test_bunch_of_tasks(std::size_t threads) {
     if (threads > 0) {
         task13 = make_final_task(std::make_shared<transwarp::parallel>(threads), f3, task10, task11, task12);
     } else {
-        task13 = make_final_task(std::make_shared<transwarp::sequenced>(), f3, task10, task11, task12);
+        task13 = make_final_task(std::make_shared<transwarp::sequential>(), f3, task10, task11, task12);
     }
 
     const auto task0_result = 42;
@@ -239,7 +239,7 @@ TEST(get_node) {
     auto f2 = [] { return 13; };
     auto task2 = make_task(f2);
     auto f3 = [](int v, int w) { return v + w; };
-    auto task3 = make_final_task(std::make_shared<transwarp::sequenced>(), f3, task1, task2);
+    auto task3 = make_final_task(std::make_shared<transwarp::sequential>(), f3, task1, task2);
 
     // task3
     ASSERT_EQUAL(2, task3->get_node().id);
@@ -281,7 +281,7 @@ void make_test_task_with_exception_thrown(std::size_t threads) {
     if (threads > 0) {
         task3 = make_final_task(std::make_shared<transwarp::parallel>(threads), f3, task2);
     } else {
-        task3 = make_final_task(std::make_shared<transwarp::sequenced>(), f3, task2);
+        task3 = make_final_task(std::make_shared<transwarp::sequential>(), f3, task2);
     }
     task3->schedule();
     try {
@@ -322,7 +322,7 @@ TEST(cancel_with_schedule_called_after) {
     auto f0 = [] { return 42; };
     auto f1 = [] (int x) { return x + 13; };
     auto task1 = make_task(f0);
-    auto task2 = make_final_task(std::make_shared<transwarp::sequenced>(), f1, task1);
+    auto task2 = make_final_task(std::make_shared<transwarp::sequential>(), f1, task1);
     task2->set_cancel(true);
     task2->schedule();
     ASSERT_FALSE(task2->get_future().valid());
@@ -342,7 +342,7 @@ TEST(itask) {
 }
 
 TEST(sequenced) {
-    transwarp::sequenced seq;
+    transwarp::sequential seq;
     ASSERT_TRUE(typeid(seq).hash_code() > 0);
 }
 

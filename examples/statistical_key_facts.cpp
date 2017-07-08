@@ -96,7 +96,7 @@ std::shared_ptr<transwarp::ifinal_task<result>> build_graph(bool parallel, std::
         return transwarp::make_final_task("aggregate results", par, aggregate_results,
                                           avg_task, stddev_task, median_task, mode_task);
     } else {
-        auto seq = std::make_shared<transwarp::sequenced>();
+        auto seq = std::make_shared<transwarp::sequential>();
         return transwarp::make_final_task("aggregate results", seq, aggregate_results,
                                           avg_task, stddev_task, median_task, mode_task);
     }
