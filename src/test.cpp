@@ -301,14 +301,17 @@ TEST(task_with_exception_thrown) {
 }
 
 TEST(cancel_with_schedule_called_before_in_parallel_and_uncancel) {
-    auto f0 = [] { return 42; };
+    std::atomic_bool cont(false);
+    auto f0 = [&cont] {
+       while (!cont) {}
+       return 42;
+    };
     auto f1 = [] (int x) { return x + 13; };
     auto task1 = make_task(f0);
     auto task2 = make_final_task(transwarp::parallel{2}, f1, task1);
-    task2->set_pause(true);
     task2->schedule();
     task2->set_cancel(true);
-    task2->set_pause(false);
+    cont = true;
     ASSERT_THROW(transwarp::task_canceled, [task2] { task2->get_future().get(); });
     task2->set_cancel(false);
     task2->schedule();
@@ -336,41 +339,6 @@ TEST(itask) {
     }
     final->schedule();
     ASSERT_EQUAL(55, final->get_future().get());
-}
-
-TEST(set_pause_without_thread_pool) {
-    auto f0 = [] { return 42; };
-    auto f1 = [] (int x) { return x + 13; };
-    auto task1 = make_task(f0);
-    auto task2 = make_final_task(transwarp::sequenced{}, f1, task1);
-    task2->set_pause(true);
-
-    std::thread([task2] {
-        task2->schedule();
-    }).detach();
-
-    while (!task2->get_future().valid()) {}
-
-    auto future = task2->get_future();
-    ASSERT_TRUE(std::future_status::timeout == future.wait_for(std::chrono::microseconds(50)));
-
-    task2->set_pause(false);
-    ASSERT_EQUAL(55, future.get());
-}
-
-TEST(set_pause_with_thread_pool) {
-    auto f0 = [] { return 42; };
-    auto f1 = [] (int x) { return x + 13; };
-    auto task1 = make_task(f0);
-    auto task2 = make_final_task(transwarp::parallel{2}, f1, task1);
-    task2->set_pause(true);
-    task2->schedule();
-
-    auto future = task2->get_future();
-    ASSERT_TRUE(std::future_status::timeout == future.wait_for(std::chrono::microseconds(50)));
-
-    task2->set_pause(false);
-    ASSERT_EQUAL(55, future.get());
 }
 
 TEST(sequenced) {

@@ -56,7 +56,6 @@ class ifinal_task : public itask<ResultType> {
 public:
     virtual ~ifinal_task() = default;
     virtual void schedule() = 0;
-    virtual void set_pause(bool enabled) = 0;
     virtual void set_cancel(bool enabled) = 0;
     virtual const std::vector<transwarp::edge>& get_graph() const = 0;
 };
@@ -118,7 +117,7 @@ class thread_pool {
 public:
 
     explicit thread_pool(std::size_t n_threads)
-    : done_(false), paused_(false)
+    : done_(false)
     {
         if (n_threads > 0) {
             const auto n_target = threads_.size() + n_threads;
@@ -134,7 +133,6 @@ public:
         {
             std::lock_guard<std::mutex> lock(mutex_);
             done_ = true;
-            paused_ = false;
         }
         cond_var_.notify_all();
         for (auto& thread : threads_) {
@@ -153,16 +151,6 @@ public:
         cond_var_.notify_one();
     }
 
-    void set_pause(bool enabled) {
-        {
-            std::lock_guard<std::mutex> lock(mutex_);
-            paused_ = enabled;
-        }
-        if (!paused_) {
-            cond_var_.notify_all();
-        }
-    }
-
 private:
 
     void worker() {
@@ -171,7 +159,7 @@ private:
             {
                 std::unique_lock<std::mutex> lock(mutex_);
                 cond_var_.wait(lock, [this]{
-                    return !paused_ && (done_ || !functors_.empty());
+                    return done_ || !functors_.empty();
                 });
                 if (done_ && functors_.empty()) {
                     break;
@@ -184,7 +172,6 @@ private:
     }
 
     bool done_;
-    bool paused_;
     std::vector<std::thread> threads_;
     std::queue<transwarp::detail::callback_t> functors_;
     std::condition_variable cond_var_;
@@ -616,21 +603,9 @@ public:
                 }
             } else { // sequential execution
                 for (const auto& callback : callbacks_) {
-                    while (paused_) {};
                     callback();
                 }
             }
-        }
-    }
-
-    // If enabled then all pending tasks are paused. If running sequentially
-    // then a call to schedule will block indefinitely. If running in parallel
-    // then a call to schedule will queue up new tasks in the underlying thread
-    // pool but not process them. Pausing does not affect currently running tasks.
-    void set_pause(bool enabled) override {
-        paused_ = enabled;
-        if (pool_) {
-            pool_->set_pause(paused_.load());
         }
     }
 
@@ -653,8 +628,7 @@ private:
 
     // A central constructor to rule them all
     final_task(std::string name, std::size_t n_threads, Functor functor, std::shared_ptr<Tasks>... parents)
-    : transwarp::task<Functor, Tasks...>(std::move(name), std::move(functor), std::move(parents)...),
-      paused_(false)
+    : transwarp::task<Functor, Tasks...>(std::move(name), std::move(functor), std::move(parents)...)
     {
         finalize();
         if (n_threads > 0) {
@@ -689,7 +663,6 @@ private:
                        });
     }
 
-    std::atomic_bool paused_;
     std::shared_ptr<std::atomic_bool> canceled_;
     std::vector<transwarp::detail::wrapped_packager> packagers_;
     std::vector<transwarp::detail::callback_t> callbacks_;
