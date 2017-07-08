@@ -92,10 +92,12 @@ std::shared_ptr<transwarp::ifinal_task<result>> build_graph(bool parallel, std::
     auto mode_task = transwarp::make_task("mode", mode, data_task);
 
     if (parallel) {
-        return transwarp::make_final_task("aggregate results", transwarp::parallel{4}, aggregate_results,
+        auto par = std::make_shared<transwarp::parallel>(4);
+        return transwarp::make_final_task("aggregate results", par, aggregate_results,
                                           avg_task, stddev_task, median_task, mode_task);
     } else {
-        return transwarp::make_final_task("aggregate results", transwarp::sequenced{}, aggregate_results,
+        auto seq = std::make_shared<transwarp::sequenced>();
+        return transwarp::make_final_task("aggregate results", seq, aggregate_results,
                                           avg_task, stddev_task, median_task, mode_task);
     }
 }

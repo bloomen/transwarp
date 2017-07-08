@@ -517,25 +517,38 @@ private:
 };
 
 
-// Policy for sequential execution
-class sequenced {};
-
-
-// Policy for parallel execution
-class parallel {
+// The executor interface
+class executor {
 public:
+    virtual ~executor() = default;
+    virtual void execute(const std::function<void()>& functor) noexcept = 0;
+};
+
+
+// Executor for sequential execution
+class sequenced : public transwarp::executor {
+public:
+
+    void execute(const std::function<void()>& functor) noexcept override {
+        functor();
+    }
+};
+
+
+// Executor for parallel execution
+class parallel : public transwarp::executor {
+public:
+
     explicit parallel(std::size_t n_threads)
-    : n_threads_(n_threads)
-    {
-        if (n_threads_ == 0) {
-            throw transwarp::transwarp_error("parallel execution requires at least one thread");
-        }
+    : pool_(n_threads)
+    {}
+
+    void execute(const std::function<void()>& functor) noexcept override {
+        pool_.push(functor);
     }
-    std::size_t n_threads() const {
-        return n_threads_;
-    }
+
 private:
-    std::size_t n_threads_;
+    transwarp::detail::thread_pool pool_;
 };
 
 
@@ -552,25 +565,17 @@ public:
     // do not match or cannot be converted into the functor's parameters of this task
     using result_type = typename transwarp::task<Functor, Tasks...>::result_type;
 
-    // A final task is defined by name, execution policy, functor, and parent tasks.
-    // This overload is used for sequential execution
-    final_task(std::string name, transwarp::sequenced, Functor functor, std::shared_ptr<Tasks>... parents)
-    : transwarp::final_task<Functor, Tasks...>(std::move(name), 0, std::move(functor), std::move(parents)...)
-    {}
+    // A final task is defined by name, executor, functor, and parent tasks.
+    final_task(std::string name, std::shared_ptr<transwarp::executor> executor, Functor functor, std::shared_ptr<Tasks>... parents)
+    : transwarp::task<Functor, Tasks...>(std::move(name), std::move(functor), std::move(parents)...),
+      executor_(std::move(executor))
+    {
+        finalize();
+    }
 
-    // This overload is used for auto-naming and sequential execution
-    final_task(transwarp::sequenced, Functor functor, std::shared_ptr<Tasks>... parents)
-    : transwarp::final_task<Functor, Tasks...>("", 0, std::move(functor), std::move(parents)...)
-    {}
-
-    // This overload is used for parallel execution
-    final_task(std::string name, transwarp::parallel par, Functor functor, std::shared_ptr<Tasks>... parents)
-    : transwarp::final_task<Functor, Tasks...>(std::move(name), par.n_threads(), std::move(functor), std::move(parents)...)
-    {}
-
-    // This overload is used for auto-naming and parallel execution
-    final_task(transwarp::parallel par, Functor functor, std::shared_ptr<Tasks>... parents)
-    : transwarp::final_task<Functor, Tasks...>("", par.n_threads(), std::move(functor), std::move(parents)...)
+    // This overload is for auto-naming
+    final_task(std::shared_ptr<transwarp::executor> executor, Functor functor, std::shared_ptr<Tasks>... parents)
+    : transwarp::final_task<Functor, Tasks...>("", std::move(executor), std::move(functor), std::move(parents)...)
     {}
 
     virtual ~final_task() = default;
@@ -591,20 +596,14 @@ public:
         return transwarp::task<Functor, Tasks...>::get_node();
     }
 
-    // Schedules the final task and all its parent tasks for execution.
-    // The execution is either sequential or in parallel. Complexity is O(n)
-    // with n being the number of tasks in the graph
+    // Schedules the final task and all its parent tasks for execution using
+    // the user-provided executor. Complexity is O(n) with n being the number
+    // of tasks in the graph
     void schedule() override {
         if (!*canceled_) {
             prepare_callbacks();
-            if (pool_) { // parallel execution
-                for (const auto& callback : callbacks_) {
-                    pool_->push(callback);
-                }
-            } else { // sequential execution
-                for (const auto& callback : callbacks_) {
-                    callback();
-                }
+            for (const auto& callback : callbacks_) {
+                executor_->execute(callback);
             }
         }
     }
@@ -625,17 +624,6 @@ public:
     }
 
 private:
-
-    // A central constructor to rule them all
-    final_task(std::string name, std::size_t n_threads, Functor functor, std::shared_ptr<Tasks>... parents)
-    : transwarp::task<Functor, Tasks...>(std::move(name), std::move(functor), std::move(parents)...)
-    {
-        finalize();
-        if (n_threads > 0) {
-            using pool_t = transwarp::detail::thread_pool;
-            pool_ = std::unique_ptr<pool_t>(new pool_t(n_threads));
-        }
-    }
 
     // Finalizes the graph of tasks by computing IDs, collecting the packager of
     // each task, populating a vector of edges, etc. The packagers are then
@@ -666,7 +654,7 @@ private:
     std::shared_ptr<std::atomic_bool> canceled_;
     std::vector<transwarp::detail::wrapped_packager> packagers_;
     std::vector<transwarp::detail::callback_t> callbacks_;
-    std::unique_ptr<transwarp::detail::thread_pool> pool_;
+    std::shared_ptr<transwarp::executor> executor_;
     std::vector<transwarp::edge> graph_;
 };
 
@@ -680,13 +668,13 @@ std::shared_ptr<transwarp::task<Functor, Tasks...>> make_task(std::string name, 
 // A factory function to create a new task. Overload for lowest priority of zero
 template<typename Functor, typename... Tasks>
 std::shared_ptr<transwarp::task<Functor, Tasks...>> make_task(std::string name, Functor functor, std::shared_ptr<Tasks>... parents) {
-    return std::make_shared<transwarp::task<Functor, Tasks...>>(std::move(name), 0, std::move(functor), std::move(parents)...);
+    return std::make_shared<transwarp::task<Functor, Tasks...>>(std::move(name), std::move(functor), std::move(parents)...);
 }
 
 // A factory function to create a new task. Overload for auto-naming
 template<typename Functor, typename... Tasks>
 std::shared_ptr<transwarp::task<Functor, Tasks...>> make_task(std::size_t priority, Functor functor, std::shared_ptr<Tasks>... parents) {
-    return std::make_shared<transwarp::task<Functor, Tasks...>>("", priority, std::move(functor), std::move(parents)...);
+    return std::make_shared<transwarp::task<Functor, Tasks...>>(priority, std::move(functor), std::move(parents)...);
 }
 
 // A factory function to create a new task. Overload for auto-naming and lowest priority of zero
@@ -696,28 +684,16 @@ std::shared_ptr<transwarp::task<Functor, Tasks...>> make_task(Functor functor, s
 }
 
 
-// A factory function to create a new final task with sequential execution
+// A factory function to create a new final task
 template<typename Functor, typename... Tasks>
-std::shared_ptr<transwarp::final_task<Functor, Tasks...>> make_final_task(std::string name, transwarp::sequenced seq, Functor functor, std::shared_ptr<Tasks>... parents) {
-    return std::make_shared<transwarp::final_task<Functor, Tasks...>>(std::move(name), std::move(seq), std::move(functor), std::move(parents)...);
+std::shared_ptr<transwarp::final_task<Functor, Tasks...>> make_final_task(std::string name, std::shared_ptr<transwarp::executor> executor, Functor functor, std::shared_ptr<Tasks>... parents) {
+    return std::make_shared<transwarp::final_task<Functor, Tasks...>>(std::move(name), std::move(executor), std::move(functor), std::move(parents)...);
 }
 
-// A factory function to create a new final task with sequential execution. Overload for auto-naming
+// A factory function to create a new final task. Overload for auto-naming
 template<typename Functor, typename... Tasks>
-std::shared_ptr<transwarp::final_task<Functor, Tasks...>> make_final_task(transwarp::sequenced seq, Functor functor, std::shared_ptr<Tasks>... parents) {
-    return std::make_shared<transwarp::final_task<Functor, Tasks...>>(std::move(seq), std::move(functor), std::move(parents)...);
-}
-
-// A factory function to create a new final task with parallel execution policy
-template<typename Functor, typename... Tasks>
-std::shared_ptr<transwarp::final_task<Functor, Tasks...>> make_final_task(std::string name, transwarp::parallel par, Functor functor, std::shared_ptr<Tasks>... parents) {
-    return std::make_shared<transwarp::final_task<Functor, Tasks...>>(std::move(name), std::move(par), std::move(functor), std::move(parents)...);
-}
-
-// A factory function to create a new final task with parallel execution policy. Overload for auto-naming
-template<typename Functor, typename... Tasks>
-std::shared_ptr<transwarp::final_task<Functor, Tasks...>> make_final_task(transwarp::parallel par, Functor functor, std::shared_ptr<Tasks>... parents) {
-    return std::make_shared<transwarp::final_task<Functor, Tasks...>>(std::move(par), std::move(functor), std::move(parents)...);
+std::shared_ptr<transwarp::final_task<Functor, Tasks...>> make_final_task(std::shared_ptr<transwarp::executor> executor, Functor functor, std::shared_ptr<Tasks>... parents) {
+    return std::make_shared<transwarp::final_task<Functor, Tasks...>>(std::move(executor), std::move(functor), std::move(parents)...);
 }
 
 
