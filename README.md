@@ -5,6 +5,12 @@ task dependencies and run those tasks in parallel that do not depend on each oth
 Under the hood, a directed acyclic graph is built at compile-time enabling efficient 
 traversal and type-safe dependencies.
 
+A task in transwarp is defined through a functor, parent tasks, and optional name 
+and priority. The functor's arguments must match the return types of the parent tasks.
+The priority comes in handy when certain tasks on the same graph level need to run
+before others. transwarp supports custom executors that can be passed when 
+constructing the final task in the graph.  
+
 transwarp is designed for ease of use, portability, and scalability. It is written in 
 C++11 and only depends on the standard library. Just copy `src/transwarp.h` 
 to your project and off you go!
@@ -59,5 +65,9 @@ int main() {
 The resulting graph of this example looks like this:
 
 ![graph](https://raw.githubusercontent.com/bloomen/transwarp/master/examples/basic_with_three_tasks.png)
+
+Every bubble represents a task and every arrow an edge between two tasks. 
+The first line within a bubble is the task name. The second line denotes the task id,
+the task priority, the task level in the graph, and the number of parents, respectively. 
 
 **Enjoy!**

@@ -1,5 +1,5 @@
 // transwarp is a header-only C++ library for task concurrency
-// Version: under development
+// Version: in development
 // Author: Christian Blume (chr.blume@gmail.com)
 // Repository: https://github.com/bloomen/transwarp
 // License: http://www.opensource.org/licenses/mit-license.php
@@ -84,7 +84,8 @@ namespace detail {
 using callback_t = std::function<void()>;
 
 // A wrapper for a packager that is associated to a node. Sorting objects of
-// this class will be first by node level and then by node id.
+// this class will be first by node level, then by node priority, and
+// finally by node id.
 class wrapped_packager {
 public:
 
@@ -382,7 +383,9 @@ inline std::string make_dot(const std::vector<transwarp::edge>& graph) noexcept 
 
 
 // A task representing a piece work given by a functor and parent tasks.
-// By connecting tasks a directed acyclic graph is built.
+// By connecting tasks a directed acyclic graph is built. Different priorities
+// will affect the order of execution for tasks on the same level. Tasks with
+// larger priorities will be executed first when at the same graph level.
 template<typename Functor, typename... Tasks>
 class task : public transwarp::itask<typename std::result_of<Functor(typename Tasks::result_type...)>::type> {
 public:
@@ -525,7 +528,7 @@ public:
 };
 
 
-// Executor for sequential execution
+// Executor for sequential execution. Runs functors sequentially on the same thread
 class sequential : public transwarp::executor {
 public:
 
@@ -535,7 +538,7 @@ public:
 };
 
 
-// Executor for parallel execution
+// Executor for parallel execution. Uses a simple thread pool
 class parallel : public transwarp::executor {
 public:
 
@@ -554,8 +557,9 @@ private:
 
 // The final task is the very last task in the graph. The final task has no children.
 // Depending on how tasks in the graph are arranged they can be run in parallel
-// by design if the parallel execution policy is used. Tasks may run in parallel
-// when they do not depend on each other.
+// by design if a parallel executor is used. Tasks may run in parallel when they
+// do not depend on each other, i.e., they are independent with respect to the
+// task that consumes them.
 template<typename Functor, typename... Tasks>
 class final_task : public transwarp::task<Functor, Tasks...>,
                    public transwarp::ifinal_task<typename transwarp::task<Functor, Tasks...>::result_type> {
@@ -598,7 +602,8 @@ public:
 
     // Schedules the final task and all its parent tasks for execution using
     // the user-provided executor. Complexity is O(n) with n being the number
-    // of tasks in the graph
+    // of tasks in the graph. The callbacks are packaged tasks that are ordered
+    // first by level, then priority, and finally ID.
     void schedule() noexcept override {
         if (!*canceled_) {
             prepare_callbacks();
@@ -627,8 +632,8 @@ private:
 
     // Finalizes the graph of tasks by computing IDs, collecting the packager of
     // each task, populating a vector of edges, etc. The packagers are then
-    // sorted by level and ID which ensures that tasks higher in the graph
-    // are executed first.
+    // sorted by level, priority, and ID which ensures that tasks higher in the
+    // graph are executed first.
     void finalize() noexcept {
         transwarp::pass_visitor pass;
         transwarp::detail::final_visitor post_visitor(packagers_, graph_);
