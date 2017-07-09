@@ -45,8 +45,8 @@ template<typename ResultType>
 class itask {
 public:
     virtual ~itask() = default;
-    virtual std::shared_future<ResultType> get_future() const = 0;
-    virtual const transwarp::node& get_node() const = 0;
+    virtual std::shared_future<ResultType> get_future() const noexcept = 0;
+    virtual const transwarp::node& get_node() const noexcept = 0;
 };
 
 
@@ -55,9 +55,9 @@ template<typename ResultType>
 class ifinal_task : public itask<ResultType> {
 public:
     virtual ~ifinal_task() = default;
-    virtual void schedule() = 0;
-    virtual void set_cancel(bool enabled) = 0;
-    virtual const std::vector<transwarp::edge>& get_graph() const = 0;
+    virtual void schedule() noexcept = 0;
+    virtual void set_cancel(bool enabled) noexcept = 0;
+    virtual const std::vector<transwarp::edge>& get_graph() const noexcept = 0;
 };
 
 
@@ -88,15 +88,15 @@ using callback_t = std::function<void()>;
 class wrapped_packager {
 public:
 
-    wrapped_packager(std::function<transwarp::detail::callback_t()> packager, const transwarp::node* node)
+    wrapped_packager(std::function<transwarp::detail::callback_t()> packager, const transwarp::node* node) noexcept
     : packager_(std::move(packager)), node_(node) {}
 
-    bool operator<(const wrapped_packager& other) const {
+    bool operator<(const wrapped_packager& other) const noexcept {
         return std::tie(node_->level, node_->priority, node_->id) <
                std::tie(other.node_->level, other.node_->priority, other.node_->id);
     }
 
-    transwarp::detail::callback_t make_callback() const {
+    transwarp::detail::callback_t make_callback() const noexcept {
         return packager_();
     }
 
@@ -140,12 +140,9 @@ public:
         }
     }
 
-    void push(const transwarp::detail::callback_t& functor) {
+    void push(const transwarp::detail::callback_t& functor) noexcept {
         {
             std::lock_guard<std::mutex> lock(mutex_);
-            if (done_) {
-                throw transwarp::detail::thread_pool_error("push called while thread pool is shutting down");
-            }
             functors_.push(functor);
         }
         cond_var_.notify_one();
@@ -153,7 +150,7 @@ public:
 
 private:
 
-    void worker() {
+    void worker() noexcept {
         for (;;) {
             transwarp::detail::callback_t functor;
             {
@@ -243,7 +240,7 @@ void call_with_each(Functor&& f, Tuple&& t) {
 
 template<int offset, typename... Tasks>
 struct assign_futures_impl {
-    static void work(const std::tuple<std::shared_ptr<Tasks>...>& source, std::tuple<std::shared_future<typename Tasks::result_type>...>& target) {
+    static void work(const std::tuple<std::shared_ptr<Tasks>...>& source, std::tuple<std::shared_future<typename Tasks::result_type>...>& target) noexcept {
         std::get<offset>(target) = std::get<offset>(source)->get_future();
         assign_futures_impl<offset - 1, Tasks...>::work(source, target);
     }
@@ -251,19 +248,19 @@ struct assign_futures_impl {
 
 template<typename... Tasks>
 struct assign_futures_impl<-1, Tasks...> {
-    static void work(const std::tuple<std::shared_ptr<Tasks>...>&, std::tuple<std::shared_future<typename Tasks::result_type>...>&) {}
+    static void work(const std::tuple<std::shared_ptr<Tasks>...>&, std::tuple<std::shared_future<typename Tasks::result_type>...>&) noexcept {}
 };
 
 // Returns the futures from the given tasks
 template<typename... Tasks>
-std::tuple<std::shared_future<typename Tasks::result_type>...> get_futures(const std::tuple<std::shared_ptr<Tasks>...>& input) {
+std::tuple<std::shared_future<typename Tasks::result_type>...> get_futures(const std::tuple<std::shared_ptr<Tasks>...>& input) noexcept {
     std::tuple<std::shared_future<typename Tasks::result_type>...> result;
     assign_futures_impl<static_cast<int>(sizeof...(Tasks)) - 1, Tasks...>::work(input, result);
     return result;
 }
 
 // Trims the given characters from the input string
-inline std::string trim(const std::string &s, const std::string& chars=" \t\n\r") {
+inline std::string trim(const std::string &s, const std::string& chars=" \t\n\r") noexcept {
     auto functor = [&chars](char c) { return chars.find(c) != std::string::npos; };
     auto it = std::find_if_not(s.begin(), s.end(), functor);
     return std::string(it, std::find_if_not(s.rbegin(), std::string::const_reverse_iterator(it), functor).base());
@@ -272,11 +269,11 @@ inline std::string trim(const std::string &s, const std::string& chars=" \t\n\r"
 // Sets level and parents of the node given in the constructor through
 // the task given in the ()-operator
 struct parent_visitor {
-    explicit parent_visitor(transwarp::node& node)
+    explicit parent_visitor(transwarp::node& node) noexcept
     : node_(node) {}
 
     template<typename Task>
-    void operator()(const Task& task) const {
+    void operator()(const Task& task) const noexcept {
         static_assert(!std::is_base_of<transwarp::ifinal_task<typename Task::result_type>, Task>::value,
                       "input task cannot be a final task");
         if (node_.level < task.node_.level)
@@ -290,11 +287,11 @@ struct parent_visitor {
 // Collects edges from the given node and task objects. The node in the
 // constructor is the child and the task in the ()-operator is the parent.
 struct edges_visitor {
-    edges_visitor(std::vector<transwarp::edge>& graph, const transwarp::node& n)
+    edges_visitor(std::vector<transwarp::edge>& graph, const transwarp::node& n) noexcept
     : graph_(graph), n_(n) {}
 
     template<typename Task>
-    void operator()(const Task& task) const {
+    void operator()(const Task& task) const noexcept {
         graph_.push_back({&n_, &task.node_});
     }
 
@@ -306,12 +303,12 @@ struct edges_visitor {
 // setting id, name, and canceled flag. Also, packagers and edges are collected.
 struct final_visitor {
     final_visitor(std::vector<transwarp::detail::wrapped_packager>& packagers,
-                  std::vector<transwarp::edge>& graph)
+                  std::vector<transwarp::edge>& graph) noexcept
     : packagers_(packagers), graph_(graph), id_(0),
       canceled_(std::make_shared<std::atomic_bool>(false)) {}
 
     template<typename Task>
-    void operator()(Task& task) {
+    void operator()(Task& task) noexcept {
         task.node_.id = id_++;
         if (task.node_.name.empty())
             task.node_.name = "task" + std::to_string(task.node_.id);
@@ -330,7 +327,7 @@ struct final_visitor {
 // the constructor
 template<typename PreVisitor, typename PostVisitor>
 struct visit {
-    visit(PreVisitor& pre_visitor, PostVisitor& post_visitor)
+    visit(PreVisitor& pre_visitor, PostVisitor& post_visitor) noexcept
     : pre_visitor_(pre_visitor), post_visitor_(post_visitor) {}
 
     template<typename Task>
@@ -346,7 +343,7 @@ struct visit {
 struct unvisit {
 
     template<typename Task>
-    void operator()(Task& task) const {
+    void operator()(Task& task) const noexcept {
         task.unvisit();
     }
 };
@@ -359,12 +356,12 @@ struct unvisit {
 struct pass_visitor {
 
     template<typename Task>
-    void operator()(const Task&) const {}
+    void operator()(const Task&) const noexcept {}
 };
 
 
 // Creates a dot-style string from the given graph
-inline std::string make_dot(const std::vector<transwarp::edge>& graph) {
+inline std::string make_dot(const std::vector<transwarp::edge>& graph) noexcept {
     auto info = [](const transwarp::node& n) {
         const auto name = transwarp::detail::trim(n.name);
         return '"' + name + "\nid " + std::to_string(n.id)
@@ -426,23 +423,23 @@ public:
     task& operator=(task&&) = delete;
 
     // Returns the future associated to the underlying execution
-    std::shared_future<result_type> get_future() const override {
+    std::shared_future<result_type> get_future() const noexcept override {
         std::lock_guard<std::mutex> lock(future_mutex_);
         return future_;
     }
 
     // Returns the associated node
-    const transwarp::node& get_node() const override {
+    const transwarp::node& get_node() const noexcept override {
         return node_;
     }
 
     // Returns the functor
-    const Functor& get_functor() const {
+    const Functor& get_functor() const noexcept {
         return functor_;
     }
 
     // Returns the parent tasks
-    const std::tuple<std::shared_ptr<Tasks>...>& get_parents() const {
+    const std::tuple<std::shared_ptr<Tasks>...>& get_parents() const noexcept {
         return parents_;
     }
 
@@ -460,7 +457,7 @@ public:
     }
 
     // Traverses through all tasks and marks them as not visited.
-    void unvisit() {
+    void unvisit() noexcept {
         if (visited_) {
             visited_ = false;
             transwarp::detail::call_with_each(transwarp::detail::unvisit(), parents_);
@@ -485,7 +482,7 @@ private:
     // Creates a wrapped packager. Calling the packager will create a packaged
     // task given the parent futures, then assign a new future to this task
     // and finally return a callback to run the packaged task.
-    transwarp::detail::wrapped_packager make_packager() {
+    transwarp::detail::wrapped_packager make_packager() noexcept {
         auto packager = [this] {
             auto futures = transwarp::detail::get_futures(parents_);
             auto pack_task = std::make_shared<std::packaged_task<result_type()>>(
@@ -500,7 +497,7 @@ private:
     }
 
     // Assigns level and parents of this task via the node object
-    void bookkeeping() {
+    void bookkeeping() noexcept {
         transwarp::detail::call_with_each(transwarp::detail::parent_visitor(node_), parents_);
         if (sizeof...(Tasks) > 0)
             ++node_.level;
@@ -587,19 +584,19 @@ public:
     final_task& operator=(final_task&&) = delete;
 
     // Returns the future associated to the underlying execution
-    std::shared_future<result_type> get_future() const override {
+    std::shared_future<result_type> get_future() const noexcept override {
         return transwarp::task<Functor, Tasks...>::get_future();
     }
 
     // Returns the associated node
-    const transwarp::node& get_node() const override {
+    const transwarp::node& get_node() const noexcept override {
         return transwarp::task<Functor, Tasks...>::get_node();
     }
 
     // Schedules the final task and all its parent tasks for execution using
     // the user-provided executor. Complexity is O(n) with n being the number
     // of tasks in the graph
-    void schedule() override {
+    void schedule() noexcept override {
         if (!*canceled_) {
             prepare_callbacks();
             for (const auto& callback : callbacks_) {
@@ -612,14 +609,14 @@ public:
     // throw transwarp::task_canceled when asking a future for its result.
     // Canceling pending tasks does not affect currently running tasks.
     // As long as cancel is enabled new computations cannot be scheduled.
-    void set_cancel(bool enabled) override {
+    void set_cancel(bool enabled) noexcept override {
         *canceled_ = enabled;
     }
 
     // Returns the graph of the task structure. This is mainly for visualizing
     // the tasks and their interdependencies. Pass the result into transwarp::make_dot
     // to retrieve a dot-style graph representation for easy viewing.
-    const std::vector<transwarp::edge>& get_graph() const override {
+    const std::vector<transwarp::edge>& get_graph() const noexcept override {
         return graph_;
     }
 
@@ -629,7 +626,7 @@ private:
     // each task, populating a vector of edges, etc. The packagers are then
     // sorted by level and ID which ensures that tasks higher in the graph
     // are executed first.
-    void finalize() {
+    void finalize() noexcept {
         transwarp::pass_visitor pass;
         transwarp::detail::final_visitor post_visitor(packagers_, graph_);
         canceled_ = post_visitor.canceled_;
@@ -644,7 +641,7 @@ private:
     // Calling the callback will then actually run the functor associated to the
     // task and store the result in the future. The callbacks are dealt with
     // by the schedule function.
-    void prepare_callbacks() {
+    void prepare_callbacks() noexcept {
         std::transform(packagers_.begin(), packagers_.end(), callbacks_.begin(),
                        [](const transwarp::detail::wrapped_packager& p) {
                            return p.make_callback();
