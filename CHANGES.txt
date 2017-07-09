@@ -1,0 +1,10 @@
+0.X.X
+
+- added ability to use custom executors
+- added ability to specify a priority for tasks and their execution
+- added noexcept keyword where possible
+- removed ability to pause execution
+
+0.1.0
+
+- initial release
