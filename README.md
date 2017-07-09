@@ -34,7 +34,8 @@ int main() {
     auto task1 = transwarp::make_task("something", compute_something);
     auto task2 = transwarp::make_task("something else", compute_something_else);
     // parallel execution with 4 threads for independent tasks
-    auto task3 = transwarp::make_final_task("adder", transwarp::parallel{4}, add_em_up, task1, task2);
+    auto parallel = std::make_shared<transwarp::parallel>(4);
+    auto task3 = transwarp::make_final_task("adder", parallel, add_em_up, task1, task2);
 
     // creating a dot-style graph for visualization
     const auto graph = task3->get_graph();
