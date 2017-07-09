@@ -92,8 +92,11 @@ public:
     : packager_(std::move(packager)), node_(node) {}
 
     bool operator<(const wrapped_packager& other) const noexcept {
-        return std::tie(node_->level, node_->priority, node_->id) <
-               std::tie(other.node_->level, other.node_->priority, other.node_->id);
+        constexpr const auto max = std::numeric_limits<std::size_t>::max();
+        const auto lhs_pri = max - node_->priority;
+        const auto rhs_pri = max - other.node_->priority;
+        return std::tie(node_->level, lhs_pri, node_->id) <
+               std::tie(other.node_->level, rhs_pri, other.node_->id);
     }
 
     transwarp::detail::callback_t make_callback() const noexcept {
