@@ -206,12 +206,6 @@ TEST(make_dot_graph_with_three_nodes) {
     ASSERT_EQUAL(exp_dot_graph, dot_graph);
 }
 
-TEST(get_functor) {
-    auto f1 = [] { return 42; };
-    auto task1 = make_task(f1);
-    ASSERT_TRUE(f1 == task1->get_functor());
-}
-
 template<typename Task>
 constexpr std::size_t n_parents() {
     using result_t = decltype(std::declval<Task>().get_parents());
