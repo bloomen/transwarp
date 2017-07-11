@@ -81,7 +81,7 @@ namespace detail {
 
 
 // The type used for callbacks
-using callback_t = std::function<void()>;
+using callback_t = std::pair<std::function<void()>, const transwarp::node*>;
 
 // A wrapper for a packager that is associated to a node. Sorting objects of
 // this class will be first by node level, then by node priority, and
@@ -89,7 +89,7 @@ using callback_t = std::function<void()>;
 class wrapped_packager {
 public:
 
-    wrapped_packager(std::function<transwarp::detail::callback_t()> packager, const transwarp::node* node) noexcept
+    wrapped_packager(std::function<std::function<void()>()> packager, const transwarp::node* node) noexcept
     : packager_(std::move(packager)), node_(node) {}
 
     bool operator<(const wrapped_packager& other) const noexcept {
@@ -101,11 +101,11 @@ public:
     }
 
     transwarp::detail::callback_t make_callback() const noexcept {
-        return packager_();
+        return std::make_pair(packager_(), node_);
     }
 
 private:
-    std::function<transwarp::detail::callback_t()> packager_;
+    std::function<std::function<void()>()> packager_;
     const transwarp::node* node_;
 };
 
@@ -144,7 +144,7 @@ public:
         }
     }
 
-    void push(const transwarp::detail::callback_t& functor) noexcept {
+    void push(const std::function<void()>& functor) noexcept {
         {
             std::lock_guard<std::mutex> lock(mutex_);
             functors_.push(functor);
@@ -156,7 +156,7 @@ private:
 
     void worker() noexcept {
         for (;;) {
-            transwarp::detail::callback_t functor;
+            std::function<void()> functor;
             {
                 std::unique_lock<std::mutex> lock(mutex_);
                 cond_var_.wait(lock, [this]{
@@ -174,7 +174,7 @@ private:
 
     bool done_;
     std::vector<std::thread> threads_;
-    std::queue<transwarp::detail::callback_t> functors_;
+    std::queue<std::function<void()>> functors_;
     std::condition_variable cond_var_;
     std::mutex mutex_;
 };
@@ -524,7 +524,7 @@ private:
 class executor {
 public:
     virtual ~executor() = default;
-    virtual void execute(const std::function<void()>& functor) noexcept = 0;
+    virtual void execute(const std::function<void()>& functor, const transwarp::node& node) noexcept = 0;
 };
 
 
@@ -532,7 +532,7 @@ public:
 class sequential : public transwarp::executor {
 public:
 
-    void execute(const std::function<void()>& functor) noexcept override {
+    void execute(const std::function<void()>& functor, const transwarp::node&) noexcept override {
         functor();
     }
 };
@@ -546,7 +546,7 @@ public:
     : pool_(n_threads)
     {}
 
-    void execute(const std::function<void()>& functor) noexcept override {
+    void execute(const std::function<void()>& functor, const transwarp::node&) noexcept override {
         pool_.push(functor);
     }
 
@@ -608,7 +608,7 @@ public:
         if (!*canceled_) {
             prepare_callbacks();
             for (const auto& callback : callbacks_) {
-                executor_->execute(callback);
+	        executor_->execute(callback.first, *callback.second);
             }
         }
     }
