@@ -80,7 +80,6 @@ public:
 namespace detail {
 
 
-// The type used for callbacks
 using callback_t = std::pair<std::function<void()>, const transwarp::node*>;
 
 // A wrapper for a packager that is associated to a node. Sorting objects of
@@ -608,7 +607,7 @@ public:
         if (!*canceled_) {
             prepare_callbacks();
             for (const auto& callback : callbacks_) {
-	        executor_->execute(callback.first, *callback.second);
+                executor_->execute(callback.first, *callback.second);
             }
         }
     }
