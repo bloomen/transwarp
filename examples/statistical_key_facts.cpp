@@ -3,6 +3,7 @@
 #include "statistical_key_facts.h"
 #include "../src/transwarp.h"
 #include <random>
+#include <numeric>
 
 namespace examples {
 
