@@ -357,7 +357,7 @@ TEST(basic_with_three_tasks) {
 void make_test_statistical_keys_facts(bool parallel) {
     std::ostringstream os;
     examples::statistical_key_facts(os, 10000, parallel);
-    ASSERT_GREATER(os.str().size(), 0);
+    ASSERT_GREATER(os.str().size(), 0u);
 }
 
 TEST(statistical_key_facts) {
