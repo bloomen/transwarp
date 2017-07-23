@@ -198,8 +198,8 @@ TEST(make_dot_graph_with_empty_graph) {
 }
 
 TEST(make_dot_graph_with_three_nodes) {
-    const transwarp::node node2{1, 10, 1, "node2", {}, nullptr};
-    const transwarp::node node3{2, 11, 1, "node3", {}, nullptr};
+    transwarp::node node2{1, 10, 1, "node2", {}, nullptr};
+    transwarp::node node3{2, 11, 1, "node3", {}, nullptr};
     const transwarp::node node1{0, 12, 0, "node1", {&node2, &node3}, nullptr};
     std::vector<transwarp::edge> graph;
     graph.push_back({&node1, &node2});
