@@ -373,6 +373,7 @@ struct pass_visitor {
 };
 
 
+// TODO: Add task-executor name
 // Creates a dot-style string from the given graph
 inline std::string make_dot(const std::vector<transwarp::edge>& graph) {
     auto info = [](const transwarp::node& n) {
@@ -395,6 +396,7 @@ inline std::string make_dot(const std::vector<transwarp::edge>& graph) {
 class executor {
 public:
     virtual ~executor() = default;
+    virtual std::string get_name() const = 0;
     virtual void execute(const std::function<void()>& functor, const transwarp::node& node) = 0;
 };
 
@@ -402,6 +404,10 @@ public:
 // Executor for sequential execution. Runs functors sequentially on the same thread
 class sequential : public transwarp::executor {
 public:
+
+    std::string get_name() const override {
+        return "transwarp::sequential";
+    }
 
     void execute(const std::function<void()>& functor, const transwarp::node&) override {
         functor();
@@ -416,6 +422,10 @@ public:
     explicit parallel(std::size_t n_threads)
     : pool_(n_threads)
     {}
+
+    std::string get_name() const override {
+        return "transwarp::parallel";
+    }
 
     void execute(const std::function<void()>& functor, const transwarp::node&) override {
         pool_.push(functor);
@@ -438,30 +448,52 @@ public:
     // do not match or cannot be converted into the functor's parameters of this task
     using result_type = typename std::result_of<Functor(typename Tasks::result_type...)>::type;
 
-    // A task is defined by name, priority, functor, and parent tasks
-    task(std::string name, std::size_t priority, Functor functor, std::shared_ptr<Tasks>... parents)
-    : node_{0, priority, 0, std::move(name), {}, nullptr},
+    // A task is defined by name, priority, executor, functor, and parent tasks
+    // name, priority, and executor are optional. See constructor overloads
+    task(std::string name, std::size_t priority, std::shared_ptr<transwarp::executor> executor, Functor functor, std::shared_ptr<Tasks>... parents)
+    : node_{0, priority, 0, std::move(name), {}, (executor ? executor.get() : nullptr)},
       functor_(std::move(functor)),
       parents_(std::make_tuple(std::move(parents)...)),
       visited_(false),
-      packager_(make_packager())
+      packager_(make_packager()),
+      executor_(std::move(executor))
     {
         bookkeeping();
     }
 
+    // This overload is for no executor
+    task(std::string name, std::size_t priority, Functor functor, std::shared_ptr<Tasks>... parents)
+    : task(std::move(name), priority, nullptr, std::move(functor), std::move(parents)...)
+    {}
+
     // This overload is for lowest priority of zero
-    task(std::string name, Functor functor, std::shared_ptr<Tasks>... parents)
-    : task(std::move(name), 0, std::move(functor), std::move(parents)...)
+    task(std::string name, std::shared_ptr<transwarp::executor> executor, Functor functor, std::shared_ptr<Tasks>... parents)
+    : task(std::move(name), 0, std::move(executor), std::move(functor), std::move(parents)...)
     {}
 
     // This overload is for auto-naming
+    task(std::size_t priority, std::shared_ptr<transwarp::executor> executor, Functor functor, std::shared_ptr<Tasks>... parents)
+    : task("", priority, std::move(executor), std::move(functor), std::move(parents)...)
+    {}
+
+    // This overload is for lowest priority of zero and no executor
+    task(std::string name, Functor functor, std::shared_ptr<Tasks>... parents)
+    : task(std::move(name), 0, nullptr, std::move(functor), std::move(parents)...)
+    {}
+
+    // This overload is for auto-naming and no executor
     task(std::size_t priority, Functor functor, std::shared_ptr<Tasks>... parents)
-    : task("", priority, std::move(functor), std::move(parents)...)
+    : task("", priority, nullptr, std::move(functor), std::move(parents)...)
     {}
 
     // This overload is for auto-naming and lowest priority of zero
+    task(std::shared_ptr<transwarp::executor> executor, Functor functor, std::shared_ptr<Tasks>... parents)
+    : task("", 0, std::move(executor), std::move(functor), std::move(parents)...)
+    {}
+
+    // This overload is for auto-naming, lowest priority of zero, and no executor
     task(Functor functor, std::shared_ptr<Tasks>... parents)
-    : task("", 0, std::move(functor), std::move(parents)...)
+    : task("", 0, nullptr, std::move(functor), std::move(parents)...)
     {}
 
     virtual ~task() = default;
@@ -471,16 +503,6 @@ public:
     task& operator=(const task&) = delete;
     task(task&&) = delete;
     task& operator=(task&&) = delete;
-
-    // Assigns an optional task-specific executor which gets precedence over
-    // the global executor (if given) in the schedule function of final_task
-    void set_executor(std::shared_ptr<transwarp::executor> executor) {
-        if (!executor) {
-            throw transwarp::transwarp_error("Not a valid pointer to the executor");
-        }
-        executor_ = std::move(executor);
-        node_.executor = executor_.get();
-    }
 
     // Returns the future associated to the underlying execution
     std::shared_future<result_type> get_future() const override {
@@ -568,10 +590,10 @@ private:
     std::tuple<std::shared_ptr<Tasks>...> parents_;
     bool visited_;
     transwarp::detail::wrapped_packager packager_;
+    std::shared_ptr<transwarp::executor> executor_;
     std::shared_ptr<std::atomic_bool> canceled_;
     std::shared_future<result_type> future_;
     mutable std::mutex future_mutex_;
-    std::shared_ptr<transwarp::executor> executor_;
 };
 
 
@@ -690,6 +712,8 @@ private:
     std::vector<transwarp::edge> graph_;
 };
 
+
+// TODO: Add overloads for remaining task constructors
 
 // A factory function to create a new task
 template<typename Functor, typename... Tasks>
