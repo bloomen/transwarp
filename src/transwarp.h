@@ -227,12 +227,16 @@ void call_with_each_index(transwarp::detail::indices<>, Functor&&, Tuple&&) {}
 
 template<std::size_t i, std::size_t... j, typename Functor, typename Tuple>
 void call_with_each_index(transwarp::detail::indices<i, j...>, Functor&& f, Tuple&& t) {
-    std::forward<Functor>(f)(*std::get<i>(std::forward<Tuple>(t)));
+    auto ptr = std::get<i>(std::forward<Tuple>(t));
+    if (!ptr) {
+        throw transwarp::transwarp_error("Not a valid pointer to a task");
+    }
+    std::forward<Functor>(f)(*ptr);
     transwarp::detail::call_with_each_index(transwarp::detail::indices<j...>(), std::forward<Functor>(f), std::forward<Tuple>(t));
 }
 
 // Calls the functor with every element in the tuple. Expects the tuple to contain
-// pointers only and dereferences each element before passing it into the functor
+// task pointers only and dereferences each element before passing it into the functor
 template<typename Functor, typename Tuple>
 void call_with_each(Functor&& f, Tuple&& t) {
     using tuple_t = typename std::decay<Tuple>::type;
@@ -634,6 +638,9 @@ private:
     // sorted by level, priority, and ID which ensures that tasks higher in the
     // graph are executed first.
     void finalize() {
+        if (!executor_) {
+            throw transwarp::transwarp_error("Not a valid pointer to the executor");
+        }
         transwarp::pass_visitor pass;
         transwarp::detail::final_visitor post_visitor(packagers_, graph_);
         canceled_ = post_visitor.canceled_;
