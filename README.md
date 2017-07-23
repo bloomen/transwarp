@@ -8,8 +8,8 @@ traversal and type-safe dependencies.
 A task in transwarp is defined through a functor, parent tasks, and optional name 
 and priority. The functor's arguments must match the return types of the parent tasks.
 The priority comes in handy when certain tasks on the same graph level need to run
-before others. transwarp supports custom executors that can be passed when 
-constructing the final task in the graph.  
+before others. transwarp supports custom executors either per task or globally
+when scheduling the tasks in the graph.
 
 transwarp is designed for ease of use, portability, and scalability. It is written in 
 C++11 and only depends on the standard library. Just copy `src/transwarp.h` 
