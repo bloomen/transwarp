@@ -77,7 +77,7 @@ result aggregate_results(double avg, double stddev, double median, int mode) {
     return {avg, stddev, median, mode};
 }
 
-std::shared_ptr<transwarp::ifinal_task<result>> build_graph(bool parallel, std::size_t sample_size, double& alpha, double& beta) {
+std::shared_ptr<transwarp::ifinal_task<result>> build_graph(std::size_t sample_size, double& alpha, double& beta) {
     auto gen = std::make_shared<std::mt19937>(1);
     auto gen_task = transwarp::make_task("rand gen", [gen] { return gen; });
     auto size_task = transwarp::make_task("sample size", [sample_size] { return sample_size; });
@@ -92,15 +92,8 @@ std::shared_ptr<transwarp::ifinal_task<result>> build_graph(bool parallel, std::
     auto median_task = transwarp::make_task("median", median, data_task);
     auto mode_task = transwarp::make_task("mode", mode, data_task);
 
-    if (parallel) {
-        auto par = std::make_shared<transwarp::parallel>(4);
-        return transwarp::make_final_task("aggregate results", par, aggregate_results,
-                                          avg_task, stddev_task, median_task, mode_task);
-    } else {
-        auto seq = std::make_shared<transwarp::sequential>();
-        return transwarp::make_final_task("aggregate results", seq, aggregate_results,
-                                          avg_task, stddev_task, median_task, mode_task);
-    }
+    return transwarp::make_final_task("aggregate results", aggregate_results,
+                                      avg_task, stddev_task, median_task, mode_task);
 }
 
 // This example computes statistical key measures from numbers sampled
@@ -114,30 +107,38 @@ void statistical_key_facts(std::ostream& os, std::size_t sample_size, bool paral
     result res;
 
     // building the graph and retrieving the final task
-    auto final_task = build_graph(parallel, sample_size, alpha, beta);
+    auto final_task = build_graph(sample_size, alpha, beta);
 
     // output the graph for visualization
     const auto graph = final_task->get_graph();
     std::ofstream("statistical_key_facts.dot") << transwarp::make_dot(graph);
 
+    // Creating the executor
+    std::shared_ptr<transwarp::executor> executor;
+    if (parallel) {
+        executor = std::make_shared<transwarp::parallel>(4);
+    } else {
+        executor = std::make_shared<transwarp::sequential>();
+    }
+
     // Now we start calculating stuff ...
 
     // First computation with initial values
-    final_task->schedule();
+    final_task->schedule(executor.get());
     res = final_task->get_future().get();
     os << res << std::endl;
 
     // Second computation with new input
     alpha = 2;
     beta = 3;
-    final_task->schedule();
+    final_task->schedule(executor.get());
     res = final_task->get_future().get();
     os << res << std::endl;
 
     // Third computation with new input
     alpha = 3;
     beta = 4;
-    final_task->schedule();
+    final_task->schedule(executor.get());
     res = final_task->get_future().get();
     os << res << std::endl;
 }

@@ -21,9 +21,7 @@ void basic_with_three_tasks(std::ostream& os) {
     // building the task graph
     auto task1 = transwarp::make_task("something", compute_something);
     auto task2 = transwarp::make_task("something else", compute_something_else);
-    // parallel execution with 4 threads for independent tasks
-    auto parallel = std::make_shared<transwarp::parallel>(4);
-    auto task3 = transwarp::make_final_task("adder", parallel, add_em_up, task1, task2);
+    auto task3 = transwarp::make_final_task("adder", add_em_up, task1, task2);
 
     // creating a dot-style graph for visualization
     const auto graph = task3->get_graph();
@@ -32,14 +30,17 @@ void basic_with_three_tasks(std::ostream& os) {
     // schedule() can now be called as much as desired. The task graph
     // only has to be built once
 
-    task3->schedule();  // schedules all tasks for execution, assigning a future to each task
+    // parallel execution with 4 threads for independent tasks
+    transwarp::parallel executor(4);
+
+    task3->schedule(&executor);  // schedules all tasks for execution, assigning a future to each task
     os << "result = " << task3->get_future().get() << std::endl;  // result = 55.3
 
     // modifying data input
     value1 += 2.5;
     value2 += 1;
 
-    task3->schedule();  // schedules all tasks for execution, replacing the existing futures
+    task3->schedule(&executor);  // schedules all tasks for execution, replacing the existing futures
     os << "result = " << task3->get_future().get() << std::endl;  // result = 58.8
 }
 

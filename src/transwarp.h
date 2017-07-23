@@ -1,5 +1,5 @@
 // transwarp is a header-only C++ library for task concurrency
-// Version: 0.2.0
+// Version: in dev
 // Author: Christian Blume (chr.blume@gmail.com)
 // Repository: https://github.com/bloomen/transwarp
 // License: http://www.opensource.org/licenses/mit-license.php
@@ -23,6 +23,10 @@
 namespace transwarp {
 
 
+// forward declaration
+class executor;
+
+
 // A node carrying meta-data of a task
 struct node {
     std::size_t id;
@@ -30,6 +34,7 @@ struct node {
     std::size_t level;
     std::string name;
     std::vector<const node*> parents;
+    transwarp::executor* executor;
 };
 
 
@@ -55,7 +60,7 @@ template<typename ResultType>
 class ifinal_task : public itask<ResultType> {
 public:
     virtual ~ifinal_task() = default;
-    virtual void schedule() = 0;
+    virtual void schedule(transwarp::executor* executor=nullptr) = 0;
     virtual void set_cancel(bool enabled) = 0;
     virtual const std::vector<transwarp::edge>& get_graph() const = 0;
 };
@@ -106,6 +111,7 @@ public:
 private:
     std::function<std::function<void()>()> packager_;
     const transwarp::node* node_;
+    std::shared_ptr<transwarp::executor> executor_;
 };
 
 // An exception for errors in the thread_pool class
@@ -385,6 +391,41 @@ inline std::string make_dot(const std::vector<transwarp::edge>& graph) {
 }
 
 
+// The executor interface
+class executor {
+public:
+    virtual ~executor() = default;
+    virtual void execute(const std::function<void()>& functor, const transwarp::node& node) = 0;
+};
+
+
+// Executor for sequential execution. Runs functors sequentially on the same thread
+class sequential : public transwarp::executor {
+public:
+
+    void execute(const std::function<void()>& functor, const transwarp::node&) override {
+        functor();
+    }
+};
+
+
+// Executor for parallel execution. Uses a simple thread pool
+class parallel : public transwarp::executor {
+public:
+
+    explicit parallel(std::size_t n_threads)
+    : pool_(n_threads)
+    {}
+
+    void execute(const std::function<void()>& functor, const transwarp::node&) override {
+        pool_.push(functor);
+    }
+
+private:
+    transwarp::detail::thread_pool pool_;
+};
+
+
 // A task representing a piece work given by a functor and parent tasks.
 // By connecting tasks a directed acyclic graph is built. Different priorities
 // will affect the order of execution for tasks on the same level. Tasks with
@@ -399,7 +440,7 @@ public:
 
     // A task is defined by name, priority, functor, and parent tasks
     task(std::string name, std::size_t priority, Functor functor, std::shared_ptr<Tasks>... parents)
-    : node_{0, priority, 0, std::move(name), {}},
+    : node_{0, priority, 0, std::move(name), {}, nullptr},
       functor_(std::move(functor)),
       parents_(std::make_tuple(std::move(parents)...)),
       visited_(false),
@@ -430,6 +471,16 @@ public:
     task& operator=(const task&) = delete;
     task(task&&) = delete;
     task& operator=(task&&) = delete;
+
+    // Assigns an optional task-specific executor which gets precedence over
+    // the global executor (if given) in the schedule function of final_task
+    void set_executor(std::shared_ptr<transwarp::executor> executor) {
+        if (!executor) {
+            throw transwarp::transwarp_error("Not a valid pointer to the executor");
+        }
+        executor_ = std::move(executor);
+        node_.executor = executor_.get();
+    }
 
     // Returns the future associated to the underlying execution
     std::shared_future<result_type> get_future() const override {
@@ -520,41 +571,7 @@ private:
     std::shared_ptr<std::atomic_bool> canceled_;
     std::shared_future<result_type> future_;
     mutable std::mutex future_mutex_;
-};
-
-
-// The executor interface
-class executor {
-public:
-    virtual ~executor() = default;
-    virtual void execute(const std::function<void()>& functor, const transwarp::node& node) = 0;
-};
-
-
-// Executor for sequential execution. Runs functors sequentially on the same thread
-class sequential : public transwarp::executor {
-public:
-
-    void execute(const std::function<void()>& functor, const transwarp::node&) override {
-        functor();
-    }
-};
-
-
-// Executor for parallel execution. Uses a simple thread pool
-class parallel : public transwarp::executor {
-public:
-
-    explicit parallel(std::size_t n_threads)
-    : pool_(n_threads)
-    {}
-
-    void execute(const std::function<void()>& functor, const transwarp::node&) override {
-        pool_.push(functor);
-    }
-
-private:
-    transwarp::detail::thread_pool pool_;
+    std::shared_ptr<transwarp::executor> executor_;
 };
 
 
@@ -572,17 +589,16 @@ public:
     // do not match or cannot be converted into the functor's parameters of this task
     using result_type = typename transwarp::task<Functor, Tasks...>::result_type;
 
-    // A final task is defined by name, executor, functor, and parent tasks.
-    final_task(std::string name, std::shared_ptr<transwarp::executor> executor, Functor functor, std::shared_ptr<Tasks>... parents)
-    : transwarp::task<Functor, Tasks...>(std::move(name), std::move(functor), std::move(parents)...),
-      executor_(std::move(executor))
+    // A final task is defined by name, functor, and parent tasks.
+    final_task(std::string name, Functor functor, std::shared_ptr<Tasks>... parents)
+    : transwarp::task<Functor, Tasks...>(std::move(name), std::move(functor), std::move(parents)...)
     {
         finalize();
     }
 
     // This overload is for auto-naming
-    final_task(std::shared_ptr<transwarp::executor> executor, Functor functor, std::shared_ptr<Tasks>... parents)
-    : transwarp::final_task<Functor, Tasks...>("", std::move(executor), std::move(functor), std::move(parents)...)
+    final_task(Functor functor, std::shared_ptr<Tasks>... parents)
+    : transwarp::final_task<Functor, Tasks...>("", std::move(functor), std::move(parents)...)
     {}
 
     virtual ~final_task() = default;
@@ -603,15 +619,24 @@ public:
         return transwarp::task<Functor, Tasks...>::get_node();
     }
 
-    // Schedules the final task and all its parent tasks for execution using
-    // the user-provided executor. Complexity is O(n) with n being the number
-    // of tasks in the graph. The callbacks are packaged tasks that are ordered
+    // Schedules the graph for execution using the provided executor.
+    // The task-specific executor gets precedence if it exists.
+    // Complexity is O(n) with n being the number of tasks in the graph.
+    // The callbacks are packaged tasks that are ordered
     // first by level, then priority, and finally ID.
-    void schedule() override {
+    // Throws transwarp_error if neither the global nor a task-specific
+    // executor is found.
+    void schedule(transwarp::executor* executor=nullptr) override {
         if (!*canceled_) {
             prepare_callbacks();
             for (const auto& callback : callbacks_) {
-                executor_->execute(callback.first, *callback.second);
+                auto exec = callback.second->executor;
+                if (!exec && executor) {
+                    exec = executor;
+                } else {
+                    throw transwarp::transwarp_error("No valid executor for task: " + callback.second->name);
+                }
+                exec->execute(callback.first, *callback.second);
             }
         }
     }
@@ -638,9 +663,6 @@ private:
     // sorted by level, priority, and ID which ensures that tasks higher in the
     // graph are executed first.
     void finalize() {
-        if (!executor_) {
-            throw transwarp::transwarp_error("Not a valid pointer to the executor");
-        }
         transwarp::pass_visitor pass;
         transwarp::detail::final_visitor post_visitor(packagers_, graph_);
         canceled_ = post_visitor.canceled_;
@@ -665,7 +687,6 @@ private:
     std::shared_ptr<std::atomic_bool> canceled_;
     std::vector<transwarp::detail::wrapped_packager> packagers_;
     std::vector<transwarp::detail::callback_t> callbacks_;
-    std::shared_ptr<transwarp::executor> executor_;
     std::vector<transwarp::edge> graph_;
 };
 
@@ -697,14 +718,14 @@ std::shared_ptr<transwarp::task<Functor, Tasks...>> make_task(Functor functor, s
 
 // A factory function to create a new final task
 template<typename Functor, typename... Tasks>
-std::shared_ptr<transwarp::final_task<Functor, Tasks...>> make_final_task(std::string name, std::shared_ptr<transwarp::executor> executor, Functor functor, std::shared_ptr<Tasks>... parents) {
-    return std::make_shared<transwarp::final_task<Functor, Tasks...>>(std::move(name), std::move(executor), std::move(functor), std::move(parents)...);
+std::shared_ptr<transwarp::final_task<Functor, Tasks...>> make_final_task(std::string name, Functor functor, std::shared_ptr<Tasks>... parents) {
+    return std::make_shared<transwarp::final_task<Functor, Tasks...>>(std::move(name), std::move(functor), std::move(parents)...);
 }
 
 // A factory function to create a new final task. Overload for auto-naming
 template<typename Functor, typename... Tasks>
-std::shared_ptr<transwarp::final_task<Functor, Tasks...>> make_final_task(std::shared_ptr<transwarp::executor> executor, Functor functor, std::shared_ptr<Tasks>... parents) {
-    return std::make_shared<transwarp::final_task<Functor, Tasks...>>(std::move(executor), std::move(functor), std::move(parents)...);
+std::shared_ptr<transwarp::final_task<Functor, Tasks...>> make_final_task(Functor functor, std::shared_ptr<Tasks>... parents) {
+    return std::make_shared<transwarp::final_task<Functor, Tasks...>>(std::move(functor), std::move(parents)...);
 }
 
 
