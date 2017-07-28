@@ -120,16 +120,21 @@ void make_test_bunch_of_tasks(std::size_t threads) {
     auto f2 = [](int a, int b){ return a + b; };
     auto f3 = [](int a, int b, int c){ return a + 2*b + c; };
 
+    auto seq = std::make_shared<transwarp::sequential>();
+
     auto task0 = make_task(f0);
     auto task1 = make_task(f0);
     auto task2 = make_task(f1, task1);
     auto task3 = make_task(f2, task2, task0);
+    task3->set_executor(seq);
     auto task5 = make_task(f2, task3, task2);
     auto task6 = make_task(f3, task1, task2, task5);
     auto task7 = make_task(3, f2, task5, task6);
+    task7->set_executor(seq);
     auto task8 = make_task(2, f2, task6, task7);
     auto task9 = make_task(f1, task7);
     auto task10 = make_task(0, f1, task9);
+    task10->set_executor(seq);
     auto task11 = make_task(f3, task10, task7, task8);
     auto task12 = make_task(f2, task11, task6);
 
@@ -355,12 +360,73 @@ TEST(itask) {
 
 TEST(sequenced) {
     transwarp::sequential seq;
-    ASSERT_TRUE(typeid(seq).hash_code() > 0);
+    ASSERT_EQUAL("transwarp::sequential", seq.get_name());
+    int value = 5;
+    auto functor = [&value]{ value *= 2; };
+    seq.execute(functor, transwarp::node{1, 2, 3, "cool", {}, nullptr});
+    ASSERT_EQUAL(10, value);
 }
 
 TEST(parallel) {
     transwarp::parallel par(4);
-    ASSERT_TRUE(typeid(par).hash_code() > 0);
+    ASSERT_EQUAL("transwarp::parallel", par.get_name());
+    std::atomic_bool done(false);
+    int value = 5;
+    auto functor = [&value, &done]{ value *= 2; done = true; };
+    par.execute(functor, transwarp::node{1, 2, 3, "cool", {}, nullptr});
+    while (!done);
+    ASSERT_EQUAL(10, value);
+}
+
+TEST(wrapped_packager_make_callback) {
+    int value = 42;
+    auto packager = [&value]{
+        return [&value] { value *= 2; };
+    };
+    const transwarp::node node{1, 2, 3, "cool", {}, nullptr};
+    transwarp::detail::wrapped_packager wp(packager, &node);
+    auto callback = wp.make_callback();
+    ASSERT_EQUAL(&node, callback.second);
+    callback.first();
+    ASSERT_EQUAL(84, value);
+}
+
+std::vector<std::unique_ptr<transwarp::node>> wp_nodes;
+
+transwarp::detail::wrapped_packager
+make_wp(std::size_t level, std::size_t priority, std::size_t id) {
+    auto packager = []{ return [] {}; };
+    wp_nodes.emplace_back(new transwarp::node{id, priority, level, "cool", {}, nullptr});
+    return {packager, wp_nodes.back().get()};
+}
+
+TEST(wrapped_packager_operator_less) {
+    auto wp1 = make_wp(1, 1, 1);
+    auto wp2 = make_wp(2, 1, 1);
+    ASSERT_TRUE(wp1 < wp2);
+
+    auto wp3 = make_wp(2, 2, 1);
+    auto wp4 = make_wp(2, 1, 1);
+    ASSERT_TRUE(wp3 < wp4);
+
+    auto wp5 = make_wp(2, 2, 1);
+    auto wp6 = make_wp(2, 2, 2);
+    ASSERT_TRUE(wp5 < wp6);
+}
+
+TEST(schedule_without_executor) {
+    auto task = make_final_task([]{});
+    auto functor = [&task] { task->schedule(); };
+    ASSERT_THROW(transwarp::transwarp_error, functor);
+}
+
+TEST(schedule_with_task_specific_executor) {
+    int value = 42;
+    auto functor = [value] { return value*2; };
+    auto task = make_final_task(functor);
+    task->set_executor(std::make_shared<transwarp::sequential>());
+    task->schedule();
+    ASSERT_EQUAL(84, task->get_future().get());
 }
 
 COLLECTION(test_examples) {
@@ -385,4 +451,3 @@ TEST(statistical_key_facts) {
 
 } // test_examples
 } // test_transwarp
-
