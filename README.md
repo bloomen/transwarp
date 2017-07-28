@@ -13,7 +13,7 @@ when scheduling the tasks in the graph.
 
 transwarp is designed for ease of use, portability, and scalability. It is written in 
 C++11 and only depends on the standard library. Just copy `src/transwarp.h` 
-to your project and off you go!
+to your project and off you go! Tested with GCC, Clang, and Visual Studio.
 
 **Example**
 
