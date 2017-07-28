@@ -1,3 +1,9 @@
+0.X.X
+
+- added ability to assign custom executors per task
+- changed schedule() to accept an executor
+- only use noexcept where appropriate
+
 0.2.0
 
 - added ability to use custom executors
