@@ -61,6 +61,7 @@ class itask : public iexecutable {
 public:
     virtual ~itask() = default;
     virtual std::shared_future<ResultType> get_future() const = 0;
+    virtual std::shared_future<ResultType> wait_future() const = 0;
 };
 
 
@@ -462,6 +463,7 @@ public:
       functor_(std::move(functor)),
       parents_(std::make_tuple(std::move(parents)...)),
       visited_(false),
+      future_replaced_(false),
       packager_(make_packager())
     {
         bookkeeping();
@@ -503,6 +505,14 @@ public:
     // Returns the future associated to the underlying execution
     std::shared_future<result_type> get_future() const override {
         std::lock_guard<std::mutex> lock(future_mutex_);
+        return future_;
+    }
+
+    // Waits until a new future becomes available and returns that future
+    std::shared_future<result_type> wait_future() const override {
+        std::unique_lock<std::mutex> lock(future_mutex_);
+        future_condvar_.wait(lock, [this]{ return future_replaced_; });
+        future_replaced_ = false;
         return future_;
     }
 
@@ -568,7 +578,9 @@ private:
             {
                 std::lock_guard<std::mutex> lock(future_mutex_);
                 future_ = pack_task->get_future();
+                future_replaced_ = true;
             }
+            future_condvar_.notify_one();
             return [pack_task] { (*pack_task)(); };
         };
         return {packager, &node_};
@@ -585,11 +597,13 @@ private:
     Functor functor_;
     std::tuple<std::shared_ptr<Tasks>...> parents_;
     bool visited_;
+    mutable bool future_replaced_;
     transwarp::detail::wrapped_packager packager_;
     std::shared_ptr<transwarp::executor> executor_;
     std::shared_ptr<std::atomic_bool> canceled_;
     std::shared_future<result_type> future_;
     mutable std::mutex future_mutex_;
+    mutable std::condition_variable future_condvar_;
 };
 
 
@@ -636,6 +650,11 @@ public:
     // Returns the future associated to the underlying execution
     std::shared_future<result_type> get_future() const override {
         return transwarp::task<Functor, Tasks...>::get_future();
+    }
+
+    // Waits until a new future becomes available and returns that future
+    std::shared_future<result_type> wait_future() const override {
+        return transwarp::task<Functor, Tasks...>::wait_future();
     }
 
     // Returns the associated node
