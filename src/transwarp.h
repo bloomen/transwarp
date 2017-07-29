@@ -511,7 +511,9 @@ public:
     // Waits until a new future becomes available and returns that future
     std::shared_future<result_type> wait_future() const override {
         std::unique_lock<std::mutex> lock(future_mutex_);
-        future_condvar_.wait(lock, [this]{ return future_replaced_; });
+        while (!future_replaced_) { // workaround for gcc4.8.5 bug
+            future_condvar_.wait(lock);
+        }
         future_replaced_ = false;
         return future_;
     }
