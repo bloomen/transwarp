@@ -127,7 +127,7 @@ void make_test_bunch_of_tasks(std::size_t threads) {
     auto task2 = make_task(f1, task1);
     auto task3 = make_task(f2, task2, task0);
     task3->set_executor(seq);
-    auto task5 = make_task(f2, task3, task2);
+    auto task5 = make_task("task5", f2, task3, task2);
     auto task6 = make_task(f3, task1, task2, task5);
     auto task7 = make_task(3, f2, task5, task6);
     task7->set_executor(seq);
@@ -427,6 +427,24 @@ TEST(schedule_with_task_specific_executor) {
     task->set_executor(std::make_shared<transwarp::sequential>());
     task->schedule();
     ASSERT_EQUAL(84, task->get_future().get());
+}
+
+TEST(invalid_task_specific_executor) {
+    auto task = make_final_task([]{});
+    auto functor = [&task] { task->set_executor(nullptr); };
+    ASSERT_THROW(transwarp::transwarp_error, functor);
+}
+
+TEST(invalid_parent_task) {
+    auto parent = make_task([] { return 42; });
+    parent.reset();
+    auto functor = [&parent] { make_final_task([](int) {}, parent); };
+    ASSERT_THROW(transwarp::transwarp_error, functor);
+}
+
+TEST(parallel_with_zero_threads) {
+    auto functor = [] { transwarp::parallel{0}; };
+    ASSERT_THROW(transwarp::detail::thread_pool_error, functor);
 }
 
 COLLECTION(test_examples) {
