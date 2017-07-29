@@ -448,12 +448,12 @@ private:
 // will affect the order of execution for tasks on the same level. Tasks with
 // larger priorities will be executed first when at the same graph level.
 template<typename Functor, typename... Tasks>
-class task : public transwarp::itask<typename std::result_of<Functor(typename Tasks::result_type...)>::type> {
+class task : public transwarp::itask<decltype(std::declval<Functor>()(std::declval<typename Tasks::result_type>()...))> {
 public:
     // This is the result type of this task.
     // Getting a compiler error here means that the result types of the parent tasks
     // do not match or cannot be converted into the functor's parameters of this task
-    using result_type = typename std::result_of<Functor(typename Tasks::result_type...)>::type;
+    using result_type = decltype(std::declval<Functor>()(std::declval<typename Tasks::result_type>()...));
 
     // A task is defined by name, priority, functor, and parent tasks
     // name and priority are optional. See constructor overloads
