@@ -447,16 +447,6 @@ TEST(parallel_with_zero_threads) {
     ASSERT_THROW(transwarp::detail::thread_pool_error, functor);
 }
 
-TEST(wait_future) {
-    auto task = make_final_task([]{});
-    std::thread([task]{
-        auto future = task->wait_future();
-        ASSERT_TRUE(future.valid());
-    }).detach();
-    transwarp::sequential exec;
-    task->schedule(&exec);
-}
-
 COLLECTION(test_examples) {
 
 TEST(basic_with_three_tasks) {

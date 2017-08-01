@@ -2,7 +2,6 @@
 
 - added ability to assign custom executors per task
 - changed schedule() to accept an executor
-- added wait_future() method to wait until a new future becomes available
 - only use noexcept where appropriate
 
 0.2.0
