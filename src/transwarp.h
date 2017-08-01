@@ -652,20 +652,19 @@ public:
     // The task-specific executor gets precedence if it exists.
     // Complexity is O(n) with n being the number of tasks in the graph.
     // The callbacks are packaged tasks that are ordered first by level, then
-    // priority, and finally ID. Throws transwarp_error if neither the global
-    // nor a task-specific executor is found.
+    // priority, and finally ID. Runs tasks on the same thread as the caller if
+    // neither the global nor a task-specific executor is found.
     void schedule(transwarp::executor* executor=nullptr) override {
         if (!*canceled_) {
             prepare_callbacks();
             for (const auto& callback : callbacks_) {
-                auto exec = callback.second->executor;
-                if (!exec && executor) {
-                    exec = executor;
+                if (callback.second->executor) {
+                    callback.second->executor->execute(callback.first, *callback.second);
+                } else if (executor) {
+                    executor->execute(callback.first, *callback.second);
+                } else {
+                    callback.first();
                 }
-                if (!exec) {
-                    throw transwarp::transwarp_error("No valid executor for task: " + callback.second->name);
-                }
-                exec->execute(callback.first, *callback.second);
             }
         }
     }

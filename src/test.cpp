@@ -415,9 +415,11 @@ TEST(wrapped_packager_operator_less) {
 }
 
 TEST(schedule_without_executor) {
-    auto task = make_final_task([]{});
-    auto functor = [&task] { task->schedule(); };
-    ASSERT_THROW(transwarp::transwarp_error, functor);
+    int x = 13;
+    auto task = make_final_task([&x]{ x *= 2; });
+    task->schedule();
+    task->get_future().wait();
+    ASSERT_EQUAL(26, x);
 }
 
 TEST(schedule_with_task_specific_executor) {
