@@ -140,7 +140,13 @@ public:
         if (n_threads > 0) {
             const auto n_target = threads_.size() + n_threads;
             while (threads_.size() < n_target) {
-                threads_.emplace_back(&thread_pool::worker, this);
+                try {
+                    std::thread thread(&thread_pool::worker, this);
+                    threads_.push_back(std::move(thread));
+                } catch (...) {
+                    shutdown();
+                    throw;
+                }
             }
         } else {
             throw transwarp::detail::thread_pool_error("number of threads must be larger than zero");
@@ -148,14 +154,7 @@ public:
     }
 
     ~thread_pool() {
-        {
-            std::lock_guard<std::mutex> lock(mutex_);
-            done_ = true;
-        }
-        cond_var_.notify_all();
-        for (auto& thread : threads_) {
-            thread.join();
-        }
+        shutdown();
     }
 
     void push(const std::function<void()>& functor) {
@@ -183,6 +182,17 @@ private:
                 functors_.pop();
             }
             functor();
+        }
+    }
+
+    void shutdown() {
+        {
+            std::lock_guard<std::mutex> lock(mutex_);
+            done_ = true;
+        }
+        cond_var_.notify_all();
+        for (auto& thread : threads_) {
+            thread.join();
         }
     }
 
