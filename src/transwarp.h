@@ -346,6 +346,18 @@ struct graph_visitor {
     std::vector<transwarp::edge>& graph_;
 };
 
+struct schedule_visitor {
+    schedule_visitor(transwarp::executor* executor)
+    : executor_(executor) {}
+
+    template<typename Task>
+    void operator()(Task& task) {
+        task.schedule(executor_);
+    }
+
+    transwarp::executor* executor_;
+};
+
 // Visits the task given in the ()-operator using the visitors given in
 // the constructor
 template<typename PreVisitor, typename PostVisitor>
@@ -538,10 +550,10 @@ public:
     // neither the global nor a task-specific executor is found.
     void schedule_all(transwarp::executor* executor=nullptr) override {
         if (!*canceled_) {
-            prepare_callbacks();
-            for (const auto& callback : callbacks_) {
-                execute(executor, callback);
-            }
+            transwarp::pass_visitor pass;
+            transwarp::detail::schedule_visitor post_visitor(executor);
+            visit(pass, post_visitor);
+            unvisit();
         }
     }
 
