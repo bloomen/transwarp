@@ -32,7 +32,6 @@ struct node {
     std::size_t id;
     std::string name;
     std::vector<const node*> parents;
-    transwarp::executor* executor;
 };
 
 
@@ -282,7 +281,7 @@ struct edges_visitor {
 };
 
 // Applies final bookkeeping to the task given in the ()-operator. This includes
-// setting id, name, and canceled flag. Also, packagers and edges are collected.
+// setting id, name, and canceled flag.
 struct final_visitor {
     final_visitor()
     : id_(0), canceled_(std::make_shared<std::atomic_bool>(false)) {}
@@ -421,9 +420,7 @@ private:
 
 
 // A task representing a piece work given by a functor and parent tasks.
-// By connecting tasks a directed acyclic graph is built. Different priorities
-// will affect the order of execution for tasks on the same level. Tasks with
-// larger priorities will be executed first when at the same graph level.
+// By connecting tasks a directed acyclic graph is built.
 template<typename Functor, typename... Tasks>
 class task : public transwarp::itask<decltype(std::declval<Functor>()(std::declval<typename Tasks::result_type>()...))> {
 public:
@@ -435,12 +432,17 @@ public:
     // A task is defined by name, functor, and parent tasks
     // name is optional. See constructor overload
     task(std::string name, Functor functor, std::shared_ptr<Tasks>... parents)
-    : node_{0, std::move(name), {}, nullptr},
+    : node_{0, std::move(name), {}},
       functor_(std::move(functor)),
       parents_(std::make_tuple(std::move(parents)...)),
       visited_(false)
     {
-        finalize();
+        transwarp::detail::call_with_each(transwarp::detail::parent_visitor(node_), parents_);
+        transwarp::pass_visitor pass;
+        transwarp::detail::final_visitor post_visitor;
+        canceled_ = post_visitor.canceled_;
+        visit(pass, post_visitor);
+        unvisit();
     }
 
     // This overload is for auto-naming
@@ -457,13 +459,12 @@ public:
     task& operator=(task&&) = delete;
 
     // Assigns an executor to this task which takes precedence over
-    // the global executor provided in schedule() or schedule_all()
+    // the executor provided in schedule() or schedule_all()
     void set_executor(std::shared_ptr<transwarp::executor> executor) override {
         if (!executor) {
             throw transwarp::transwarp_error("Not a valid pointer to executor");
         }
         executor_ = std::move(executor);
-        node_.executor = executor_.get();
     }
 
     // Returns the future associated to the underlying execution
@@ -486,23 +487,32 @@ public:
         return parents_;
     }
 
+    // Schedules this task for execution using the provided executor.
+    // The task-specific executor gets precedence if it exists.
+    // Runs the task on the same thread as the caller if neither the global
+    // nor the task-specific executor is found.
+    // Replaces the future associated to this task.
     void schedule(transwarp::executor* executor=nullptr) override {
         if (!*canceled_) {
             auto futures = transwarp::detail::get_futures(parents_);
             auto pack_task = std::make_shared<std::packaged_task<result_type()>>(
                     std::bind(&task::evaluate, std::ref(*this), std::move(futures)));
             future_ = pack_task->get_future();
-            const std::function<void()> callback = [pack_task] { (*pack_task)(); };
-            execute(executor, callback);
+            if (executor_) {
+                executor_->execute([pack_task] { (*pack_task)(); }, node_);
+            } else if (executor) {
+                executor->execute([pack_task] { (*pack_task)(); }, node_);
+            } else {
+                (*pack_task)();
+            }
         }
     }
 
-    // Schedules the graph for execution using the provided executor.
+    // Schedules all tasks in the graph for execution using the provided executor.
     // The task-specific executor gets precedence if it exists.
-    // Complexity is O(n) with n being the number of tasks in the graph.
-    // The callbacks are packaged tasks that are ordered first by level, then
-    // priority, and finally ID. Runs tasks on the same thread as the caller if
-    // neither the global nor a task-specific executor is found.
+    // Runs tasks on the same thread as the caller if neither the global
+    // nor a task-specific executor is found.
+    // Replaces all futures associated to the tasks.
     void schedule_all(transwarp::executor* executor=nullptr) override {
         if (!*canceled_) {
             transwarp::pass_visitor pass;
@@ -567,25 +577,6 @@ private:
         if (*task.canceled_)
             throw transwarp::task_canceled(task.get_node());
         return transwarp::detail::call_with_futures<result_type>(task.functor_, std::move(futures));
-    }
-
-    void finalize() {
-        transwarp::detail::call_with_each(transwarp::detail::parent_visitor(node_), parents_);
-        transwarp::pass_visitor pass;
-        transwarp::detail::final_visitor post_visitor;
-        canceled_ = post_visitor.canceled_;
-        this->visit(pass, post_visitor);
-        this->unvisit();
-    }
-
-    void execute(transwarp::executor* executor, const std::function<void()>& callback) const {
-        if (node_.executor) {
-            node_.executor->execute(callback, node_);
-        } else if (executor) {
-            executor->execute(callback, node_);
-        } else {
-            callback();
-        }
     }
 
     transwarp::node node_;
