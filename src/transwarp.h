@@ -52,6 +52,9 @@ public:
     virtual ~iexecutable() = default;
     virtual void set_executor(std::shared_ptr<transwarp::executor> executor) = 0;
     virtual const transwarp::node& get_node() const = 0;
+    virtual void schedule(transwarp::executor* executor=nullptr) = 0;
+    virtual void set_cancel(bool enabled) = 0;
+    virtual std::vector<transwarp::edge> get_graph() const = 0;
 };
 
 
@@ -61,17 +64,6 @@ class itask : public iexecutable {
 public:
     virtual ~itask() = default;
     virtual std::shared_future<ResultType> get_future() const = 0;
-};
-
-
-// An interface for the final_task class
-template<typename ResultType>
-class ifinal_task : public itask<ResultType> {
-public:
-    virtual ~ifinal_task() = default;
-    virtual void schedule(transwarp::executor* executor=nullptr) = 0;
-    virtual void set_cancel(bool enabled) = 0;
-    virtual const std::vector<transwarp::edge>& get_graph() const = 0;
 };
 
 
@@ -305,8 +297,6 @@ struct parent_visitor {
 
     template<typename Task>
     void operator()(const Task& task) const {
-        static_assert(!std::is_base_of<transwarp::ifinal_task<typename Task::result_type>, Task>::value,
-                      "input task cannot be a final task");
         if (node_.level < task.node_.level)
             node_.level = task.node_.level;
         node_.parents.push_back(&task.node_);
@@ -333,25 +323,34 @@ struct edges_visitor {
 // Applies final bookkeeping to the task given in the ()-operator. This includes
 // setting id, name, and canceled flag. Also, packagers and edges are collected.
 struct final_visitor {
-    final_visitor(std::vector<transwarp::detail::wrapped_packager>& packagers,
-                  std::vector<transwarp::edge>& graph)
-    : packagers_(packagers), graph_(graph), id_(0),
+    final_visitor(std::vector<transwarp::detail::wrapped_packager>& packagers)
+    : packagers_(packagers), id_(0),
       canceled_(std::make_shared<std::atomic_bool>(false)) {}
 
     template<typename Task>
     void operator()(Task& task) {
         task.node_.id = id_++;
         if (task.node_.name.empty())
-            task.node_.name = "task" + std::to_string(task.node_.id);
+            task.node_.name = "task";
         packagers_.push_back(task.packager_);
         task.canceled_ = canceled_;
-        transwarp::detail::call_with_each(transwarp::detail::edges_visitor(graph_, task.node_), task.parents_);
     }
 
     std::vector<transwarp::detail::wrapped_packager>& packagers_;
-    std::vector<transwarp::edge>& graph_;
     std::size_t id_;
     std::shared_ptr<std::atomic_bool> canceled_;
+};
+
+struct graph_visitor {
+    graph_visitor(std::vector<transwarp::edge>& graph)
+    : graph_(graph) {}
+
+    template<typename Task>
+    void operator()(const Task& task) {
+        transwarp::detail::call_with_each(transwarp::detail::edges_visitor(graph_, task.node_), task.parents_);
+    }
+
+    std::vector<transwarp::edge>& graph_;
 };
 
 // Visits the task given in the ()-operator using the visitors given in
@@ -475,6 +474,7 @@ public:
       packager_(make_packager())
     {
         bookkeeping();
+        finalize();
     }
 
     // This overload is for lowest priority of zero
@@ -501,7 +501,7 @@ public:
     task& operator=(task&&) = delete;
 
     // Assigns an executor to this task which takes precedence over
-    // the global executor provided in final_task::schedule()
+    // the global executor provided in schedule()
     void set_executor(std::shared_ptr<transwarp::executor> executor) override {
         if (!executor) {
             throw transwarp::transwarp_error("Not a valid pointer to executor");
@@ -528,124 +528,6 @@ public:
     // Returns the parent tasks
     const std::tuple<std::shared_ptr<Tasks>...>& get_parents() const {
         return parents_;
-    }
-
-    // Visits each task in a depth-first traversal. The pre_visitor is called
-    // before traversing through parents and the post_visitor after. A visitor
-    // takes a reference to a task (task&) as its only input argument.
-    template<typename PreVisitor, typename PostVisitor>
-    void visit(PreVisitor& pre_visitor, PostVisitor& post_visitor) {
-        if (!visited_) {
-            pre_visitor(*this);
-            transwarp::detail::call_with_each(transwarp::detail::visit<PreVisitor, PostVisitor>(pre_visitor, post_visitor), parents_);
-            post_visitor(*this);
-            visited_ = true;
-        }
-    }
-
-    // Traverses through all tasks and marks them as not visited.
-    void unvisit() noexcept {
-        if (visited_) {
-            visited_ = false;
-            transwarp::detail::call_with_each(transwarp::detail::unvisit(), parents_);
-        }
-    }
-
-private:
-
-    friend struct transwarp::detail::parent_visitor;
-    friend struct transwarp::detail::edges_visitor;
-    friend struct transwarp::detail::final_visitor;
-
-    // Calls the functor of the given task with the results from the futures.
-    // Throws transwarp::task_canceled if the task is canceled.
-    static result_type evaluate(transwarp::task<Functor, Tasks...>& task,
-                                std::tuple<std::shared_future<typename Tasks::result_type>...> futures) {
-        if (*task.canceled_)
-            throw transwarp::task_canceled(task.get_node());
-        return transwarp::detail::call_with_futures<result_type>(task.functor_, std::move(futures));
-    }
-
-    // Creates a wrapped packager. Calling the packager will create a packaged
-    // task given the parent futures, then assign a new future to this task
-    // and finally return a callback to run the packaged task.
-    transwarp::detail::wrapped_packager make_packager() {
-        auto packager = [this] {
-            auto futures = transwarp::detail::get_futures(parents_);
-            auto pack_task = std::make_shared<std::packaged_task<result_type()>>(
-                    std::bind(&task::evaluate, std::ref(*this), std::move(futures)));
-            future_ = pack_task->get_future();
-            return [pack_task] { (*pack_task)(); };
-        };
-        return {packager, &node_};
-    }
-
-    // Assigns level and parents of this task via the node object
-    void bookkeeping() {
-        transwarp::detail::call_with_each(transwarp::detail::parent_visitor(node_), parents_);
-        if (sizeof...(Tasks) > 0)
-            ++node_.level;
-    }
-
-    transwarp::node node_;
-    Functor functor_;
-    std::tuple<std::shared_ptr<Tasks>...> parents_;
-    bool visited_;
-    transwarp::detail::wrapped_packager packager_;
-    std::shared_ptr<transwarp::executor> executor_;
-    std::shared_ptr<std::atomic_bool> canceled_;
-    std::shared_future<result_type> future_;
-};
-
-
-// The final task is the very last task in the graph. The final task has no children.
-// Depending on how tasks in the graph are arranged they can be run in parallel
-// by design if a parallel executor is used. Tasks may run in parallel when they
-// do not depend on each other, i.e., they are independent with respect to the
-// task that consumes them.
-template<typename Functor, typename... Tasks>
-class final_task : public transwarp::task<Functor, Tasks...>,
-                   public transwarp::ifinal_task<typename transwarp::task<Functor, Tasks...>::result_type> {
-public:
-    // This is the result type of this final task.
-    // Getting a compiler error here means that the result types of the parent tasks
-    // do not match or cannot be converted into the functor's parameters of this task
-    using result_type = typename transwarp::task<Functor, Tasks...>::result_type;
-
-    // A final task is defined by name, functor, and parent tasks.
-    final_task(std::string name, Functor functor, std::shared_ptr<Tasks>... parents)
-    : transwarp::task<Functor, Tasks...>(std::move(name), std::move(functor), std::move(parents)...)
-    {
-        finalize();
-    }
-
-    // This overload is for auto-naming
-    final_task(Functor functor, std::shared_ptr<Tasks>... parents)
-    : transwarp::final_task<Functor, Tasks...>("", std::move(functor), std::move(parents)...)
-    {}
-
-    virtual ~final_task() = default;
-
-    // delete copy/move semantics
-    final_task(const final_task&) = delete;
-    final_task& operator=(const final_task&) = delete;
-    final_task(final_task&&) = delete;
-    final_task& operator=(final_task&&) = delete;
-
-    // Assigns an executor to this task which takes precedence over
-    // the global executor provided in final_task::schedule()
-    void set_executor(std::shared_ptr<transwarp::executor> executor) override {
-        transwarp::task<Functor, Tasks...>::set_executor(std::move(executor));
-    }
-
-    // Returns the future associated to the underlying execution
-    std::shared_future<result_type> get_future() const override {
-        return transwarp::task<Functor, Tasks...>::get_future();
-    }
-
-    // Returns the associated node
-    const transwarp::node& get_node() const override {
-        return transwarp::task<Functor, Tasks...>::get_node();
     }
 
     // Schedules the graph for execution using the provided executor.
@@ -680,11 +562,72 @@ public:
     // Returns the graph of the task structure. This is mainly for visualizing
     // the tasks and their interdependencies. Pass the result into transwarp::make_dot
     // to retrieve a dot-style graph representation for easy viewing.
-    const std::vector<transwarp::edge>& get_graph() const override {
-        return graph_;
+    std::vector<transwarp::edge> get_graph() const override {
+        std::vector<transwarp::edge> graph;
+        transwarp::pass_visitor pass;
+        transwarp::detail::graph_visitor post_visitor(graph);
+        const_cast<task*>(this)->visit(pass, post_visitor);
+        const_cast<task*>(this)->unvisit();
+        return graph;
+    }
+
+    // Visits each task in a depth-first traversal. The pre_visitor is called
+    // before traversing through parents and the post_visitor after. A visitor
+    // takes a reference to a task (task&) as its only input argument.
+    template<typename PreVisitor, typename PostVisitor>
+    void visit(PreVisitor& pre_visitor, PostVisitor& post_visitor) {
+        if (!visited_) {
+            pre_visitor(*this);
+            transwarp::detail::call_with_each(transwarp::detail::visit<PreVisitor, PostVisitor>(pre_visitor, post_visitor), parents_);
+            post_visitor(*this);
+            visited_ = true;
+        }
+    }
+
+    // Traverses through all tasks and marks them as not visited.
+    void unvisit() noexcept {
+        if (visited_) {
+            visited_ = false;
+            transwarp::detail::call_with_each(transwarp::detail::unvisit(), parents_);
+        }
     }
 
 private:
+
+    friend struct transwarp::detail::parent_visitor;
+    friend struct transwarp::detail::edges_visitor;
+    friend struct transwarp::detail::graph_visitor;
+    friend struct transwarp::detail::final_visitor;
+
+    // Calls the functor of the given task with the results from the futures.
+    // Throws transwarp::task_canceled if the task is canceled.
+    static result_type evaluate(transwarp::task<Functor, Tasks...>& task,
+                                std::tuple<std::shared_future<typename Tasks::result_type>...> futures) {
+        if (*task.canceled_)
+            throw transwarp::task_canceled(task.get_node());
+        return transwarp::detail::call_with_futures<result_type>(task.functor_, std::move(futures));
+    }
+
+    // Creates a wrapped packager. Calling the packager will create a packaged
+    // task given the parent futures, then assign a new future to this task
+    // and finally return a callback to run the packaged task.
+    transwarp::detail::wrapped_packager make_packager() {
+        auto packager = [this] {
+            auto futures = transwarp::detail::get_futures(parents_);
+            auto pack_task = std::make_shared<std::packaged_task<result_type()>>(
+                    std::bind(&task::evaluate, std::ref(*this), std::move(futures)));
+            future_ = pack_task->get_future();
+            return [pack_task] { (*pack_task)(); };
+        };
+        return {packager, &node_};
+    }
+
+    // Assigns level and parents of this task via the node object
+    void bookkeeping() {
+        transwarp::detail::call_with_each(transwarp::detail::parent_visitor(node_), parents_);
+        if (sizeof...(Tasks) > 0)
+            ++node_.level;
+    }
 
     // Finalizes the graph of tasks by computing IDs, collecting the packager of
     // each task, populating a vector of edges, etc. The packagers are then
@@ -692,7 +635,7 @@ private:
     // graph are executed first.
     void finalize() {
         transwarp::pass_visitor pass;
-        transwarp::detail::final_visitor post_visitor(packagers_, graph_);
+        transwarp::detail::final_visitor post_visitor(packagers_);
         canceled_ = post_visitor.canceled_;
         this->visit(pass, post_visitor);
         this->unvisit();
@@ -712,10 +655,16 @@ private:
                        });
     }
 
+    transwarp::node node_;
+    Functor functor_;
+    std::tuple<std::shared_ptr<Tasks>...> parents_;
+    bool visited_;
+    transwarp::detail::wrapped_packager packager_;
+    std::shared_ptr<transwarp::executor> executor_;
     std::shared_ptr<std::atomic_bool> canceled_;
+    std::shared_future<result_type> future_;
     std::vector<transwarp::detail::wrapped_packager> packagers_;
     std::vector<transwarp::detail::callback_t> callbacks_;
-    std::vector<transwarp::edge> graph_;
 };
 
 
@@ -741,19 +690,6 @@ std::shared_ptr<transwarp::task<Functor, Tasks...>> make_task(std::size_t priori
 template<typename Functor, typename... Tasks>
 std::shared_ptr<transwarp::task<Functor, Tasks...>> make_task(Functor functor, std::shared_ptr<Tasks>... parents) {
     return std::make_shared<transwarp::task<Functor, Tasks...>>(std::move(functor), std::move(parents)...);
-}
-
-
-// A factory function to create a new final task
-template<typename Functor, typename... Tasks>
-std::shared_ptr<transwarp::final_task<Functor, Tasks...>> make_final_task(std::string name, Functor functor, std::shared_ptr<Tasks>... parents) {
-    return std::make_shared<transwarp::final_task<Functor, Tasks...>>(std::move(name), std::move(functor), std::move(parents)...);
-}
-
-// A factory function to create a new final task. Overload for auto-naming
-template<typename Functor, typename... Tasks>
-std::shared_ptr<transwarp::final_task<Functor, Tasks...>> make_final_task(Functor functor, std::shared_ptr<Tasks>... parents) {
-    return std::make_shared<transwarp::final_task<Functor, Tasks...>>(std::move(functor), std::move(parents)...);
 }
 
 

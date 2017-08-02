@@ -77,7 +77,7 @@ result aggregate_results(double avg, double stddev, double median, int mode) {
     return {avg, stddev, median, mode};
 }
 
-std::shared_ptr<transwarp::ifinal_task<result>> build_graph(std::size_t sample_size, double& alpha, double& beta) {
+std::shared_ptr<transwarp::itask<result>> build_graph(std::size_t sample_size, double& alpha, double& beta) {
     auto gen = std::make_shared<std::mt19937>(1);
     auto gen_task = transwarp::make_task("rand gen", [gen] { return gen; });
     auto size_task = transwarp::make_task("sample size", [sample_size] { return sample_size; });
@@ -92,8 +92,8 @@ std::shared_ptr<transwarp::ifinal_task<result>> build_graph(std::size_t sample_s
     auto median_task = transwarp::make_task("median", median, data_task);
     auto mode_task = transwarp::make_task("mode", mode, data_task);
 
-    return transwarp::make_final_task("aggregate results", aggregate_results,
-                                      avg_task, stddev_task, median_task, mode_task);
+    return transwarp::make_task("aggregate results", aggregate_results,
+                                avg_task, stddev_task, median_task, mode_task);
 }
 
 // This example computes statistical key measures from numbers sampled

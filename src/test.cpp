@@ -5,7 +5,7 @@
 
 
 using transwarp::make_task;
-using transwarp::make_final_task;
+using transwarp::make_task;
 
 
 COLLECTION(test_transwarp) {
@@ -14,18 +14,18 @@ void make_test_one_task(std::size_t threads) {
     const int value = 42;
     auto f1 = [value]{ return value; };
     std::shared_ptr<transwarp::executor> executor;
-    std::shared_ptr<transwarp::ifinal_task<int>> task;
+    std::shared_ptr<transwarp::itask<int>> task;
     if (threads > 0) {
-        task = make_final_task(f1);
+        task = make_task(f1);
         executor = std::make_shared<transwarp::parallel>(threads);
     } else {
-        task = make_final_task(f1);
+        task = make_task(f1);
         executor = std::make_shared<transwarp::sequential>();
     }
     ASSERT_EQUAL(0u, task->get_node().id);
     ASSERT_EQUAL(0u, task->get_node().level);
     ASSERT_EQUAL(0u, task->get_node().parents.size());
-    ASSERT_EQUAL("task0", task->get_node().name);
+    ASSERT_EQUAL("task", task->get_node().name);
     const auto graph = task->get_graph();
     ASSERT_EQUAL(0u, graph.size());
     task->schedule(executor.get());
@@ -53,12 +53,12 @@ void make_test_three_tasks(std::size_t threads) {
     auto f3 = [](int v, int w) { return v + w + 3; }; 
 
     std::shared_ptr<transwarp::executor> executor;
-    std::shared_ptr<transwarp::ifinal_task<int>> task3;
+    std::shared_ptr<transwarp::itask<int>> task3;
     if (threads > 0) {
-        task3 = make_final_task("t3 ", f3, task1, task2);
+        task3 = make_task("t3 ", f3, task1, task2);
         executor = std::make_shared<transwarp::parallel>(threads);
     } else {
-        task3 = make_final_task("t3 ", f3, task1, task2);
+        task3 = make_task("t3 ", f3, task1, task2);
         executor = std::make_shared<transwarp::sequential>();
     }
 
@@ -139,12 +139,12 @@ void make_test_bunch_of_tasks(std::size_t threads) {
     auto task12 = make_task(f2, task11, task6);
 
     std::shared_ptr<transwarp::executor> executor;
-    std::shared_ptr<transwarp::ifinal_task<int>> task13;
+    std::shared_ptr<transwarp::itask<int>> task13;
     if (threads > 0) {
-        task13 = make_final_task(f3, task10, task11, task12);
+        task13 = make_task(f3, task10, task11, task12);
         executor = std::make_shared<transwarp::parallel>(threads);
     } else {
-        task13 = make_final_task(f3, task10, task11, task12);
+        task13 = make_task(f3, task10, task11, task12);
         executor = std::make_shared<transwarp::sequential>();
     }
 
@@ -249,12 +249,12 @@ TEST(get_node) {
     auto f2 = [] { return 13; };
     auto task2 = make_task(f2);
     auto f3 = [](int v, int w) { return v + w; };
-    auto task3 = make_final_task(f3, task1, task2);
+    auto task3 = make_task(f3, task1, task2);
 
     // task3
     ASSERT_EQUAL(2, task3->get_node().id);
     ASSERT_EQUAL(1, task3->get_node().level);
-    ASSERT_EQUAL("task2", task3->get_node().name);
+    ASSERT_EQUAL("task", task3->get_node().name);
     ASSERT_EQUAL(2u, task3->get_node().parents.size());
     ASSERT_EQUAL(&task1->get_node(), task3->get_node().parents[0]);
     ASSERT_EQUAL(&task2->get_node(), task3->get_node().parents[1]);
@@ -262,13 +262,13 @@ TEST(get_node) {
     // task1
     ASSERT_EQUAL(0, task1->get_node().id);
     ASSERT_EQUAL(0, task1->get_node().level);
-    ASSERT_EQUAL("task0", task1->get_node().name);
+    ASSERT_EQUAL("task", task1->get_node().name);
     ASSERT_EQUAL(0u, task1->get_node().parents.size());
 
     // task2
     ASSERT_EQUAL(1, task2->get_node().id);
     ASSERT_EQUAL(0, task2->get_node().level);
-    ASSERT_EQUAL("task1", task2->get_node().name);
+    ASSERT_EQUAL("task", task2->get_node().name);
     ASSERT_EQUAL(0u, task2->get_node().parents.size());
 }
 
@@ -289,12 +289,12 @@ void make_test_task_with_exception_thrown(std::size_t threads) {
     auto task2 = make_task(f2, task1);
 
     std::shared_ptr<transwarp::executor> executor;
-    std::shared_ptr<transwarp::ifinal_task<int>> task3;
+    std::shared_ptr<transwarp::itask<int>> task3;
     if (threads > 0) {
-        task3 = make_final_task(f3, task2);
+        task3 = make_task(f3, task2);
         executor = std::make_shared<transwarp::parallel>(threads);
     } else {
-        task3 = make_final_task(f3, task2);
+        task3 = make_task(f3, task2);
         executor = std::make_shared<transwarp::sequential>();
     }
     task3->schedule(executor.get());
@@ -322,7 +322,7 @@ TEST(cancel_with_schedule_called_before_in_parallel_and_uncancel) {
     };
     auto f1 = [] (int x) { return x + 13; };
     auto task1 = make_task(f0);
-    auto task2 = make_final_task(f1, task1);
+    auto task2 = make_task(f1, task1);
     transwarp::parallel executor(2);
     task2->schedule(&executor);
     task2->set_cancel(true);
@@ -337,7 +337,7 @@ TEST(cancel_with_schedule_called_after) {
     auto f0 = [] { return 42; };
     auto f1 = [] (int x) { return x + 13; };
     auto task1 = make_task(f0);
-    auto task2 = make_final_task(f1, task1);
+    auto task2 = make_task(f1, task1);
     task2->set_cancel(true);
     transwarp::sequential executor;
     task2->schedule(&executor);
@@ -345,12 +345,12 @@ TEST(cancel_with_schedule_called_after) {
 }
 
 TEST(itask) {
-    std::shared_ptr<transwarp::ifinal_task<int>> final;
+    std::shared_ptr<transwarp::itask<int>> final;
     {
         auto f0 = [] { return 42; };
         auto f1 = [] (int x) { return x + 13; };
         auto task1 = make_task(f0);
-        auto task2 = make_final_task(f1, task1);
+        auto task2 = make_task(f1, task1);
         final = task2;
     }
     transwarp::parallel executor(2);
@@ -416,7 +416,7 @@ TEST(wrapped_packager_operator_less) {
 
 TEST(schedule_without_executor) {
     int x = 13;
-    auto task = make_final_task([&x]{ x *= 2; });
+    auto task = make_task([&x]{ x *= 2; });
     task->schedule();
     task->get_future().wait();
     ASSERT_EQUAL(26, x);
@@ -425,14 +425,14 @@ TEST(schedule_without_executor) {
 TEST(schedule_with_task_specific_executor) {
     int value = 42;
     auto functor = [value] { return value*2; };
-    auto task = make_final_task(functor);
+    auto task = make_task(functor);
     task->set_executor(std::make_shared<transwarp::sequential>());
     task->schedule();
     ASSERT_EQUAL(84, task->get_future().get());
 }
 
 TEST(invalid_task_specific_executor) {
-    auto task = make_final_task([]{});
+    auto task = make_task([]{});
     auto functor = [&task] { task->set_executor(nullptr); };
     ASSERT_THROW(transwarp::transwarp_error, functor);
 }
@@ -440,7 +440,7 @@ TEST(invalid_task_specific_executor) {
 TEST(invalid_parent_task) {
     auto parent = make_task([] { return 42; });
     parent.reset();
-    auto functor = [&parent] { make_final_task([](int) {}, parent); };
+    auto functor = [&parent] { make_task([](int) {}, parent); };
     ASSERT_THROW(transwarp::transwarp_error, functor);
 }
 
