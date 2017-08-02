@@ -39,7 +39,7 @@ int main() {
     // building the task graph
     auto task1 = transwarp::make_task("something", compute_something);
     auto task2 = transwarp::make_task("something else", compute_something_else);
-    auto task3 = transwarp::make_final_task("adder", add_em_up, task1, task2);
+    auto task3 = transwarp::make_task("adder", add_em_up, task1, task2);
 
     // creating a dot-style graph for visualization
     const auto graph = task3->get_graph();
