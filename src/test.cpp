@@ -23,7 +23,6 @@ void make_test_one_task(std::size_t threads) {
         executor = std::make_shared<transwarp::sequential>();
     }
     ASSERT_EQUAL(0u, task->get_node().id);
-    ASSERT_EQUAL(0u, task->get_node().level);
     ASSERT_EQUAL(0u, task->get_node().parents.size());
     ASSERT_EQUAL("task", task->get_node().name);
     const auto graph = task->get_graph();
@@ -45,10 +44,10 @@ void make_test_three_tasks(std::size_t threads) {
     int value = 42;
 
     auto f1 = [&value]{ return value; };
-    auto task1 = make_task("t1", 13, f1);
+    auto task1 = make_task("t1", f1);
 
     auto f2 = [](int v) { return v + 2; };
-    auto task2 = make_task("\nt2\t", 42, f2, task1);
+    auto task2 = make_task("\nt2\t", f2, task1);
 
     auto f3 = [](int v, int w) { return v + w + 3; }; 
 
@@ -63,17 +62,14 @@ void make_test_three_tasks(std::size_t threads) {
     }
 
     ASSERT_EQUAL(0u, task1->get_node().id);
-    ASSERT_EQUAL(0u, task1->get_node().level);
     ASSERT_EQUAL(0u, task1->get_node().parents.size());
     ASSERT_EQUAL("t1", task1->get_node().name);
 
     ASSERT_EQUAL(1u, task2->get_node().id);
-    ASSERT_EQUAL(1u, task2->get_node().level);
     ASSERT_EQUAL(1u, task2->get_node().parents.size());
     ASSERT_EQUAL("\nt2\t", task2->get_node().name);
 
     ASSERT_EQUAL(2u, task3->get_node().id);
-    ASSERT_EQUAL(2u, task3->get_node().level);
     ASSERT_EQUAL(2u, task3->get_node().parents.size());
     ASSERT_EQUAL("t3 ", task3->get_node().name);
 
@@ -93,14 +89,14 @@ void make_test_three_tasks(std::size_t threads) {
 
     const std::string exp_dot_graph = "digraph {\n"
 "\"t1\n"
-"id 0 pri 13 lev 0 par 0\" -> \"t2\n"
-"id 1 pri 42 lev 1 par 1\"\n"
+"id 0 parents 0\" -> \"t2\n"
+"id 1 parents 1\"\n"
 "\"t1\n"
-"id 0 pri 13 lev 0 par 0\" -> \"t3\n"
-"id 2 pri 0 lev 2 par 2\"\n"
+"id 0 parents 0\" -> \"t3\n"
+"id 2 parents 2\"\n"
 "\"t2\n"
-"id 1 pri 42 lev 1 par 1\" -> \"t3\n"
-"id 2 pri 0 lev 2 par 2\"\n"
+"id 1 parents 1\" -> \"t3\n"
+"id 2 parents 2\"\n"
 "}\n";
 
     ASSERT_EQUAL(exp_dot_graph, dot_graph);
@@ -129,11 +125,11 @@ void make_test_bunch_of_tasks(std::size_t threads) {
     task3->set_executor(seq);
     auto task5 = make_task("task5", f2, task3, task2);
     auto task6 = make_task(f3, task1, task2, task5);
-    auto task7 = make_task(3, f2, task5, task6);
+    auto task7 = make_task(f2, task5, task6);
     task7->set_executor(seq);
-    auto task8 = make_task(2, f2, task6, task7);
+    auto task8 = make_task(f2, task6, task7);
     auto task9 = make_task(f1, task7);
-    auto task10 = make_task(0, f1, task9);
+    auto task10 = make_task(f1, task9);
     task10->set_executor(seq);
     auto task11 = make_task(f3, task10, task7, task8);
     auto task12 = make_task(f2, task11, task6);
@@ -187,7 +183,7 @@ TEST(transwarp_error) {
 
 TEST(task_canceled) {
     const std::string msg = "cool is canceled";
-    const transwarp::node node{1, 2, 3, "cool", {}, nullptr};
+    const transwarp::node node{1, "cool", {}, nullptr};
     try {
         throw transwarp::task_canceled(node);
     } catch (const transwarp::transwarp_error& e) {
@@ -203,20 +199,20 @@ TEST(make_dot_graph_with_empty_graph) {
 }
 
 TEST(make_dot_graph_with_three_nodes) {
-    const transwarp::node node2{1, 10, 1, "node2", {}, nullptr};
-    const transwarp::node node3{2, 11, 1, "node3", {}, nullptr};
-    const transwarp::node node1{0, 12, 0, "node1", {&node2, &node3}, nullptr};
+    const transwarp::node node2{1, "node2", {}, nullptr};
+    const transwarp::node node3{2, "node3", {}, nullptr};
+    const transwarp::node node1{0, "node1", {&node2, &node3}, nullptr};
     std::vector<transwarp::edge> graph;
     graph.push_back({&node1, &node2});
     graph.push_back({&node1, &node3});
     const auto dot_graph = transwarp::make_dot(graph);
     const std::string exp_dot_graph = "digraph {\n"
 "\"node2\n"
-"id 1 pri 10 lev 1 par 0\" -> \"node1\n"
-"id 0 pri 12 lev 0 par 2\"\n"
+"id 1 parents 0\" -> \"node1\n"
+"id 0 parents 2\"\n"
 "\"node3\n"
-"id 2 pri 11 lev 1 par 0\" -> \"node1\n"
-"id 0 pri 12 lev 0 par 2\"\n"
+"id 2 parents 0\" -> \"node1\n"
+"id 0 parents 2\"\n"
 "}\n";
 
     ASSERT_EQUAL(exp_dot_graph, dot_graph);
@@ -253,7 +249,6 @@ TEST(get_node) {
 
     // task3
     ASSERT_EQUAL(2, task3->get_node().id);
-    ASSERT_EQUAL(1, task3->get_node().level);
     ASSERT_EQUAL("task", task3->get_node().name);
     ASSERT_EQUAL(2u, task3->get_node().parents.size());
     ASSERT_EQUAL(&task1->get_node(), task3->get_node().parents[0]);
@@ -261,13 +256,11 @@ TEST(get_node) {
 
     // task1
     ASSERT_EQUAL(0, task1->get_node().id);
-    ASSERT_EQUAL(0, task1->get_node().level);
     ASSERT_EQUAL("task", task1->get_node().name);
     ASSERT_EQUAL(0u, task1->get_node().parents.size());
 
     // task2
     ASSERT_EQUAL(1, task2->get_node().id);
-    ASSERT_EQUAL(0, task2->get_node().level);
     ASSERT_EQUAL("task", task2->get_node().name);
     ASSERT_EQUAL(0u, task2->get_node().parents.size());
 }
@@ -363,7 +356,7 @@ TEST(sequenced) {
     ASSERT_EQUAL("transwarp::sequential", seq.get_name());
     int value = 5;
     auto functor = [&value]{ value *= 2; };
-    seq.execute(functor, transwarp::node{1, 2, 3, "cool", {}, nullptr});
+    seq.execute(functor, transwarp::node{1, "cool", {}, nullptr});
     ASSERT_EQUAL(10, value);
 }
 
@@ -373,45 +366,9 @@ TEST(parallel) {
     std::atomic_bool done(false);
     int value = 5;
     auto functor = [&value, &done]{ value *= 2; done = true; };
-    par.execute(functor, transwarp::node{1, 2, 3, "cool", {}, nullptr});
+    par.execute(functor, transwarp::node{1, "cool", {}, nullptr});
     while (!done);
     ASSERT_EQUAL(10, value);
-}
-
-TEST(wrapped_packager_make_callback) {
-    int value = 42;
-    auto packager = [&value]{
-        return [&value] { value *= 2; };
-    };
-    const transwarp::node node{1, 2, 3, "cool", {}, nullptr};
-    transwarp::detail::wrapped_packager wp(packager, &node);
-    auto callback = wp.make_callback();
-    ASSERT_EQUAL(&node, callback.second);
-    callback.first();
-    ASSERT_EQUAL(84, value);
-}
-
-std::vector<std::unique_ptr<transwarp::node>> wp_nodes;
-
-transwarp::detail::wrapped_packager
-make_wp(std::size_t level, std::size_t priority, std::size_t id) {
-    auto packager = []{ return [] {}; };
-    wp_nodes.emplace_back(new transwarp::node{id, priority, level, "cool", {}, nullptr});
-    return {packager, wp_nodes.back().get()};
-}
-
-TEST(wrapped_packager_operator_less) {
-    auto wp1 = make_wp(1, 1, 1);
-    auto wp2 = make_wp(2, 1, 1);
-    ASSERT_TRUE(wp1 < wp2);
-
-    auto wp3 = make_wp(2, 2, 1);
-    auto wp4 = make_wp(2, 1, 1);
-    ASSERT_TRUE(wp3 < wp4);
-
-    auto wp5 = make_wp(2, 2, 1);
-    auto wp6 = make_wp(2, 2, 2);
-    ASSERT_TRUE(wp5 < wp6);
 }
 
 TEST(schedule_all_without_executor) {

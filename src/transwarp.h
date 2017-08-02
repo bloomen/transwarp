@@ -30,8 +30,6 @@ class executor;
 // A node carrying meta-data of a task
 struct node {
     std::size_t id;
-    std::size_t priority;
-    std::size_t level;
     std::string name;
     std::vector<const node*> parents;
     transwarp::executor* executor;
@@ -78,34 +76,6 @@ public:
 
 namespace detail {
 
-
-using callback_t = std::pair<std::function<void()>, const transwarp::node*>;
-
-// A wrapper for a packager that is associated to a node. Sorting objects of
-// this class will be first by node level, then by node priority, and
-// finally by node id.
-class wrapped_packager {
-public:
-
-    wrapped_packager(std::function<std::function<void()>()> packager, const transwarp::node* node)
-    : packager_(std::move(packager)), node_(node) {}
-
-    bool operator<(const wrapped_packager& other) const noexcept {
-        constexpr const auto max = std::numeric_limits<std::size_t>::max();
-        const auto lhs_pri = max - node_->priority;
-        const auto rhs_pri = max - other.node_->priority;
-        return std::tie(node_->level, lhs_pri, node_->id) <
-               std::tie(other.node_->level, rhs_pri, other.node_->id);
-    }
-
-    transwarp::detail::callback_t make_callback() const {
-        return std::make_pair(packager_(), node_);
-    }
-
-private:
-    std::function<std::function<void()>()> packager_;
-    const transwarp::node* node_;
-};
 
 // An exception for errors in the thread_pool class
 class thread_pool_error : public transwarp::transwarp_error {
@@ -290,8 +260,6 @@ struct parent_visitor {
 
     template<typename Task>
     void operator()(const Task& task) const {
-        if (node_.level < task.node_.level)
-            node_.level = task.node_.level;
         node_.parents.push_back(&task.node_);
     }
 
@@ -397,9 +365,7 @@ inline std::string make_dot(const std::vector<transwarp::edge>& graph) {
     auto info = [](const transwarp::node& n) {
         const auto name = transwarp::detail::trim(n.name);
         return '"' + name + "\nid " + std::to_string(n.id)
-                   + " pri " + std::to_string(n.priority)
-                   + " lev " + std::to_string(n.level)
-                   + " par " + std::to_string(n.parents.size()) + '"';
+                   + " parents " + std::to_string(n.parents.size()) + '"';
     };
     std::string dot = "digraph {\n";
     for (const auto& pair : graph) {
@@ -466,32 +432,20 @@ public:
     // do not match or cannot be converted into the functor's parameters of this task
     using result_type = decltype(std::declval<Functor>()(std::declval<typename Tasks::result_type>()...));
 
-    // A task is defined by name, priority, functor, and parent tasks
-    // name and priority are optional. See constructor overloads
-    task(std::string name, std::size_t priority, Functor functor, std::shared_ptr<Tasks>... parents)
-    : node_{0, priority, 0, std::move(name), {}, nullptr},
+    // A task is defined by name, functor, and parent tasks
+    // name is optional. See constructor overload
+    task(std::string name, Functor functor, std::shared_ptr<Tasks>... parents)
+    : node_{0, std::move(name), {}, nullptr},
       functor_(std::move(functor)),
       parents_(std::make_tuple(std::move(parents)...)),
-      visited_(false),
-      packager_(make_packager())
+      visited_(false)
     {
-        bookkeeping();
         finalize();
     }
 
-    // This overload is for lowest priority of zero
-    task(std::string name, Functor functor, std::shared_ptr<Tasks>... parents)
-    : task(std::move(name), 0, std::move(functor), std::move(parents)...)
-    {}
-
     // This overload is for auto-naming
-    task(std::size_t priority, Functor functor, std::shared_ptr<Tasks>... parents)
-    : task("", priority, std::move(functor), std::move(parents)...)
-    {}
-
-    // This overload is for auto-naming and lowest priority of zero
     task(Functor functor, std::shared_ptr<Tasks>... parents)
-    : task("", 0, std::move(functor), std::move(parents)...)
+    : task("", std::move(functor), std::move(parents)...)
     {}
 
     virtual ~task() = default;
@@ -503,7 +457,7 @@ public:
     task& operator=(task&&) = delete;
 
     // Assigns an executor to this task which takes precedence over
-    // the global executor provided in schedule()
+    // the global executor provided in schedule() or schedule_all()
     void set_executor(std::shared_ptr<transwarp::executor> executor) override {
         if (!executor) {
             throw transwarp::transwarp_error("Not a valid pointer to executor");
@@ -534,7 +488,11 @@ public:
 
     void schedule(transwarp::executor* executor=nullptr) override {
         if (!*canceled_) {
-            const auto callback = packager_.make_callback();
+            auto futures = transwarp::detail::get_futures(parents_);
+            auto pack_task = std::make_shared<std::packaged_task<result_type()>>(
+                    std::bind(&task::evaluate, std::ref(*this), std::move(futures)));
+            future_ = pack_task->get_future();
+            const std::function<void()> callback = [pack_task] { (*pack_task)(); };
             execute(executor, callback);
         }
     }
@@ -611,32 +569,8 @@ private:
         return transwarp::detail::call_with_futures<result_type>(task.functor_, std::move(futures));
     }
 
-    // Creates a wrapped packager. Calling the packager will create a packaged
-    // task given the parent futures, then assign a new future to this task
-    // and finally return a callback to run the packaged task.
-    transwarp::detail::wrapped_packager make_packager() {
-        auto packager = [this] {
-            auto futures = transwarp::detail::get_futures(parents_);
-            auto pack_task = std::make_shared<std::packaged_task<result_type()>>(
-                    std::bind(&task::evaluate, std::ref(*this), std::move(futures)));
-            future_ = pack_task->get_future();
-            return [pack_task] { (*pack_task)(); };
-        };
-        return {packager, &node_};
-    }
-
-    // Assigns level and parents of this task via the node object
-    void bookkeeping() {
-        transwarp::detail::call_with_each(transwarp::detail::parent_visitor(node_), parents_);
-        if (sizeof...(Tasks) > 0)
-            ++node_.level;
-    }
-
-    // Finalizes the graph of tasks by computing IDs, collecting the packager of
-    // each task, populating a vector of edges, etc. The packagers are then
-    // sorted by level, priority, and ID which ensures that tasks higher in the
-    // graph are executed first.
     void finalize() {
+        transwarp::detail::call_with_each(transwarp::detail::parent_visitor(node_), parents_);
         transwarp::pass_visitor pass;
         transwarp::detail::final_visitor post_visitor;
         canceled_ = post_visitor.canceled_;
@@ -644,13 +578,13 @@ private:
         this->unvisit();
     }
 
-    void execute(transwarp::executor* executor, const transwarp::detail::callback_t& callback) const {
-        if (callback.second->executor) {
-            callback.second->executor->execute(callback.first, *callback.second);
+    void execute(transwarp::executor* executor, const std::function<void()>& callback) const {
+        if (node_.executor) {
+            node_.executor->execute(callback, node_);
         } else if (executor) {
-            executor->execute(callback.first, *callback.second);
+            executor->execute(callback, node_);
         } else {
-            callback.first();
+            callback();
         }
     }
 
@@ -658,7 +592,6 @@ private:
     Functor functor_;
     std::tuple<std::shared_ptr<Tasks>...> parents_;
     bool visited_;
-    transwarp::detail::wrapped_packager packager_;
     std::shared_ptr<transwarp::executor> executor_;
     std::shared_ptr<std::atomic_bool> canceled_;
     std::shared_future<result_type> future_;
@@ -667,23 +600,11 @@ private:
 
 // A factory function to create a new task
 template<typename Functor, typename... Tasks>
-std::shared_ptr<transwarp::task<Functor, Tasks...>> make_task(std::string name, std::size_t priority, Functor functor, std::shared_ptr<Tasks>... parents) {
-    return std::make_shared<transwarp::task<Functor, Tasks...>>(std::move(name), priority, std::move(functor), std::move(parents)...);
-}
-
-// A factory function to create a new task. Overload for lowest priority of zero
-template<typename Functor, typename... Tasks>
 std::shared_ptr<transwarp::task<Functor, Tasks...>> make_task(std::string name, Functor functor, std::shared_ptr<Tasks>... parents) {
     return std::make_shared<transwarp::task<Functor, Tasks...>>(std::move(name), std::move(functor), std::move(parents)...);
 }
 
 // A factory function to create a new task. Overload for auto-naming
-template<typename Functor, typename... Tasks>
-std::shared_ptr<transwarp::task<Functor, Tasks...>> make_task(std::size_t priority, Functor functor, std::shared_ptr<Tasks>... parents) {
-    return std::make_shared<transwarp::task<Functor, Tasks...>>(priority, std::move(functor), std::move(parents)...);
-}
-
-// A factory function to create a new task. Overload for auto-naming and lowest priority of zero
 template<typename Functor, typename... Tasks>
 std::shared_ptr<transwarp::task<Functor, Tasks...>> make_task(Functor functor, std::shared_ptr<Tasks>... parents) {
     return std::make_shared<transwarp::task<Functor, Tasks...>>(std::move(functor), std::move(parents)...);
