@@ -45,25 +45,17 @@ struct edge {
 };
 
 
-// An interface for gaining access to member functions that do not depend
-// on the result type of the task
-class iexecutable {
+// An interface for the task class
+template<typename ResultType>
+class itask {
 public:
-    virtual ~iexecutable() = default;
+    virtual ~itask() = default;
     virtual void set_executor(std::shared_ptr<transwarp::executor> executor) = 0;
+    virtual std::shared_future<ResultType> get_future() const = 0;
     virtual const transwarp::node& get_node() const = 0;
     virtual void schedule(transwarp::executor* executor=nullptr) = 0;
     virtual void set_cancel(bool enabled) = 0;
     virtual std::vector<transwarp::edge> get_graph() const = 0;
-};
-
-
-// An interface for the task class
-template<typename ResultType>
-class itask : public iexecutable {
-public:
-    virtual ~itask() = default;
-    virtual std::shared_future<ResultType> get_future() const = 0;
 };
 
 
