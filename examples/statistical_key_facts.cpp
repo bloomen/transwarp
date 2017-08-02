@@ -124,21 +124,21 @@ void statistical_key_facts(std::ostream& os, std::size_t sample_size, bool paral
     // Now we start calculating stuff ...
 
     // First computation with initial values
-    final_task->schedule(executor.get());
+    final_task->schedule_all(executor.get());
     res = final_task->get_future().get();
     os << res << std::endl;
 
     // Second computation with new input
     alpha = 2;
     beta = 3;
-    final_task->schedule(executor.get());
+    final_task->schedule_all(executor.get());
     res = final_task->get_future().get();
     os << res << std::endl;
 
     // Third computation with new input
     alpha = 3;
     beta = 4;
-    final_task->schedule(executor.get());
+    final_task->schedule_all(executor.get());
     res = final_task->get_future().get();
     os << res << std::endl;
 }

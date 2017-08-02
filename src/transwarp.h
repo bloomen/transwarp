@@ -54,6 +54,7 @@ public:
     virtual std::shared_future<ResultType> get_future() const = 0;
     virtual const transwarp::node& get_node() const = 0;
     virtual void schedule(transwarp::executor* executor=nullptr) = 0;
+    virtual void schedule_all(transwarp::executor* executor=nullptr) = 0;
     virtual void set_cancel(bool enabled) = 0;
     virtual std::vector<transwarp::edge> get_graph() const = 0;
 };
@@ -522,23 +523,24 @@ public:
         return parents_;
     }
 
+    void schedule(transwarp::executor* executor=nullptr) override {
+        if (!*canceled_) {
+            const auto callback = packagers_.back().make_callback();
+            execute(executor, callback);
+        }
+    }
+
     // Schedules the graph for execution using the provided executor.
     // The task-specific executor gets precedence if it exists.
     // Complexity is O(n) with n being the number of tasks in the graph.
     // The callbacks are packaged tasks that are ordered first by level, then
     // priority, and finally ID. Runs tasks on the same thread as the caller if
     // neither the global nor a task-specific executor is found.
-    void schedule(transwarp::executor* executor=nullptr) override {
+    void schedule_all(transwarp::executor* executor=nullptr) override {
         if (!*canceled_) {
             prepare_callbacks();
             for (const auto& callback : callbacks_) {
-                if (callback.second->executor) {
-                    callback.second->executor->execute(callback.first, *callback.second);
-                } else if (executor) {
-                    executor->execute(callback.first, *callback.second);
-                } else {
-                    callback.first();
-                }
+                execute(executor, callback);
             }
         }
     }
@@ -645,6 +647,16 @@ private:
                        [](const transwarp::detail::wrapped_packager& p) {
                            return p.make_callback();
                        });
+    }
+
+    void execute(transwarp::executor* executor, const transwarp::detail::callback_t& callback) const {
+        if (callback.second->executor) {
+            callback.second->executor->execute(callback.first, *callback.second);
+        } else if (executor) {
+            executor->execute(callback.first, *callback.second);
+        } else {
+            callback.first();
+        }
     }
 
     transwarp::node node_;
