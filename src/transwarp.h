@@ -316,20 +316,17 @@ struct edges_visitor {
 // Applies final bookkeeping to the task given in the ()-operator. This includes
 // setting id, name, and canceled flag. Also, packagers and edges are collected.
 struct final_visitor {
-    final_visitor(std::vector<transwarp::detail::wrapped_packager>& packagers)
-    : packagers_(packagers), id_(0),
-      canceled_(std::make_shared<std::atomic_bool>(false)) {}
+    final_visitor()
+    : id_(0), canceled_(std::make_shared<std::atomic_bool>(false)) {}
 
     template<typename Task>
     void operator()(Task& task) {
         task.node_.id = id_++;
         if (task.node_.name.empty())
             task.node_.name = "task";
-        packagers_.push_back(task.packager_);
         task.canceled_ = canceled_;
     }
 
-    std::vector<transwarp::detail::wrapped_packager>& packagers_;
     std::size_t id_;
     std::shared_ptr<std::atomic_bool> canceled_;
 };
@@ -537,7 +534,7 @@ public:
 
     void schedule(transwarp::executor* executor=nullptr) override {
         if (!*canceled_) {
-            const auto callback = packagers_.back().make_callback();
+            const auto callback = packager_.make_callback();
             execute(executor, callback);
         }
     }
@@ -641,24 +638,10 @@ private:
     // graph are executed first.
     void finalize() {
         transwarp::pass_visitor pass;
-        transwarp::detail::final_visitor post_visitor(packagers_);
+        transwarp::detail::final_visitor post_visitor;
         canceled_ = post_visitor.canceled_;
         this->visit(pass, post_visitor);
         this->unvisit();
-        callbacks_.resize(packagers_.size());
-        std::sort(packagers_.begin(), packagers_.end());
-    }
-
-    // Calls all packagers and stores the results as callbacks. Every task has
-    // a packager which, when called, wraps the task and assigns a new future.
-    // Calling the callback will then actually run the functor associated to the
-    // task and store the result in the future. The callbacks are dealt with
-    // by the schedule function.
-    void prepare_callbacks() {
-        std::transform(packagers_.begin(), packagers_.end(), callbacks_.begin(),
-                       [](const transwarp::detail::wrapped_packager& p) {
-                           return p.make_callback();
-                       });
     }
 
     void execute(transwarp::executor* executor, const transwarp::detail::callback_t& callback) const {
@@ -679,8 +662,6 @@ private:
     std::shared_ptr<transwarp::executor> executor_;
     std::shared_ptr<std::atomic_bool> canceled_;
     std::shared_future<result_type> future_;
-    std::vector<transwarp::detail::wrapped_packager> packagers_;
-    std::vector<transwarp::detail::callback_t> callbacks_;
 };
 
 
