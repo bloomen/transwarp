@@ -299,10 +299,10 @@ TEST(cancel_with_schedule_all_called_before_in_parallel_and_uncancel) {
     auto task2 = make_task(f1, task1);
     transwarp::parallel executor(2);
     task2->schedule_all(&executor);
-    task2->set_cancel(true);
+    task2->cancel_all(true);
     cont = true;
     ASSERT_THROW(transwarp::task_canceled, [task2] { task2->get_future().get(); });
-    task2->set_cancel(false);
+    task2->cancel_all(false);
     task2->reset_all();
     task2->schedule_all(&executor);
     ASSERT_EQUAL(55, task2->get_future().get());
@@ -313,7 +313,7 @@ TEST(cancel_with_schedule_all_called_after) {
     auto f1 = [] (int x) { return x + 13; };
     auto task1 = make_task(f0);
     auto task2 = make_task(f1, task1);
-    task2->set_cancel(true);
+    task2->cancel_all(true);
     transwarp::sequential executor;
     task2->schedule_all(&executor);
     ASSERT_FALSE(task2->get_future().valid());

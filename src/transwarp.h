@@ -59,7 +59,8 @@ public:
     virtual void schedule_all(transwarp::executor* executor=nullptr) = 0;
     virtual void reset() = 0;
     virtual void reset_all() = 0;
-    virtual void set_cancel(bool enabled) = 0;
+    virtual void cancel(bool enabled) = 0;
+    virtual void cancel_all(bool enabled) = 0;
     virtual std::vector<transwarp::edge> get_graph() const = 0;
 };
 
@@ -291,14 +292,13 @@ struct edges_visitor {
 // setting id, name, and canceled flag.
 struct final_visitor {
     final_visitor()
-    : id_(0), canceled_(std::make_shared<std::atomic_bool>(false)) {}
+    : id_(0) {}
 
     template<typename Task>
     void operator()(Task& task) {
         task.node_.id = id_++;
         if (task.node_.name.empty())
             task.node_.name = "task";
-        task.canceled_ = canceled_;
     }
 
     std::size_t id_;
@@ -335,6 +335,18 @@ struct reset_visitor {
     void operator()(Task& task) const {
         task.reset();
     }
+};
+
+struct cancel_visitor {
+    cancel_visitor(bool enabled)
+    : enabled_(enabled) {}
+
+    template<typename Task>
+    void operator()(Task& task) const {
+        task.cancel(enabled_);
+    }
+
+    bool enabled_;
 };
 
 // Visits the task given in the ()-operator using the visitors given in
@@ -441,12 +453,12 @@ public:
     : node_{0, std::move(name), {}},
       functor_(std::move(functor)),
       parents_(std::make_tuple(std::move(parents)...)),
-      visited_(false)
+      visited_(false),
+      canceled_(false)
     {
         transwarp::detail::call_with_each(transwarp::detail::parent_visitor(node_), parents_);
         transwarp::pass_visitor pass;
         transwarp::detail::final_visitor post_visitor;
-        canceled_ = post_visitor.canceled_;
         visit(pass, post_visitor);
         unvisit();
     }
@@ -488,7 +500,7 @@ public:
     // Runs the task on the same thread as the caller if neither the global
     // nor the task-specific executor is found.
     void schedule(transwarp::executor* executor=nullptr) override {
-        if (!*canceled_ && !future_.valid()) {
+        if (!canceled_ && !future_.valid()) {
             auto futures = transwarp::detail::get_futures(parents_);
             auto pack_task = std::make_shared<std::packaged_task<result_type()>>(
                     std::bind(&task::evaluate, std::ref(*this), std::move(futures)));
@@ -508,7 +520,7 @@ public:
     // Runs tasks on the same thread as the caller if neither the global
     // nor a task-specific executor is found.
     void schedule_all(transwarp::executor* executor=nullptr) override {
-        if (!*canceled_) {
+        if (!canceled_) {
             transwarp::pass_visitor pass;
             transwarp::detail::schedule_visitor post_visitor(executor);
             visit(pass, post_visitor);
@@ -530,12 +542,25 @@ public:
         unvisit();
     }
 
-    // If enabled then all pending tasks are canceled which will
+    // If enabled then this task is canceled which will
+    // throw transwarp::task_canceled when asking the future for its result.
+    // Canceling pending tasks does not affect currently running tasks.
+    // As long as cancel is enabled new computations cannot be scheduled.
+    // Passing true is equivalent to resume.
+    void cancel(bool enabled) override {
+        canceled_ = enabled;
+    }
+
+    // If enabled then all pending tasks in the graph are canceled which will
     // throw transwarp::task_canceled when asking a future for its result.
     // Canceling pending tasks does not affect currently running tasks.
     // As long as cancel is enabled new computations cannot be scheduled.
-    void set_cancel(bool enabled) override {
-        *canceled_ = enabled;
+    // Passing true is equivalent to resume.
+    void cancel_all(bool enabled) override {
+        transwarp::pass_visitor pass;
+        transwarp::detail::cancel_visitor post_visitor(enabled);
+        visit(pass, post_visitor);
+        unvisit();
     }
 
     // Returns the graph of the task structure. This is mainly for visualizing
@@ -586,7 +611,7 @@ private:
     // Throws transwarp::task_canceled if the task is canceled.
     static result_type evaluate(transwarp::task<Functor, Tasks...>& task,
                                 std::tuple<std::shared_future<typename Tasks::result_type>...> futures) {
-        if (*task.canceled_)
+        if (task.canceled_)
             throw transwarp::task_canceled(task.get_node());
         return transwarp::detail::call_with_futures<result_type>(task.functor_, std::move(futures));
     }
@@ -595,8 +620,8 @@ private:
     Functor functor_;
     std::tuple<std::shared_ptr<Tasks>...> parents_;
     bool visited_;
+    std::atomic_bool canceled_;
     std::shared_ptr<transwarp::executor> executor_;
-    std::shared_ptr<std::atomic_bool> canceled_;
     std::shared_future<result_type> future_;
 };
 
