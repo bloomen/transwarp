@@ -33,9 +33,6 @@ int main() {
     double value1 = 13.3;
     int value2 = 42;
 
-    auto compute_something = [&value1] { return value1; };
-    auto compute_something_else = [&value2] { return value2; };
-
     // building the task graph
     auto task1 = transwarp::make_task("something", compute_something);
     auto task2 = transwarp::make_task("something else", compute_something_else);
@@ -51,14 +48,16 @@ int main() {
     // parallel execution with 4 threads for independent tasks
     transwarp::parallel executor(4);
 
-    task3->schedule(&executor);  // schedules all tasks for execution, assigning a future to each task
+    task3->schedule_all(&executor);  // schedules all tasks for execution, assigning a future to each task
     std::cout << "result = " << task3->get_future().get() << std::endl;  // result = 55.3
 
     // modifying data input
     value1 += 2.5;
     value2 += 1;
 
-    task3->schedule(&executor);  // schedules all tasks for execution, replacing the existing futures
+    task3->reset_all(); // reset to allow for re-schedule of all tasks
+
+    task3->schedule_all(&executor);  // schedules all tasks for execution, assigning new futures
     std::cout << "result = " << task3->get_future().get() << std::endl;  // result = 58.8
 }
 ```
