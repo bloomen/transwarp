@@ -23,10 +23,6 @@
 namespace transwarp {
 
 
-// forward declaration
-class executor;
-
-
 // A node carrying meta-data of a task
 struct node {
     std::size_t id;
@@ -39,6 +35,15 @@ struct node {
 struct edge {
     const transwarp::node* child;
     const transwarp::node* parent;
+};
+
+
+// The executor interface
+class executor {
+public:
+    virtual ~executor() = default;
+    virtual std::string get_name() const = 0;
+    virtual void execute(const std::function<void()>& functor, const transwarp::node& node) = 0;
 };
 
 
@@ -375,15 +380,6 @@ inline std::string make_dot(const std::vector<transwarp::edge>& graph) {
 }
 
 
-// The executor interface
-class executor {
-public:
-    virtual ~executor() = default;
-    virtual std::string get_name() const = 0;
-    virtual void execute(const std::function<void()>& functor, const transwarp::node& node) = 0;
-};
-
-
 // Executor for sequential execution. Runs functors sequentially on the same thread
 class sequential : public transwarp::executor {
 public:
@@ -477,16 +473,6 @@ public:
         return node_;
     }
 
-    // Returns the functor
-    const Functor& get_functor() const {
-        return functor_;
-    }
-
-    // Returns the parent tasks
-    const std::tuple<std::shared_ptr<Tasks>...>& get_parents() const {
-        return parents_;
-    }
-
     // Schedules this task for execution using the provided executor.
     // The task-specific executor gets precedence if it exists.
     // Runs the task on the same thread as the caller if neither the global
@@ -542,6 +528,17 @@ public:
         return graph;
     }
 
+private:
+
+    friend struct transwarp::detail::parent_visitor;
+    friend struct transwarp::detail::edges_visitor;
+    friend struct transwarp::detail::graph_visitor;
+    friend struct transwarp::detail::final_visitor;
+
+    template<typename T, typename U>
+    friend struct transwarp::detail::visit;
+    friend struct transwarp::detail::unvisit;
+
     // Visits each task in a depth-first traversal. The pre_visitor is called
     // before traversing through parents and the post_visitor after. A visitor
     // takes a reference to a task (task&) as its only input argument.
@@ -562,13 +559,6 @@ public:
             transwarp::detail::call_with_each(transwarp::detail::unvisit(), parents_);
         }
     }
-
-private:
-
-    friend struct transwarp::detail::parent_visitor;
-    friend struct transwarp::detail::edges_visitor;
-    friend struct transwarp::detail::graph_visitor;
-    friend struct transwarp::detail::final_visitor;
 
     // Calls the functor of the given task with the results from the futures.
     // Throws transwarp::task_canceled if the task is canceled.
