@@ -79,6 +79,8 @@ void make_test_three_tasks(std::size_t threads) {
 
     ++value;
 
+    task3->reset_all();
+
     task3->schedule_all(executor.get());
     ASSERT_EQUAL(91, task3->get_future().get());
     ASSERT_EQUAL(43, task1->get_future().get());
@@ -301,6 +303,7 @@ TEST(cancel_with_schedule_all_called_before_in_parallel_and_uncancel) {
     cont = true;
     ASSERT_THROW(transwarp::task_canceled, [task2] { task2->get_future().get(); });
     task2->set_cancel(false);
+    task2->reset_all();
     task2->schedule_all(&executor);
     ASSERT_EQUAL(55, task2->get_future().get());
 }
@@ -420,6 +423,18 @@ TEST(schedule_with_three_tasks_parallel) {
     task3->schedule(&executor);
     ASSERT_EQUAL(55, task3->get_future().get());
     task3->schedule_all(&executor);
+    ASSERT_EQUAL(55, task3->get_future().get());
+}
+
+TEST(schedule_with_three_tasks_but_different_schedule) {
+    auto f1 = [] { return 42; };
+    auto task1 = make_task(f1);
+    auto f2 = [] { return 13; };
+    auto task2 = make_task(f2);
+    auto f3 = [](int v, int w) { return v + w; };
+    auto task3 = make_task(f3, task1, task2);
+    task1->schedule();
+    task3->schedule_all();
     ASSERT_EQUAL(55, task3->get_future().get());
 }
 

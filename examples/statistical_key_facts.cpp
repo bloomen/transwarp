@@ -128,12 +128,16 @@ void statistical_key_facts(std::ostream& os, std::size_t sample_size, bool paral
     res = final_task->get_future().get();
     os << res << std::endl;
 
+    final_task->reset_all();
+
     // Second computation with new input
     alpha = 2;
     beta = 3;
     final_task->schedule_all(executor.get());
     res = final_task->get_future().get();
     os << res << std::endl;
+
+    final_task->reset_all();
 
     // Third computation with new input
     alpha = 3;

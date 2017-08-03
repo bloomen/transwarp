@@ -57,6 +57,8 @@ public:
     virtual const transwarp::node& get_node() const = 0;
     virtual void schedule(transwarp::executor* executor=nullptr) = 0;
     virtual void schedule_all(transwarp::executor* executor=nullptr) = 0;
+    virtual void reset() = 0;
+    virtual void reset_all() = 0;
     virtual void set_cancel(bool enabled) = 0;
     virtual std::vector<transwarp::edge> get_graph() const = 0;
 };
@@ -327,6 +329,14 @@ struct schedule_visitor {
     transwarp::executor* executor_;
 };
 
+struct reset_visitor {
+
+    template<typename Task>
+    void operator()(Task& task) const {
+        task.reset();
+    }
+};
+
 // Visits the task given in the ()-operator using the visitors given in
 // the constructor
 template<typename PreVisitor, typename PostVisitor>
@@ -477,9 +487,8 @@ public:
     // The task-specific executor gets precedence if it exists.
     // Runs the task on the same thread as the caller if neither the global
     // nor the task-specific executor is found.
-    // Replaces the future associated to this task.
     void schedule(transwarp::executor* executor=nullptr) override {
-        if (!*canceled_) {
+        if (!*canceled_ && !future_.valid()) {
             auto futures = transwarp::detail::get_futures(parents_);
             auto pack_task = std::make_shared<std::packaged_task<result_type()>>(
                     std::bind(&task::evaluate, std::ref(*this), std::move(futures)));
@@ -498,7 +507,6 @@ public:
     // The task-specific executor gets precedence if it exists.
     // Runs tasks on the same thread as the caller if neither the global
     // nor a task-specific executor is found.
-    // Replaces all futures associated to the tasks.
     void schedule_all(transwarp::executor* executor=nullptr) override {
         if (!*canceled_) {
             transwarp::pass_visitor pass;
@@ -506,6 +514,20 @@ public:
             visit(pass, post_visitor);
             unvisit();
         }
+    }
+
+    // Resets the future of this task, allowing for a new call to schedule
+    void reset() override {
+        future_ = std::shared_future<result_type>();
+    }
+
+    // Resets the futures of all tasks in the graph, allowing for re-schedule
+    // of all tasks in the graph
+    void reset_all() override {
+        transwarp::pass_visitor pass;
+        transwarp::detail::reset_visitor post_visitor;
+        visit(pass, post_visitor);
+        unvisit();
     }
 
     // If enabled then all pending tasks are canceled which will
