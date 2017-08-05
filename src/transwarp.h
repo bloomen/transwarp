@@ -26,31 +26,31 @@ namespace transwarp {
 
 // The possible task types
 enum class task_type {
-    consumer, // The task's functor consumes the results of the parent tasks
-    sentinel  // The task's functor takes no arguments but waits for parents
+    consume_all, // The task's functor consumes the results of the parent tasks
+    wait_all  // The task's functor takes no arguments but waits for parents
 };
 
 // Output stream operator for the task_type enumeration
 inline std::ostream& operator<<(std::ostream& os, const transwarp::task_type& type) {
-    if (type == transwarp::task_type::consumer) {
-        os << "consumer";
-    } else if (type == transwarp::task_type::sentinel) {
-        os << "sentinel";
+    if (type == transwarp::task_type::consume_all) {
+        os << "consume_all";
+    } else if (type == transwarp::task_type::wait_all) {
+        os << "wait_all";
     }
     return os;
 }
 
-// The consumer type. Used for tag dispatch
-struct consumer_type : std::integral_constant<transwarp::task_type, transwarp::task_type::consumer> {};
+// The consume_all type. Used for tag dispatch
+struct consume_all_type : std::integral_constant<transwarp::task_type, transwarp::task_type::consume_all> {};
 
-// An instance of a consumer type
-constexpr const transwarp::consumer_type consumer;
+// An instance of a consume_all type
+constexpr const transwarp::consume_all_type consume_all;
 
-// The sentinel type. Used for tag dispatch
-struct sentinel_type : std::integral_constant<transwarp::task_type, transwarp::task_type::sentinel> {};
+// The wait_all type. Used for tag dispatch
+struct wait_all_type : std::integral_constant<transwarp::task_type, transwarp::task_type::wait_all> {};
 
-// An instance of a sentinel type
-constexpr const transwarp::sentinel_type sentinel;
+// An instance of a wait_all type
+constexpr const transwarp::wait_all_type wait_all;
 
 
 // A node carrying meta-data of a task
@@ -206,7 +206,7 @@ struct call_with_futures_impl {
 };
 
 template<int total, int... n>
-struct call_with_futures_impl<transwarp::consumer_type, true, total, n...> {
+struct call_with_futures_impl<transwarp::consume_all_type, true, total, n...> {
     template<typename Result, typename Functor, typename Tuple>
     static Result work(Functor&& f, Tuple&& t) {
         return std::forward<Functor>(f)(std::get<n>(std::forward<Tuple>(t)).get()...);
@@ -214,7 +214,7 @@ struct call_with_futures_impl<transwarp::consumer_type, true, total, n...> {
 };
 
 template<int total, int... n>
-struct call_with_futures_impl<transwarp::sentinel_type, true, total, n...> {
+struct call_with_futures_impl<transwarp::wait_all_type, true, total, n...> {
     template<typename Result, typename Functor, typename Tuple>
     static Result work(Functor&& f, Tuple&& t) {
         wait(std::get<n>(std::forward<Tuple>(t))...);
@@ -229,9 +229,9 @@ struct call_with_futures_impl<transwarp::sentinel_type, true, total, n...> {
 };
 
 
-// For consumer_type, calls the functor with the given tuple of futures.
+// For consume_all_type, calls the functor with the given tuple of futures.
 // get() is called on every future and the results are then passed into the functor.
-// For sentinel_type, calls wait() on every future and then calls the functor without arguments
+// For wait_all_type, calls wait() on every future and then calls the functor without arguments
 template<typename TaskType, typename Result, typename Functor, typename Tuple>
 Result call_with_futures(Functor&& f, Tuple&& t) {
     using tuple_t = typename std::decay<Tuple>::type;
@@ -426,18 +426,18 @@ struct unvisit {
 // Determines the result type of the Functor dispatching on the task type
 template<typename TaskType, typename Functor, typename... Tasks>
 struct result {
-    static_assert(std::is_same<TaskType, transwarp::consumer_type>::value ||
-                  std::is_same<TaskType, transwarp::sentinel_type>::value,
-                  "Not a valid task type. Must be one of: consumer_type, sentinel_type");
+    static_assert(std::is_same<TaskType, transwarp::consume_all_type>::value ||
+                  std::is_same<TaskType, transwarp::wait_all_type>::value,
+                  "Not a valid task type. Must be one of: consume_all_type, wait_all_type");
 };
 
 template<typename Functor, typename... Tasks>
-struct result<transwarp::consumer_type, Functor, Tasks...> {
+struct result<transwarp::consume_all_type, Functor, Tasks...> {
     using type = decltype(std::declval<Functor>()(std::declval<typename Tasks::result_type>()...));
 };
 
 template<typename Functor, typename... Tasks>
-struct result<transwarp::sentinel_type, Functor, Tasks...> {
+struct result<transwarp::wait_all_type, Functor, Tasks...> {
     using type = decltype(std::declval<Functor>()());
 };
 
@@ -518,7 +518,7 @@ private:
 template<typename TaskType, typename Functor, typename... Tasks>
 class task : public transwarp::itask<typename transwarp::detail::result<TaskType, Functor, Tasks...>::type> {
 public:
-    // The task type. Can be one of consumer_type or sentinel_type
+    // The task type. Can be one of consume_all_type or wait_all_type
     using task_type = TaskType;
 
     // The result type of this task
