@@ -6,9 +6,10 @@ Under the hood, a directed acyclic graph is built at compile-time enabling effic
 traversal and type-safe dependencies.
 
 A task in transwarp is defined through a functor, parent tasks, and an optional name. 
-The functor's arguments must match the return types of the parent tasks.
-transwarp supports custom executors either per task or globally
-when scheduling the tasks in the graph.
+A task can be either a consumer or a sentinel task. A consumer task's functor will 
+consume the results of the parent tasks whereas a sentinel task's functor takes no 
+arguments but waits for its parents to finish. transwarp supports custom executors 
+either per task or globally when scheduling the tasks in the graph.
 
 transwarp is designed for ease of use, portability, and scalability. It is written in 
 C++11 and only depends on the standard library. Just copy `src/transwarp.h` 
@@ -69,7 +70,8 @@ The resulting graph of this example looks like this:
 ![graph](https://raw.githubusercontent.com/bloomen/transwarp/master/examples/basic_with_three_tasks.png)
 
 Every bubble represents a task and every arrow an edge between two tasks. 
-The first line within a bubble is the task name. The second line denotes the task id and
+The first line within a bubble is the task name. The second line denotes the task
+type which can be either consumer or sentinel. The third line denotes task id and
 the number of parents, respectively. 
 
 **Enjoy!**
