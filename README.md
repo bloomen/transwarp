@@ -32,13 +32,13 @@ int main() {
     double value1 = 13.3;
     int value2 = 42;
 
-    auto compute_something = [&value1] { return value1; };
-    auto compute_something_else = [&value2] { return value2; };
+    auto something = [&value1] { return value1; };
+    auto something_else = [&value2] { return value2; };
 
     // building the task graph
-    auto task1 = transwarp::make_task("something", compute_something);
-    auto task2 = transwarp::make_task("something else", compute_something_else);
-    auto task3 = transwarp::make_task("adder", add_em_up, task1, task2);
+    auto task1 = transwarp::make_task(transwarp::consumer, "something", something);
+    auto task2 = transwarp::make_task(transwarp::consumer, "something else", something_else);
+    auto task3 = transwarp::make_task(transwarp::consumer, "adder", add_em_up, task1, task2);
 
     // creating a dot-style graph for visualization
     const auto graph = task3->get_graph();
