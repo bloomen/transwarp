@@ -18,7 +18,7 @@
 #include <queue>
 #include <stdexcept>
 #include <atomic>
-#include <ostream>
+#include <sstream>
 
 
 namespace transwarp {
@@ -456,8 +456,18 @@ struct pass_visitor {
 inline std::string make_dot(const std::vector<transwarp::edge>& graph) {
     auto info = [](const transwarp::node& n) {
         const auto name = transwarp::detail::trim(n.name);
-        return '"' + name + "\nid " + std::to_string(n.id)
-                   + " parents " + std::to_string(n.parents.size()) + '"';
+        const auto exec = transwarp::detail::trim(n.executor);
+        std::ostringstream os;
+        os << '"';
+        os << name << "\n";
+        os << n.type << "\n";
+        os << "id " << std::to_string(n.id);
+        os << " parents " << std::to_string(n.parents.size());
+        if (!exec.empty()) {
+            os << "\n" << exec;
+        }
+        os << '"';
+        return os.str();
     };
     std::string dot = "digraph {\n";
     for (const auto& pair : graph) {

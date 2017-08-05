@@ -94,14 +94,14 @@ void make_test_three_tasks(std::size_t threads) {
     const auto dot_graph = transwarp::make_dot(graph);
 
     const std::string exp_dot_graph = "digraph {\n"
-"\"t1\n"
-"id 0 parents 0\" -> \"t2\n"
+"\"t1\nconsumer\n"
+"id 0 parents 0\" -> \"t2\nconsumer\n"
 "id 1 parents 1\"\n"
-"\"t1\n"
-"id 0 parents 0\" -> \"t3\n"
+"\"t1\nconsumer\n"
+"id 0 parents 0\" -> \"t3\nconsumer\n"
 "id 2 parents 2\"\n"
-"\"t2\n"
-"id 1 parents 1\" -> \"t3\n"
+"\"t2\nconsumer\n"
+"id 1 parents 1\" -> \"t3\nconsumer\n"
 "id 2 parents 2\"\n"
 "}\n";
 
@@ -205,19 +205,19 @@ TEST(make_dot_graph_with_empty_graph) {
 }
 
 TEST(make_dot_graph_with_three_nodes) {
-    const transwarp::node node2{1, "node2", transwarp::task_type::consumer, "", {}};
-    const transwarp::node node3{2, "node3", transwarp::task_type::consumer, "", {}};
+    const transwarp::node node2{1, "node2", transwarp::task_type::consumer, "exec", {}};
+    const transwarp::node node3{2, "node3", transwarp::task_type::sentinel, "", {}};
     const transwarp::node node1{0, "node1", transwarp::task_type::consumer, "", {&node2, &node3}};
     std::vector<transwarp::edge> graph;
     graph.push_back({&node1, &node2});
     graph.push_back({&node1, &node3});
     const auto dot_graph = transwarp::make_dot(graph);
     const std::string exp_dot_graph = "digraph {\n"
-"\"node2\n"
-"id 1 parents 0\" -> \"node1\n"
+"\"node2\nconsumer\n"
+"id 1 parents 0\nexec\" -> \"node1\nconsumer\n"
 "id 0 parents 2\"\n"
-"\"node3\n"
-"id 2 parents 0\" -> \"node1\n"
+"\"node3\nsentinel\n"
+"id 2 parents 0\" -> \"node1\nconsumer\n"
 "id 0 parents 2\"\n"
 "}\n";
 
