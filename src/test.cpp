@@ -11,7 +11,7 @@ using transwarp::make_task;
 COLLECTION(test_transwarp) {
 
 transwarp::node generic_node() {
-    return {1, "cool", {}, "exec", true};
+    return {1, "cool", transwarp::task_type::consumer, "exec", {}};
 }
 
 void make_test_one_task(std::size_t threads) {
@@ -20,10 +20,10 @@ void make_test_one_task(std::size_t threads) {
     std::shared_ptr<transwarp::executor> executor;
     std::shared_ptr<transwarp::itask<int>> task;
     if (threads > 0) {
-        task = make_task(f1);
+        task = make_task(transwarp::consumer, f1);
         executor = std::make_shared<transwarp::parallel>(threads);
     } else {
-        task = make_task(f1);
+        task = make_task(transwarp::consumer, f1);
         executor = std::make_shared<transwarp::sequential>();
     }
     ASSERT_EQUAL(0u, task->get_node().id);
@@ -48,20 +48,20 @@ void make_test_three_tasks(std::size_t threads) {
     int value = 42;
 
     auto f1 = [&value]{ return value; };
-    auto task1 = make_task("t1", f1);
+    auto task1 = make_task(transwarp::consumer, "t1", f1);
 
     auto f2 = [](int v) { return v + 2; };
-    auto task2 = make_task("\nt2\t", f2, task1);
+    auto task2 = make_task(transwarp::consumer, "\nt2\t", f2, task1);
 
     auto f3 = [](int v, int w) { return v + w + 3; }; 
 
     std::shared_ptr<transwarp::executor> executor;
     std::shared_ptr<transwarp::itask<int>> task3;
     if (threads > 0) {
-        task3 = make_task("t3 ", f3, task1, task2);
+        task3 = make_task(transwarp::consumer, "t3 ", f3, task1, task2);
         executor = std::make_shared<transwarp::parallel>(threads);
     } else {
-        task3 = make_task("t3 ", f3, task1, task2);
+        task3 = make_task(transwarp::consumer, "t3 ", f3, task1, task2);
         executor = std::make_shared<transwarp::sequential>();
     }
 
@@ -124,29 +124,29 @@ void make_test_bunch_of_tasks(std::size_t threads) {
 
     auto seq = std::make_shared<transwarp::sequential>();
 
-    auto task0 = make_task(f0);
-    auto task1 = make_task(f0);
-    auto task2 = make_task(f1, task1);
-    auto task3 = make_task(f2, task2, task0);
+    auto task0 = make_task(transwarp::consumer, f0);
+    auto task1 = make_task(transwarp::consumer, f0);
+    auto task2 = make_task(transwarp::consumer, f1, task1);
+    auto task3 = make_task(transwarp::consumer, f2, task2, task0);
     task3->set_executor(seq);
-    auto task5 = make_task("task5", f2, task3, task2);
-    auto task6 = make_task(f3, task1, task2, task5);
-    auto task7 = make_task(f2, task5, task6);
+    auto task5 = make_task(transwarp::consumer, "task5", f2, task3, task2);
+    auto task6 = make_task(transwarp::consumer, f3, task1, task2, task5);
+    auto task7 = make_task(transwarp::consumer, f2, task5, task6);
     task7->set_executor(seq);
-    auto task8 = make_task(f2, task6, task7);
-    auto task9 = make_task(f1, task7);
-    auto task10 = make_task(f1, task9);
+    auto task8 = make_task(transwarp::consumer, f2, task6, task7);
+    auto task9 = make_task(transwarp::consumer, f1, task7);
+    auto task10 = make_task(transwarp::consumer, f1, task9);
     task10->set_executor(seq);
-    auto task11 = make_task(f3, task10, task7, task8);
-    auto task12 = make_task(f2, task11, task6);
+    auto task11 = make_task(transwarp::consumer, f3, task10, task7, task8);
+    auto task12 = make_task(transwarp::consumer, f2, task11, task6);
 
     std::shared_ptr<transwarp::executor> executor;
     std::shared_ptr<transwarp::itask<int>> task13;
     if (threads > 0) {
-        task13 = make_task(f3, task10, task11, task12);
+        task13 = make_task(transwarp::consumer, f3, task10, task11, task12);
         executor = std::make_shared<transwarp::parallel>(threads);
     } else {
-        task13 = make_task(f3, task10, task11, task12);
+        task13 = make_task(transwarp::consumer, f3, task10, task11, task12);
         executor = std::make_shared<transwarp::sequential>();
     }
 
@@ -205,9 +205,9 @@ TEST(make_dot_graph_with_empty_graph) {
 }
 
 TEST(make_dot_graph_with_three_nodes) {
-    const transwarp::node node2{1, "node2", {}, "", true};
-    const transwarp::node node3{2, "node3", {}, "", true};
-    const transwarp::node node1{0, "node1", {&node2, &node3}, "", true};
+    const transwarp::node node2{1, "node2", transwarp::task_type::consumer, "", {}};
+    const transwarp::node node3{2, "node3", transwarp::task_type::consumer, "", {}};
+    const transwarp::node node1{0, "node1", transwarp::task_type::consumer, "", {&node2, &node3}};
     std::vector<transwarp::edge> graph;
     graph.push_back({&node1, &node2});
     graph.push_back({&node1, &node3});
@@ -226,11 +226,11 @@ TEST(make_dot_graph_with_three_nodes) {
 
 TEST(get_node) {
     auto f1 = [] { return 42; };
-    auto task1 = make_task(f1);
+    auto task1 = make_task(transwarp::consumer, f1);
     auto f2 = [] { return 13; };
-    auto task2 = make_task(f2);
+    auto task2 = make_task(transwarp::consumer, f2);
     auto f3 = [](int v, int w) { return v + w; };
-    auto task3 = make_task(f3, task1, task2);
+    auto task3 = make_task(transwarp::consumer, f3, task1, task2);
 
     // task3
     ASSERT_EQUAL(2, task3->get_node().id);
@@ -263,16 +263,16 @@ void make_test_task_with_exception_thrown(std::size_t threads) {
         throw std::logic_error("from f3");
         return x + 1;
     };
-    auto task1 = make_task(f1);
-    auto task2 = make_task(f2, task1);
+    auto task1 = make_task(transwarp::consumer, f1);
+    auto task2 = make_task(transwarp::consumer, f2, task1);
 
     std::shared_ptr<transwarp::executor> executor;
     std::shared_ptr<transwarp::itask<int>> task3;
     if (threads > 0) {
-        task3 = make_task(f3, task2);
+        task3 = make_task(transwarp::consumer, f3, task2);
         executor = std::make_shared<transwarp::parallel>(threads);
     } else {
-        task3 = make_task(f3, task2);
+        task3 = make_task(transwarp::consumer, f3, task2);
         executor = std::make_shared<transwarp::sequential>();
     }
     task3->schedule_all(executor.get());
@@ -299,8 +299,8 @@ TEST(cancel_with_schedule_all_called_before_in_parallel_and_uncancel) {
        return 42;
     };
     auto f1 = [] (int x) { return x + 13; };
-    auto task1 = make_task(f0);
-    auto task2 = make_task(f1, task1);
+    auto task1 = make_task(transwarp::consumer, f0);
+    auto task2 = make_task(transwarp::consumer, f1, task1);
     transwarp::parallel executor(2);
     task2->schedule_all(&executor);
     task2->cancel_all(true);
@@ -315,8 +315,8 @@ TEST(cancel_with_schedule_all_called_before_in_parallel_and_uncancel) {
 TEST(cancel_with_schedule_all_called_after) {
     auto f0 = [] { return 42; };
     auto f1 = [] (int x) { return x + 13; };
-    auto task1 = make_task(f0);
-    auto task2 = make_task(f1, task1);
+    auto task1 = make_task(transwarp::consumer, f0);
+    auto task2 = make_task(transwarp::consumer, f1, task1);
     task2->cancel_all(true);
     transwarp::sequential executor;
     task2->schedule_all(&executor);
@@ -328,8 +328,8 @@ TEST(itask) {
     {
         auto f0 = [] { return 42; };
         auto f1 = [] (int x) { return x + 13; };
-        auto task1 = make_task(f0);
-        auto task2 = make_task(f1, task1);
+        auto task1 = make_task(transwarp::consumer, f0);
+        auto task2 = make_task(transwarp::consumer, f1, task1);
         final = task2;
     }
     transwarp::parallel executor(2);
@@ -359,7 +359,7 @@ TEST(parallel) {
 
 TEST(schedule_all_without_executor) {
     int x = 13;
-    auto task = make_task([&x]{ x *= 2; });
+    auto task = make_task(transwarp::consumer, [&x]{ x *= 2; });
     task->schedule_all();
     task->get_future().wait();
     ASSERT_EQUAL(26, x);
@@ -368,22 +368,22 @@ TEST(schedule_all_without_executor) {
 TEST(schedule_all_with_task_specific_executor) {
     int value = 42;
     auto functor = [value] { return value*2; };
-    auto task = make_task(functor);
+    auto task = make_task(transwarp::consumer, functor);
     task->set_executor(std::make_shared<transwarp::sequential>());
     task->schedule_all();
     ASSERT_EQUAL(84, task->get_future().get());
 }
 
 TEST(invalid_task_specific_executor) {
-    auto task = make_task([]{});
+    auto task = make_task(transwarp::consumer, []{});
     auto functor = [&task] { task->set_executor(nullptr); };
     ASSERT_THROW(transwarp::transwarp_error, functor);
 }
 
 TEST(invalid_parent_task) {
-    auto parent = make_task([] { return 42; });
+    auto parent = make_task(transwarp::consumer, [] { return 42; });
     parent.reset();
-    auto functor = [&parent] { make_task([](int) {}, parent); };
+    auto functor = [&parent] { make_task(transwarp::consumer, [](int) {}, parent); };
     ASSERT_THROW(transwarp::transwarp_error, functor);
 }
 
@@ -394,18 +394,18 @@ TEST(parallel_with_zero_threads) {
 
 TEST(schedule_single_task) {
     int x = 13;
-    auto task = make_task([&x]{ x *= 2; });
+    auto task = make_task(transwarp::consumer, [&x]{ x *= 2; });
     task->schedule();
     ASSERT_EQUAL(26, x);
 }
 
 TEST(schedule_with_three_tasks_sequential) {
     auto f1 = [] { return 42; };
-    auto task1 = make_task(f1);
+    auto task1 = make_task(transwarp::consumer, f1);
     auto f2 = [] { return 13; };
-    auto task2 = make_task(f2);
+    auto task2 = make_task(transwarp::consumer, f2);
     auto f3 = [](int v, int w) { return v + w; };
-    auto task3 = make_task(f3, task1, task2);
+    auto task3 = make_task(transwarp::consumer, f3, task1, task2);
     task1->schedule();
     task2->schedule();
     task3->schedule();
@@ -416,11 +416,11 @@ TEST(schedule_with_three_tasks_sequential) {
 
 TEST(schedule_with_three_tasks_parallel) {
     auto f1 = [] { return 42; };
-    auto task1 = make_task(f1);
+    auto task1 = make_task(transwarp::consumer, f1);
     auto f2 = [] { return 13; };
-    auto task2 = make_task(f2);
+    auto task2 = make_task(transwarp::consumer, f2);
     auto f3 = [](int v, int w) { return v + w; };
-    auto task3 = make_task(f3, task1, task2);
+    auto task3 = make_task(transwarp::consumer, f3, task1, task2);
     transwarp::parallel executor{4};
     task1->schedule(&executor);
     task2->schedule(&executor);
@@ -432,14 +432,39 @@ TEST(schedule_with_three_tasks_parallel) {
 
 TEST(schedule_with_three_tasks_but_different_schedule) {
     auto f1 = [] { return 42; };
-    auto task1 = make_task(f1);
+    auto task1 = make_task(transwarp::consumer, f1);
     auto f2 = [] { return 13; };
-    auto task2 = make_task(f2);
+    auto task2 = make_task(transwarp::consumer, f2);
     auto f3 = [](int v, int w) { return v + w; };
-    auto task3 = make_task(f3, task1, task2);
+    auto task3 = make_task(transwarp::consumer, f3, task1, task2);
     task1->schedule();
     task3->schedule_all();
     ASSERT_EQUAL(55, task3->get_future().get());
+}
+
+TEST(schedule_with_three_tasks_sentinel) {
+    auto f1 = [] { return 42; };
+    auto task1 = make_task(transwarp::consumer, f1);
+    auto f2 = [] { return 13; };
+    auto task2 = make_task(transwarp::consumer, f2);
+    auto f3 = []() { return 17; };
+    auto task3 = make_task(transwarp::sentinel, f3, task1, task2);
+
+    ASSERT_EQUAL(transwarp::task_type::consumer, task1->get_node().type);
+    ASSERT_EQUAL(transwarp::task_type::consumer, task2->get_node().type);
+    ASSERT_EQUAL(transwarp::task_type::sentinel, task3->get_node().type);
+
+    task3->schedule_all();
+    ASSERT_EQUAL(17, task3->get_future().get());
+}
+
+TEST(task_type_output_stream) {
+    std::ostringstream os1;
+    os1 << transwarp::task_type::consumer;
+    ASSERT_EQUAL("consumer", os1.str());
+    std::ostringstream os2;
+    os2 << transwarp::task_type::sentinel;
+    ASSERT_EQUAL("sentinel", os2.str());
 }
 
 COLLECTION(test_examples) {
