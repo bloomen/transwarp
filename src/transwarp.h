@@ -28,6 +28,8 @@ struct node {
     std::size_t id;
     std::string name;
     std::vector<const node*> parents;
+    std::string executor;
+    bool is_consumer;
 };
 
 
@@ -450,7 +452,7 @@ public:
     // A task is defined by name, functor, and parent tasks
     // name is optional. See constructor overload
     task(std::string name, Functor functor, std::shared_ptr<Tasks>... parents)
-    : node_{0, std::move(name), {}},
+    : node_{0, std::move(name), {}, "", true},
       functor_(std::move(functor)),
       parents_(std::make_tuple(std::move(parents)...)),
       visited_(false),
@@ -483,6 +485,7 @@ public:
             throw transwarp::transwarp_error("Not a valid pointer to executor");
         }
         executor_ = std::move(executor);
+        node_.executor = executor_->get_name();
     }
 
     // Returns the future associated to the underlying execution

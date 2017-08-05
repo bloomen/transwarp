@@ -32,6 +32,9 @@ int main() {
     double value1 = 13.3;
     int value2 = 42;
 
+    auto compute_something = [&value1] { return value1; };
+    auto compute_something_else = [&value2] { return value2; };
+
     // building the task graph
     auto task1 = transwarp::make_task("something", compute_something);
     auto task2 = transwarp::make_task("something else", compute_something_else);
@@ -41,7 +44,7 @@ int main() {
     const auto graph = task3->get_graph();
     std::ofstream("basic_with_three_tasks.dot") << transwarp::make_dot(graph);
 
-    // schedule can now be called as much as desired. The task graph
+    // schedule() can now be called as much as desired. The task graph
     // only has to be built once
 
     // parallel execution with 4 threads for independent tasks
@@ -54,7 +57,7 @@ int main() {
     value1 += 2.5;
     value2 += 1;
 
-    task3->reset_all();  // reset to allow for re-schedule of all tasks
+    task3->reset_all(); // reset to allow for re-schedule of all tasks
 
     task3->schedule_all(&executor);  // schedules all tasks for execution, assigning new futures
     std::cout << "result = " << task3->get_future().get() << std::endl;  // result = 58.8

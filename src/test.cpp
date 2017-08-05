@@ -10,6 +10,10 @@ using transwarp::make_task;
 
 COLLECTION(test_transwarp) {
 
+transwarp::node generic_node() {
+    return {1, "cool", {}, "exec", true};
+}
+
 void make_test_one_task(std::size_t threads) {
     const int value = 42;
     auto f1 = [value]{ return value; };
@@ -185,7 +189,7 @@ TEST(transwarp_error) {
 
 TEST(task_canceled) {
     const std::string msg = "cool is canceled";
-    const transwarp::node node{1, "cool", {}};
+    const auto node = generic_node();
     try {
         throw transwarp::task_canceled(node);
     } catch (const transwarp::transwarp_error& e) {
@@ -201,9 +205,9 @@ TEST(make_dot_graph_with_empty_graph) {
 }
 
 TEST(make_dot_graph_with_three_nodes) {
-    const transwarp::node node2{1, "node2", {}};
-    const transwarp::node node3{2, "node3", {}};
-    const transwarp::node node1{0, "node1", {&node2, &node3}};
+    const transwarp::node node2{1, "node2", {}, "", true};
+    const transwarp::node node3{2, "node3", {}, "", true};
+    const transwarp::node node1{0, "node1", {&node2, &node3}, "", true};
     std::vector<transwarp::edge> graph;
     graph.push_back({&node1, &node2});
     graph.push_back({&node1, &node3});
@@ -338,7 +342,7 @@ TEST(sequenced) {
     ASSERT_EQUAL("transwarp::sequential", seq.get_name());
     int value = 5;
     auto functor = [&value]{ value *= 2; };
-    seq.execute(functor, transwarp::node{1, "cool", {}});
+    seq.execute(functor, generic_node());
     ASSERT_EQUAL(10, value);
 }
 
@@ -348,7 +352,7 @@ TEST(parallel) {
     std::atomic_bool done(false);
     int value = 5;
     auto functor = [&value, &done]{ value *= 2; done = true; };
-    par.execute(functor, transwarp::node{1, "cool", {}});
+    par.execute(functor, generic_node());
     while (!done);
     ASSERT_EQUAL(10, value);
 }
