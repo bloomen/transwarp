@@ -491,6 +491,26 @@ TEST(schedule_with_three_tasks_consume_any) {
     ASSERT_EQUAL(13, task3->get_future().get());
 }
 
+TEST(schedule_with_two_tasks_wait_all_with_void_return) {
+    auto f1 = [] {};
+    auto task1 = make_task(transwarp::consume_all, f1);
+    auto f2 = [] { return 13; };
+    auto task2 = make_task(transwarp::wait_all, f2, task1);
+
+    task2->schedule_all();
+    ASSERT_EQUAL(13, task2->get_future().get());
+}
+
+TEST(schedule_with_two_tasks_wait_any_with_void_return) {
+    auto f1 = [] {};
+    auto task1 = make_task(transwarp::consume_all, f1);
+    auto f2 = [] { return 13; };
+    auto task2 = make_task(transwarp::wait_any, f2, task1);
+
+    task2->schedule_all();
+    ASSERT_EQUAL(13, task2->get_future().get());
+}
+
 TEST(task_type_output_stream) {
     std::ostringstream os1;
     os1 << transwarp::task_type::consume_all;
