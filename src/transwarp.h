@@ -513,18 +513,17 @@ struct cancel_visitor {
 };
 
 // Visits the given task using the visitors given in the constructor
-template<typename PreVisitor, typename PostVisitor>
+template<typename Visitor>
 struct visit {
-    visit(PreVisitor& pre_visitor, PostVisitor& post_visitor) noexcept
-    : pre_visitor_(pre_visitor), post_visitor_(post_visitor) {}
+    visit(Visitor& visitor) noexcept
+    : visitor_(visitor) {}
 
     template<typename Task>
     void operator()(Task& task) const {
-        task.visit(pre_visitor_, post_visitor_);
+        task.visit(visitor_);
     }
 
-    PreVisitor& pre_visitor_;
-    PostVisitor& post_visitor_;
+    Visitor& visitor_;
 };
 
 // Unvisits the given task
@@ -581,14 +580,6 @@ struct result<transwarp::wait_any_type, Functor, Tasks...> {
 };
 
 } // detail
-
-
-// A visitor to be used to do nothing
-struct pass_visitor {
-
-    template<typename Task>
-    void operator()(const Task&) const noexcept {}
-};
 
 
 // Creates a dot-style string from the given graph
@@ -673,9 +664,8 @@ public:
       canceled_(false)
     {
         transwarp::detail::call_with_each(transwarp::detail::parent_visitor(node_), parents_);
-        transwarp::pass_visitor pass;
-        transwarp::detail::final_visitor post_visitor;
-        visit(pass, post_visitor);
+        transwarp::detail::final_visitor visitor;
+        visit(visitor);
         unvisit();
     }
 
@@ -738,9 +728,8 @@ public:
     // nor a task-specific executor is found.
     void schedule_all(transwarp::executor* executor=nullptr) override {
         if (!canceled_) {
-            transwarp::pass_visitor pass;
-            transwarp::detail::schedule_visitor post_visitor(executor);
-            visit(pass, post_visitor);
+            transwarp::detail::schedule_visitor visitor(executor);
+            visit(visitor);
             unvisit();
         }
     }
@@ -753,9 +742,8 @@ public:
     // Resets the futures of all tasks in the graph, allowing for re-schedule
     // of all tasks in the graph
     void reset_all() override {
-        transwarp::pass_visitor pass;
-        transwarp::detail::reset_visitor post_visitor;
-        visit(pass, post_visitor);
+        transwarp::detail::reset_visitor visitor;
+        visit(visitor);
         unvisit();
     }
 
@@ -774,9 +762,8 @@ public:
     // As long as cancel is enabled new computations cannot be scheduled.
     // Passing true is equivalent to resume.
     void cancel_all(bool enabled) override {
-        transwarp::pass_visitor pass;
-        transwarp::detail::cancel_visitor post_visitor(enabled);
-        visit(pass, post_visitor);
+        transwarp::detail::cancel_visitor visitor(enabled);
+        visit(visitor);
         unvisit();
     }
 
@@ -785,9 +772,8 @@ public:
     // to retrieve a dot-style graph representation for easy viewing.
     std::vector<transwarp::edge> get_graph() const override {
         std::vector<transwarp::edge> graph;
-        transwarp::pass_visitor pass;
-        transwarp::detail::graph_visitor post_visitor(graph);
-        const_cast<task*>(this)->visit(pass, post_visitor);
+        transwarp::detail::graph_visitor visitor(graph);
+        const_cast<task*>(this)->visit(visitor);
         const_cast<task*>(this)->unvisit();
         return graph;
     }
@@ -803,15 +789,13 @@ private:
     friend struct transwarp::detail::visit;
     friend struct transwarp::detail::unvisit;
 
-    // Visits each task in a depth-first traversal. The pre_visitor is called
-    // before traversing through parents and the post_visitor after. A visitor
+    // Visits each task in a depth-first traversal. The visitor
     // takes a reference to a task (task&) as its only input argument.
-    template<typename PreVisitor, typename PostVisitor>
-    void visit(PreVisitor& pre_visitor, PostVisitor& post_visitor) {
+    template<typename Visitor>
+    void visit(Visitor& visitor) {
         if (!visited_) {
-            pre_visitor(*this);
-            transwarp::detail::call_with_each(transwarp::detail::visit<PreVisitor, PostVisitor>(pre_visitor, post_visitor), parents_);
-            post_visitor(*this);
+            transwarp::detail::call_with_each(transwarp::detail::visit<Visitor>(visitor), parents_);
+            visitor(*this);
             visited_ = true;
         }
     }
