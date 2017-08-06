@@ -295,7 +295,7 @@ TEST(task_with_exception_thrown) {
 TEST(cancel_with_schedule_all_called_before_in_parallel_and_uncancel) {
     std::atomic_bool cont(false);
     auto f0 = [&cont] {
-       while (!cont) {}
+       while (!cont);
        return 42;
     };
     auto f1 = [] (int x) { return x + 13; };
@@ -476,7 +476,10 @@ TEST(schedule_with_three_tasks_wait_any) {
 
 TEST(schedule_with_three_tasks_consume_any) {
     std::atomic_bool cont(false);
-    auto f1 = [&cont] { while (!cont); return 42; };
+    auto f1 = [&cont] {
+        while (!cont);
+        return 42;
+    };
     auto task1 = make_task(transwarp::consume_all, f1);
     auto f2 = [] { return 13; };
     auto task2 = make_task(transwarp::consume_all, f2);
