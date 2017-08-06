@@ -292,15 +292,15 @@ TEST(task_with_exception_thrown) {
     make_test_task_with_exception_thrown(4);
 }
 
-TEST(cancel_with_schedule_all_called_before_in_parallel_and_uncancel) {
+template<typename Functor, typename TaskType>
+void cancel_with_schedule_all(int expected, Functor functor, TaskType task_type) {
     std::atomic_bool cont(false);
     auto f0 = [&cont] {
        while (!cont);
        return 42;
     };
-    auto f1 = [] (int x) { return x + 13; };
     auto task1 = make_task(transwarp::consume_all, f0);
-    auto task2 = make_task(transwarp::consume_all, f1, task1);
+    auto task2 = make_task(task_type, functor, task1);
     transwarp::parallel executor(2);
     task2->schedule_all(&executor);
     task2->cancel_all(true);
@@ -309,7 +309,14 @@ TEST(cancel_with_schedule_all_called_before_in_parallel_and_uncancel) {
     task2->cancel_all(false);
     task2->reset_all();
     task2->schedule_all(&executor);
-    ASSERT_EQUAL(55, task2->get_future().get());
+    ASSERT_EQUAL(expected, task2->get_future().get());
+}
+
+TEST(cancel_with_schedule_all_called_before_in_parallel_and_uncancel) {
+    cancel_with_schedule_all(55, [] (int x) { return x + 13; }, transwarp::consume_all);
+    cancel_with_schedule_all(55, [] (int x) { return x + 13; }, transwarp::consume_any);
+    cancel_with_schedule_all(13, [] () { return 13; }, transwarp::wait_all);
+    cancel_with_schedule_all(13, [] () { return 13; }, transwarp::wait_any);
 }
 
 TEST(cancel_with_schedule_all_called_after) {
@@ -529,6 +536,18 @@ TEST(task_type_output_stream) {
     std::ostringstream os2b;
     os2b << transwarp::task_type::wait_any;
     ASSERT_EQUAL("wait_any", os2b.str());
+}
+
+TEST(wait_any_task_no_parents) {
+    auto t = make_task(transwarp::wait_any, []{ return 42; });
+    t->schedule();
+    ASSERT_EQUAL(42, t->get_future().get());
+}
+
+TEST(consume_any_task_no_parents) {
+    auto t = make_task(transwarp::consume_any, []{ return 42; });
+    t->schedule();
+    ASSERT_EQUAL(42, t->get_future().get());
 }
 
 COLLECTION(test_examples) {
