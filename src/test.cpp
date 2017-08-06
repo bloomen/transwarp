@@ -475,7 +475,8 @@ TEST(schedule_with_three_tasks_wait_any) {
 }
 
 TEST(schedule_with_three_tasks_consume_any) {
-    auto f1 = [] { std::this_thread::sleep_for(std::chrono::milliseconds(10)); return 42; };
+    std::atomic_bool cont(false);
+    auto f1 = [&cont] { while (!cont); return 42; };
     auto task1 = make_task(transwarp::consume_all, f1);
     auto f2 = [] { return 13; };
     auto task2 = make_task(transwarp::consume_all, f2);
@@ -489,6 +490,7 @@ TEST(schedule_with_three_tasks_consume_any) {
     transwarp::parallel exec{4};
     task3->schedule_all(&exec);
     ASSERT_EQUAL(13, task3->get_future().get());
+    cont = true;
 }
 
 TEST(schedule_with_two_tasks_wait_all_with_void_return) {
