@@ -1,7 +1,7 @@
 # transwarp
 
-transwarp is a header-only C++ library for task concurrency. It enables you to define
-task dependencies and run those tasks in parallel that do not depend on each other.
+transwarp is a header-only C++ library for task concurrency. It enables you to free
+your functors from explicit threads and transparently manage dependencies.
 Under the hood, a directed acyclic graph is built at compile-time enabling efficient 
 traversal and type-safe dependencies.
 
