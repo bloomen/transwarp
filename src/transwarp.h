@@ -49,19 +49,19 @@ inline std::ostream& operator<<(std::ostream& os, const transwarp::task_type& ty
 
 // The consume_all type. Used for tag dispatch
 struct consume_all_type : std::integral_constant<transwarp::task_type, transwarp::task_type::consume_all> {};
-constexpr const transwarp::consume_all_type consume_all;
+constexpr const transwarp::consume_all_type consume_all{};
 
 // The consume_any type. Used for tag dispatch
 struct consume_any_type : std::integral_constant<transwarp::task_type, transwarp::task_type::consume_any> {};
-constexpr const transwarp::consume_any_type consume_any;
+constexpr const transwarp::consume_any_type consume_any{};
 
 // The wait_all type. Used for tag dispatch
 struct wait_all_type : std::integral_constant<transwarp::task_type, transwarp::task_type::wait_all> {};
-constexpr const transwarp::wait_all_type wait_all;
+constexpr const transwarp::wait_all_type wait_all{};
 
 // The wait_any type. Used for tag dispatch
 struct wait_any_type : std::integral_constant<transwarp::task_type, transwarp::task_type::wait_any> {};
-constexpr const transwarp::wait_any_type wait_any;
+constexpr const transwarp::wait_any_type wait_any{};
 
 
 // A node carrying meta-data of a task
