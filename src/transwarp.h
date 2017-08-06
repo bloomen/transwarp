@@ -639,7 +639,7 @@ private:
 template<typename TaskType, typename Functor, typename... Tasks>
 class task : public transwarp::itask<typename transwarp::detail::result<TaskType, Functor, Tasks...>::type> {
 public:
-    // The task type. Can be one of consume_all_type or wait_all_type
+    // The task type
     using task_type = TaskType;
 
     // The result type of this task
