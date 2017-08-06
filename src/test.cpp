@@ -444,13 +444,13 @@ TEST(schedule_with_three_tasks_but_different_schedule) {
 
 TEST(schedule_with_three_tasks_wait_all) {
     auto f1 = [] { return 42; };
-    auto task1 = make_task(transwarp::consume_all, f1);
+    auto task1 = make_task(transwarp::wait_all, f1);
     auto f2 = [] { return 13; };
     auto task2 = make_task(transwarp::consume_all, f2);
     auto f3 = []() { return 17; };
     auto task3 = make_task(transwarp::wait_all, f3, task1, task2);
 
-    ASSERT_EQUAL(transwarp::task_type::consume_all, task1->get_node().type);
+    ASSERT_EQUAL(transwarp::task_type::wait_all, task1->get_node().type);
     ASSERT_EQUAL(transwarp::task_type::consume_all, task2->get_node().type);
     ASSERT_EQUAL(transwarp::task_type::wait_all, task3->get_node().type);
 
@@ -458,13 +458,52 @@ TEST(schedule_with_three_tasks_wait_all) {
     ASSERT_EQUAL(17, task3->get_future().get());
 }
 
+TEST(schedule_with_three_tasks_wait_any) {
+    auto f1 = [] { return 42; };
+    auto task1 = make_task(transwarp::consume_all, f1);
+    auto f2 = [] { return 13; };
+    auto task2 = make_task(transwarp::consume_all, f2);
+    auto f3 = []() { return 17; };
+    auto task3 = make_task(transwarp::wait_any, f3, task1, task2);
+
+    ASSERT_EQUAL(transwarp::task_type::consume_all, task1->get_node().type);
+    ASSERT_EQUAL(transwarp::task_type::consume_all, task2->get_node().type);
+    ASSERT_EQUAL(transwarp::task_type::wait_any, task3->get_node().type);
+
+    task3->schedule_all();
+    ASSERT_EQUAL(17, task3->get_future().get());
+}
+
+TEST(schedule_with_three_tasks_consume_any) {
+    auto f1 = [] { std::this_thread::sleep_for(std::chrono::milliseconds(10)); return 42; };
+    auto task1 = make_task(transwarp::consume_all, f1);
+    auto f2 = [] { return 13; };
+    auto task2 = make_task(transwarp::consume_all, f2);
+    auto f3 = [](int x) { return x; };
+    auto task3 = make_task(transwarp::consume_any, f3, task1, task2);
+
+    ASSERT_EQUAL(transwarp::task_type::consume_all, task1->get_node().type);
+    ASSERT_EQUAL(transwarp::task_type::consume_all, task2->get_node().type);
+    ASSERT_EQUAL(transwarp::task_type::consume_any, task3->get_node().type);
+
+    transwarp::parallel exec{4};
+    task3->schedule_all(&exec);
+    ASSERT_EQUAL(13, task3->get_future().get());
+}
+
 TEST(task_type_output_stream) {
     std::ostringstream os1;
     os1 << transwarp::task_type::consume_all;
     ASSERT_EQUAL("consume_all", os1.str());
+    std::ostringstream os1b;
+    os1b << transwarp::task_type::consume_any;
+    ASSERT_EQUAL("consume_any", os1b.str());
     std::ostringstream os2;
     os2 << transwarp::task_type::wait_all;
     ASSERT_EQUAL("wait_all", os2.str());
+    std::ostringstream os2b;
+    os2b << transwarp::task_type::wait_any;
+    ASSERT_EQUAL("wait_any", os2b.str());
 }
 
 COLLECTION(test_examples) {
