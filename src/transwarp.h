@@ -785,7 +785,7 @@ private:
     friend struct transwarp::detail::graph_visitor;
     friend struct transwarp::detail::final_visitor;
 
-    template<typename T, typename U>
+    template<typename T>
     friend struct transwarp::detail::visit;
     friend struct transwarp::detail::unvisit;
 
