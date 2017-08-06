@@ -16,7 +16,12 @@ for mode in $modes;do
     # Checking tests
     $thisdir/src/compile_test.sh $mode
     echo "+++ Running $thisdir/src/test.$mode ..."
-    $thisdir/src/test.$mode
+    count=0
+    while [ $count -lt 100 ]; do
+        $thisdir/src/test.$mode > /dev/null
+        let count+=1
+    done
+    echo "Tests OK"        
 
     # Checking examples
     examples=$(ls $thisdir/examples/*.cpp)
@@ -25,6 +30,7 @@ for mode in $modes;do
         echo "+++ Running ${ex%.cpp}.$mode ..."
         ${ex%.cpp}.$mode
     done
+    echo "Examples OK"        
 done
 
 echo "+++ Done!"
