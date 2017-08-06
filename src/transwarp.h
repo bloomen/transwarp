@@ -28,8 +28,8 @@ namespace transwarp {
 enum class task_type {
     consume_all, // The task's functor consumes all of the parent results
     consume_any, // The task's functor consumes the first parent result that becomes ready
-    wait_all,  // The task's functor takes no arguments but waits for all parents to finish
-    wait_any,  // The task's functor takes no arguments but waits for the first parent to finish
+    wait_all,    // The task's functor takes no arguments but waits for all parents to finish
+    wait_any,    // The task's functor takes no arguments but waits for the first parent to finish
 };
 
 // Output stream operator for the task_type enumeration
