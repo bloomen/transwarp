@@ -252,7 +252,7 @@ struct call_with_futures_consume_any_impl<false, Result, n...> {
         while (!ready) {
             future = wait(ready, std::get<n>(std::forward<Tuple>(t))...);
         }
-        auto result = future.get();
+        auto& result = future.get();
         if (canceled) {
             throw transwarp::task_canceled(node);
         }
