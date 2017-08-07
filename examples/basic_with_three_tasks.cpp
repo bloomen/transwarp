@@ -2,6 +2,8 @@
 #include <iostream>
 #include "../src/transwarp.h"
 
+namespace tw = transwarp;
+
 namespace examples {
 
 double add_em_up(double x, int y) {
@@ -19,19 +21,19 @@ void basic_with_three_tasks(std::ostream& os) {
     auto something_else = [&value2] { return value2; };
 
     // building the task graph
-    auto task1 = transwarp::make_task(transwarp::root, "something", something);
-    auto task2 = transwarp::make_task(transwarp::root, "something else", something_else);
-    auto task3 = transwarp::make_task(transwarp::consume, "adder", add_em_up, task1, task2);
+    auto task1 = tw::make_task(tw::root, "something", something);
+    auto task2 = tw::make_task(tw::root, "something else", something_else);
+    auto task3 = tw::make_task(tw::consume, "adder", add_em_up, task1, task2);
 
     // creating a dot-style graph for visualization
     const auto graph = task3->get_graph();
-    std::ofstream("basic_with_three_tasks.dot") << transwarp::make_dot(graph);
+    std::ofstream("basic_with_three_tasks.dot") << tw::make_dot(graph);
 
     // schedule() can now be called as much as desired. The task graph
     // only has to be built once
 
     // parallel execution with 4 threads for independent tasks
-    transwarp::parallel executor(4);
+    tw::parallel executor(4);
 
     task3->schedule_all(&executor);  // schedules all tasks for execution, assigning a future to each task
     os << "result = " << task3->get_future().get() << std::endl;  // result = 55.3

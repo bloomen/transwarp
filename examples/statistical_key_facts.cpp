@@ -5,6 +5,8 @@
 #include <random>
 #include <numeric>
 
+namespace tw = transwarp;
+
 namespace examples {
 
 using data_const_t = std::shared_ptr<const std::vector<double>>;
@@ -77,23 +79,23 @@ result aggregate_results(double avg, double stddev, double median, int mode) {
     return {avg, stddev, median, mode};
 }
 
-std::shared_ptr<transwarp::itask<result>> build_graph(std::size_t sample_size, double& alpha, double& beta) {
+std::shared_ptr<tw::itask<result>> build_graph(std::size_t sample_size, double& alpha, double& beta) {
     auto gen = std::make_shared<std::mt19937>(1);
-    auto gen_task = transwarp::make_task(transwarp::root, "rand gen", [gen] { return gen; });
-    auto size_task = transwarp::make_task(transwarp::root, "sample size", [sample_size] { return sample_size; });
-    auto alpha_task = transwarp::make_task(transwarp::root, "alpha", [&alpha] { return alpha; });
-    auto beta_task = transwarp::make_task(transwarp::root, "beta", [&beta] { return beta; });
+    auto gen_task = tw::make_task(tw::root, "rand gen", [gen] { return gen; });
+    auto size_task = tw::make_task(tw::root, "sample size", [sample_size] { return sample_size; });
+    auto alpha_task = tw::make_task(tw::root, "alpha", [&alpha] { return alpha; });
+    auto beta_task = tw::make_task(tw::root, "beta", [&beta] { return beta; });
 
-    auto data_task = transwarp::make_task(transwarp::consume, "generate gamma", generate_gamma,
-                                          size_task, alpha_task, beta_task, gen_task);
+    auto data_task = tw::make_task(tw::consume, "generate gamma", generate_gamma,
+                                   size_task, alpha_task, beta_task, gen_task);
 
-    auto avg_task = transwarp::make_task(transwarp::consume, "average", average, data_task);
-    auto stddev_task = transwarp::make_task(transwarp::consume, "stddev", stddev, data_task, avg_task);
-    auto median_task = transwarp::make_task(transwarp::consume, "median", median, data_task);
-    auto mode_task = transwarp::make_task(transwarp::consume, "mode", mode, data_task);
+    auto avg_task = tw::make_task(tw::consume, "average", average, data_task);
+    auto stddev_task = tw::make_task(tw::consume, "stddev", stddev, data_task, avg_task);
+    auto median_task = tw::make_task(tw::consume, "median", median, data_task);
+    auto mode_task = tw::make_task(tw::consume, "mode", mode, data_task);
 
-    return transwarp::make_task(transwarp::consume, "aggregate results", aggregate_results,
-                                avg_task, stddev_task, median_task, mode_task);
+    return tw::make_task(tw::consume, "aggregate results", aggregate_results,
+                         avg_task, stddev_task, median_task, mode_task);
 }
 
 // This example computes statistical key measures from numbers sampled
@@ -111,14 +113,14 @@ void statistical_key_facts(std::ostream& os, std::size_t sample_size, bool paral
 
     // output the graph for visualization
     const auto graph = final_task->get_graph();
-    std::ofstream("statistical_key_facts.dot") << transwarp::make_dot(graph);
+    std::ofstream("statistical_key_facts.dot") << tw::make_dot(graph);
 
     // Creating the executor
-    std::shared_ptr<transwarp::executor> executor;
+    std::shared_ptr<tw::executor> executor;
     if (parallel) {
-        executor = std::make_shared<transwarp::parallel>(4);
+        executor = std::make_shared<tw::parallel>(4);
     } else {
-        executor = std::make_shared<transwarp::sequential>();
+        executor = std::make_shared<tw::sequential>();
     }
 
     // Now we start calculating stuff ...
