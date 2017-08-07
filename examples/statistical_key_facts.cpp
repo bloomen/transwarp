@@ -79,20 +79,20 @@ result aggregate_results(double avg, double stddev, double median, int mode) {
 
 std::shared_ptr<transwarp::itask<result>> build_graph(std::size_t sample_size, double& alpha, double& beta) {
     auto gen = std::make_shared<std::mt19937>(1);
-    auto gen_task = transwarp::make_task(transwarp::consume_all, "rand gen", [gen] { return gen; });
-    auto size_task = transwarp::make_task(transwarp::consume_all, "sample size", [sample_size] { return sample_size; });
-    auto alpha_task = transwarp::make_task(transwarp::consume_all, "alpha", [&alpha] { return alpha; });
-    auto beta_task = transwarp::make_task(transwarp::consume_all, "beta", [&beta] { return beta; });
+    auto gen_task = transwarp::make_task(transwarp::root, "rand gen", [gen] { return gen; });
+    auto size_task = transwarp::make_task(transwarp::root, "sample size", [sample_size] { return sample_size; });
+    auto alpha_task = transwarp::make_task(transwarp::root, "alpha", [&alpha] { return alpha; });
+    auto beta_task = transwarp::make_task(transwarp::root, "beta", [&beta] { return beta; });
 
-    auto data_task = transwarp::make_task(transwarp::consume_all, "generate gamma", generate_gamma,
+    auto data_task = transwarp::make_task(transwarp::consume, "generate gamma", generate_gamma,
                                           size_task, alpha_task, beta_task, gen_task);
 
-    auto avg_task = transwarp::make_task(transwarp::consume_all, "average", average, data_task);
-    auto stddev_task = transwarp::make_task(transwarp::consume_all, "stddev", stddev, data_task, avg_task);
-    auto median_task = transwarp::make_task(transwarp::consume_all, "median", median, data_task);
-    auto mode_task = transwarp::make_task(transwarp::consume_all, "mode", mode, data_task);
+    auto avg_task = transwarp::make_task(transwarp::consume, "average", average, data_task);
+    auto stddev_task = transwarp::make_task(transwarp::consume, "stddev", stddev, data_task, avg_task);
+    auto median_task = transwarp::make_task(transwarp::consume, "median", median, data_task);
+    auto mode_task = transwarp::make_task(transwarp::consume, "mode", mode, data_task);
 
-    return transwarp::make_task(transwarp::consume_all, "aggregate results", aggregate_results,
+    return transwarp::make_task(transwarp::consume, "aggregate results", aggregate_results,
                                 avg_task, stddev_task, median_task, mode_task);
 }
 

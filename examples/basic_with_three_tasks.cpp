@@ -19,9 +19,9 @@ void basic_with_three_tasks(std::ostream& os) {
     auto something_else = [&value2] { return value2; };
 
     // building the task graph
-    auto task1 = transwarp::make_task(transwarp::consume_all, "something", something);
-    auto task2 = transwarp::make_task(transwarp::consume_all, "something else", something_else);
-    auto task3 = transwarp::make_task(transwarp::consume_all, "adder", add_em_up, task1, task2);
+    auto task1 = transwarp::make_task(transwarp::root, "something", something);
+    auto task2 = transwarp::make_task(transwarp::root, "something else", something_else);
+    auto task3 = transwarp::make_task(transwarp::consume, "adder", add_em_up, task1, task2);
 
     // creating a dot-style graph for visualization
     const auto graph = task3->get_graph();

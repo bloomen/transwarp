@@ -26,20 +26,23 @@ namespace transwarp {
 
 // The possible task types
 enum class task_type {
-    consume_all, // The task's functor consumes all of the parent results
+    root,        // The task has no parents
+    consume,     // The task's functor consumes all parent results
     consume_any, // The task's functor consumes the first parent result that becomes ready
-    wait_all,    // The task's functor takes no arguments but waits for all parents to finish
+    wait,        // The task's functor takes no arguments but waits for all parents to finish
     wait_any,    // The task's functor takes no arguments but waits for the first parent to finish
 };
 
 // Output stream operator for the task_type enumeration
 inline std::ostream& operator<<(std::ostream& os, const transwarp::task_type& type) {
-    if (type == transwarp::task_type::consume_all) {
-        os << "consume_all";
+    if (type == transwarp::task_type::root) {
+        os << "root";
+    } else if (type == transwarp::task_type::consume) {
+        os << "consume";
     } else if (type == transwarp::task_type::consume_any) {
         os << "consume_any";
-    } else if (type == transwarp::task_type::wait_all) {
-        os << "wait_all";
+    } else if (type == transwarp::task_type::wait) {
+        os << "wait";
     } else if (type == transwarp::task_type::wait_any) {
         os << "wait_any";
     }
@@ -47,17 +50,21 @@ inline std::ostream& operator<<(std::ostream& os, const transwarp::task_type& ty
 }
 
 
-// The consume_all type. Used for tag dispatch
-struct consume_all_type : std::integral_constant<transwarp::task_type, transwarp::task_type::consume_all> {};
-constexpr const transwarp::consume_all_type consume_all{};
+// The root type. Used for tag dispatch
+struct root_type : std::integral_constant<transwarp::task_type, transwarp::task_type::root> {};
+constexpr const transwarp::root_type root{};
+
+// The consume type. Used for tag dispatch
+struct consume_type : std::integral_constant<transwarp::task_type, transwarp::task_type::consume> {};
+constexpr const transwarp::consume_type consume{};
 
 // The consume_any type. Used for tag dispatch
 struct consume_any_type : std::integral_constant<transwarp::task_type, transwarp::task_type::consume_any> {};
 constexpr const transwarp::consume_any_type consume_any{};
 
-// The wait_all type. Used for tag dispatch
-struct wait_all_type : std::integral_constant<transwarp::task_type, transwarp::task_type::wait_all> {};
-constexpr const transwarp::wait_all_type wait_all{};
+// The wait type. Used for tag dispatch
+struct wait_type : std::integral_constant<transwarp::task_type, transwarp::task_type::wait> {};
+constexpr const transwarp::wait_type wait{};
 
 // The wait_any type. Used for tag dispatch
 struct wait_any_type : std::integral_constant<transwarp::task_type, transwarp::task_type::wait_any> {};
@@ -217,7 +224,18 @@ struct call_with_futures_impl {
 };
 
 template<int total, int... n>
-struct call_with_futures_impl<transwarp::consume_all_type, true, total, n...> {
+struct call_with_futures_impl<transwarp::root_type, true, total, n...> {
+    template<typename Result, typename Functor, typename Tuple>
+    static Result work(const std::atomic_bool& canceled, const transwarp::node& node, Functor&& f, Tuple&&) {
+        if (canceled) {
+            throw transwarp::task_canceled(node);
+        }
+        return std::forward<Functor>(f)();
+    }
+};
+
+template<int total, int... n>
+struct call_with_futures_impl<transwarp::consume_type, true, total, n...> {
     template<typename Result, typename Functor, typename Tuple>
     static Result work(const std::atomic_bool& canceled, const transwarp::node& node, Functor&& f, Tuple&& t) {
         auto results = std::tie(std::get<n>(std::forward<Tuple>(t)).get()...);
@@ -282,7 +300,7 @@ struct call_with_futures_impl<transwarp::consume_any_type, true, total, n...> {
 };
 
 template<int total, int... n>
-struct call_with_futures_impl<transwarp::wait_all_type, true, total, n...> {
+struct call_with_futures_impl<transwarp::wait_type, true, total, n...> {
     template<typename Result, typename Functor, typename Tuple>
     static Result work(const std::atomic_bool& canceled, const transwarp::node& node, Functor&& f, Tuple&& t) {
         wait(std::get<n>(std::forward<Tuple>(t))...);
@@ -538,11 +556,24 @@ struct unvisit {
 // Determines the result type of the Functor dispatching on the task type
 template<typename TaskType, typename Functor, typename... Tasks>
 struct result {
-    static_assert(std::is_same<TaskType, transwarp::consume_all_type>::value ||
+    static_assert(std::is_same<TaskType, transwarp::root_type>::value ||
+                  std::is_same<TaskType, transwarp::consume_type>::value ||
                   std::is_same<TaskType, transwarp::consume_any_type>::value ||
-                  std::is_same<TaskType, transwarp::wait_all_type>::value ||
+                  std::is_same<TaskType, transwarp::wait_type>::value ||
                   std::is_same<TaskType, transwarp::wait_any_type>::value,
-                  "Not a valid task type. Must be one of: consume_all_type, consume_any_type, wait_all_type, wait_any_type");
+                  "Invalid task type, must be one of: root, consume, consume_any, wait, wait_any");
+};
+
+template<typename Functor, typename... Tasks>
+struct result<transwarp::root_type, Functor, Tasks...> {
+    static_assert(sizeof...(Tasks) == 0, "A root task cannot have parent tasks");
+    using type = decltype(std::declval<Functor>()());
+};
+
+template<typename Functor, typename... Tasks>
+struct result<transwarp::consume_type, Functor, Tasks...> {
+    static_assert(sizeof...(Tasks) > 0, "A consume task must have at least one parent");
+    using type = decltype(std::declval<Functor>()(std::declval<typename Tasks::result_type>()...));
 };
 
 template<bool zero_tasks, typename Functor, typename... Tasks>
@@ -560,22 +591,20 @@ struct result_consume_any_impl<false, Functor, Tasks...> {
 };
 
 template<typename Functor, typename... Tasks>
-struct result<transwarp::consume_all_type, Functor, Tasks...> {
-    using type = decltype(std::declval<Functor>()(std::declval<typename Tasks::result_type>()...));
-};
-
-template<typename Functor, typename... Tasks>
 struct result<transwarp::consume_any_type, Functor, Tasks...> {
+    static_assert(sizeof...(Tasks) > 0, "A consume_any task must have at least one parent");
     using type = typename result_consume_any_impl<sizeof...(Tasks) == 0, Functor, Tasks...>::type;
 };
 
 template<typename Functor, typename... Tasks>
-struct result<transwarp::wait_all_type, Functor, Tasks...> {
+struct result<transwarp::wait_type, Functor, Tasks...> {
+    static_assert(sizeof...(Tasks) > 0, "A wait task must have at least one parent");
     using type = decltype(std::declval<Functor>()());
 };
 
 template<typename Functor, typename... Tasks>
 struct result<transwarp::wait_any_type, Functor, Tasks...> {
+    static_assert(sizeof...(Tasks) > 0, "A wait_any task must have at least one parent");
     using type = decltype(std::declval<Functor>()());
 };
 
