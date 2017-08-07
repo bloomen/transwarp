@@ -1,7 +1,9 @@
 0.X.X
 
 - added ability to assign custom executors per task
-- changed schedule() to accept an executor
+- merge final_task and task together to a single class
+- add task types to support consuming or waiting
+- changed schedule functions to accept an executor
 - only use noexcept where appropriate
 
 0.2.0
