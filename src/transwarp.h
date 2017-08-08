@@ -1,7 +1,7 @@
 // transwarp is a header-only C++ library for task concurrency
 // Version: in dev
-// Author: Christian Blume (chr.blume@gmail.com)
 // Repository: https://github.com/bloomen/transwarp
+// Copyright: 2017 Christian Blume
 // License: http://www.opensource.org/licenses/mit-license.php
 #pragma once
 #include <future>
@@ -363,6 +363,8 @@ struct call_with_futures_impl<transwarp::wait_any_type, true, total, n...> {
     }
 };
 
+// Calls the given functor with or without the tuple of futures depending on the task type.
+// Throws task_canceled if the canceled becomes true
 template<typename TaskType, typename Result, typename Functor, typename Tuple>
 Result call_with_futures(const std::atomic_bool& canceled, const transwarp::node& node, Functor&& f, Tuple&& t) {
     using tuple_t = typename std::decay<Tuple>::type;
