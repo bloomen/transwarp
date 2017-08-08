@@ -89,14 +89,17 @@ consume_any, // The task's functor consumes the first parent result that becomes
 wait,        // The task's functor takes no arguments but waits for all parents to finish
 wait_any,    // The task's functor takes no arguments but waits for the first parent to finish
 ```
-The task type is passed as the first parameter to `make_task`, e.g., to create a `consume` task simply do this:
+The task type is passed as the first parameter to `make_task`, e.g., to create 
+a `consume` task simply do this:
 ```cpp
 auto task = tw::make_task(tw::consume, functor, parent1, parent2);
 ```
-where `functor` denotes some callable and `parent1/2` the parent tasks. Note that `functor` in this case has to accept two arguments that match the result types
-of the parent tasks.
+where `functor` denotes some callable and `parent1/2` the parent tasks. 
+Note that `functor` in this case has to accept two arguments that match the 
+result types of the parent tasks.
 
-Tasks can be freely chained together using the different task types. The only restriction is that tasks without parents have to be labeled as `root` tasks. 
+Tasks can be freely chained together using the different task types. 
+The only restriction is that tasks without parents have to be labeled as `root` tasks. 
 
 ### Scheduling tasks
 
@@ -105,18 +108,22 @@ Once a task is created it can be scheduled just by itself:
 auto task = tw::make_task(tw::root, functor);
 task->schedule()
 ```
-which, if nothing else is specified, will run the task on the current thread. However, using the bultin `parallel` executor the task can be pushed into a thread pool and executed asynchronously:
+which, if nothing else is specified, will run the task on the current thread. 
+However, using the bult-in `parallel` executor the task can be pushed into a 
+thread pool and executed asynchronously:
 ```cpp
 tw::parallel executor{4};  // thread pool with 4 threads
 auto task = tw::make_task(tw::root, functor);
 task->schedule(&executor)
 ```
-Regardless of how you schedule, the shared future associated to the underlying execution can be retrieved through:
+Regardless of how you schedule, the shared future associated to the underlying 
+execution can be retrieved through:
 ```cpp
 auto future = task->get_future();
 std::cout << future.get() << std::endl;
 ```  
-Once a task has been scheduled it cannot be scheduled again until you call `reset()` which resets the future of the task:
+Once a task has been scheduled it cannot be scheduled again until you call `reset()` 
+which resets the future of the task:
 ```cpp
 task->reset();  // now can schedule again
 ```  
@@ -144,7 +151,8 @@ task->schedule(&executor2);  // executor1 will be used to schedule the task
 The task-specific executor will always be preferred over other executors when
 scheduling tasks.
 
-transwarp defines an executor interface which can be implemented to perform custom behaviour when scheduling tasks. The interface looks like this:
+transwarp defines an executor interface which can be implemented to perform custom 
+behaviour when scheduling tasks. The interface looks like this:
 ```cpp
 class executor {
 public:
@@ -154,7 +162,8 @@ public:
 };
 
 ``` 
-where `functor` denotes the function to be run and `node` a simple struct holding meta-data of the current task:
+where `functor` denotes the function to be run and `node` a simple struct holding 
+meta-data of the current task:
 ```cpp
 struct node {
     std::size_t id;  // the task id
