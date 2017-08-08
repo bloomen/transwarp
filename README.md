@@ -14,7 +14,7 @@ transwarp is designed for ease of use, portability, and scalability. It is writt
 C++11 and only depends on the standard library. Just copy `src/transwarp.h` 
 to your project and off you go! Tested with GCC, Clang, and Visual Studio.
 
-**Example**
+## Example
 
 This example creates three tasks and connects them with each other to form
 a two-level graph. The tasks are then scheduled twice for computation 
@@ -75,4 +75,97 @@ The first line within a bubble is the task name. The second line denotes the tas
 type which can be one of root, consume, consume_any, wait, and wait_any. 
 The third line denotes task id and the number of parents, respectively. 
 
-**Enjoy!**
+## API Doc
+
+This is a brief API doc of transwarp. In the following we will use `tw` as a namespace alias for `transwarp`.
+
+### Creating tasks
+
+transwarp supports five different task types:
+```cpp
+root,        // The task has no parents
+consume,     // The task's functor consumes all parent results
+consume_any, // The task's functor consumes the first parent result that becomes ready
+wait,        // The task's functor takes no arguments but waits for all parents to finish
+wait_any,    // The task's functor takes no arguments but waits for the first parent to finish
+```
+The task type is passed as the first parameter to `make_task`, e.g., to create a `consume` task simply do this:
+```cpp
+auto task = tw::make_task(tw::consume, functor, parent1, parent2);
+```
+where `functor` denotes some callable and `parent1/2` the parent tasks. Note that `functor` in this case has to accept two arguments that match the result types
+of the parent tasks.
+
+Tasks can be freely chained together using the different task types. The only restriction is that tasks without parents have to be labeled as `root` tasks. 
+
+### Scheduling tasks
+
+Once a task is created it can be scheduled just by itself:
+```cpp
+auto task = tw::make_task(tw::root, functor);
+task->schedule()
+```
+which, if nothing else is specified, will run the task on the current thread. However, using the bultin `parallel` executor the task can be pushed into a thread pool and executed asynchronously:
+```cpp
+tw::parallel executor{4};  // thread pool with 4 threads
+auto task = tw::make_task(tw::root, functor);
+task->schedule(&executor)
+```
+Regardless of how you schedule, the shared future associated to the underlying execution can be retrieved through:
+```cpp
+auto future = task->get_future();
+std::cout << future.get() << std::endl;
+```  
+Once a task has been scheduled it cannot be scheduled again until you call `reset()` which resets the future of the task:
+```cpp
+task->reset();  // now can schedule again
+```  
+Scheduling multiple tasks at once is also possible:
+```cpp
+auto parent1 = tw::make_task(tw::root, foo);
+auto parent2 = tw::make_task(tw::root, bar);
+auto task = tw::make_task(tw::consume, functor, parent1, parent2);
+task->schedule_all();  // schedules all parents and itself
+task->reset_all();  // need to reset to schedule again
+task->schedule_all();  // schedules again
+```
+which can also be done using the executor from above.
+
+### More on executors
+
+We have seen that we can pass executors to `schedule()` and `schedule_all()`.
+However, they can also be assigned to a task directly:
+```cpp
+auto executor1 = std::make_shared<tw::parallel>(2);  // thread pool with 2 threads
+task->set_executor(executor1);
+tw::sequential executor2;
+task->schedule(&executor2);  // executor1 will be used to schedule the task
+``` 
+The task-specific executor will always be preferred over other executors when
+scheduling tasks.
+
+transwarp defines an executor interface which can be implemented to perform custom behaviour when scheduling tasks. The interface looks like this:
+```cpp
+class executor {
+public:
+    virtual ~executor() = default;
+    virtual std::string get_name() const = 0;
+    virtual void execute(const std::function<void()>& functor, const tw::node& node) = 0;
+};
+
+``` 
+where `functor` denotes the function to be run and `node` a simple struct holding meta-data of the current task:
+```cpp
+struct node {
+    std::size_t id;  // the task id
+    std::string name;  // the task name
+    tw::task_type type;  // the task type
+    std::string executor;  // the name of the task-specific executor (if exists)
+    std::vector<const node*> parents;  // the list of parents (if exists)
+};
+
+```
+## Feedback
+
+Contact me if you have any questions or suggestions to make this a better library!
+You can reach me at `chr.blume@gmail.com`
