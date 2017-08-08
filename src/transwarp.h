@@ -151,11 +151,18 @@ public:
         if (n_threads > 0) {
             const auto n_target = threads_.size() + n_threads;
             while (threads_.size() < n_target) {
+                std::thread thread;
                 try {
-                    std::thread thread(&thread_pool::worker, this);
+                    thread = std::thread(&thread_pool::worker, this);
+                } catch (...) {
+                    shutdown();
+                    throw;
+                }
+                try {
                     threads_.push_back(std::move(thread));
                 } catch (...) {
                     shutdown();
+                    thread.join();
                     throw;
                 }
             }
