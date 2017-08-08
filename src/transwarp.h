@@ -470,7 +470,7 @@ struct edges_visitor {
 
 // Applies final bookkeeping to the task
 struct final_visitor {
-    final_visitor()
+    final_visitor() noexcept
     : id_(0) {}
 
     template<typename Task>
@@ -486,7 +486,7 @@ struct final_visitor {
 
 // Generates a graph
 struct graph_visitor {
-    graph_visitor(std::vector<transwarp::edge>& graph)
+    graph_visitor(std::vector<transwarp::edge>& graph) noexcept
     : graph_(graph) {}
 
     template<typename Task>
@@ -499,7 +499,7 @@ struct graph_visitor {
 
 // Schedules using the given executor
 struct schedule_visitor {
-    schedule_visitor(transwarp::executor* executor)
+    schedule_visitor(transwarp::executor* executor) noexcept
     : executor_(executor) {}
 
     template<typename Task>
@@ -521,7 +521,7 @@ struct reset_visitor {
 
 // Cancels or resumes the given task
 struct cancel_visitor {
-    cancel_visitor(bool enabled)
+    cancel_visitor(bool enabled) noexcept
     : enabled_(enabled) {}
 
     template<typename Task>
