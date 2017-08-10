@@ -72,6 +72,7 @@ std::size_t measure(Functor functor, std::size_t sample_size) {
     return static_cast<std::size_t>(std::chrono::duration_cast<std::chrono::microseconds>(end - start).count());
 }
 
+// This benchmark compares regular function calls with the transwarp graph
 void benchmark(std::ostream& os, std::size_t sample_size) {
     auto task = build_graph();
     std::ofstream("benchmark.dot") << tw::make_dot(task->get_graph());
