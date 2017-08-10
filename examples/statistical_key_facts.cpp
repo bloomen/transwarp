@@ -106,12 +106,11 @@ void statistical_key_facts(std::ostream& os, std::size_t sample_size, bool paral
 
     double alpha = 1;
     double beta = 1;
-    result res;
 
-    // building the graph and retrieving the final task
+    // Building the graph and retrieving the final task
     auto final_task = build_graph(sample_size, alpha, beta);
 
-    // output the graph for visualization
+    // Output the graph for visualization
     const auto graph = final_task->get_graph();
     std::ofstream("statistical_key_facts.dot") << tw::make_dot(graph);
 
@@ -124,29 +123,18 @@ void statistical_key_facts(std::ostream& os, std::size_t sample_size, bool paral
     }
 
     // Now we start calculating stuff ...
+    double count = 1;
+    while (count < 4) {
+        final_task->schedule_all(executor.get());
+        const result res = final_task->get_future().get();
+        os << res << std::endl;
+        final_task->reset_all();
+        // Changing input
+        alpha += count;
+        beta += count;
+        ++count;
+    }
 
-    // First computation with initial values
-    final_task->schedule_all(executor.get());
-    res = final_task->get_future().get();
-    os << res << std::endl;
-
-    final_task->reset_all();
-
-    // Second computation with new input
-    alpha = 2;
-    beta = 3;
-    final_task->schedule_all(executor.get());
-    res = final_task->get_future().get();
-    os << res << std::endl;
-
-    final_task->reset_all();
-
-    // Third computation with new input
-    alpha = 3;
-    beta = 4;
-    final_task->schedule_all(executor.get());
-    res = final_task->get_future().get();
-    os << res << std::endl;
 }
 
 }
