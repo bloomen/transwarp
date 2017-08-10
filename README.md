@@ -7,7 +7,7 @@ traversal and type-safe dependencies.
 
 A task in transwarp is defined through a functor, parent tasks, and an optional name. 
 A task can either be consuming all or just one of its parents, or simply wait for their 
-completion similar to how continuations work. transwarp supports custom executors 
+completion similar to continuations. transwarp supports custom executors 
 either per task or globally when scheduling the tasks in the graph.
 
 transwarp is designed for ease of use, portability, and scalability. It is written in 
@@ -75,7 +75,7 @@ The first line within a bubble is the task name. The second line denotes the tas
 type which can be one of root, consume, consume_any, wait, and wait_any. 
 The third line denotes task id and the number of parents, respectively. 
 
-## API Doc
+## API doc
 
 This is a brief API doc of transwarp. In the following we will use `tw` as a namespace alias for `transwarp`.
 
@@ -109,7 +109,7 @@ auto task = tw::make_task(tw::root, functor);
 task->schedule()
 ```
 which, if nothing else is specified, will run the task on the current thread. 
-However, using the bult-in `parallel` executor the task can be pushed into a 
+However, using the built-in `parallel` executor the task can be pushed into a 
 thread pool and executed asynchronously:
 ```cpp
 tw::parallel executor{4};  // thread pool with 4 threads
@@ -125,28 +125,33 @@ std::cout << future.get() << std::endl;
 Once a task has been scheduled it cannot be scheduled again until you call `reset()` 
 which resets the future of the task:
 ```cpp
-task->reset();  // now can schedule again
+task->reset();  // can now schedule again
 ```  
-Scheduling multiple tasks at once is also possible:
+When chaining multiple tasks together a directed acyclic graph is built in which
+every task can be scheduled individually. However, in many scenarios it is useful
+to compute all tasks in the right order with a single call:
 ```cpp
-auto parent1 = tw::make_task(tw::root, foo);
-auto parent2 = tw::make_task(tw::root, bar);
+auto parent1 = tw::make_task(tw::root, foo);  // foo is a functor
+auto parent2 = tw::make_task(tw::root, bar);  // bar is a functor
 auto task = tw::make_task(tw::consume, functor, parent1, parent2);
 task->schedule_all();  // schedules all parents and itself
-task->reset_all();  // need to reset to schedule again
-task->schedule_all();  // schedules again
 ```
-which can also be done using the executor from above.
+which also can be scheduled using a custom executor, for instance:
+```cpp
+tw::parallel executor{4};
+task->schedule_all(&executor);
+```
+which will run those tasks in parallel that do not depend on each other.
 
 ### More on executors
 
 We have seen that we can pass executors to `schedule()` and `schedule_all()`.
 However, they can also be assigned to a task directly:
 ```cpp
-auto executor1 = std::make_shared<tw::parallel>(2);  // thread pool with 2 threads
-task->set_executor(executor1);
-tw::sequential executor2;
-task->schedule(&executor2);  // executor1 will be used to schedule the task
+auto exec1 = std::make_shared<tw::parallel>(2);
+task->set_executor(exec1);
+tw::sequential exec2;
+task->schedule(&exec2);  // exec1 will be used to schedule the task
 ``` 
 The task-specific executor will always be preferred over other executors when
 scheduling tasks.
