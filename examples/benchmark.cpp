@@ -64,11 +64,11 @@ void calculate_via_transwarp(tw::itask<double>& task) {
 
 template<typename Functor>
 std::size_t measure(Functor functor, std::size_t sample_size) {
-    auto start = std::chrono::high_resolution_clock::now();
+    const auto start = std::chrono::high_resolution_clock::now();
     for (std::size_t i=0; i<sample_size; ++i) {
         functor();
     }
-    auto end = std::chrono::high_resolution_clock::now();
+    const auto end = std::chrono::high_resolution_clock::now();
     return static_cast<std::size_t>(std::chrono::duration_cast<std::chrono::microseconds>(end - start).count());
 }
 
