@@ -2,6 +2,7 @@
 #include "transwarp.h"
 #include "../examples/basic_with_three_tasks.h"
 #include "../examples/statistical_key_facts.h"
+#include "../examples/benchmark.h"
 
 
 using transwarp::make_task;
@@ -559,6 +560,12 @@ void make_test_statistical_keys_facts(bool parallel) {
 TEST(statistical_key_facts) {
     make_test_statistical_keys_facts(false);
     make_test_statistical_keys_facts(true);
+}
+
+TEST(benchmark) {
+    std::ostringstream os;
+    examples::benchmark(os, 10);
+    ASSERT_GREATER(os.str().size(), 0u);
 }
 
 } // test_examples
