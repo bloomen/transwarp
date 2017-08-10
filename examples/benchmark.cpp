@@ -69,7 +69,7 @@ std::size_t measure(Functor functor, std::size_t sample_size) {
         functor();
     }
     auto end = std::chrono::high_resolution_clock::now();
-    return std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
+    return static_cast<std::size_t>(std::chrono::duration_cast<std::chrono::microseconds>(end - start).count());
 }
 
 void benchmark(std::ostream& os, std::size_t sample_size) {
