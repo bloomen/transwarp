@@ -1,4 +1,4 @@
-#include "benchmark.h"
+#include "benchmark_simple.h"
 #include "../src/transwarp.h"
 #include <chrono>
 #include <fstream>
@@ -9,28 +9,32 @@ namespace examples {
 
 const double expected = 4273.5;
 
+void sleep() {
+    std::this_thread::sleep_for(std::chrono::microseconds(100));
+}
+
 int func0() {
-    std::this_thread::sleep_for(std::chrono::microseconds(1));
+    sleep();
     return 42;
 }
 
 int func1() {
-    std::this_thread::sleep_for(std::chrono::microseconds(1));
+    sleep();
     return 13;
 }
 
 int func2(int x, int y) {
-    std::this_thread::sleep_for(std::chrono::microseconds(1));
+    sleep();
     return x + y;
 }
 
 double func3() {
-    std::this_thread::sleep_for(std::chrono::microseconds(1));
+    sleep();
     return 77.7;
 }
 
 double func4(int x, double y) {
-    std::this_thread::sleep_for(std::chrono::microseconds(1));
+    sleep();
     return x * y;
 }
 
@@ -73,9 +77,10 @@ std::size_t measure(Functor functor, std::size_t sample_size) {
 }
 
 // This benchmark compares regular function calls with the transwarp graph
-void benchmark(std::ostream& os, std::size_t sample_size) {
+// for a simple chain of calls
+void benchmark_simple(std::ostream& os, std::size_t sample_size) {
     auto task = build_graph();
-    std::ofstream("benchmark.dot") << tw::make_dot(task->get_graph());
+    std::ofstream("benchmark_simple.dot") << tw::make_dot(task->get_graph());
 
     const auto func_us = measure([] { calculate_via_functions(); }, sample_size);
 
@@ -91,7 +96,7 @@ void benchmark(std::ostream& os, std::size_t sample_size) {
 
 #ifndef USE_LIBUNITTEST
 int main() {
-    std::cout << "Running example: benchmark ..." << std::endl;
-    examples::benchmark(std::cout);
+    std::cout << "Running example: benchmark_simple ..." << std::endl;
+    examples::benchmark_simple(std::cout);
 }
 #endif
