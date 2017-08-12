@@ -485,14 +485,16 @@ TEST(schedule_with_three_tasks_wait_any) {
 
 TEST(schedule_with_three_tasks_consume_any) {
     std::atomic_bool cont(false);
-    auto f1 = [&cont] {
+    int value1 = 42;
+    auto f1 = [&cont,&value1]() -> int& {
         while (!cont);
-        return 42;
+        return value1;
     };
     auto task1 = make_task(transwarp::root, f1);
-    auto f2 = [] { return 13; };
+    int value2 = 13;
+    auto f2 = [&value2]() -> int& { return value2; }; // to test ref types
     auto task2 = make_task(transwarp::root, f2);
-    auto f3 = [](int x) { return x; };
+    auto f3 = [](int& x) -> int { return x; };
     auto task3 = make_task(transwarp::consume_any, f3, task1, task2);
 
     ASSERT_EQUAL(transwarp::task_type::root, task1->get_node().type);
@@ -541,6 +543,22 @@ TEST(task_type_output_stream) {
     std::ostringstream os2b;
     os2b << transwarp::task_type::wait_any;
     ASSERT_EQUAL("wait_any", os2b.str());
+}
+
+TEST(task_with_const_reference_return_type) {
+    const int value = 42;
+    auto functor = [&value]() -> const int& { return value; };
+    auto task = make_task(transwarp::root, functor);
+    task->schedule();
+    ASSERT_EQUAL(value, task->get_future().get());
+}
+
+TEST(task_with_reference_return_type) {
+    int value = 42;
+    auto functor = [&value]() -> int& { return value; };
+    auto task = make_task(transwarp::root, functor);
+    task->schedule();
+    ASSERT_EQUAL(value, task->get_future().get());
 }
 
 COLLECTION(test_examples) {

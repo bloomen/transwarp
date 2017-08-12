@@ -254,56 +254,40 @@ struct call_with_futures_impl<transwarp::consume_type, true, total, n...> {
     }
 };
 
-template<bool zero_futures, typename Result, int... n>
-struct call_with_futures_consume_any_impl;
-
-template<typename Result, int... n>
-struct call_with_futures_consume_any_impl<true, Result, n...> {
-    template<typename Functor, typename Tuple>
-    static Result work(const std::atomic_bool& canceled, const transwarp::node& node, Functor&& f, Tuple&&) {
-        if (canceled) {
-            throw transwarp::task_canceled(node);
-        }
-        return std::forward<Functor>(f)();
-    }
-};
-
-template<typename Result, int... n>
-struct call_with_futures_consume_any_impl<false, Result, n...> {
-    template<typename Functor, typename Tuple>
-    static Result work(const std::atomic_bool& canceled, const transwarp::node& node, Functor&& f, Tuple&& t) {
-        std::shared_future<Result> future;
-        bool ready = false;
-        while (!ready) {
-            future = wait(ready, std::get<n>(std::forward<Tuple>(t))...);
-        }
-        auto& result = future.get();
-        if (canceled) {
-            throw transwarp::task_canceled(node);
-        }
-        return std::forward<Functor>(f)(result);
-    }
-    template<typename T, typename... Args>
-    static T wait(bool& ready, T&& arg, Args&& ...args) {
-        const auto status = std::forward<T>(arg).wait_for(std::chrono::microseconds(1));
-        if (status == std::future_status::ready) {
-            ready = true;
-            return arg;
-        }
-        return wait(ready, std::forward<Args>(args)...);
-    }
-    static std::shared_future<Result> wait(bool&) {
-        return {};
-    }
-};
-
 template<int total, int... n>
 struct call_with_futures_impl<transwarp::consume_any_type, true, total, n...> {
     template<typename Result, typename Functor, typename Tuple>
     static Result work(const std::atomic_bool& canceled, const transwarp::node& node, Functor&& f, Tuple&& t) {
-        return call_with_futures_consume_any_impl<std::tuple_size<Tuple>::value == 0, Result, n...>::template
-                work(canceled, node, std::forward<Functor>(f), std::forward<Tuple>(t));
+        using future_t = typename std::remove_reference<decltype(std::get<0>(std::forward<Tuple>(t)))>::type; // use first type as reference
+        while (1) {
+            bool ready = false;
+            auto future = waiter<future_t>::template wait(ready, std::get<n>(std::forward<Tuple>(t))...);
+            if (ready) {
+                if (canceled) {
+                    throw transwarp::task_canceled(node);
+                }
+                return std::forward<Functor>(f)(future.get());
+            }
+        }
     }
+
+    template<typename Future>
+    struct waiter {
+
+        template<typename T, typename... Args>
+        static Future wait(bool& ready, T&& arg, Args&& ...args) {
+            const auto status = std::forward<T>(arg).wait_for(std::chrono::microseconds(1));
+            if (status == std::future_status::ready) {
+                ready = true;
+                return std::forward<T>(arg);
+            }
+            return wait(ready, std::forward<Args>(args)...);
+        }
+        static Future wait(bool&) {
+            return {};
+        }
+
+    };
 };
 
 template<int total, int... n>
