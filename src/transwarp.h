@@ -259,7 +259,7 @@ struct call_with_futures_impl<transwarp::consume_any_type, true, total, n...> {
     template<typename Result, typename Functor, typename Tuple>
     static Result work(const std::atomic_bool& canceled, const transwarp::node& node, Functor&& f, Tuple&& t) {
         using future_t = typename std::remove_reference<decltype(std::get<0>(std::forward<Tuple>(t)))>::type; // use first type as reference
-        while (1) {
+        for (;;) {
             bool ready = false;
             auto future = waiter<future_t>::template wait(ready, std::get<n>(std::forward<Tuple>(t))...);
             if (ready) {
