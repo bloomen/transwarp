@@ -1,4 +1,4 @@
-#include "benchmark_stats.h"
+#include "benchmark_statistical.h"
 #include "../src/transwarp.h"
 #include <chrono>
 #include <fstream>
@@ -129,10 +129,10 @@ namespace examples {
 
 // This benchmark compares regular function calls with the transwarp graph
 // for a chain of calls to compute statistical measures of a gamma distribution
-void benchmark_stats(std::ostream& os, std::size_t sample_size) {
+void benchmark_statistical(std::ostream& os, std::size_t sample_size) {
     auto gen = std::make_shared<std::mt19937>(1);
     auto task = build_graph(gen);
-    std::ofstream("benchmark_stats.dot") << tw::make_dot(task->get_graph());
+    std::ofstream("benchmark_statistical.dot") << tw::make_dot(task->get_graph());
 
     const auto func_us = measure([gen] { calculate_via_functions(*gen); }, sample_size);
 
@@ -148,7 +148,7 @@ void benchmark_stats(std::ostream& os, std::size_t sample_size) {
 
 #ifndef USE_LIBUNITTEST
 int main() {
-    std::cout << "Running example: benchmark_stats ..." << std::endl;
-    examples::benchmark_stats(std::cout);
+    std::cout << "Running example: benchmark_statistical ..." << std::endl;
+    examples::benchmark_statistical(std::cout);
 }
 #endif

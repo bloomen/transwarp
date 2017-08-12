@@ -3,7 +3,7 @@
 #include "../examples/basic_with_three_tasks.h"
 #include "../examples/statistical_key_facts.h"
 #include "../examples/benchmark_simple.h"
-#include "../examples/benchmark_stats.h"
+#include "../examples/benchmark_statistical.h"
 
 
 using transwarp::make_task;
@@ -587,9 +587,9 @@ TEST(benchmark_simple) {
     ASSERT_GREATER(os.str().size(), 0u);
 }
 
-TEST(benchmark_stats) {
+TEST(benchmark_statistical) {
     std::ostringstream os;
-    examples::benchmark_stats(os, 3);
+    examples::benchmark_statistical(os, 3);
     ASSERT_GREATER(os.str().size(), 0u);
 }
 
