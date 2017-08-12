@@ -138,7 +138,7 @@ auto parent2 = tw::make_task(tw::root, bar);  // bar is a functor
 auto task = tw::make_task(tw::consume, functor, parent1, parent2);
 task->schedule_all();  // schedules all parents and itself
 ```
-which also can be scheduled using a custom executor, for instance:
+which can also be scheduled using a custom executor, for instance:
 ```cpp
 tw::parallel executor{4};
 task->schedule_all(&executor);
