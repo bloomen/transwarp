@@ -5,7 +5,7 @@
 
 namespace tw = transwarp;
 
-namespace examples {
+namespace {
 
 const double expected = 4273.5;
 
@@ -67,14 +67,18 @@ void calculate_via_transwarp(tw::itask<double>& task) {
 }
 
 template<typename Functor>
-std::size_t measure(Functor functor, std::size_t sample_size) {
+long long measure(Functor functor, std::size_t sample_size) {
     const auto start = std::chrono::high_resolution_clock::now();
     for (std::size_t i=0; i<sample_size; ++i) {
         functor();
     }
     const auto end = std::chrono::high_resolution_clock::now();
-    return static_cast<std::size_t>(std::chrono::duration_cast<std::chrono::microseconds>(end - start).count());
+    return static_cast<long long>(std::chrono::duration_cast<std::chrono::microseconds>(end - start).count());
 }
+
+}
+
+namespace examples {
 
 // This benchmark compares regular function calls with the transwarp graph
 // for a simple chain of calls

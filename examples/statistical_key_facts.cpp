@@ -7,7 +7,7 @@
 
 namespace tw = transwarp;
 
-namespace examples {
+namespace {
 
 using data_const_t = std::shared_ptr<const std::vector<double>>;
 
@@ -97,6 +97,10 @@ std::shared_ptr<tw::itask<result>> build_graph(std::size_t sample_size, double& 
     return tw::make_task(tw::consume, "aggregate results", aggregate_results,
                          avg_task, stddev_task, median_task, mode_task);
 }
+
+}
+
+namespace examples {
 
 // This example computes statistical key measures from numbers sampled
 // from a gamma distribution. The example computes average, standard deviation,
