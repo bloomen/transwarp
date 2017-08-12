@@ -2,6 +2,8 @@
 #include "../src/transwarp.h"
 #include <chrono>
 #include <fstream>
+#include <random>
+#include <numeric>
 
 namespace tw = transwarp;
 
