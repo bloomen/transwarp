@@ -11,14 +11,14 @@ namespace {
 
 using data_const_t = std::shared_ptr<const std::vector<double>>;
 
-data_const_t generate_gamma(std::shared_ptr<std::mt19937> gen) {
+data_const_t generate_gamma(std::mt19937& gen) {
     const double alpha = 2;
     const double beta = 2;
     const std::size_t size = 10000;
     auto data = std::make_shared<std::vector<double>>(size);
     std::gamma_distribution<double> dist(alpha, beta);
     for (auto& value : *data) {
-        value = dist(*gen);
+        value = dist(gen);
     }
     return data;
 }
@@ -83,7 +83,7 @@ void check_result(const result& res) {
     }
 }
 
-void calculate_via_functions(std::shared_ptr<std::mt19937> gen) {
+void calculate_via_functions(std::mt19937& gen) {
     const auto data = generate_gamma(gen);
     const auto avg = average(data);
     const auto std = stddev(data, avg);
@@ -94,7 +94,7 @@ void calculate_via_functions(std::shared_ptr<std::mt19937> gen) {
 }
 
 std::shared_ptr<tw::itask<result>> build_graph(std::shared_ptr<std::mt19937> gen) {
-    auto gen_task = tw::make_task(tw::root, [gen] { return gen; });
+    auto gen_task = tw::make_task(tw::root, [gen]() -> std::mt19937& { return *gen; });
     auto data_task = tw::make_task(tw::consume, generate_gamma, gen_task);
 
     auto avg_task = tw::make_task(tw::consume, average, data_task);
@@ -134,7 +134,7 @@ void benchmark_stats(std::ostream& os, std::size_t sample_size) {
     auto task = build_graph(gen);
     std::ofstream("benchmark_stats.dot") << tw::make_dot(task->get_graph());
 
-    const auto func_us = measure([gen] { calculate_via_functions(gen); }, sample_size);
+    const auto func_us = measure([gen] { calculate_via_functions(*gen); }, sample_size);
 
     const auto tw_us = measure([task] { calculate_via_transwarp(*task); }, sample_size);
 
