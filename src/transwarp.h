@@ -569,24 +569,11 @@ struct result<transwarp::consume_type, Functor, Tasks...> {
     using type = decltype(std::declval<Functor>()(std::declval<typename Tasks::result_type>()...));
 };
 
-template<bool zero_tasks, typename Functor, typename... Tasks>
-struct result_consume_any_impl;
-
-template<typename Functor, typename... Tasks>
-struct result_consume_any_impl<true, Functor, Tasks...> {
-    using type = decltype(std::declval<Functor>()());
-};
-
-template<typename Functor, typename... Tasks>
-struct result_consume_any_impl<false, Functor, Tasks...> {
-    using arg_t = typename std::tuple_element<0, std::tuple<typename Tasks::result_type...>>::type;
-    using type = decltype(std::declval<Functor>()(std::declval<arg_t>()));
-};
-
 template<typename Functor, typename... Tasks>
 struct result<transwarp::consume_any_type, Functor, Tasks...> {
     static_assert(sizeof...(Tasks) > 0, "A consume_any task must have at least one parent");
-    using type = typename result_consume_any_impl<sizeof...(Tasks) == 0, Functor, Tasks...>::type;
+    using arg_t = typename std::tuple_element<0, std::tuple<typename Tasks::result_type...>>::type; // using first type as reference
+    using type = decltype(std::declval<Functor>()(std::declval<arg_t>()));
 };
 
 template<typename Functor, typename... Tasks>
