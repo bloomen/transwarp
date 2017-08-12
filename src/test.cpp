@@ -1,8 +1,9 @@
 #include <libunittest/all.hpp>
 #include "transwarp.h"
 #include "../examples/basic_with_three_tasks.h"
-#include "../examples/benchmark_simple.h"
 #include "../examples/statistical_key_facts.h"
+#include "../examples/benchmark_simple.h"
+#include "../examples/benchmark_stats.h"
 
 
 using transwarp::make_task;
@@ -565,6 +566,12 @@ TEST(statistical_key_facts) {
 TEST(benchmark_simple) {
     std::ostringstream os;
     examples::benchmark_simple(os, 10);
+    ASSERT_GREATER(os.str().size(), 0u);
+}
+
+TEST(benchmark_stats) {
+    std::ostringstream os;
+    examples::benchmark_stats(os, 3);
     ASSERT_GREATER(os.str().size(), 0u);
 }
 
