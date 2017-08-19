@@ -809,7 +809,7 @@ private:
     // Throws transwarp::task_canceled if the task is canceled.
     static result_type evaluate(transwarp::task<task_type, Functor, Tasks...>& task,
                                 std::tuple<std::shared_future<typename Tasks::result_type>...> futures) {
-        return transwarp::detail::call_with_futures<task_type, result_type>(task.canceled_, task.get_node(), task.functor_, std::move(futures));
+        return transwarp::detail::call_with_futures<task_type, result_type>(task.canceled_, task.node_, task.functor_, std::move(futures));
     }
 
     transwarp::node node_;
