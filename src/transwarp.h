@@ -246,7 +246,7 @@ struct call_with_futures_impl<transwarp::consume_type, true, total, n...> {
     template<typename Result, typename Functor, typename Tuple>
     static Result work(const std::atomic_bool& canceled, const transwarp::node& node, Functor&& f, Tuple&& t) {
         auto results = std::tie(std::get<n>(std::forward<Tuple>(t)).get()...);
-        (void)results; // workaround for unused gcc bug
+        (void)results; // workaround for unused warning gcc bug
         if (canceled) {
             throw transwarp::task_canceled(node);
         }
@@ -308,23 +308,9 @@ struct call_with_futures_impl<transwarp::wait_type, true, total, n...> {
     static void wait() {}
 };
 
-template<bool zero_futures, typename Result, int... n>
-struct call_with_futures_wait_any_impl;
-
-template<typename Result, int... n>
-struct call_with_futures_wait_any_impl<true, Result, n...> {
-    template<typename Functor, typename Tuple>
-    static Result work(const std::atomic_bool& canceled, const transwarp::node& node, Functor&& f, Tuple&&) {
-        if (canceled) {
-            throw transwarp::task_canceled(node);
-        }
-        return std::forward<Functor>(f)();
-    }
-};
-
-template<typename Result, int... n>
-struct call_with_futures_wait_any_impl<false, Result, n...> {
-    template<typename Functor, typename Tuple>
+template<int total, int... n>
+struct call_with_futures_impl<transwarp::wait_any_type, true, total, n...> {
+    template<typename Result, typename Functor, typename Tuple>
     static Result work(const std::atomic_bool& canceled, const transwarp::node& node, Functor&& f, Tuple&& t) {
         while (!wait(std::get<n>(std::forward<Tuple>(t))...));
         if (canceled) {
@@ -342,15 +328,6 @@ struct call_with_futures_wait_any_impl<false, Result, n...> {
     }
     static bool wait() {
         return false;
-    }
-};
-
-template<int total, int... n>
-struct call_with_futures_impl<transwarp::wait_any_type, true, total, n...> {
-    template<typename Result, typename Functor, typename Tuple>
-    static Result work(const std::atomic_bool& canceled, const transwarp::node& node, Functor&& f, Tuple&& t) {
-        return call_with_futures_wait_any_impl<std::tuple_size<Tuple>::value == 0, Result, n...>::template
-                work(canceled, node, std::forward<Functor>(f), std::forward<Tuple>(t));
     }
 };
 
