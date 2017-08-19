@@ -84,7 +84,7 @@ namespace examples {
 // for a simple chain of calls
 void benchmark_simple(std::ostream& os, std::size_t sample_size) {
     auto task = build_graph();
-    std::ofstream("benchmark_simple.dot") << tw::make_dot(task->get_graph());
+    std::ofstream("benchmark_simple.dot") << tw::to_string(task->get_graph());
 
     const auto func_us = measure([] { calculate_via_functions(); }, sample_size);
 

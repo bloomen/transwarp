@@ -27,7 +27,7 @@ void basic_with_three_tasks(std::ostream& os) {
 
     // creating a dot-style graph for visualization
     const auto graph = task3->get_graph();
-    std::ofstream("basic_with_three_tasks.dot") << tw::make_dot(graph);
+    std::ofstream("basic_with_three_tasks.dot") << tw::to_string(graph);
 
     // schedule() can now be called as much as desired. The task graph
     // only has to be built once

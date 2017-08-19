@@ -93,7 +93,7 @@ void make_test_three_tasks(std::size_t threads) {
 
     const auto graph = task3->get_graph();
     ASSERT_EQUAL(3u, graph.size());
-    const auto dot_graph = transwarp::make_dot(graph);
+    const auto dot_graph = transwarp::to_string(graph);
 
     const std::string exp_dot_graph = "digraph {\n"
 "\"t1\nroot\n"
@@ -201,7 +201,7 @@ TEST(task_canceled) {
 
 TEST(make_dot_graph_with_empty_graph) {
     const std::vector<transwarp::edge> graph;
-    const auto dot_graph = transwarp::make_dot(graph);
+    const auto dot_graph = transwarp::to_string(graph);
     const std::string exp_dot_graph = "digraph {\n}\n";
     ASSERT_EQUAL(exp_dot_graph, dot_graph);
 }
@@ -213,7 +213,7 @@ TEST(make_dot_graph_with_three_nodes) {
     std::vector<transwarp::edge> graph;
     graph.push_back({&node1, &node2});
     graph.push_back({&node1, &node3});
-    const auto dot_graph = transwarp::make_dot(graph);
+    const auto dot_graph = transwarp::to_string(graph);
     const std::string exp_dot_graph = "digraph {\n"
 "\"node2\nconsume\n"
 "id 1 parents 0\nexec\" -> \"node1\nconsume\n"

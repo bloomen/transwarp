@@ -70,6 +70,18 @@ struct wait_any_type : std::integral_constant<transwarp::task_type, transwarp::t
 constexpr const transwarp::wait_any_type wait_any{};
 
 
+namespace detail {
+
+// Trims the given characters from the input string
+inline std::string trim(const std::string &s, const std::string& chars=" \t\n\r") {
+    auto functor = [&chars](char c) { return chars.find(c) != std::string::npos; };
+    auto it = std::find_if_not(s.begin(), s.end(), functor);
+    return std::string(it, std::find_if_not(s.rbegin(), std::string::const_reverse_iterator(it), functor).base());
+}
+
+} // detail
+
+
 // A node carrying meta-data of a task
 struct node {
     std::size_t id;
@@ -79,12 +91,45 @@ struct node {
     std::vector<const node*> parents;
 };
 
+// String conversion for the node class
+inline std::string to_string(const transwarp::node& node) {
+    const auto name = transwarp::detail::trim(node.name);
+    const auto exec = transwarp::detail::trim(node.executor);
+    std::string s;
+    s += '"';
+    s += name + "\n";
+    s += transwarp::to_string(node.type) + "\n";
+    s += "id " + std::to_string(node.id);
+    s += " parents " + std::to_string(node.parents.size());
+    if (!exec.empty()) {
+        s += "\n" + exec;
+    }
+    s += '"';
+    return s;
+}
+
 
 // An edge between two nodes
 struct edge {
     const transwarp::node* child;
     const transwarp::node* parent;
 };
+
+// String conversion for the edge class
+inline std::string to_string(const transwarp::edge& edge) {
+    return transwarp::to_string(*edge.parent) + " -> " + transwarp::to_string(*edge.child);
+}
+
+
+// Creates a dot-style string from the given graph
+inline std::string to_string(const std::vector<transwarp::edge>& graph) {
+    std::string dot = "digraph {\n";
+    for (const auto& edge : graph) {
+        dot += transwarp::to_string(edge) + '\n';
+    }
+    dot += "}\n";
+    return dot;
+}
 
 
 // The executor interface
@@ -401,13 +446,6 @@ std::tuple<std::shared_future<typename Tasks::result_type>...> get_futures(const
     return result;
 }
 
-// Trims the given characters from the input string
-inline std::string trim(const std::string &s, const std::string& chars=" \t\n\r") {
-    auto functor = [&chars](char c) { return chars.find(c) != std::string::npos; };
-    auto it = std::find_if_not(s.begin(), s.end(), functor);
-    return std::string(it, std::find_if_not(s.rbegin(), std::string::const_reverse_iterator(it), functor).base());
-}
-
 // Sets parents of the node
 struct parent_visitor {
     explicit parent_visitor(transwarp::node& node) noexcept
@@ -565,32 +603,6 @@ struct result<transwarp::wait_any_type, Functor, Tasks...> {
 };
 
 } // detail
-
-
-// Creates a dot-style string from the given graph
-inline std::string make_dot(const std::vector<transwarp::edge>& graph) {
-    auto info = [](const transwarp::node& n) {
-        const auto name = transwarp::detail::trim(n.name);
-        const auto exec = transwarp::detail::trim(n.executor);
-        std::string s;
-        s += '"';
-        s += name + "\n";
-        s += transwarp::to_string(n.type) + "\n";
-        s += "id " + std::to_string(n.id);
-        s += " parents " + std::to_string(n.parents.size());
-        if (!exec.empty()) {
-            s += "\n" + exec;
-        }
-        s += '"';
-        return s;
-    };
-    std::string dot = "digraph {\n";
-    for (const auto& pair : graph) {
-        dot += info(*pair.parent) + " -> " + info(*pair.child) + '\n';
-    }
-    dot += "}\n";
-    return dot;
-}
 
 
 // Executor for sequential execution. Runs functors sequentially on the same thread

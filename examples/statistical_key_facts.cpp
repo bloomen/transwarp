@@ -116,7 +116,7 @@ void statistical_key_facts(std::ostream& os, std::size_t sample_size, bool paral
 
     // Output the graph for visualization
     const auto graph = final_task->get_graph();
-    std::ofstream("statistical_key_facts.dot") << tw::make_dot(graph);
+    std::ofstream("statistical_key_facts.dot") << tw::to_string(graph);
 
     // Creating the executor
     std::shared_ptr<tw::executor> executor;

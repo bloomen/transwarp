@@ -132,7 +132,7 @@ namespace examples {
 void benchmark_statistical(std::ostream& os, std::size_t sample_size) {
     auto gen = std::make_shared<std::mt19937>(1);
     auto task = build_graph(gen);
-    std::ofstream("benchmark_statistical.dot") << tw::make_dot(task->get_graph());
+    std::ofstream("benchmark_statistical.dot") << tw::to_string(task->get_graph());
 
     const auto func_us = measure([gen] { calculate_via_functions(*gen); }, sample_size);
 
