@@ -268,49 +268,48 @@ private:
 template<typename TaskType, bool done, int total, int... n>
 struct call_with_futures_impl {
     template<typename Result, typename Functor, typename Tuple>
-    static Result work(const std::atomic_bool& canceled, const transwarp::node& node, Functor&& f, Tuple&& t) {
+    static Result work(const std::atomic_bool& canceled, const transwarp::node& node, const Functor& f, const Tuple& t) {
         return call_with_futures_impl<TaskType, total == 1 + sizeof...(n), total, n..., sizeof...(n)>::template
-                work<Result>(canceled, node, std::forward<Functor>(f), std::forward<Tuple>(t));
+                work<Result>(canceled, node, f, t);
     }
 };
 
 template<int total, int... n>
 struct call_with_futures_impl<transwarp::root_type, true, total, n...> {
     template<typename Result, typename Functor, typename Tuple>
-    static Result work(const std::atomic_bool& canceled, const transwarp::node& node, Functor&& f, Tuple&&) {
+    static Result work(const std::atomic_bool& canceled, const transwarp::node& node, const Functor& f, const Tuple&) {
         if (canceled) {
             throw transwarp::task_canceled(node);
         }
-        return std::forward<Functor>(f)();
+        return f();
     }
 };
 
 template<int total, int... n>
 struct call_with_futures_impl<transwarp::consume_type, true, total, n...> {
     template<typename Result, typename Functor, typename Tuple>
-    static Result work(const std::atomic_bool& canceled, const transwarp::node& node, Functor&& f, Tuple&& t) {
-        auto results = std::tie(std::get<n>(std::forward<Tuple>(t)).get()...);
-        (void)results; // workaround for unused warning gcc bug
+    static Result work(const std::atomic_bool& canceled, const transwarp::node& node, const Functor& f, const Tuple& t) {
+        auto results = std::tie(std::get<n>(t).get()...);
         if (canceled) {
             throw transwarp::task_canceled(node);
         }
-        return std::forward<Functor>(f)(std::get<n>(results)...);
+        return f(std::get<n>(results)...);
     }
 };
 
 template<int total, int... n>
 struct call_with_futures_impl<transwarp::consume_any_type, true, total, n...> {
     template<typename Result, typename Functor, typename Tuple>
-    static Result work(const std::atomic_bool& canceled, const transwarp::node& node, Functor&& f, Tuple&& t) {
-        using future_t = typename std::remove_reference<decltype(std::get<0>(std::forward<Tuple>(t)))>::type; // use first type as reference
+    static Result work(const std::atomic_bool& canceled, const transwarp::node& node, const Functor& f, const Tuple& t) {
+        using future_t = typename std::remove_reference<decltype(std::get<0>(t))>::type; // use first type as reference
         for (;;) {
             bool ready = false;
-            auto future = waiter<future_t>::template wait(ready, std::get<n>(std::forward<Tuple>(t))...);
+            auto future = waiter<future_t>::template wait(ready, std::get<n>(t)...);
             if (ready) {
                 if (canceled) {
                     throw transwarp::task_canceled(node);
                 }
-                return std::forward<Functor>(f)(future.get());
+                return f(future.get());
             }
         }
     }
@@ -319,13 +318,13 @@ struct call_with_futures_impl<transwarp::consume_any_type, true, total, n...> {
     struct waiter {
 
         template<typename T, typename... Args>
-        static Future wait(bool& ready, T&& arg, Args&& ...args) {
-            const auto status = std::forward<T>(arg).wait_for(std::chrono::microseconds(1));
+        static Future wait(bool& ready, const T& arg, const Args& ...args) {
+            const auto status = arg.wait_for(std::chrono::microseconds(1));
             if (status == std::future_status::ready) {
                 ready = true;
-                return std::forward<T>(arg);
+                return arg;
             }
-            return wait(ready, std::forward<Args>(args)...);
+            return wait(ready, args...);
         }
         static Future wait(bool&) {
             return {};
@@ -337,17 +336,17 @@ struct call_with_futures_impl<transwarp::consume_any_type, true, total, n...> {
 template<int total, int... n>
 struct call_with_futures_impl<transwarp::wait_type, true, total, n...> {
     template<typename Result, typename Functor, typename Tuple>
-    static Result work(const std::atomic_bool& canceled, const transwarp::node& node, Functor&& f, Tuple&& t) {
-        wait(std::get<n>(std::forward<Tuple>(t))...);
+    static Result work(const std::atomic_bool& canceled, const transwarp::node& node, const Functor& f, const Tuple& t) {
+        wait(std::get<n>(t)...);
         if (canceled) {
             throw transwarp::task_canceled(node);
         }
-        return std::forward<Functor>(f)();
+        return f();
     }
     template<typename T, typename... Args>
-    static void wait(T&& arg, Args&& ...args) {
-        std::forward<T>(arg).wait();
-        wait(std::forward<Args>(args)...);
+    static void wait(const T& arg, const Args& ...args) {
+        arg.wait();
+        wait(args...);
     }
     static void wait() {}
 };
@@ -355,20 +354,20 @@ struct call_with_futures_impl<transwarp::wait_type, true, total, n...> {
 template<int total, int... n>
 struct call_with_futures_impl<transwarp::wait_any_type, true, total, n...> {
     template<typename Result, typename Functor, typename Tuple>
-    static Result work(const std::atomic_bool& canceled, const transwarp::node& node, Functor&& f, Tuple&& t) {
-        while (!wait(std::get<n>(std::forward<Tuple>(t))...));
+    static Result work(const std::atomic_bool& canceled, const transwarp::node& node, const Functor& f, const Tuple& t) {
+        while (!wait(std::get<n>(t)...));
         if (canceled) {
             throw transwarp::task_canceled(node);
         }
-        return std::forward<Functor>(f)();
+        return f();
     }
     template<typename T, typename... Args>
-    static bool wait(T&& arg, Args&& ...args) {
-        const auto status = std::forward<T>(arg).wait_for(std::chrono::microseconds(1));
+    static bool wait(const T& arg, const Args& ...args) {
+        const auto status = arg.wait_for(std::chrono::microseconds(1));
         if (status == std::future_status::ready) {
             return true;
         }
-        return wait(std::forward<Args>(args)...);
+        return wait(args...);
     }
     static bool wait() {
         return false;
@@ -378,11 +377,11 @@ struct call_with_futures_impl<transwarp::wait_any_type, true, total, n...> {
 // Calls the given functor with or without the tuple of futures depending on the task type.
 // Throws task_canceled if the canceled becomes true
 template<typename TaskType, typename Result, typename Functor, typename Tuple>
-Result call_with_futures(const std::atomic_bool& canceled, const transwarp::node& node, Functor&& f, Tuple&& t) {
+Result call_with_futures(const std::atomic_bool& canceled, const transwarp::node& node, const Functor& f, const Tuple& t) {
     using tuple_t = typename std::decay<Tuple>::type;
     static const std::size_t n = std::tuple_size<tuple_t>::value;
     return transwarp::detail::call_with_futures_impl<TaskType, 0 == n, n>::template
-            work<Result>(canceled, node, std::forward<Functor>(f), std::forward<Tuple>(t));
+            work<Result>(canceled, node, f, t);
 }
 
 template<std::size_t...> struct indices {};
@@ -403,26 +402,26 @@ struct index_range {
 };
 
 template<typename Functor, typename Tuple>
-void call_with_each_index(transwarp::detail::indices<>, Functor&&, Tuple&&) {}
+void call_with_each_index(transwarp::detail::indices<>, const Functor&, const Tuple&) {}
 
 template<std::size_t i, std::size_t... j, typename Functor, typename Tuple>
-void call_with_each_index(transwarp::detail::indices<i, j...>, Functor&& f, Tuple&& t) {
-    auto ptr = std::get<i>(std::forward<Tuple>(t));
+void call_with_each_index(transwarp::detail::indices<i, j...>, const Functor& f, const Tuple& t) {
+    auto ptr = std::get<i>(t);
     if (!ptr) {
         throw transwarp::transwarp_error("Not a valid pointer to a task");
     }
-    std::forward<Functor>(f)(*ptr);
-    transwarp::detail::call_with_each_index(transwarp::detail::indices<j...>(), std::forward<Functor>(f), std::forward<Tuple>(t));
+    f(*ptr);
+    transwarp::detail::call_with_each_index(transwarp::detail::indices<j...>(), f, t);
 }
 
 // Calls the functor with every element in the tuple. Expects the tuple to contain
 // task pointers only and dereferences each element before passing it into the functor
 template<typename Functor, typename Tuple>
-void call_with_each(Functor&& f, Tuple&& t) {
+void call_with_each(const Functor& f, const Tuple& t) {
     using tuple_t = typename std::decay<Tuple>::type;
     static const std::size_t n = std::tuple_size<tuple_t>::value;
     using index_t = typename transwarp::detail::index_range<0, n>::type;
-    transwarp::detail::call_with_each_index(index_t(), std::forward<Functor>(f), std::forward<Tuple>(t));
+    transwarp::detail::call_with_each_index(index_t(), f, t);
 }
 
 template<int offset, typename... Tasks>
@@ -491,7 +490,7 @@ struct final_visitor {
 
 // Generates a graph
 struct graph_visitor {
-    graph_visitor(std::vector<transwarp::edge>& graph) noexcept
+    explicit graph_visitor(std::vector<transwarp::edge>& graph) noexcept
     : graph_(graph) {}
 
     template<typename Task>
@@ -504,7 +503,7 @@ struct graph_visitor {
 
 // Schedules using the given executor
 struct schedule_visitor {
-    schedule_visitor(transwarp::executor* executor) noexcept
+    explicit schedule_visitor(transwarp::executor* executor) noexcept
     : executor_(executor) {}
 
     template<typename Task>
@@ -526,7 +525,7 @@ struct reset_visitor {
 
 // Cancels or resumes the given task
 struct cancel_visitor {
-    cancel_visitor(bool enabled) noexcept
+    explicit cancel_visitor(bool enabled) noexcept
     : enabled_(enabled) {}
 
     template<typename Task>
@@ -540,7 +539,7 @@ struct cancel_visitor {
 // Visits the given task using the visitors given in the constructor
 template<typename Visitor>
 struct visit {
-    visit(Visitor& visitor) noexcept
+    explicit visit(Visitor& visitor) noexcept
     : visitor_(visitor) {}
 
     template<typename Task>
@@ -667,7 +666,7 @@ public:
     }
 
     // This overload is for auto-naming
-    task(Functor functor, std::shared_ptr<Tasks>... parents)
+    explicit task(Functor functor, std::shared_ptr<Tasks>... parents)
     : task("", std::move(functor), std::move(parents)...)
     {}
 
