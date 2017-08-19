@@ -18,7 +18,6 @@
 #include <queue>
 #include <stdexcept>
 #include <atomic>
-#include <sstream>
 
 
 namespace transwarp {
@@ -33,20 +32,20 @@ enum class task_type {
     wait_any,    // The task's functor takes no arguments but waits for the first parent to finish
 };
 
-// Output stream operator for the task_type enumeration
-inline std::ostream& operator<<(std::ostream& os, const transwarp::task_type& type) {
+// String conversion for the task_type enumeration
+inline std::string to_string(const transwarp::task_type& type) {
     if (type == transwarp::task_type::root) {
-        os << "root";
+        return "root";
     } else if (type == transwarp::task_type::consume) {
-        os << "consume";
+        return "consume";
     } else if (type == transwarp::task_type::consume_any) {
-        os << "consume_any";
+        return "consume_any";
     } else if (type == transwarp::task_type::wait) {
-        os << "wait";
+        return "wait";
     } else if (type == transwarp::task_type::wait_any) {
-        os << "wait_any";
+        return "wait_any";
     }
-    return os;
+    return "unknown";
 }
 
 
@@ -573,17 +572,17 @@ inline std::string make_dot(const std::vector<transwarp::edge>& graph) {
     auto info = [](const transwarp::node& n) {
         const auto name = transwarp::detail::trim(n.name);
         const auto exec = transwarp::detail::trim(n.executor);
-        std::ostringstream os;
-        os << '"';
-        os << name << "\n";
-        os << n.type << "\n";
-        os << "id " << std::to_string(n.id);
-        os << " parents " << std::to_string(n.parents.size());
+        std::string s;
+        s += '"';
+        s += name + "\n";
+        s += transwarp::to_string(n.type) + "\n";
+        s += "id " + std::to_string(n.id);
+        s += " parents " + std::to_string(n.parents.size());
         if (!exec.empty()) {
-            os << "\n" << exec;
+            s += "\n" + exec;
         }
-        os << '"';
-        return os.str();
+        s += '"';
+        return s;
     };
     std::string dot = "digraph {\n";
     for (const auto& pair : graph) {
