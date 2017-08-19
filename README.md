@@ -130,7 +130,7 @@ which resets the future of the task:
 task->reset();  // can now schedule again
 ```  
 When chaining multiple tasks together a directed acyclic graph is built in which
-every task can be scheduled individually. However, in many scenarios it is useful
+every task can be scheduled individually. Though, in many scenarios it is useful
 to compute all tasks in the right order with a single call:
 ```cpp
 auto parent1 = tw::make_task(tw::root, foo);  // foo is a functor
@@ -148,7 +148,7 @@ which will run those tasks in parallel that do not depend on each other.
 ### More on executors
 
 We have seen that we can pass executors to `schedule()` and `schedule_all()`.
-However, they can also be assigned to a task directly:
+Additionally, they can be assigned to a task directly:
 ```cpp
 auto exec1 = std::make_shared<tw::parallel>(2);
 task->set_executor(exec1);
