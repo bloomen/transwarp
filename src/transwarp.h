@@ -111,8 +111,8 @@ inline std::string to_string(const transwarp::node& node) {
 
 // An edge between two nodes
 struct edge {
-    const transwarp::node* child;
     const transwarp::node* parent;
+    const transwarp::node* child;
 };
 
 // String conversion for the edge class
@@ -465,7 +465,7 @@ struct edges_visitor {
 
     template<typename Task>
     void operator()(const Task& task) const {
-        graph_.push_back({&n_, &task.node_});
+        graph_.push_back({&task.node_, &n_});
     }
 
     std::vector<transwarp::edge>& graph_;
