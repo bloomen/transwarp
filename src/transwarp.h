@@ -149,8 +149,10 @@ public:
     virtual void set_executor(std::shared_ptr<transwarp::executor> executor) = 0;
     virtual std::shared_future<ResultType> get_future() const = 0;
     virtual const transwarp::node& get_node() const = 0;
-    virtual void schedule(transwarp::executor* executor=nullptr) = 0;
-    virtual void schedule_all(transwarp::executor* executor=nullptr) = 0;
+    virtual void schedule() = 0;
+    virtual void schedule(transwarp::executor& executor) = 0;
+    virtual void schedule_all() = 0;
+    virtual void schedule_all(transwarp::executor& executor) = 0;
     virtual void reset() = 0;
     virtual void reset_all() = 0;
     virtual void cancel(bool enabled) = 0;
@@ -508,7 +510,7 @@ struct schedule_visitor {
 
     template<typename Task>
     void operator()(Task& task) {
-        task.schedule(executor_);
+        task.schedule_impl(executor_);
     }
 
     transwarp::executor* executor_;
@@ -698,36 +700,28 @@ public:
         return node_;
     }
 
+    // Schedules this task for execution on the caller thread.
+    // The task-specific executor gets precedence if it exists.
+    void schedule() override {
+        schedule_impl();
+    }
+
     // Schedules this task for execution using the provided executor.
     // The task-specific executor gets precedence if it exists.
-    // Runs the task on the same thread as the caller if neither the global
-    // nor the task-specific executor is found.
-    void schedule(transwarp::executor* executor=nullptr) override {
-        if (!canceled_ && !future_.valid()) {
-            auto futures = transwarp::detail::get_futures(parents_);
-            auto pack_task = std::make_shared<std::packaged_task<result_type()>>(
-                    std::bind(&task::evaluate, std::ref(*this), std::move(futures)));
-            future_ = pack_task->get_future();
-            if (executor_) {
-                executor_->execute([pack_task] { (*pack_task)(); }, node_);
-            } else if (executor) {
-                executor->execute([pack_task] { (*pack_task)(); }, node_);
-            } else {
-                (*pack_task)();
-            }
-        }
+    void schedule(transwarp::executor& executor) override {
+        schedule_impl(&executor);
+    }
+
+    // Schedules all tasks in the graph for execution on the caller thread.
+    // The task-specific executor gets precedence if it exists.
+    void schedule_all() override {
+        schedule_all_impl();
     }
 
     // Schedules all tasks in the graph for execution using the provided executor.
     // The task-specific executor gets precedence if it exists.
-    // Runs tasks on the same thread as the caller if neither the global
-    // nor a task-specific executor is found.
-    void schedule_all(transwarp::executor* executor=nullptr) override {
-        if (!canceled_) {
-            transwarp::detail::schedule_visitor visitor(executor);
-            visit(visitor);
-            unvisit();
-        }
+    void schedule_all(transwarp::executor& executor) override {
+        schedule_all_impl(&executor);
     }
 
     // Resets the future of this task, allowing for a new call to schedule
@@ -780,10 +774,43 @@ private:
     friend struct transwarp::detail::edges_visitor;
     friend struct transwarp::detail::graph_visitor;
     friend struct transwarp::detail::final_visitor;
+    friend struct transwarp::detail::schedule_visitor;
 
     template<typename T>
     friend struct transwarp::detail::visit;
     friend struct transwarp::detail::unvisit;
+
+    // Schedules this task for execution using the provided executor.
+    // The task-specific executor gets precedence if it exists.
+    // Runs the task on the same thread as the caller if neither the global
+    // nor the task-specific executor is found.
+    void schedule_impl(transwarp::executor* executor=nullptr) {
+        if (!canceled_ && !future_.valid()) {
+            auto futures = transwarp::detail::get_futures(parents_);
+            auto pack_task = std::make_shared<std::packaged_task<result_type()>>(
+                    std::bind(&task::evaluate, std::ref(*this), std::move(futures)));
+            future_ = pack_task->get_future();
+            if (executor_) {
+                executor_->execute([pack_task] { (*pack_task)(); }, node_);
+            } else if (executor) {
+                executor->execute([pack_task] { (*pack_task)(); }, node_);
+            } else {
+                (*pack_task)();
+            }
+        }
+    }
+
+    // Schedules all tasks in the graph for execution using the provided executor.
+    // The task-specific executor gets precedence if it exists.
+    // Runs tasks on the same thread as the caller if neither the global
+    // nor a task-specific executor is found.
+    void schedule_all_impl(transwarp::executor* executor=nullptr) {
+        if (!canceled_) {
+            transwarp::detail::schedule_visitor visitor(executor);
+            visit(visitor);
+            unvisit();
+        }
+    }
 
     // Visits each task in a depth-first traversal. The visitor
     // takes a reference to a task (task&) as its only input argument.

@@ -33,7 +33,7 @@ void make_test_one_task(std::size_t threads) {
     ASSERT_EQUAL("task", task->get_node().name);
     const auto graph = task->get_graph();
     ASSERT_EQUAL(0u, graph.size());
-    task->schedule_all(executor.get());
+    task->schedule_all(*executor);
     auto future = task->get_future();
     ASSERT_EQUAL(42, future.get());
 }
@@ -79,7 +79,7 @@ void make_test_three_tasks(std::size_t threads) {
     ASSERT_EQUAL(2u, task3->get_node().parents.size());
     ASSERT_EQUAL("t3 ", task3->get_node().name);
 
-    task3->schedule_all(executor.get());
+    task3->schedule_all(*executor);
     ASSERT_EQUAL(89, task3->get_future().get());
     ASSERT_EQUAL(42, task1->get_future().get());
 
@@ -87,7 +87,7 @@ void make_test_three_tasks(std::size_t threads) {
 
     task3->reset_all();
 
-    task3->schedule_all(executor.get());
+    task3->schedule_all(*executor);
     ASSERT_EQUAL(91, task3->get_future().get());
     ASSERT_EQUAL(43, task1->get_future().get());
 
@@ -157,14 +157,14 @@ void make_test_bunch_of_tasks(std::size_t threads) {
     const auto task11_result = 11172;
     const auto exp_result = 42042;
 
-    task13->schedule_all(executor.get());
+    task13->schedule_all(*executor);
     ASSERT_EQUAL(exp_result, task13->get_future().get());
     ASSERT_EQUAL(task0_result, task0->get_future().get());
     ASSERT_EQUAL(task3_result, task3->get_future().get());
     ASSERT_EQUAL(task11_result, task11->get_future().get());
 
     for (auto i=0; i<100; ++i) {
-        task13->schedule_all(executor.get());
+        task13->schedule_all(*executor);
         ASSERT_EQUAL(task0_result, task0->get_future().get());
         ASSERT_EQUAL(task3_result, task3->get_future().get());
         ASSERT_EQUAL(task11_result, task11->get_future().get());
@@ -277,7 +277,7 @@ void make_test_task_with_exception_thrown(std::size_t threads) {
         task3 = make_task(transwarp::consume, f3, task2);
         executor = std::make_shared<transwarp::sequential>();
     }
-    task3->schedule_all(executor.get());
+    task3->schedule_all(*executor);
     try {
         task3->get_future().get();
         ASSERT_TRUE(false);
@@ -304,13 +304,13 @@ void cancel_with_schedule_all(int expected, Functor functor, TaskType task_type)
     auto task1 = make_task(transwarp::root, f0);
     auto task2 = make_task(task_type, functor, task1);
     transwarp::parallel executor(2);
-    task2->schedule_all(&executor);
+    task2->schedule_all(executor);
     task2->cancel_all(true);
     cont = true;
     ASSERT_THROW(transwarp::task_canceled, [task2] { task2->get_future().get(); });
     task2->cancel_all(false);
     task2->reset_all();
-    task2->schedule_all(&executor);
+    task2->schedule_all(executor);
     ASSERT_EQUAL(expected, task2->get_future().get());
 }
 
@@ -328,7 +328,7 @@ TEST(cancel_with_schedule_all_called_after) {
     auto task2 = make_task(transwarp::consume, f1, task1);
     task2->cancel_all(true);
     transwarp::sequential executor;
-    task2->schedule_all(&executor);
+    task2->schedule_all(executor);
     ASSERT_FALSE(task2->get_future().valid());
 }
 
@@ -342,7 +342,7 @@ TEST(itask) {
         final = task2;
     }
     transwarp::parallel executor(2);
-    final->schedule_all(&executor);
+    final->schedule_all(executor);
     ASSERT_EQUAL(55, final->get_future().get());
 }
 
@@ -431,11 +431,11 @@ TEST(schedule_with_three_tasks_parallel) {
     auto f3 = [](int v, int w) { return v + w; };
     auto task3 = make_task(transwarp::consume, f3, task1, task2);
     transwarp::parallel executor{4};
-    task1->schedule(&executor);
-    task2->schedule(&executor);
-    task3->schedule(&executor);
+    task1->schedule(executor);
+    task2->schedule(executor);
+    task3->schedule(executor);
     ASSERT_EQUAL(55, task3->get_future().get());
-    task3->schedule_all(&executor);
+    task3->schedule_all(executor);
     ASSERT_EQUAL(55, task3->get_future().get());
 }
 
@@ -502,7 +502,7 @@ TEST(schedule_with_three_tasks_consume_any) {
     ASSERT_TRUE(transwarp::task_type::consume_any == task3->get_node().type);
 
     transwarp::parallel exec{4};
-    task3->schedule_all(&exec);
+    task3->schedule_all(exec);
     ASSERT_EQUAL(13, task3->get_future().get());
     cont = true;
 }

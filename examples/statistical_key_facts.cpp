@@ -129,7 +129,7 @@ void statistical_key_facts(std::ostream& os, std::size_t sample_size, bool paral
     // Now we start calculating stuff ...
     double count = 1;
     while (count < 4) {
-        final_task->schedule_all(executor.get());
+        final_task->schedule_all(*executor);
         const result res = final_task->get_future().get();
         os << res << std::endl;
         final_task->reset_all();
