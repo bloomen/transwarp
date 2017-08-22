@@ -93,6 +93,7 @@ void calculate_via_functions(std::mt19937& gen) {
     check_result(res);
 }
 
+// cppcheck-suppress passedByValue
 std::shared_ptr<tw::itask<result>> build_graph(std::shared_ptr<std::mt19937> gen) {
     auto gen_task = tw::make_task(tw::root, [gen]() -> std::mt19937& { return *gen; });
     auto data_task = tw::make_task(tw::consume, generate_gamma, gen_task);

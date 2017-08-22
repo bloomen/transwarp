@@ -11,6 +11,7 @@ namespace {
 
 using data_const_t = std::shared_ptr<const std::vector<double>>;
 
+// cppcheck-suppress passedByValue
 data_const_t generate_gamma(std::size_t sample_size, double alpha, double beta, std::shared_ptr<std::mt19937> gen) {
     auto data = std::make_shared<std::vector<double>>(sample_size);
     std::gamma_distribution<double> dist(alpha, beta);
@@ -70,6 +71,7 @@ struct result {
     int mode;
 };
 
+// cppcheck-suppress unusedFunction
 std::ostream& operator<<(std::ostream& os, const result& r) {
     os << "avg=" << r.avg << ", stddev=" << r.stddev << ", median=" << r.median << ", mode=" << r.mode;
     return os;

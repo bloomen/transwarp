@@ -39,7 +39,10 @@ void basic_with_three_tasks(std::ostream& os) {
     os << "result = " << task3->get_future().get() << std::endl;  // result = 55.3
 
     // modifying data input
+
+    // cppcheck-suppress unreadVariable
     value1 += 2.5;
+    // cppcheck-suppress unreadVariable
     value2 += 1;
 
     task3->reset_all();  // reset to allow for re-schedule of all tasks

@@ -449,21 +449,21 @@ std::tuple<std::shared_future<typename Tasks::result_type>...> get_futures(const
 
 // Sets parents of the node
 struct parent_visitor {
-    explicit parent_visitor(std::shared_ptr<transwarp::node> node) noexcept
-    : node_(std::move(node)) {}
+    explicit parent_visitor(std::shared_ptr<transwarp::node>& node) noexcept
+    : node_(node) {}
 
     template<typename Task>
     void operator()(const Task& task) const {
         node_->parents.push_back(task.node_);
     }
 
-    std::shared_ptr<transwarp::node> node_;
+    std::shared_ptr<transwarp::node>& node_;
 };
 
 // Collects edges from the given node and task objects
 struct edges_visitor {
-    edges_visitor(std::vector<transwarp::edge>& graph, std::shared_ptr<transwarp::node> node) noexcept
-    : graph_(graph), node_(std::move(node)) {}
+    edges_visitor(std::vector<transwarp::edge>& graph, const std::shared_ptr<transwarp::node>& node) noexcept
+    : graph_(graph), node_(node) {}
 
     template<typename Task>
     void operator()(const Task& task) const {
@@ -471,7 +471,7 @@ struct edges_visitor {
     }
 
     std::vector<transwarp::edge>& graph_;
-    std::shared_ptr<transwarp::node> node_;
+    const std::shared_ptr<transwarp::node>& node_;
 };
 
 // Applies final bookkeeping to the task
@@ -654,6 +654,7 @@ public:
 
     // A task is defined by name, functor, and parent tasks
     // name is optional. See constructor overload
+    // cppcheck-suppress passedByValue
     task(std::string name, Functor functor, std::shared_ptr<Tasks>... parents)
     : node_(std::make_shared<transwarp::node>(transwarp::node{0, std::move(name), task_type::value, "", {}})),
       functor_(std::move(functor)),
@@ -668,6 +669,7 @@ public:
     }
 
     // This overload is for auto-naming
+    // cppcheck-suppress uninitMemberVar
     explicit task(Functor functor, std::shared_ptr<Tasks>... parents)
     : task("", std::move(functor), std::move(parents)...)
     {}
