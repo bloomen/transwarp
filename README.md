@@ -54,7 +54,7 @@ int main() {
     // parallel execution with 4 threads for independent tasks
     tw::parallel executor(4);
 
-    task3->schedule_all(&executor);  // schedules all tasks for execution, assigning a future to each task
+    task3->schedule_all(executor);  // schedules all tasks for execution, assigning a future to each task
     std::cout << "result = " << task3->get_future().get() << std::endl;  // result = 55.3
 
     // modifying data input
@@ -63,7 +63,7 @@ int main() {
 
     task3->reset_all();  // reset to allow for re-schedule of all tasks
 
-    task3->schedule_all(&executor);  // schedules all tasks for execution, assigning new futures
+    task3->schedule_all(executor);  // schedules all tasks for execution, assigning new futures
     std::cout << "result = " << task3->get_future().get() << std::endl;  // result = 58.8
 }
 ```
@@ -116,7 +116,7 @@ thread pool and executed asynchronously:
 ```cpp
 tw::parallel executor{4};  // thread pool with 4 threads
 auto task = tw::make_task(tw::root, functor);
-task->schedule(&executor)
+task->schedule(executor)
 ```
 Regardless of how you schedule, the shared future associated to the underlying 
 execution can be retrieved through:
@@ -141,7 +141,7 @@ task->schedule_all();  // schedules all parents and itself
 which can also be scheduled using a custom executor, for instance:
 ```cpp
 tw::parallel executor{4};
-task->schedule_all(&executor);
+task->schedule_all(executor);
 ```
 which will run those tasks in parallel that do not depend on each other.
 
@@ -153,7 +153,7 @@ Additionally, they can be assigned to a task directly:
 auto exec1 = std::make_shared<tw::parallel>(2);
 task->set_executor(exec1);
 tw::sequential exec2;
-task->schedule(&exec2);  // exec1 will be used to schedule the task
+task->schedule(exec2);  // exec1 will be used to schedule the task
 ``` 
 The task-specific executor will always be preferred over other executors when
 scheduling tasks.
@@ -165,7 +165,7 @@ class executor {
 public:
     virtual ~executor() = default;
     virtual std::string get_name() const = 0;
-    virtual void execute(const std::function<void()>& functor, const tw::node& node) = 0;
+    virtual void execute(const std::function<void()>& functor, const std::shared_ptr<tw::node>& node) = 0;
 };
 
 ``` 
@@ -177,7 +177,7 @@ struct node {
     std::string name;  // the task name
     tw::task_type type;  // the task type
     std::string executor;  // the name of the task-specific executor (if exists)
-    std::vector<const node*> parents;  // the list of parents (if exists)
+    std::vector<std::shared_ptr<node>> parents;  // the list of parents (if exists)
 };
 
 ```
