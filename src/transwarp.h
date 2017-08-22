@@ -88,7 +88,7 @@ struct node {
     std::string name;
     transwarp::task_type type;
     std::string executor;
-    std::vector<std::shared_ptr<const node>> parents;
+    std::vector<std::shared_ptr<node>> parents;
 };
 
 // String conversion for the node class
@@ -111,8 +111,8 @@ inline std::string to_string(const transwarp::node& node) {
 
 // An edge between two nodes
 struct edge {
-    std::shared_ptr<const transwarp::node> parent;
-    std::shared_ptr<const transwarp::node> child;
+    std::shared_ptr<transwarp::node> parent;
+    std::shared_ptr<transwarp::node> child;
 };
 
 // String conversion for the edge class
@@ -137,7 +137,7 @@ class executor {
 public:
     virtual ~executor() = default;
     virtual std::string get_name() const = 0;
-    virtual void execute(const std::function<void()>& functor, const transwarp::node& node) = 0;
+    virtual void execute(const std::function<void()>& functor, const std::shared_ptr<transwarp::node>& node) = 0;
 };
 
 
@@ -148,7 +148,7 @@ public:
     virtual ~itask() = default;
     virtual void set_executor(std::shared_ptr<transwarp::executor> executor) = 0;
     virtual std::shared_future<ResultType> get_future() const = 0;
-    virtual std::shared_ptr<const transwarp::node> get_node() const = 0;
+    virtual const std::shared_ptr<transwarp::node>& get_node() const = 0;
     virtual void schedule() = 0;
     virtual void schedule(transwarp::executor& executor) = 0;
     virtual void schedule_all() = 0;
@@ -614,7 +614,7 @@ public:
         return "transwarp::sequential";
     }
 
-    void execute(const std::function<void()>& functor, const transwarp::node&) override {
+    void execute(const std::function<void()>& functor, const std::shared_ptr<transwarp::node>&) override {
         functor();
     }
 };
@@ -632,7 +632,7 @@ public:
         return "transwarp::parallel";
     }
 
-    void execute(const std::function<void()>& functor, const transwarp::node&) override {
+    void execute(const std::function<void()>& functor, const std::shared_ptr<transwarp::node>&) override {
         pool_.push(functor);
     }
 
@@ -696,7 +696,7 @@ public:
     }
 
     // Returns the associated node
-    std::shared_ptr<const transwarp::node> get_node() const override {
+    const std::shared_ptr<transwarp::node>& get_node() const override {
         return node_;
     }
 
@@ -791,9 +791,9 @@ private:
                     std::bind(&task::evaluate, std::ref(*this), std::move(futures)));
             future_ = pack_task->get_future();
             if (executor_) {
-                executor_->execute([pack_task] { (*pack_task)(); }, *node_);
+                executor_->execute([pack_task] { (*pack_task)(); }, node_);
             } else if (executor) {
-                executor->execute([pack_task] { (*pack_task)(); }, *node_);
+                executor->execute([pack_task] { (*pack_task)(); }, node_);
             } else {
                 (*pack_task)();
             }

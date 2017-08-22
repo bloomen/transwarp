@@ -351,7 +351,7 @@ TEST(sequenced) {
     ASSERT_EQUAL("transwarp::sequential", seq.get_name());
     int value = 5;
     auto functor = [&value]{ value *= 2; };
-    seq.execute(functor, generic_node());
+    seq.execute(functor, std::make_shared<transwarp::node>(generic_node()));
     ASSERT_EQUAL(10, value);
 }
 
@@ -361,7 +361,7 @@ TEST(parallel) {
     std::atomic_bool done(false);
     int value = 5;
     auto functor = [&value, &done]{ value *= 2; done = true; };
-    par.execute(functor, generic_node());
+    par.execute(functor, std::make_shared<transwarp::node>(generic_node()));
     while (!done);
     ASSERT_EQUAL(10, value);
 }
