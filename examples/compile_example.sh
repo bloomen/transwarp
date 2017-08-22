@@ -22,4 +22,4 @@ if [ "x$CXX" != "x" ];then
 fi
 
 echo "Compiling $cpp with $compiler ..."
-$compiler -std=c++11 $opt -g -pedantic -Wall -Wextra -Wconversion -pthread -I"$thisdir/../src/transwarp" $cpp -o ${cpp%.cpp}.$mode
+$compiler -std=c++11 $opt -g -pedantic -Wall -Wextra -Wconversion -Werror -pthread -I"$thisdir/../src/transwarp" $cpp -o ${cpp%.cpp}.$mode
