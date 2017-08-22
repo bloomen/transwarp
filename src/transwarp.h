@@ -758,7 +758,7 @@ public:
     }
 
     // Returns the graph of the task structure. This is mainly for visualizing
-    // the tasks and their interdependencies. Pass the result into transwarp::make_dot
+    // the tasks and their interdependencies. Pass the result into transwarp::to_string
     // to retrieve a dot-style graph representation for easy viewing.
     std::vector<transwarp::edge> get_graph() const override {
         std::vector<transwarp::edge> graph;
