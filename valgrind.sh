@@ -1,3 +1,4 @@
 #!/bin/bash
 set -e
-valgrind --quiet --leak-check=yes --error-exitcode=1 $1
+valgrind --quiet --tool=memcheck --leak-check=full --show-reachable=yes \
+--num-callers=20 --error-exitcode=1 $1
