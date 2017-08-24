@@ -52,7 +52,7 @@ int main() {
     // only has to be built once
 
     // parallel execution with 4 threads for independent tasks
-    tw::parallel executor(4);
+    tw::parallel executor{4};
 
     task3->schedule_all(executor);  // schedules all tasks for execution, assigning a future to each task
     std::cout << "result = " << task3->get_future().get() << std::endl;  // result = 55.3
@@ -167,16 +167,7 @@ public:
 };
 
 ``` 
-where `functor` denotes the function to be run and `node` a simple struct holding 
-meta-data of the current task:
-```cpp
-struct node {
-    std::size_t id;  // the task id
-    std::string name;  // the task name
-    tw::task_type type;  // the task type
-    std::vector<std::shared_ptr<node>> parents;  // the list of parents (if exists)
-};
-
+where `functor` denotes the function to be run and `node` an object that holds meta-data of the current task.
 ```
 ## Feedback
 
