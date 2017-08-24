@@ -96,15 +96,15 @@ void make_test_three_tasks(std::size_t threads) {
     const auto dot_graph = transwarp::to_string(graph);
 
     const std::string exp_dot_graph = "digraph {\n"
-"\"t1\nroot\n"
-"id 0 parents 0\" -> \"t2\nconsume\n"
-"id 1 parents 1\"\n"
-"\"t1\nroot\n"
-"id 0 parents 0\" -> \"t3\nconsume\n"
-"id 2 parents 2\"\n"
-"\"t2\nconsume\n"
-"id 1 parents 1\" -> \"t3\nconsume\n"
-"id 2 parents 2\"\n"
+"\"t1\nroot "
+"id=0 parents=0\" -> \"t2\nconsume "
+"id=1 parents=1\"\n"
+"\"t1\nroot "
+"id=0 parents=0\" -> \"t3\nconsume "
+"id=2 parents=2\"\n"
+"\"t2\nconsume "
+"id=1 parents=1\" -> \"t3\nconsume "
+"id=2 parents=2\"\n"
 "}\n";
 
     ASSERT_EQUAL(exp_dot_graph, dot_graph);
@@ -215,12 +215,12 @@ TEST(make_dot_graph_with_three_nodes) {
     graph.push_back({node3, node1});
     const auto dot_graph = transwarp::to_string(graph);
     const std::string exp_dot_graph = "digraph {\n"
-"\"node2\nconsume\n"
-"id 1 parents 0\nexec\" -> \"node1\nconsume\n"
-"id 0 parents 2\"\n"
-"\"node3\nwait\n"
-"id 2 parents 0\" -> \"node1\nconsume\n"
-"id 0 parents 2\"\n"
+"\"node2\nconsume "
+"id=1 parents=0\" -> \"node1\nconsume "
+"id=0 parents=2\"\n"
+"\"node3\nwait "
+"id=2 parents=0\" -> \"node1\nconsume "
+"id=0 parents=2\"\n"
 "}\n";
 
     ASSERT_EQUAL(exp_dot_graph, dot_graph);

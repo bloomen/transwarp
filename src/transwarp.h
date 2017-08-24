@@ -96,9 +96,9 @@ inline std::string to_string(const transwarp::node& node) {
     std::string s;
     s += '"';
     s += name + "\n";
-    s += transwarp::to_string(node.type) + "\n";
-    s += "id " + std::to_string(node.id);
-    s += " parents " + std::to_string(node.parents.size());
+    s += transwarp::to_string(node.type);
+    s += " id=" + std::to_string(node.id);
+    s += " parents=" + std::to_string(node.parents.size());
     s += '"';
     return s;
 }
