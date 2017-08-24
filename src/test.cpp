@@ -554,6 +554,59 @@ TEST(task_with_reference_return_type) {
     ASSERT_EQUAL(*value, task->get_future().get());
 }
 
+struct non_copy_functor {
+    non_copy_functor() = default;
+    non_copy_functor(const non_copy_functor&) = delete;
+    non_copy_functor& operator=(const non_copy_functor&) = delete;
+    non_copy_functor(non_copy_functor&&) = default;
+    non_copy_functor& operator=(non_copy_functor&&) = default;
+    int operator()() const {
+        return 42;
+    }
+};
+
+struct non_move_functor {
+    non_move_functor() = default;
+    non_move_functor(const non_move_functor&) = default;
+    non_move_functor& operator=(const non_move_functor&) = default;
+    non_move_functor(non_move_functor&&) = delete;
+    non_move_functor& operator=(non_move_functor&&) = delete;
+    int operator()() const {
+        return 43;
+    }
+};
+
+TEST(make_task_with_non_copy_functor) {
+    non_copy_functor functor;
+    auto task = make_task(transwarp::root, std::move(functor));
+    task->schedule();
+    ASSERT_EQUAL(42, task->get_future().get());
+}
+
+TEST(make_task_with_non_move_functor) {
+    non_move_functor functor;
+    auto task = make_task(transwarp::root, functor);
+    task->schedule();
+    ASSERT_EQUAL(43, task->get_future().get());
+}
+
+TEST(make_task_std_function) {
+    std::function<int()> functor = [] { return 44; };
+    auto task = make_task(transwarp::root, functor);
+    task->schedule();
+    ASSERT_EQUAL(44, task->get_future().get());
+}
+
+int myfunc() {
+    return 45;
+}
+
+TEST(make_task_raw_function) {
+    auto task = make_task(transwarp::root, myfunc);
+    task->schedule();
+    ASSERT_EQUAL(45, task->get_future().get());
+}
+
 COLLECTION(test_examples) {
 
 TEST(basic_with_three_tasks) {

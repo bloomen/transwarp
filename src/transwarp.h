@@ -681,12 +681,12 @@ public:
     // The result type of this task
     using result_type = typename transwarp::detail::result<task_type, Functor, Tasks...>::type;
 
-    // A task is defined by name, functor, and parent tasks
-    // name is optional. See constructor overload
+    // A task is defined by name, functor, and parent tasks. name is optional. See constructor overload
     // cppcheck-suppress passedByValue
-    task(std::string name, Functor functor, std::shared_ptr<Tasks>... parents)
+    template<typename F>
+    task(std::string name, F&& functor, std::shared_ptr<Tasks>... parents)
     : node_(std::make_shared<transwarp::node>(0, std::move(name), task_type::value, std::vector<std::shared_ptr<transwarp::node>>{})),
-      functor_(std::move(functor)),
+      functor_(std::forward<F>(functor)),
       parents_(std::make_tuple(std::move(parents)...)),
       visited_(false),
       canceled_(false)
@@ -699,8 +699,9 @@ public:
 
     // This overload is for auto-naming
     // cppcheck-suppress uninitMemberVar
-    explicit task(Functor functor, std::shared_ptr<Tasks>... parents)
-    : task("", std::move(functor), std::move(parents)...)
+    template<typename F>
+    explicit task(F&& functor, std::shared_ptr<Tasks>... parents)
+    : task("", std::forward<F>(functor), std::move(parents)...)
     {}
 
     virtual ~task() = default;
@@ -880,16 +881,16 @@ private:
 
 // A factory function to create a new task
 template<typename TaskType, typename Functor, typename... Tasks>
-std::shared_ptr<transwarp::task<TaskType, Functor, Tasks...>>
-make_task(TaskType, std::string name, Functor functor, std::shared_ptr<Tasks>... parents) {
-    return std::make_shared<transwarp::task<TaskType, Functor, Tasks...>>(std::move(name), std::move(functor), std::move(parents)...);
+std::shared_ptr<transwarp::task<TaskType, typename std::decay<Functor>::type, Tasks...>>
+make_task(TaskType, std::string name, Functor&& functor, std::shared_ptr<Tasks>... parents) {
+    return std::make_shared<transwarp::task<TaskType, typename std::decay<Functor>::type, Tasks...>>(std::move(name), std::forward<Functor>(functor), std::move(parents)...);
 }
 
 // A factory function to create a new task. Overload for auto-naming
 template<typename TaskType, typename Functor, typename... Tasks>
-std::shared_ptr<transwarp::task<TaskType, Functor, Tasks...>>
-make_task(TaskType, Functor functor, std::shared_ptr<Tasks>... parents) {
-    return std::make_shared<transwarp::task<TaskType, Functor, Tasks...>>(std::move(functor), std::move(parents)...);
+std::shared_ptr<transwarp::task<TaskType, typename std::decay<Functor>::type, Tasks...>>
+make_task(TaskType, Functor&& functor, std::shared_ptr<Tasks>... parents) {
+    return std::make_shared<transwarp::task<TaskType, typename std::decay<Functor>::type, Tasks...>>(std::forward<Functor>(functor), std::move(parents)...);
 }
 
 
