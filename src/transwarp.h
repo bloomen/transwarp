@@ -87,23 +87,18 @@ struct node {
     std::size_t id;
     std::string name;
     transwarp::task_type type;
-    std::string executor;
     std::vector<std::shared_ptr<node>> parents;
 };
 
 // String conversion for the node class
 inline std::string to_string(const transwarp::node& node) {
     const auto name = transwarp::detail::trim(node.name);
-    const auto exec = transwarp::detail::trim(node.executor);
     std::string s;
     s += '"';
     s += name + "\n";
     s += transwarp::to_string(node.type) + "\n";
     s += "id " + std::to_string(node.id);
     s += " parents " + std::to_string(node.parents.size());
-    if (!exec.empty()) {
-        s += "\n" + exec;
-    }
     s += '"';
     return s;
 }
@@ -136,7 +131,6 @@ inline std::string to_string(const std::vector<transwarp::edge>& graph) {
 class executor {
 public:
     virtual ~executor() = default;
-    virtual std::string get_name() const = 0;
     virtual void execute(const std::function<void()>& functor, const std::shared_ptr<transwarp::node>& node) = 0;
 };
 
@@ -610,10 +604,6 @@ struct result<transwarp::wait_any_type, Functor, Tasks...> {
 class sequential : public transwarp::executor {
 public:
 
-    std::string get_name() const override {
-        return "transwarp::sequential";
-    }
-
     void execute(const std::function<void()>& functor, const std::shared_ptr<transwarp::node>&) override {
         functor();
     }
@@ -627,10 +617,6 @@ public:
     explicit parallel(std::size_t n_threads)
     : pool_(n_threads)
     {}
-
-    std::string get_name() const override {
-        return "transwarp::parallel";
-    }
 
     void execute(const std::function<void()>& functor, const std::shared_ptr<transwarp::node>&) override {
         pool_.push(functor);
@@ -656,7 +642,7 @@ public:
     // name is optional. See constructor overload
     // cppcheck-suppress passedByValue
     task(std::string name, Functor functor, std::shared_ptr<Tasks>... parents)
-    : node_(std::make_shared<transwarp::node>(transwarp::node{0, std::move(name), task_type::value, "", {}})),
+    : node_(std::make_shared<transwarp::node>(transwarp::node{0, std::move(name), task_type::value, {}})),
       functor_(std::move(functor)),
       parents_(std::make_tuple(std::move(parents)...)),
       visited_(false),
@@ -689,7 +675,6 @@ public:
             throw transwarp::transwarp_error("Not a valid pointer to executor");
         }
         executor_ = std::move(executor);
-        node_->executor = executor_->get_name();
     }
 
     // Returns the future associated to the underlying execution

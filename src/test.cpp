@@ -13,7 +13,7 @@ using transwarp::make_task;
 COLLECTION(test_transwarp) {
 
 transwarp::node generic_node() {
-    return {1, "cool", transwarp::task_type::consume, "exec", {}};
+    return {1, "cool", transwarp::task_type::consume, {}};
 }
 
 void make_test_one_task(std::size_t threads) {
@@ -207,9 +207,9 @@ TEST(make_dot_graph_with_empty_graph) {
 }
 
 TEST(make_dot_graph_with_three_nodes) {
-    auto node2 = std::make_shared<transwarp::node>(transwarp::node{1, "node2", transwarp::task_type::consume, "exec", {}});
-    auto node3 = std::make_shared<transwarp::node>(transwarp::node{2, "node3", transwarp::task_type::wait, "", {}});
-    auto node1 = std::make_shared<transwarp::node>(transwarp::node{0, "node1", transwarp::task_type::consume, "", {node2, node3}});
+    auto node2 = std::make_shared<transwarp::node>(transwarp::node{1, "node2", transwarp::task_type::consume, {}});
+    auto node3 = std::make_shared<transwarp::node>(transwarp::node{2, "node3", transwarp::task_type::wait, {}});
+    auto node1 = std::make_shared<transwarp::node>(transwarp::node{0, "node1", transwarp::task_type::consume, {node2, node3}});
     std::vector<transwarp::edge> graph;
     graph.push_back({node2, node1});
     graph.push_back({node3, node1});
@@ -348,7 +348,6 @@ TEST(itask) {
 
 TEST(sequenced) {
     transwarp::sequential seq;
-    ASSERT_EQUAL("transwarp::sequential", seq.get_name());
     int value = 5;
     auto functor = [&value]{ value *= 2; };
     seq.execute(functor, std::make_shared<transwarp::node>(generic_node()));
@@ -357,7 +356,6 @@ TEST(sequenced) {
 
 TEST(parallel) {
     transwarp::parallel par(4);
-    ASSERT_EQUAL("transwarp::parallel", par.get_name());
     std::atomic_bool done(false);
     int value = 5;
     auto functor = [&value, &done]{ value *= 2; done = true; };
