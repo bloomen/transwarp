@@ -88,11 +88,9 @@ struct final_visitor;
 // A node carrying meta-data of a task
 class node {
 public:
-    node(std::size_t id, std::string name, transwarp::task_type type,
-         std::vector<std::shared_ptr<node>> parents) noexcept
-    : id_(id), name_(std::move(name)), type_(type),
-      parents_(std::move(parents))
-    {}
+    // cppcheck-suppress passedByValue
+    node(std::size_t id, std::string name, transwarp::task_type type, std::vector<std::shared_ptr<node>> parents) noexcept
+    : id_(id), name_(std::move(name)), type_(type), parents_(std::move(parents)) {}
 
     std::size_t get_id() const noexcept {
         return id_;
@@ -137,6 +135,7 @@ inline std::string to_string(const transwarp::node& node) {
 // An edge between two nodes
 class edge {
 public:
+    // cppcheck-suppress passedByValue
     edge(std::shared_ptr<transwarp::node> parent, std::shared_ptr<transwarp::node> child) noexcept
     : parent_(std::move(parent)), child_(std::move(child)) {}
 
@@ -682,8 +681,8 @@ public:
     using result_type = typename transwarp::detail::result<task_type, Functor, Tasks...>::type;
 
     // A task is defined by name, functor, and parent tasks. name is optional. See constructor overload
-    // cppcheck-suppress passedByValue
     template<typename F>
+    // cppcheck-suppress passedByValue
     task(std::string name, F&& functor, std::shared_ptr<Tasks>... parents)
     : node_(std::make_shared<transwarp::node>(0, std::move(name), task_type::value, std::vector<std::shared_ptr<transwarp::node>>{})),
       functor_(std::forward<F>(functor)),
@@ -698,8 +697,8 @@ public:
     }
 
     // This overload is for auto-naming
-    // cppcheck-suppress uninitMemberVar
     template<typename F>
+    // cppcheck-suppress uninitMemberVar
     explicit task(F&& functor, std::shared_ptr<Tasks>... parents)
     : task("", std::forward<F>(functor), std::move(parents)...)
     {}
