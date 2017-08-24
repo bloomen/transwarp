@@ -154,16 +154,16 @@ class itask {
 public:
     virtual ~itask() = default;
     virtual void set_executor(std::shared_ptr<transwarp::executor> executor) = 0;
-    virtual std::shared_future<ResultType> get_future() const = 0;
-    virtual const std::shared_ptr<transwarp::node>& get_node() const = 0;
+    virtual const std::shared_future<ResultType>& get_future() const noexcept = 0;
+    virtual const std::shared_ptr<transwarp::node>& get_node() const noexcept = 0;
     virtual void schedule() = 0;
     virtual void schedule(transwarp::executor& executor) = 0;
     virtual void schedule_all() = 0;
     virtual void schedule_all(transwarp::executor& executor) = 0;
     virtual void reset() = 0;
     virtual void reset_all() = 0;
-    virtual void cancel(bool enabled) = 0;
-    virtual void cancel_all(bool enabled) = 0;
+    virtual void cancel(bool enabled) noexcept = 0;
+    virtual void cancel_all(bool enabled) noexcept = 0;
     virtual std::vector<transwarp::edge> get_graph() const = 0;
 };
 
@@ -538,7 +538,7 @@ struct cancel_visitor {
     : enabled_(enabled) {}
 
     template<typename Task>
-    void operator()(Task& task) const {
+    void operator()(Task& task) const noexcept {
         task.cancel(enabled_);
     }
 
@@ -691,12 +691,12 @@ public:
     }
 
     // Returns the future associated to the underlying execution
-    std::shared_future<result_type> get_future() const override {
+    const std::shared_future<result_type>& get_future() const noexcept override {
         return future_;
     }
 
     // Returns the associated node
-    const std::shared_ptr<transwarp::node>& get_node() const override {
+    const std::shared_ptr<transwarp::node>& get_node() const noexcept override {
         return node_;
     }
 
@@ -742,7 +742,7 @@ public:
     // Canceling pending tasks does not affect currently running tasks.
     // As long as cancel is enabled new computations cannot be scheduled.
     // Passing true is equivalent to resume.
-    void cancel(bool enabled) override {
+    void cancel(bool enabled) noexcept override {
         canceled_ = enabled;
     }
 
@@ -751,7 +751,7 @@ public:
     // Canceling pending tasks does not affect currently running tasks.
     // As long as cancel is enabled new computations cannot be scheduled.
     // Passing true is equivalent to resume.
-    void cancel_all(bool enabled) override {
+    void cancel_all(bool enabled) noexcept override {
         transwarp::detail::cancel_visitor visitor(enabled);
         visit(visitor);
         unvisit();
@@ -850,13 +850,15 @@ private:
 
 // A factory function to create a new task
 template<typename TaskType, typename Functor, typename... Tasks>
-std::shared_ptr<transwarp::task<TaskType, Functor, Tasks...>> make_task(TaskType, std::string name, Functor functor, std::shared_ptr<Tasks>... parents) {
+std::shared_ptr<transwarp::task<TaskType, Functor, Tasks...>>
+make_task(TaskType, std::string name, Functor functor, std::shared_ptr<Tasks>... parents) {
     return std::make_shared<transwarp::task<TaskType, Functor, Tasks...>>(std::move(name), std::move(functor), std::move(parents)...);
 }
 
 // A factory function to create a new task. Overload for auto-naming
 template<typename TaskType, typename Functor, typename... Tasks>
-std::shared_ptr<transwarp::task<TaskType, Functor, Tasks...>> make_task(TaskType, Functor functor, std::shared_ptr<Tasks>... parents) {
+std::shared_ptr<transwarp::task<TaskType, Functor, Tasks...>>
+make_task(TaskType, Functor functor, std::shared_ptr<Tasks>... parents) {
     return std::make_shared<transwarp::task<TaskType, Functor, Tasks...>>(std::move(functor), std::move(parents)...);
 }
 
