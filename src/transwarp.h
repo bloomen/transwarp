@@ -79,34 +79,64 @@ inline std::string trim(const std::string &s, const std::string& chars=" \t\n\r"
     return std::string(it, std::find_if_not(s.rbegin(), std::string::const_reverse_iterator(it), functor).base());
 }
 
+struct parent_visitor;
+struct final_visitor;
+
 } // detail
 
 
 // A node carrying meta-data of a task
-struct node {
-    std::size_t id;
-    std::string name;
-    transwarp::task_type type;
-    std::vector<std::shared_ptr<node>> parents;
+class node {
+public:
+    node(std::size_t id, std::string name, transwarp::task_type type,
+         std::vector<std::shared_ptr<node>> parents) noexcept
+    : id_(id), name_(std::move(name)), type_(type),
+      parents_(std::move(parents))
+    {}
+
+    std::size_t get_id() const noexcept {
+        return id_;
+    }
+
+    const std::string& get_name() const noexcept {
+        return name_;
+    }
+
+    transwarp::task_type get_type() const noexcept {
+        return type_;
+    }
+
+    const std::vector<std::shared_ptr<node>>& get_parents() const noexcept {
+        return parents_;
+    }
+
+private:
+    friend struct detail::parent_visitor;
+    friend struct detail::final_visitor;
+
+    std::size_t id_;
+    std::string name_;
+    transwarp::task_type type_;
+    std::vector<std::shared_ptr<node>> parents_;
 };
 
 // String conversion for the node class
 inline std::string to_string(const transwarp::node& node) {
-    const auto name = transwarp::detail::trim(node.name);
+    const auto name = transwarp::detail::trim(node.get_name());
     std::string s;
     s += '"';
     s += name + "\n";
-    s += transwarp::to_string(node.type);
-    s += " id=" + std::to_string(node.id);
-    s += " parents=" + std::to_string(node.parents.size());
+    s += transwarp::to_string(node.get_type());
+    s += " id=" + std::to_string(node.get_id());
+    s += " parents=" + std::to_string(node.get_parents().size());
     s += '"';
     return s;
 }
 
 
 // An edge between two nodes
-struct edge {
-
+class edge {
+public:
     edge(std::shared_ptr<transwarp::node> parent, std::shared_ptr<transwarp::node> child) noexcept
     : parent_(std::move(parent)), child_(std::move(child)) {}
 
@@ -180,7 +210,7 @@ public:
 class task_canceled : public transwarp::transwarp_error {
 public:
     explicit task_canceled(const transwarp::node& n)
-    : transwarp::transwarp_error(n.name + " is canceled") {}
+    : transwarp::transwarp_error(n.get_name() + " is canceled") {}
 };
 
 
@@ -461,7 +491,7 @@ struct parent_visitor {
 
     template<typename Task>
     void operator()(const Task& task) const {
-        node_->parents.push_back(task.node_);
+        node_->parents_.push_back(task.node_);
     }
 
     std::shared_ptr<transwarp::node>& node_;
@@ -488,9 +518,9 @@ struct final_visitor {
 
     template<typename Task>
     void operator()(Task& task) {
-        task.node_->id = id_++;
-        if (task.node_->name.empty())
-            task.node_->name = "task";
+        task.node_->id_ = id_++;
+        if (task.node_->name_.empty())
+            task.node_->name_ = "task";
     }
 
     std::size_t id_;
@@ -655,7 +685,7 @@ public:
     // name is optional. See constructor overload
     // cppcheck-suppress passedByValue
     task(std::string name, Functor functor, std::shared_ptr<Tasks>... parents)
-    : node_(std::make_shared<transwarp::node>(transwarp::node{0, std::move(name), task_type::value, {}})),
+    : node_(std::make_shared<transwarp::node>(0, std::move(name), task_type::value, std::vector<std::shared_ptr<transwarp::node>>{})),
       functor_(std::move(functor)),
       parents_(std::make_tuple(std::move(parents)...)),
       visited_(false),

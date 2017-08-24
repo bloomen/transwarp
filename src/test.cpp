@@ -28,9 +28,9 @@ void make_test_one_task(std::size_t threads) {
         task = make_task(transwarp::root, f1);
         executor = std::make_shared<transwarp::sequential>();
     }
-    ASSERT_EQUAL(0u, task->get_node()->id);
-    ASSERT_EQUAL(0u, task->get_node()->parents.size());
-    ASSERT_EQUAL("task", task->get_node()->name);
+    ASSERT_EQUAL(0u, task->get_node()->get_id());
+    ASSERT_EQUAL(0u, task->get_node()->get_parents().size());
+    ASSERT_EQUAL("task", task->get_node()->get_name());
     const auto graph = task->get_graph();
     ASSERT_EQUAL(0u, graph.size());
     task->schedule_all(*executor);
@@ -67,17 +67,17 @@ void make_test_three_tasks(std::size_t threads) {
         executor = std::make_shared<transwarp::sequential>();
     }
 
-    ASSERT_EQUAL(0u, task1->get_node()->id);
-    ASSERT_EQUAL(0u, task1->get_node()->parents.size());
-    ASSERT_EQUAL("t1", task1->get_node()->name);
+    ASSERT_EQUAL(0u, task1->get_node()->get_id());
+    ASSERT_EQUAL(0u, task1->get_node()->get_parents().size());
+    ASSERT_EQUAL("t1", task1->get_node()->get_name());
 
-    ASSERT_EQUAL(1u, task2->get_node()->id);
-    ASSERT_EQUAL(1u, task2->get_node()->parents.size());
-    ASSERT_EQUAL("\nt2\t", task2->get_node()->name);
+    ASSERT_EQUAL(1u, task2->get_node()->get_id());
+    ASSERT_EQUAL(1u, task2->get_node()->get_parents().size());
+    ASSERT_EQUAL("\nt2\t", task2->get_node()->get_name());
 
-    ASSERT_EQUAL(2u, task3->get_node()->id);
-    ASSERT_EQUAL(2u, task3->get_node()->parents.size());
-    ASSERT_EQUAL("t3 ", task3->get_node()->name);
+    ASSERT_EQUAL(2u, task3->get_node()->get_id());
+    ASSERT_EQUAL(2u, task3->get_node()->get_parents().size());
+    ASSERT_EQUAL("t3 ", task3->get_node()->get_name());
 
     task3->schedule_all(*executor);
     ASSERT_EQUAL(89, task3->get_future().get());
@@ -235,21 +235,21 @@ TEST(get_node) {
     auto task3 = make_task(transwarp::consume, f3, task1, task2);
 
     // task3
-    ASSERT_EQUAL(2, task3->get_node()->id);
-    ASSERT_EQUAL("task", task3->get_node()->name);
-    ASSERT_EQUAL(2u, task3->get_node()->parents.size());
-    ASSERT_EQUAL(task1->get_node().get(), task3->get_node()->parents[0].get());
-    ASSERT_EQUAL(task2->get_node().get(), task3->get_node()->parents[1].get());
+    ASSERT_EQUAL(2, task3->get_node()->get_id());
+    ASSERT_EQUAL("task", task3->get_node()->get_name());
+    ASSERT_EQUAL(2u, task3->get_node()->get_parents().size());
+    ASSERT_EQUAL(task1->get_node().get(), task3->get_node()->get_parents()[0].get());
+    ASSERT_EQUAL(task2->get_node().get(), task3->get_node()->get_parents()[1].get());
 
     // task1
-    ASSERT_EQUAL(0, task1->get_node()->id);
-    ASSERT_EQUAL("task", task1->get_node()->name);
-    ASSERT_EQUAL(0u, task1->get_node()->parents.size());
+    ASSERT_EQUAL(0, task1->get_node()->get_id());
+    ASSERT_EQUAL("task", task1->get_node()->get_name());
+    ASSERT_EQUAL(0u, task1->get_node()->get_parents().size());
 
     // task2
-    ASSERT_EQUAL(1, task2->get_node()->id);
-    ASSERT_EQUAL("task", task2->get_node()->name);
-    ASSERT_EQUAL(0u, task2->get_node()->parents.size());
+    ASSERT_EQUAL(1, task2->get_node()->get_id());
+    ASSERT_EQUAL("task", task2->get_node()->get_name());
+    ASSERT_EQUAL(0u, task2->get_node()->get_parents().size());
 }
 
 void make_test_task_with_exception_thrown(std::size_t threads) {
@@ -457,9 +457,9 @@ TEST(schedule_with_three_tasks_wait) {
     auto f3 = []() { return 17; };
     auto task3 = make_task(transwarp::wait, f3, task1, task2);
 
-    ASSERT_TRUE(transwarp::task_type::root == task1->get_node()->type);
-    ASSERT_TRUE(transwarp::task_type::root == task2->get_node()->type);
-    ASSERT_TRUE(transwarp::task_type::wait == task3->get_node()->type);
+    ASSERT_TRUE(transwarp::task_type::root == task1->get_node()->get_type());
+    ASSERT_TRUE(transwarp::task_type::root == task2->get_node()->get_type());
+    ASSERT_TRUE(transwarp::task_type::wait == task3->get_node()->get_type());
 
     task3->schedule_all();
     ASSERT_EQUAL(17, task3->get_future().get());
@@ -473,9 +473,9 @@ TEST(schedule_with_three_tasks_wait_any) {
     auto f3 = []() { return 17; };
     auto task3 = make_task(transwarp::wait_any, f3, task1, task2);
 
-    ASSERT_TRUE(transwarp::task_type::root == task1->get_node()->type);
-    ASSERT_TRUE(transwarp::task_type::root == task2->get_node()->type);
-    ASSERT_TRUE(transwarp::task_type::wait_any == task3->get_node()->type);
+    ASSERT_TRUE(transwarp::task_type::root == task1->get_node()->get_type());
+    ASSERT_TRUE(transwarp::task_type::root == task2->get_node()->get_type());
+    ASSERT_TRUE(transwarp::task_type::wait_any == task3->get_node()->get_type());
 
     task3->schedule_all();
     ASSERT_EQUAL(17, task3->get_future().get());
@@ -495,9 +495,9 @@ TEST(schedule_with_three_tasks_consume_any) {
     auto f3 = [](int& x) -> int { return x; };
     auto task3 = make_task(transwarp::consume_any, f3, task1, task2);
 
-    ASSERT_TRUE(transwarp::task_type::root == task1->get_node()->type);
-    ASSERT_TRUE(transwarp::task_type::root == task2->get_node()->type);
-    ASSERT_TRUE(transwarp::task_type::consume_any == task3->get_node()->type);
+    ASSERT_TRUE(transwarp::task_type::root == task1->get_node()->get_type());
+    ASSERT_TRUE(transwarp::task_type::root == task2->get_node()->get_type());
+    ASSERT_TRUE(transwarp::task_type::consume_any == task3->get_node()->get_type());
 
     transwarp::parallel exec{4};
     task3->schedule_all(exec);
