@@ -211,8 +211,8 @@ TEST(make_dot_graph_with_three_nodes) {
     auto node3 = std::make_shared<transwarp::node>(transwarp::node{2, "node3", transwarp::task_type::wait, {}});
     auto node1 = std::make_shared<transwarp::node>(transwarp::node{0, "node1", transwarp::task_type::consume, {node2, node3}});
     std::vector<transwarp::edge> graph;
-    graph.push_back({node2, node1});
-    graph.push_back({node3, node1});
+    graph.emplace_back(node2, node1);
+    graph.emplace_back(node3, node1);
     const auto dot_graph = transwarp::to_string(graph);
     const std::string exp_dot_graph = "digraph {\n"
 "\"node2\nconsume "

@@ -106,13 +106,26 @@ inline std::string to_string(const transwarp::node& node) {
 
 // An edge between two nodes
 struct edge {
-    std::shared_ptr<transwarp::node> parent;
-    std::shared_ptr<transwarp::node> child;
+
+    edge(std::shared_ptr<transwarp::node> parent, std::shared_ptr<transwarp::node> child) noexcept
+    : parent_(std::move(parent)), child_(std::move(child)) {}
+
+    const std::shared_ptr<transwarp::node>& get_parent() const noexcept {
+        return parent_;
+    }
+
+    const std::shared_ptr<transwarp::node>& get_child() const noexcept {
+        return child_;
+    }
+
+private:
+    std::shared_ptr<transwarp::node> parent_;
+    std::shared_ptr<transwarp::node> child_;
 };
 
 // String conversion for the edge class
 inline std::string to_string(const transwarp::edge& edge) {
-    return transwarp::to_string(*edge.parent) + " -> " + transwarp::to_string(*edge.child);
+    return transwarp::to_string(*edge.get_parent()) + " -> " + transwarp::to_string(*edge.get_child());
 }
 
 
@@ -461,7 +474,7 @@ struct edges_visitor {
 
     template<typename Task>
     void operator()(const Task& task) const {
-        graph_.push_back({task.node_, node_});
+        graph_.emplace_back(task.node_, node_);
     }
 
     std::vector<transwarp::edge>& graph_;
