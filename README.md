@@ -74,8 +74,7 @@ The resulting graph of this example looks like this:
 
 Every bubble represents a task and every arrow an edge between two tasks. 
 The first line within a bubble is the task name. The second line denotes the task
-type which can be one of root, consume, consume_any, wait, and wait_any. 
-The third line denotes task id and the number of parents, respectively. 
+type followed by the task id and the number of parents. 
 
 ## API doc
 
@@ -164,7 +163,6 @@ behaviour when scheduling tasks. The interface looks like this:
 class executor {
 public:
     virtual ~executor() = default;
-    virtual std::string get_name() const = 0;
     virtual void execute(const std::function<void()>& functor, const std::shared_ptr<tw::node>& node) = 0;
 };
 
@@ -176,7 +174,6 @@ struct node {
     std::size_t id;  // the task id
     std::string name;  // the task name
     tw::task_type type;  // the task type
-    std::string executor;  // the name of the task-specific executor (if exists)
     std::vector<std::shared_ptr<node>> parents;  // the list of parents (if exists)
 };
 
