@@ -4,6 +4,7 @@
 #include "../examples/statistical_key_facts.h"
 #include "../examples/benchmark_simple.h"
 #include "../examples/benchmark_statistical.h"
+#include "../examples/single_thread_lock_free.h"
 
 
 using transwarp::make_task;
@@ -637,6 +638,11 @@ TEST(benchmark_statistical) {
     std::ostringstream os;
     examples::benchmark_statistical(os, 3);
     ASSERT_GREATER(os.str().size(), 0u);
+}
+
+TEST(single_thread_lock_free) {
+    std::ostringstream os;
+    examples::single_thread_lock_free(os);
 }
 
 } // test_examples
