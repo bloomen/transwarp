@@ -167,8 +167,8 @@ public:
 };
 
 ``` 
-where `functor` denotes the function to be run and `node` an object that holds meta-data of the current task.
-```
+where `functor` denotes the function to be run and `node` an object that holds 
+meta-data of the current task.
 
 ## Feedback
 
