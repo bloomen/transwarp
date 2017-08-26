@@ -134,7 +134,6 @@ void statistical_key_facts(std::ostream& os, std::size_t sample_size, bool paral
         final_task->schedule_all(*executor);
         const result res = final_task->get_future().get();
         os << res << std::endl;
-        final_task->reset_all();
         // Changing input
         alpha += count;
         beta += count;

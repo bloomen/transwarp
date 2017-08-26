@@ -111,7 +111,6 @@ void calculate_via_transwarp(tw::itask<result>& task) {
     task.schedule_all();
     const auto& res = task.get_future().get();
     check_result(res);
-    task.reset_all();
 }
 
 template<typename Functor>

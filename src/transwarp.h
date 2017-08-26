@@ -186,10 +186,10 @@ public:
     virtual void remove_executor() noexcept = 0;
     virtual const std::shared_future<ResultType>& get_future() const noexcept = 0;
     virtual const std::shared_ptr<transwarp::node>& get_node() const noexcept = 0;
-    virtual void schedule() = 0;
-    virtual void schedule(transwarp::executor& executor) = 0;
-    virtual void schedule_all() = 0;
-    virtual void schedule_all(transwarp::executor& executor) = 0;
+    virtual void schedule(bool reset=true) = 0;
+    virtual void schedule(transwarp::executor& executor, bool reset=true) = 0;
+    virtual void schedule_all(bool reset_all=true) = 0;
+    virtual void schedule_all(transwarp::executor& executor, bool reset_all=true) = 0;
     virtual void reset() = 0;
     virtual void reset_all() = 0;
     virtual void cancel(bool enabled) noexcept = 0;
@@ -542,14 +542,15 @@ struct graph_visitor {
 
 // Schedules using the given executor
 struct schedule_visitor {
-    explicit schedule_visitor(transwarp::executor* executor) noexcept
-    : executor_(executor) {}
+    explicit schedule_visitor(bool reset, transwarp::executor* executor) noexcept
+    : reset_(reset), executor_(executor) {}
 
     template<typename Task>
     void operator()(Task& task) {
-        task.schedule_impl(executor_);
+        task.schedule_impl(reset_, executor_);
     }
 
+    bool reset_;
     transwarp::executor* executor_;
 };
 
@@ -738,35 +739,42 @@ public:
 
     // Schedules this task for execution on the caller thread.
     // The task-specific executor gets precedence if it exists.
-    void schedule() override {
-        schedule_impl();
+    // reset denotes whether schedule should reset the underlying
+    // future and schedule even if the future is already valid.
+    void schedule(bool reset=true) override {
+        schedule_impl(reset);
     }
 
     // Schedules this task for execution using the provided executor.
     // The task-specific executor gets precedence if it exists.
-    void schedule(transwarp::executor& executor) override {
-        schedule_impl(&executor);
+    // reset denotes whether schedule should reset the underlying
+    // future and schedule even if the future is already valid.
+    void schedule(transwarp::executor& executor, bool reset=true) override {
+        schedule_impl(reset, &executor);
     }
 
     // Schedules all tasks in the graph for execution on the caller thread.
     // The task-specific executors get precedence if they exist.
-    void schedule_all() override {
-        schedule_all_impl();
+    // reset_all denotes whether schedule_all should reset the underlying
+    // futures and schedule even if the futures are already present.
+    void schedule_all(bool reset_all=true) override {
+        schedule_all_impl(reset_all);
     }
 
     // Schedules all tasks in the graph for execution using the provided executor.
     // The task-specific executors get precedence if they exist.
-    void schedule_all(transwarp::executor& executor) override {
-        schedule_all_impl(&executor);
+    // reset_all denotes whether schedule_all should reset the underlying
+    // futures and schedule even if the futures are already present.
+    void schedule_all(transwarp::executor& executor, bool reset_all=true) override {
+        schedule_all_impl(reset_all, &executor);
     }
 
-    // Resets the future of this task, allowing for a new call to schedule
+    // Resets the future of this task
     void reset() override {
         future_ = std::shared_future<result_type>();
     }
 
-    // Resets the futures of all tasks in the graph, allowing for re-schedule
-    // of all tasks in the graph
+    // Resets the futures of all tasks in the graph
     void reset_all() override {
         transwarp::detail::reset_visitor visitor;
         visit(visitor);
@@ -820,8 +828,8 @@ private:
     // The task-specific executor gets precedence if it exists.
     // Runs the task on the same thread as the caller if neither the global
     // nor the task-specific executor is found.
-    void schedule_impl(transwarp::executor* executor=nullptr) {
-        if (!canceled_ && !future_.valid()) {
+    void schedule_impl(bool reset, transwarp::executor* executor=nullptr) {
+        if (!canceled_ && (reset || !future_.valid())) {
             auto futures = transwarp::detail::get_futures(parents_);
             auto pack_task = std::make_shared<std::packaged_task<result_type()>>(
                     std::bind(&task::evaluate, std::ref(*this), std::move(futures)));
@@ -840,9 +848,9 @@ private:
     // The task-specific executors get precedence if they exist.
     // Runs tasks on the same thread as the caller if neither the global
     // nor a task-specific executor is found.
-    void schedule_all_impl(transwarp::executor* executor=nullptr) {
+    void schedule_all_impl(bool reset_all, transwarp::executor* executor=nullptr) {
         if (!canceled_) {
-            transwarp::detail::schedule_visitor visitor(executor);
+            transwarp::detail::schedule_visitor visitor(reset_all, executor);
             visit(visitor);
             unvisit();
         }

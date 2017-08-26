@@ -86,8 +86,6 @@ void make_test_three_tasks(std::size_t threads) {
 
     ++value;
 
-    task3->reset_all();
-
     task3->schedule_all(*executor);
     ASSERT_EQUAL(91, task3->get_future().get());
     ASSERT_EQUAL(43, task1->get_future().get());
@@ -310,7 +308,6 @@ void cancel_with_schedule_all(int expected, Functor functor, TaskType task_type)
     cont = true;
     ASSERT_THROW(transwarp::task_canceled, [task2] { task2->get_future().get(); });
     task2->cancel_all(false);
-    task2->reset_all();
     task2->schedule_all(executor);
     ASSERT_EQUAL(expected, task2->get_future().get());
 }
@@ -648,9 +645,71 @@ TEST(remove_executor_with_exec_passed_to_schedule) {
     task->remove_executor();
     mock_exec exec_seq;
     task->schedule(exec_seq);
+    ASSERT_FALSE(exec->called);
     ASSERT_TRUE(exec_seq.called);
     ASSERT_EQUAL(84, task->get_future().get());
 }
+
+TEST(reset) {
+    int value = 42;
+    auto functor = [&value] { return value*2; };
+    auto task = make_task(transwarp::root, functor);
+    task->schedule(false);
+    ASSERT_EQUAL(84, task->get_future().get());
+    value = 43;
+    task->schedule(false);
+    ASSERT_EQUAL(84, task->get_future().get());
+    task->reset();
+    task->schedule(false);
+    ASSERT_EQUAL(86, task->get_future().get());
+}
+
+TEST(reset_through_schedule) {
+    int value = 42;
+    auto functor = [&value] { return value*2; };
+    auto task = make_task(transwarp::root, functor);
+    task->schedule();
+    ASSERT_EQUAL(84, task->get_future().get());
+    value = 43;
+    task->schedule(false);
+    ASSERT_EQUAL(84, task->get_future().get());
+    task->schedule();
+    ASSERT_EQUAL(86, task->get_future().get());
+}
+
+TEST(reset_all) {
+    int value = 42;
+    auto task = make_task(transwarp::root, [&value] { return value * 2; });
+    auto task2 = make_task(transwarp::consume, [](int x) { return x + 3; }, task);
+    task2->schedule_all(false);
+    ASSERT_EQUAL(84, task->get_future().get());
+    ASSERT_EQUAL(87, task2->get_future().get());
+    value = 43;
+    task2->schedule_all(false);
+    ASSERT_EQUAL(84, task->get_future().get());
+    ASSERT_EQUAL(87, task2->get_future().get());
+    task2->reset_all();
+    task2->schedule_all(false);
+    ASSERT_EQUAL(86, task->get_future().get());
+    ASSERT_EQUAL(89, task2->get_future().get());
+}
+
+TEST(reset_all_through_schedule_all) {
+    int value = 42;
+    auto task = make_task(transwarp::root, [&value] { return value * 2; });
+    auto task2 = make_task(transwarp::consume, [](int x) { return x + 3; }, task);
+    task2->schedule_all();
+    ASSERT_EQUAL(84, task->get_future().get());
+    ASSERT_EQUAL(87, task2->get_future().get());
+    value = 43;
+    task2->schedule_all(false);
+    ASSERT_EQUAL(84, task->get_future().get());
+    ASSERT_EQUAL(87, task2->get_future().get());
+    task2->schedule_all();
+    ASSERT_EQUAL(86, task->get_future().get());
+    ASSERT_EQUAL(89, task2->get_future().get());
+}
+
 
 COLLECTION(test_examples) {
 

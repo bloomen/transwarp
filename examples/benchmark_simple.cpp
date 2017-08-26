@@ -63,7 +63,6 @@ void calculate_via_transwarp(tw::itask<double>& task) {
     if (task.get_future().get() != expected) {
         throw std::runtime_error("wrong result");
     }
-    task.reset_all();
 }
 
 template<typename Functor>
