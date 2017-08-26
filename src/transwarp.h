@@ -173,6 +173,9 @@ inline std::string to_string(const std::vector<transwarp::edge>& graph) {
 class executor {
 public:
     virtual ~executor() = default;
+    // This actually runs a task which is wrapped by the functor. The functor only
+    // captures a shared_ptr and can hence be copied at low cost. node represents
+    // the task that the functor belongs to.
     virtual void execute(const std::function<void()>& functor, const std::shared_ptr<transwarp::node>& node) = 0;
 };
 
