@@ -183,6 +183,7 @@ class itask {
 public:
     virtual ~itask() = default;
     virtual void set_executor(std::shared_ptr<transwarp::executor> executor) = 0;
+    virtual void remove_executor() noexcept = 0;
     virtual const std::shared_future<ResultType>& get_future() const noexcept = 0;
     virtual const std::shared_ptr<transwarp::node>& get_node() const noexcept = 0;
     virtual void schedule() = 0;
@@ -718,6 +719,11 @@ public:
             throw transwarp::transwarp_error("Not a valid pointer to executor");
         }
         executor_ = std::move(executor);
+    }
+
+    // Removes the executor from this task
+    void remove_executor() noexcept override {
+        executor_.reset();
     }
 
     // Returns the future associated to the underlying execution

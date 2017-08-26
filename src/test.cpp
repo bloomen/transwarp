@@ -608,6 +608,50 @@ TEST(make_task_raw_function) {
     ASSERT_EQUAL(45, task->get_future().get());
 }
 
+struct mock_exec : transwarp::executor {
+    bool called = false;
+    void execute(const std::function<void()>& functor, const std::shared_ptr<transwarp::node>&) override {
+        called = true;
+        functor();
+    }
+};
+
+TEST(set_executor_without_exec_passed_to_schedule) {
+    int value = 42;
+    auto functor = [value] { return value*2; };
+    auto task = make_task(transwarp::root, functor);
+    auto exec = std::make_shared<mock_exec>();
+    task->set_executor(exec);
+    task->schedule();
+    ASSERT_TRUE(exec->called);
+    ASSERT_EQUAL(84, task->get_future().get());
+}
+
+TEST(set_executor_with_exec_passed_to_schedule) {
+    int value = 42;
+    auto functor = [value] { return value*2; };
+    auto task = make_task(transwarp::root, functor);
+    auto exec = std::make_shared<mock_exec>();
+    task->set_executor(exec);
+    transwarp::sequential exec_seq;
+    task->schedule(exec_seq);
+    ASSERT_TRUE(exec->called);
+    ASSERT_EQUAL(84, task->get_future().get());
+}
+
+TEST(remove_executor_with_exec_passed_to_schedule) {
+    int value = 42;
+    auto functor = [value] { return value*2; };
+    auto task = make_task(transwarp::root, functor);
+    auto exec = std::make_shared<mock_exec>();
+    task->set_executor(exec);
+    task->remove_executor();
+    mock_exec exec_seq;
+    task->schedule(exec_seq);
+    ASSERT_TRUE(exec_seq.called);
+    ASSERT_EQUAL(84, task->get_future().get());
+}
+
 COLLECTION(test_examples) {
 
 TEST(basic_with_three_tasks) {
