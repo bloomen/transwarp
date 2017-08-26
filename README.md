@@ -5,12 +5,14 @@
 transwarp is a header-only C++ library for task concurrency. It enables you to free
 your functors from explicit threads and transparently manage dependencies.
 Under the hood, a directed acyclic graph is built at compile-time enabling efficient 
-traversal and type-safe dependencies.
+traversal and type-safe dependencies. Once a graph is instantiated its structure
+cannot be changed at runtime.
 
 A task in transwarp is defined through a functor, parent tasks, and an optional name. 
 A task can either be consuming all or just one of its parents, or simply wait for their 
 completion similar to continuations. transwarp supports custom executors 
-either per task or globally when scheduling the tasks in the graph.
+either per task or globally when scheduling the tasks in the graph. Executors are
+decoupled from tasks and simply provide a way of running a given functor.
 
 transwarp is designed for ease of use, portability, and scalability. It is written in 
 C++11 and only depends on the standard library. Just copy `src/transwarp.h` 
@@ -60,8 +62,6 @@ int main() {
     // modifying data input
     value1 += 2.5;
     value2 += 1;
-
-    task3->reset_all();  // reset to allow for re-schedule of all tasks
 
     task3->schedule_all(executor);  // schedules all tasks for execution, assigning new futures
     std::cout << "result = " << task3->get_future().get() << std::endl;  // result = 58.8
@@ -122,11 +122,6 @@ execution can be retrieved through:
 ```cpp
 auto future = task->get_future();
 std::cout << future.get() << std::endl;
-```  
-Once a task has been scheduled it cannot be scheduled again until you call `reset()` 
-which resets the future of the task:
-```cpp
-task->reset();  // can now schedule again
 ```  
 When chaining multiple tasks together a directed acyclic graph is built in which
 every task can be scheduled individually. Though, in many scenarios it is useful
