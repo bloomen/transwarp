@@ -169,6 +169,7 @@ public:
 ``` 
 where `functor` denotes the function to be run and `node` an object that holds meta-data of the current task.
 ```
+
 ## Feedback
 
 Contact me if you have any questions or suggestions to make this a better library!
