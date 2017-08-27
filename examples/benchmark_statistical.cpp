@@ -9,9 +9,9 @@ namespace tw = transwarp;
 
 namespace {
 
-using data_const_t = std::shared_ptr<const std::vector<double>>;
+using data_t = std::shared_ptr<std::vector<double>>;
 
-data_const_t generate_gamma(std::mt19937& gen) {
+data_t generate_gamma(std::mt19937& gen) {
     const double alpha = 2;
     const double beta = 2;
     const std::size_t size = 10000;
@@ -23,18 +23,18 @@ data_const_t generate_gamma(std::mt19937& gen) {
     return data;
 }
 
-double average(data_const_t data) {
+double average(data_t data) {
     return std::accumulate(data->begin(), data->end(), 0.) / static_cast<double>(data->size());
 }
 
-double stddev(data_const_t data, double average) {
+double stddev(data_t data, double average) {
     double sum = 0;
     std::for_each(data->begin(), data->end(),
                   [average,&sum](double x) { sum += std::pow(x - average, 2.); });
     return std::sqrt(sum / static_cast<double>(data->size()));
 }
 
-double median(data_const_t data) {
+double median(data_t data) {
     auto copy = *data;
     std::sort(copy.begin(), copy.end());
     if(data->size() % 2 == 0)
@@ -43,7 +43,7 @@ double median(data_const_t data) {
         return copy[data->size() / 2];
 }
 
-int mode(data_const_t data) {
+int mode(data_t data) {
     auto copy = *data;
     std::sort(copy.begin(), copy.end());
     int number = static_cast<int>(*copy.begin());

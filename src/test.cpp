@@ -746,6 +746,7 @@ TEST(benchmark_statistical) {
 TEST(single_thread_lock_free) {
     std::ostringstream os;
     examples::single_thread_lock_free(os);
+    ASSERT_GREATER(os.str().size(), 0u);
 }
 
 } // test_examples
