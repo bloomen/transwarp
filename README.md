@@ -5,14 +5,14 @@
 transwarp is a header-only C++ library for task concurrency. It enables you to free
 your functors from explicit threads and transparently manage dependencies.
 Under the hood, a directed acyclic graph is built at compile-time enabling efficient 
-traversal and type-safe dependencies. Once a graph is instantiated its structure
+traversal and type-safe dependencies. Once a graph is created its structure
 cannot be changed at runtime.
 
 A task in transwarp is defined through a functor, parent tasks, and an optional name. 
 A task can either be consuming all or just one of its parents, or simply wait for their 
 completion similar to continuations. transwarp supports custom executors 
 either per task or globally when scheduling the tasks in the graph. Executors are
-decoupled from tasks and simply provide a way of running a given functor.
+decoupled from tasks and simply provide a way of running a given function.
 
 transwarp is designed for ease of use, portability, and scalability. It is written in 
 C++11 and only depends on the standard library. Just copy `src/transwarp.h` 
@@ -164,6 +164,20 @@ public:
 ``` 
 where `functor` denotes the function to be run and `node` an object that holds 
 meta-data of the current task.
+
+## Running the tests
+
+You'll need:
+* [libunittest](http://libunittest.sourceforge.net/)
+* [boost](http://www.boost.org/)
+* [cppcheck](http://cppcheck.sourceforge.net/) 
+* [valgrind](http://valgrind.org/) 
+
+If you're on Mac or Linux, just do:
+```
+./make_check.sh [compiler]
+```
+where compiler defaults to `g++` and can also be `clang++`.
 
 ## Feedback
 
