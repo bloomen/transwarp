@@ -107,7 +107,7 @@ The only restriction is that tasks without parents have to be labeled as `root` 
 Once a task is created it can be scheduled just by itself:
 ```cpp
 auto task = tw::make_task(tw::root, functor);
-task->schedule()
+task->schedule();
 ```
 which, if nothing else is specified, will run the task on the current thread. 
 However, using the built-in `parallel` executor the task can be pushed into a 
@@ -115,7 +115,7 @@ thread pool and executed asynchronously:
 ```cpp
 tw::parallel executor{4};  // thread pool with 4 threads
 auto task = tw::make_task(tw::root, functor);
-task->schedule(executor)
+task->schedule(executor);
 ```
 Regardless of how you schedule, the shared future associated to the underlying 
 execution can be retrieved through:
