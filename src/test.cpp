@@ -710,6 +710,56 @@ TEST(reset_all_through_schedule_all) {
     ASSERT_EQUAL(89, task2->get_future().get());
 }
 
+TEST(consume_any) {
+    std::atomic_bool cont(false);
+    auto task1 = make_task(transwarp::root, [&cont] {
+        while (!cont);
+        return 42;
+    });
+    auto task2 = make_task(transwarp::root, [] {
+        return 43;
+    });
+    auto task3 = make_task(transwarp::consume_any, [](int x) { return x; }, task1, task2);
+    transwarp::parallel exec{2};
+    task3->schedule_all(exec);
+    ASSERT_EQUAL(43, task3->get_future().get());
+    cont = true;
+}
+
+TEST(wait_any) {
+    int result = 0;
+    std::atomic_bool cont(false);
+    auto task1 = make_task(transwarp::root, [&cont, &result] {
+        while (!cont);
+        result = 42;
+    });
+    auto task2 = make_task(transwarp::root, [&result] {
+        result = 43;
+    });
+    auto task3 = make_task(transwarp::wait_any, [] {}, task1, task2);
+    transwarp::parallel exec{2};
+    task3->schedule_all(exec);
+    task3->get_future().wait();
+    ASSERT_EQUAL(43, result);
+    cont = true;
+}
+
+TEST(wait) {
+    int result1 = 0;
+    int result2 = 0;
+    auto task1 = make_task(transwarp::root, [&result1] {
+        result1 = 42;
+    });
+    auto task2 = make_task(transwarp::root, [&result2] {
+        result2 = 43;
+    });
+    auto task3 = make_task(transwarp::wait, [] {}, task1, task2);
+    transwarp::parallel exec{2};
+    task3->schedule_all(exec);
+    task3->get_future().wait();
+    ASSERT_EQUAL(42, result1);
+    ASSERT_EQUAL(43, result2);
+}
 
 COLLECTION(test_examples) {
 
