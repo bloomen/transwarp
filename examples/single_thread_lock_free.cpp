@@ -15,7 +15,7 @@ namespace {
 class lock_free_executor : public tw::executor {
 public:
     lock_free_executor()
-    : thread_(&lock_free_executor::worker, this), queue_(1000), done_(false) {}
+    : done_(false), queue_(1000), thread_(&lock_free_executor::worker, this) {}
 
     ~lock_free_executor() {
         done_ = true;
@@ -42,9 +42,9 @@ private:
         }
     }
 
-    std::thread thread_;
-    boost::lockfree::spsc_queue<std::function<void()>> queue_;
     std::atomic_bool done_;
+    boost::lockfree::spsc_queue<std::function<void()>> queue_;
+    std::thread thread_;
 };
 
 
