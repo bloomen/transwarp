@@ -3,6 +3,8 @@
 #include <fstream>
 #include <iostream>
 #include <array>
+#include <random>
+#include <numeric>
 #include <boost/lockfree/spsc_queue.hpp>
 
 namespace tw = transwarp;
