@@ -761,6 +761,28 @@ TEST(wait) {
     ASSERT_EQUAL(43, result2);
 }
 
+template<typename T>
+void make_test_pass_by_reference() {
+    using data_t = typename std::decay<T>::type;
+    data_t data;
+    const auto data_ptr = &data;
+
+    auto t1 = make_task(transwarp::root, [&data]() -> T { return data; });
+    auto t2 = make_task(transwarp::consume, [](T d) -> T { return d; }, t1);
+    auto t3 = make_task(transwarp::consume_any, [](T d) -> T { return d; }, t2);
+    t3->schedule_all();
+
+    auto& result = t3->get_future().get();
+    const auto result_ptr = &result;
+    ASSERT_EQUAL(data_ptr, result_ptr);
+}
+
+TEST(pass_by_reference) {
+    using data_t = std::array<double, 10>;
+    make_test_pass_by_reference<const data_t&>();
+    make_test_pass_by_reference<data_t&>();
+}
+
 COLLECTION(test_examples) {
 
 TEST(basic_with_three_tasks) {
