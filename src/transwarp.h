@@ -532,7 +532,6 @@ struct final_visitor {
     }
 
     std::size_t id_;
-    std::shared_ptr<std::atomic_bool> canceled_;
 };
 
 // Generates a graph
