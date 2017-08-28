@@ -90,7 +90,8 @@ class node {
 public:
     // cppcheck-suppress passedByValue
     node(std::size_t id, std::string name, transwarp::task_type type, std::vector<std::shared_ptr<node>> parents) noexcept
-    : id_(id), name_(std::move(name)), type_(type), parents_(std::move(parents)) {}
+    : id_(id), name_(std::move(name)), type_(type), parents_(std::move(parents))
+    {}
 
     std::size_t get_id() const noexcept {
         return id_;
@@ -137,7 +138,8 @@ class edge {
 public:
     // cppcheck-suppress passedByValue
     edge(std::shared_ptr<transwarp::node> parent, std::shared_ptr<transwarp::node> child) noexcept
-    : parent_(std::move(parent)), child_(std::move(child)) {}
+    : parent_(std::move(parent)), child_(std::move(child))
+    {}
 
     const std::shared_ptr<transwarp::node>& get_parent() const noexcept {
         return parent_;
@@ -205,7 +207,8 @@ public:
 class transwarp_error : public std::runtime_error {
 public:
     explicit transwarp_error(const std::string& message)
-    : std::runtime_error(message) {}
+    : std::runtime_error(message)
+    {}
 };
 
 
@@ -213,7 +216,8 @@ public:
 class task_canceled : public transwarp::transwarp_error {
 public:
     explicit task_canceled(const transwarp::node& n)
-    : transwarp::transwarp_error(n.get_name() + " is canceled") {}
+    : transwarp::transwarp_error(n.get_name() + " is canceled")
+    {}
 };
 
 
@@ -224,7 +228,8 @@ namespace detail {
 class thread_pool_error : public transwarp::transwarp_error {
 public:
     explicit thread_pool_error(const std::string& message)
-    : transwarp::transwarp_error(message) {}
+    : transwarp::transwarp_error(message)
+    {}
 };
 
 // A simple thread pool used to execute tasks in parallel
