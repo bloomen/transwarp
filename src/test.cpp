@@ -5,6 +5,7 @@
 #include "../examples/benchmark_simple.h"
 #include "../examples/benchmark_statistical.h"
 #include "../examples/single_thread_lock_free.h"
+#include <array>
 
 
 using transwarp::make_task;
@@ -47,24 +48,24 @@ TEST(one_task) {
     make_test_one_task(4);
 }
 
-void make_test_three_tasks(std::size_t threads) {
+ void make_test_three_tasks(std::size_t threads) {
     int value = 42;
 
     auto f1 = [&value]{ return value; };
     auto task1 = make_task(transwarp::root, "t1", f1);
 
     auto f2 = [](int v) { return v + 2; };
-    auto task2 = make_task(transwarp::consume, "\nt2\t", f2, task1);
+    auto task2 = make_task(transwarp::consume, "t2", f2, task1);
 
     auto f3 = [](int v, int w) { return v + w + 3; }; 
 
     std::shared_ptr<transwarp::executor> executor;
     std::shared_ptr<transwarp::itask<int>> task3;
     if (threads > 0) {
-        task3 = make_task(transwarp::consume, "t3 ", f3, task1, task2);
+        task3 = make_task(transwarp::consume, "t3", f3, task1, task2);
         executor = std::make_shared<transwarp::parallel>(threads);
     } else {
-        task3 = make_task(transwarp::consume, "t3 ", f3, task1, task2);
+        task3 = make_task(transwarp::consume, "t3", f3, task1, task2);
         executor = std::make_shared<transwarp::sequential>();
     }
 
@@ -74,11 +75,11 @@ void make_test_three_tasks(std::size_t threads) {
 
     ASSERT_EQUAL(1u, task2->get_node()->get_id());
     ASSERT_EQUAL(1u, task2->get_node()->get_parents().size());
-    ASSERT_EQUAL("\nt2\t", task2->get_node()->get_name());
+    ASSERT_EQUAL("t2", task2->get_node()->get_name());
 
     ASSERT_EQUAL(2u, task3->get_node()->get_id());
     ASSERT_EQUAL(2u, task3->get_node()->get_parents().size());
-    ASSERT_EQUAL("t3 ", task3->get_node()->get_name());
+    ASSERT_EQUAL("t3", task3->get_node()->get_name());
 
     task3->schedule_all(*executor);
     ASSERT_EQUAL(89, task3->get_future().get());
@@ -394,7 +395,7 @@ TEST(invalid_parent_task) {
 
 TEST(parallel_with_zero_threads) {
     auto functor = [] { transwarp::parallel{0}; };
-    ASSERT_THROW(transwarp::detail::thread_pool_error, functor);
+    ASSERT_THROW(transwarp::thread_pool_error, functor);
 }
 
 TEST(schedule_single_task) {

@@ -72,13 +72,6 @@ constexpr const transwarp::wait_any_type wait_any{};
 
 namespace detail {
 
-// Trims the given characters from the input string
-inline std::string trim(const std::string &s, const std::string& chars=" \t\n\r") {
-    auto functor = [&chars](char c) { return chars.find(c) != std::string::npos; };
-    auto it = std::find_if_not(s.begin(), s.end(), functor);
-    return std::string(it, std::find_if_not(s.rbegin(), std::string::const_reverse_iterator(it), functor).base());
-}
-
 struct parent_visitor;
 struct final_visitor;
 
@@ -110,8 +103,8 @@ public:
     }
 
 private:
-    friend struct detail::parent_visitor;
-    friend struct detail::final_visitor;
+    friend struct transwarp::detail::parent_visitor;
+    friend struct transwarp::detail::final_visitor;
 
     std::size_t id_;
     std::string name_;
@@ -121,10 +114,9 @@ private:
 
 // String conversion for the node class
 inline std::string to_string(const transwarp::node& node) {
-    const auto name = transwarp::detail::trim(node.get_name());
     std::string s;
     s += '"';
-    s += name + "\n";
+    s += node.get_name() + "\n";
     s += transwarp::to_string(node.get_type());
     s += " id=" + std::to_string(node.get_id());
     s += " parents=" + std::to_string(node.get_parents().size());
@@ -164,7 +156,7 @@ inline std::string to_string(const transwarp::edge& edge) {
 inline std::string to_string(const std::vector<transwarp::edge>& graph) {
     std::string dot = "digraph {\n";
     for (const auto& edge : graph) {
-        dot += transwarp::to_string(edge) + '\n';
+        dot += transwarp::to_string(edge) + "\n";
     }
     dot += "}\n";
     return dot;
@@ -221,9 +213,6 @@ public:
 };
 
 
-namespace detail {
-
-
 // An exception for errors in the thread_pool class
 class thread_pool_error : public transwarp::transwarp_error {
 public:
@@ -231,6 +220,10 @@ public:
     : transwarp::transwarp_error(message)
     {}
 };
+
+
+namespace detail {
+
 
 // A simple thread pool used to execute tasks in parallel
 class thread_pool {
@@ -258,7 +251,7 @@ public:
                 }
             }
         } else {
-            throw transwarp::detail::thread_pool_error("number of threads must be larger than zero");
+            throw transwarp::thread_pool_error("number of threads must be larger than zero");
         }
     }
 
@@ -422,7 +415,7 @@ struct call_with_futures_impl<transwarp::wait_any_type, true, total, n...> {
 };
 
 // Calls the given functor with or without the tuple of futures depending on the task type.
-// Throws task_canceled if the canceled becomes true
+// Throws task_canceled if canceled becomes true
 template<typename TaskType, typename Result, typename Functor, typename Tuple>
 Result call_with_futures(const std::atomic_bool& canceled, const transwarp::node& node, const Functor& f, const Tuple& t) {
     using tuple_t = typename std::decay<Tuple>::type;
@@ -689,7 +682,7 @@ public:
     // The result type of this task
     using result_type = typename transwarp::detail::result<task_type, Functor, Tasks...>::type;
 
-    // A task is defined by name, functor, and parent tasks. name is optional. See constructor overload
+    // A task is defined by name, functor, and parent tasks. name is optional, see overload
     template<typename F>
     // cppcheck-suppress passedByValue
     task(std::string name, F&& functor, std::shared_ptr<Tasks>... parents)
