@@ -765,10 +765,10 @@ TEST(wait) {
 template<typename T>
 void make_test_pass_by_reference() {
     using data_t = typename std::decay<T>::type;
-    data_t data;
-    const auto data_ptr = &data;
+    auto data = std::make_shared<data_t>();
+    const auto data_ptr = data.get();
 
-    auto t1 = make_task(transwarp::root, [&data]() -> T { return data; });
+    auto t1 = make_task(transwarp::root, [data]() -> T { return *data; });
     auto t2 = make_task(transwarp::consume, [](T d) -> T { return d; }, t1);
     auto t3 = make_task(transwarp::consume_any, [](T d) -> T { return d; }, t2);
     t3->schedule_all();
