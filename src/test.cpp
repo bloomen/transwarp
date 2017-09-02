@@ -76,6 +76,7 @@ TEST(one_task) {
     ASSERT_EQUAL(1u, task2->get_node()->get_id());
     ASSERT_EQUAL(1u, task2->get_node()->get_parents().size());
     ASSERT_EQUAL("t2", task2->get_node()->get_name());
+    task2->set_executor(std::make_shared<transwarp::sequential>());
 
     ASSERT_EQUAL(2u, task3->get_node()->get_id());
     ASSERT_EQUAL(2u, task3->get_node()->get_parents().size());
@@ -98,12 +99,12 @@ TEST(one_task) {
     const std::string exp_dot_graph = "digraph {\n"
 "\"t1\nroot "
 "id=0 parents=0\" -> \"t2\nconsume "
-"id=1 parents=1\"\n"
+"id=1 parents=1\n<transwarp::sequential>\"\n"
 "\"t1\nroot "
 "id=0 parents=0\" -> \"t3\nconsume "
 "id=2 parents=2\"\n"
 "\"t2\nconsume "
-"id=1 parents=1\" -> \"t3\nconsume "
+"id=1 parents=1\n<transwarp::sequential>\" -> \"t3\nconsume "
 "id=2 parents=2\"\n"
 "}\n";
 
@@ -608,11 +609,23 @@ TEST(make_task_raw_function) {
 
 struct mock_exec : transwarp::executor {
     bool called = false;
+    std::string get_name() const override {
+        return "mock_exec";
+    }
     void execute(const std::function<void()>& functor, const std::shared_ptr<transwarp::node>&) override {
         called = true;
         functor();
     }
 };
+
+TEST(set_executor_name_and_reset) {
+    auto task = make_task(transwarp::root, []{});
+    auto exec = std::make_shared<mock_exec>();
+    task->set_executor(exec);
+    ASSERT_EQUAL(exec->get_name(), *task->get_node()->get_executor());
+    task->remove_executor();
+    ASSERT_FALSE(task->get_node()->get_executor());
+}
 
 TEST(set_executor_without_exec_passed_to_schedule) {
     int value = 42;

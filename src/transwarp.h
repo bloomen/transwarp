@@ -74,6 +74,7 @@ namespace detail {
 
 struct parent_visitor;
 struct final_visitor;
+struct executor_setter;
 
 } // detail
 
@@ -98,6 +99,10 @@ public:
         return type_;
     }
 
+    const std::shared_ptr<std::string>& get_executor() const noexcept {
+        return executor_;
+    }
+
     const std::vector<std::shared_ptr<node>>& get_parents() const noexcept {
         return parents_;
     }
@@ -105,10 +110,12 @@ public:
 private:
     friend struct transwarp::detail::parent_visitor;
     friend struct transwarp::detail::final_visitor;
+    friend struct transwarp::detail::executor_setter;
 
     std::size_t id_;
     std::string name_;
     transwarp::task_type type_;
+    std::shared_ptr<std::string> executor_;
     std::vector<std::shared_ptr<node>> parents_;
 };
 
@@ -120,6 +127,10 @@ inline std::string to_string(const transwarp::node& node) {
     s += transwarp::to_string(node.get_type());
     s += " id=" + std::to_string(node.get_id());
     s += " parents=" + std::to_string(node.get_parents().size());
+    const auto& exec = node.get_executor();
+    if (exec) {
+        s += "\n<" + *exec + ">";
+    }
     s += '"';
     return s;
 }
@@ -167,6 +178,10 @@ inline std::string to_string(const std::vector<transwarp::edge>& graph) {
 class executor {
 public:
     virtual ~executor() = default;
+
+    // Returns the name of the executor
+    virtual std::string get_name() const = 0;
+
     // This actually runs a task which is wrapped by the functor. The functor only
     // captures a shared_ptr and can hence be copied at low cost. node represents
     // the task that the functor belongs to.
@@ -599,6 +614,17 @@ struct unvisit {
     }
 };
 
+// Assigns an executor name to the given node
+struct executor_setter {
+    void operator()(transwarp::node& node, std::shared_ptr<std::string> executor) const noexcept {
+        if (executor) {
+            node.executor_ = executor;
+        } else {
+            node.executor_.reset();
+        }
+    }
+};
+
 // Determines the result type of the Functor dispatching on the task type
 template<typename TaskType, typename Functor, typename... Tasks>
 struct result {
@@ -648,6 +674,10 @@ struct result<transwarp::wait_any_type, Functor, Tasks...> {
 class sequential : public transwarp::executor {
 public:
 
+    std::string get_name() const override {
+        return "transwarp::sequential";
+    }
+
     void execute(const std::function<void()>& functor, const std::shared_ptr<transwarp::node>&) override {
         functor();
     }
@@ -661,6 +691,10 @@ public:
     explicit parallel(std::size_t n_threads)
     : pool_(n_threads)
     {}
+
+    std::string get_name() const override {
+        return "transwarp::parallel";
+    }
 
     void execute(const std::function<void()>& functor, const std::shared_ptr<transwarp::node>&) override {
         pool_.push(functor);
@@ -720,11 +754,13 @@ public:
             throw transwarp::transwarp_error("Not a valid pointer to executor");
         }
         executor_ = std::move(executor);
+        transwarp::detail::executor_setter{}(*node_, std::make_shared<std::string>(executor_->get_name()));
     }
 
     // Removes the executor from this task
     void remove_executor() noexcept override {
         executor_.reset();
+        transwarp::detail::executor_setter{}(*node_, nullptr);
     }
 
     // Returns the future associated to the underlying execution

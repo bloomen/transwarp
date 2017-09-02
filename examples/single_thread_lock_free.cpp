@@ -24,6 +24,10 @@ public:
         thread_.join();
     }
 
+    std::string get_name() const override {
+        return "lock_free_executor";
+    }
+
     void execute(const std::function<void()>& functor, const std::shared_ptr<tw::node>&) override {
         queue_.push(functor);
     }
