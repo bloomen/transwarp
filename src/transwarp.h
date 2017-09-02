@@ -626,7 +626,7 @@ struct unvisit {
 struct executor_setter {
     void operator()(transwarp::node& node, std::shared_ptr<std::string> executor) const noexcept {
         if (executor) {
-            node.executor_ = executor;
+            node.executor_ = std::move(executor);
         } else {
             node.executor_.reset();
         }
