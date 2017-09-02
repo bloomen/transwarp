@@ -87,22 +87,27 @@ public:
     : id_(id), name_(std::move(name)), type_(type), parents_(std::move(parents))
     {}
 
+    // The unique task ID
     std::size_t get_id() const noexcept {
         return id_;
     }
 
+    // The task name
     const std::string& get_name() const noexcept {
         return name_;
     }
 
+    // The task type
     transwarp::task_type get_type() const noexcept {
         return type_;
     }
 
+    // The optional, task-specific executor (may be null)
     const std::shared_ptr<std::string>& get_executor() const noexcept {
         return executor_;
     }
 
+    // The task's parents (may be empty)
     const std::vector<std::shared_ptr<node>>& get_parents() const noexcept {
         return parents_;
     }
@@ -144,10 +149,12 @@ public:
     : parent_(std::move(parent)), child_(std::move(child))
     {}
 
+    // Returns the parent node
     const std::shared_ptr<transwarp::node>& get_parent() const noexcept {
         return parent_;
     }
 
+    // Returns the child node
     const std::shared_ptr<transwarp::node>& get_child() const noexcept {
         return child_;
     }
