@@ -41,6 +41,7 @@ for mode in $modes;do
             echo "+++ Valgrinding $app ..."
             $thisdir/valgrind.sh $app
         fi
+        mv $(basename ${ex%.cpp}.dot) $thisdir/examples/
     done
     echo "Examples OK"
        

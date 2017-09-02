@@ -158,6 +158,7 @@ behaviour when scheduling tasks. The interface looks like this:
 class executor {
 public:
     virtual ~executor() = default;
+    virtual std::string get_name() const = 0;
     virtual void execute(const std::function<void()>& functor, const std::shared_ptr<tw::node>& node) = 0;
 };
 
