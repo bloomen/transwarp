@@ -98,14 +98,14 @@ TEST(one_task) {
 
     const std::string exp_dot_graph = "digraph {\n"
 "\"t1\nroot "
-"id=0 parents=0\" -> \"t2\nconsume "
-"id=1 parents=1\n<transwarp::sequential>\"\n"
+"id=0 par=0\" -> \"t2\nconsume "
+"id=1 par=1\n<transwarp::sequential>\"\n"
 "\"t1\nroot "
-"id=0 parents=0\" -> \"t3\nconsume "
-"id=2 parents=2\"\n"
+"id=0 par=0\" -> \"t3\nconsume "
+"id=2 par=2\"\n"
 "\"t2\nconsume "
-"id=1 parents=1\n<transwarp::sequential>\" -> \"t3\nconsume "
-"id=2 parents=2\"\n"
+"id=1 par=1\n<transwarp::sequential>\" -> \"t3\nconsume "
+"id=2 par=2\"\n"
 "}\n";
 
     ASSERT_EQUAL(exp_dot_graph, dot_graph);
@@ -217,11 +217,11 @@ TEST(make_dot_graph_with_three_nodes) {
     const auto dot_graph = transwarp::to_string(graph);
     const std::string exp_dot_graph = "digraph {\n"
 "\"node2\nconsume "
-"id=1 parents=0\" -> \"node1\nconsume "
-"id=0 parents=2\"\n"
+"id=1 par=0\" -> \"node1\nconsume "
+"id=0 par=2\"\n"
 "\"node3\nwait "
-"id=2 parents=0\" -> \"node1\nconsume "
-"id=0 parents=2\"\n"
+"id=2 par=0\" -> \"node1\nconsume "
+"id=0 par=2\"\n"
 "}\n";
 
     ASSERT_EQUAL(exp_dot_graph, dot_graph);

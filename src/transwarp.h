@@ -126,7 +126,7 @@ inline std::string to_string(const transwarp::node& node) {
     s += node.get_name() + "\n";
     s += transwarp::to_string(node.get_type());
     s += " id=" + std::to_string(node.get_id());
-    s += " parents=" + std::to_string(node.get_parents().size());
+    s += " par=" + std::to_string(node.get_parents().size());
     const auto& exec = node.get_executor();
     if (exec) {
         s += "\n<" + *exec + ">";
