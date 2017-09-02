@@ -10,7 +10,7 @@ cannot be changed at runtime.
 
 A task in transwarp is defined through a functor, parent tasks, and an optional name. 
 A task can either be consuming all or just one of its parents, or simply wait for their 
-completion similar to continuations. transwarp supports custom executors 
+completion similar to continuations. transwarp supports executors 
 either per task or globally when scheduling the tasks in the graph. Executors are
 decoupled from tasks and simply provide a way of running a given function.
 
@@ -132,7 +132,7 @@ auto parent2 = tw::make_task(tw::root, bar);  // bar is a functor
 auto task = tw::make_task(tw::consume, functor, parent1, parent2);
 task->schedule_all();  // schedules all parents and itself
 ```
-which can also be scheduled using a custom executor, for instance:
+which can also be scheduled using an executor, for instance:
 ```cpp
 tw::parallel executor{4};
 task->schedule_all(executor);
