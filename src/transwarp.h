@@ -318,6 +318,7 @@ private:
         for (auto& thread : threads_) {
             thread.join();
         }
+        threads_.clear();
     }
 
     bool done_;
