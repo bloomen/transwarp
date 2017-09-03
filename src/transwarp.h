@@ -714,7 +714,7 @@ private:
 };
 
 
-// A task representing a piece work given by a functor and parent tasks.
+// A task representing a piece of work given by a functor and parent tasks.
 // By connecting tasks a directed acyclic graph is built.
 template<typename TaskType, typename Functor, typename... Tasks>
 class task : public transwarp::itask<typename transwarp::detail::result<TaskType, Functor, Tasks...>::type> {
