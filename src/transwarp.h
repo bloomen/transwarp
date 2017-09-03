@@ -83,23 +83,23 @@ struct executor_setter;
 class node {
 public:
     // cppcheck-suppress passedByValue
-    node(std::size_t id, std::string name, transwarp::task_type type, std::vector<std::shared_ptr<node>> parents) noexcept
-    : id_(id), name_(std::move(name)), type_(type), parents_(std::move(parents))
+    node(std::size_t id, transwarp::task_type type, std::shared_ptr<std::string> name, std::vector<std::shared_ptr<node>> parents) noexcept
+    : id_(id), type_(type), name_(std::move(name)), parents_(std::move(parents))
     {}
 
-    // The unique task ID
+    // The task ID
     std::size_t get_id() const noexcept {
         return id_;
-    }
-
-    // The task name
-    const std::string& get_name() const noexcept {
-        return name_;
     }
 
     // The task type
     transwarp::task_type get_type() const noexcept {
         return type_;
+    }
+
+    // The optional task name (may be null)
+    const std::shared_ptr<std::string>& get_name() const noexcept {
+        return name_;
     }
 
     // The optional, task-specific executor (may be null)
@@ -118,23 +118,26 @@ private:
     friend struct transwarp::detail::executor_setter;
 
     std::size_t id_;
-    std::string name_;
     transwarp::task_type type_;
+    std::shared_ptr<std::string> name_;
     std::shared_ptr<std::string> executor_;
     std::vector<std::shared_ptr<node>> parents_;
 };
 
 // String conversion for the node class
-inline std::string to_string(const transwarp::node& node) {
+inline std::string to_string(const transwarp::node& node, const std::string& seperator="\n") {
     std::string s;
     s += '"';
-    s += node.get_name() + "\n";
+    const auto& name = node.get_name();
+    if (name) {
+        s += "<" + *name + ">" + seperator;
+    }
     s += transwarp::to_string(node.get_type());
     s += " id=" + std::to_string(node.get_id());
     s += " par=" + std::to_string(node.get_parents().size());
     const auto& exec = node.get_executor();
     if (exec) {
-        s += "\n<" + *exec + ">";
+        s += seperator + "<" + *exec + ">";
     }
     s += '"';
     return s;
@@ -165,18 +168,18 @@ private:
 };
 
 // String conversion for the edge class
-inline std::string to_string(const transwarp::edge& edge) {
-    return transwarp::to_string(*edge.get_parent()) + " -> " + transwarp::to_string(*edge.get_child());
+inline std::string to_string(const transwarp::edge& edge, const std::string& separator="\n") {
+    return transwarp::to_string(*edge.get_parent(), separator) + " -> " + transwarp::to_string(*edge.get_child(), separator);
 }
 
 
 // Creates a dot-style string from the given graph
-inline std::string to_string(const std::vector<transwarp::edge>& graph) {
-    std::string dot = "digraph {\n";
+inline std::string to_string(const std::vector<transwarp::edge>& graph, const std::string& separator="\n") {
+    std::string dot = "digraph {" + separator;
     for (const auto& edge : graph) {
-        dot += transwarp::to_string(edge) + "\n";
+        dot += transwarp::to_string(edge, separator) + separator;
     }
-    dot += "}\n";
+    dot += "}";
     return dot;
 }
 
@@ -229,8 +232,8 @@ public:
 // Exception thrown when a task is canceled
 class task_canceled : public transwarp::transwarp_error {
 public:
-    explicit task_canceled(const transwarp::node& n)
-    : transwarp::transwarp_error(n.get_name() + " is canceled")
+    explicit task_canceled(const transwarp::node& node)
+    : transwarp::transwarp_error("canceled: " + transwarp::to_string(node, " "))
     {}
 };
 
@@ -541,10 +544,8 @@ struct final_visitor {
     : id_(0) {}
 
     template<typename Task>
-    void operator()(Task& task) {
+    void operator()(Task& task) noexcept {
         task.node_->id_ = id_++;
-        if (task.node_->name_.empty())
-            task.node_->name_ = "task";
     }
 
     std::size_t id_;
@@ -727,24 +728,16 @@ public:
     // A task is defined by name, functor, and parent tasks. name is optional, see overload
     template<typename F>
     // cppcheck-suppress passedByValue
+    // cppcheck-suppress uninitMemberVar
     task(std::string name, F&& functor, std::shared_ptr<Tasks>... parents)
-    : node_(std::make_shared<transwarp::node>(0, std::move(name), task_type::value, std::vector<std::shared_ptr<transwarp::node>>{})),
-      functor_(std::forward<F>(functor)),
-      parents_(std::make_tuple(std::move(parents)...)),
-      visited_(false),
-      canceled_(false)
-    {
-        transwarp::detail::call_with_each(transwarp::detail::parent_visitor(node_), parents_);
-        transwarp::detail::final_visitor visitor;
-        visit(visitor);
-        unvisit();
-    }
+    : task(true, std::move(name), std::forward<F>(functor), std::move(parents)...)
+    {}
 
-    // This overload is for auto-naming
+    // This overload is for omitting the task name
     template<typename F>
     // cppcheck-suppress uninitMemberVar
     explicit task(F&& functor, std::shared_ptr<Tasks>... parents)
-    : task("", std::forward<F>(functor), std::move(parents)...)
+    : task(false, "", std::forward<F>(functor), std::move(parents)...)
     {}
 
     virtual ~task() = default;
@@ -858,6 +851,23 @@ public:
 
 private:
 
+    template<typename F>
+    // cppcheck-suppress passedByValue
+    task(bool has_name, std::string name, F&& functor, std::shared_ptr<Tasks>... parents)
+    : node_(std::make_shared<transwarp::node>(0, task_type::value,
+            (has_name ? std::make_shared<std::string>(std::move(name)) : nullptr),
+            std::vector<std::shared_ptr<transwarp::node>>{})),
+      functor_(std::forward<F>(functor)),
+      parents_(std::make_tuple(std::move(parents)...)),
+      visited_(false),
+      canceled_(false)
+    {
+        transwarp::detail::call_with_each(transwarp::detail::parent_visitor(node_), parents_);
+        transwarp::detail::final_visitor visitor;
+        visit(visitor);
+        unvisit();
+    }
+
     friend struct transwarp::detail::parent_visitor;
     friend struct transwarp::detail::edges_visitor;
     friend struct transwarp::detail::graph_visitor;
@@ -943,7 +953,7 @@ make_task(TaskType, std::string name, Functor&& functor, std::shared_ptr<Tasks>.
     return std::make_shared<transwarp::task<TaskType, typename std::decay<Functor>::type, Tasks...>>(std::move(name), std::forward<Functor>(functor), std::move(parents)...);
 }
 
-// A factory function to create a new task. Overload for auto-naming
+// A factory function to create a new task. Overload for omitting the task name
 template<typename TaskType, typename Functor, typename... Tasks>
 std::shared_ptr<transwarp::task<TaskType, typename std::decay<Functor>::type, Tasks...>>
 make_task(TaskType, Functor&& functor, std::shared_ptr<Tasks>... parents) {

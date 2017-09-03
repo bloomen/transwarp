@@ -15,7 +15,7 @@ using transwarp::make_task;
 COLLECTION(test_transwarp) {
 
 transwarp::node generic_node() {
-    return {1, "cool", transwarp::task_type::consume, {}};
+    return {1, transwarp::task_type::consume, std::make_shared<std::string>("cool"), {}};
 }
 
 void make_test_one_task(std::size_t threads) {
@@ -32,7 +32,7 @@ void make_test_one_task(std::size_t threads) {
     }
     ASSERT_EQUAL(0u, task->get_node()->get_id());
     ASSERT_EQUAL(0u, task->get_node()->get_parents().size());
-    ASSERT_EQUAL("task", task->get_node()->get_name());
+    ASSERT_FALSE(task->get_node()->get_name());
     const auto graph = task->get_graph();
     ASSERT_EQUAL(0u, graph.size());
     task->schedule_all(*executor);
@@ -71,16 +71,16 @@ TEST(one_task) {
 
     ASSERT_EQUAL(0u, task1->get_node()->get_id());
     ASSERT_EQUAL(0u, task1->get_node()->get_parents().size());
-    ASSERT_EQUAL("t1", task1->get_node()->get_name());
+    ASSERT_EQUAL("t1", *task1->get_node()->get_name());
 
     ASSERT_EQUAL(1u, task2->get_node()->get_id());
     ASSERT_EQUAL(1u, task2->get_node()->get_parents().size());
-    ASSERT_EQUAL("t2", task2->get_node()->get_name());
+    ASSERT_EQUAL("t2", *task2->get_node()->get_name());
     task2->set_executor(std::make_shared<transwarp::sequential>());
 
     ASSERT_EQUAL(2u, task3->get_node()->get_id());
     ASSERT_EQUAL(2u, task3->get_node()->get_parents().size());
-    ASSERT_EQUAL("t3", task3->get_node()->get_name());
+    ASSERT_EQUAL("t3", *task3->get_node()->get_name());
 
     task3->schedule_all(*executor);
     ASSERT_EQUAL(89, task3->get_future().get());
@@ -97,16 +97,16 @@ TEST(one_task) {
     const auto dot_graph = transwarp::to_string(graph);
 
     const std::string exp_dot_graph = "digraph {\n"
-"\"t1\nroot "
-"id=0 par=0\" -> \"t2\nconsume "
+"\"<t1>\nroot "
+"id=0 par=0\" -> \"<t2>\nconsume "
 "id=1 par=1\n<transwarp::sequential>\"\n"
-"\"t1\nroot "
-"id=0 par=0\" -> \"t3\nconsume "
+"\"<t1>\nroot "
+"id=0 par=0\" -> \"<t3>\nconsume "
 "id=2 par=2\"\n"
-"\"t2\nconsume "
-"id=1 par=1\n<transwarp::sequential>\" -> \"t3\nconsume "
+"\"<t2>\nconsume "
+"id=1 par=1\n<transwarp::sequential>\" -> \"<t3>\nconsume "
 "id=2 par=2\"\n"
-"}\n";
+"}";
 
     ASSERT_EQUAL(exp_dot_graph, dot_graph);
 }
@@ -191,7 +191,7 @@ TEST(transwarp_error) {
 }
 
 TEST(task_canceled) {
-    const std::string msg = "cool is canceled";
+    const std::string msg = "canceled: \"<cool> consume id=1 par=0\"";
     const auto node = generic_node();
     try {
         throw transwarp::task_canceled(node);
@@ -203,26 +203,26 @@ TEST(task_canceled) {
 TEST(make_dot_graph_with_empty_graph) {
     const std::vector<transwarp::edge> graph;
     const auto dot_graph = transwarp::to_string(graph);
-    const std::string exp_dot_graph = "digraph {\n}\n";
+    const std::string exp_dot_graph = "digraph {\n}";
     ASSERT_EQUAL(exp_dot_graph, dot_graph);
 }
 
 TEST(make_dot_graph_with_three_nodes) {
-    auto node2 = std::make_shared<transwarp::node>(transwarp::node{1, "node2", transwarp::task_type::consume, {}});
-    auto node3 = std::make_shared<transwarp::node>(transwarp::node{2, "node3", transwarp::task_type::wait, {}});
-    auto node1 = std::make_shared<transwarp::node>(transwarp::node{0, "node1", transwarp::task_type::consume, {node2, node3}});
+    auto node2 = std::make_shared<transwarp::node>(transwarp::node{1, transwarp::task_type::consume, std::make_shared<std::string>("node2"), {}});
+    auto node3 = std::make_shared<transwarp::node>(transwarp::node{2, transwarp::task_type::wait, std::make_shared<std::string>("node3"), {}});
+    auto node1 = std::make_shared<transwarp::node>(transwarp::node{0, transwarp::task_type::consume, std::make_shared<std::string>("node1"), {node2, node3}});
     std::vector<transwarp::edge> graph;
     graph.emplace_back(node2, node1);
     graph.emplace_back(node3, node1);
     const auto dot_graph = transwarp::to_string(graph);
     const std::string exp_dot_graph = "digraph {\n"
-"\"node2\nconsume "
-"id=1 par=0\" -> \"node1\nconsume "
+"\"<node2>\nconsume "
+"id=1 par=0\" -> \"<node1>\nconsume "
 "id=0 par=2\"\n"
-"\"node3\nwait "
-"id=2 par=0\" -> \"node1\nconsume "
+"\"<node3>\nwait "
+"id=2 par=0\" -> \"<node1>\nconsume "
 "id=0 par=2\"\n"
-"}\n";
+"}";
 
     ASSERT_EQUAL(exp_dot_graph, dot_graph);
 }
@@ -237,19 +237,19 @@ TEST(get_node) {
 
     // task3
     ASSERT_EQUAL(2, task3->get_node()->get_id());
-    ASSERT_EQUAL("task", task3->get_node()->get_name());
+    ASSERT_FALSE(task3->get_node()->get_name());
     ASSERT_EQUAL(2u, task3->get_node()->get_parents().size());
     ASSERT_EQUAL(task1->get_node().get(), task3->get_node()->get_parents()[0].get());
     ASSERT_EQUAL(task2->get_node().get(), task3->get_node()->get_parents()[1].get());
 
     // task1
     ASSERT_EQUAL(0, task1->get_node()->get_id());
-    ASSERT_EQUAL("task", task1->get_node()->get_name());
+    ASSERT_FALSE(task1->get_node()->get_name());
     ASSERT_EQUAL(0u, task1->get_node()->get_parents().size());
 
     // task2
     ASSERT_EQUAL(1, task2->get_node()->get_id());
-    ASSERT_EQUAL("task", task2->get_node()->get_name());
+    ASSERT_FALSE(task2->get_node()->get_name());
     ASSERT_EQUAL(0u, task2->get_node()->get_parents().size());
 }
 
