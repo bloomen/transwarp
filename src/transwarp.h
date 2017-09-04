@@ -18,6 +18,7 @@
 #include <queue>
 #include <stdexcept>
 #include <atomic>
+#include <chrono>
 
 
 namespace transwarp {
@@ -382,7 +383,6 @@ struct call_with_futures_impl<transwarp::consume_any_type, true, total, n...> {
 
     template<typename Future>
     struct waiter {
-
         template<typename T, typename... Args>
         static Future wait(bool& ready, const T& arg, const Args& ...args) {
             const auto status = arg.wait_for(std::chrono::microseconds(1));
@@ -395,7 +395,6 @@ struct call_with_futures_impl<transwarp::consume_any_type, true, total, n...> {
         static Future wait(bool&) {
             return {};
         }
-
     };
 };
 
@@ -566,7 +565,7 @@ struct graph_visitor {
 
 // Schedules using the given executor
 struct schedule_visitor {
-    explicit schedule_visitor(bool reset, transwarp::executor* executor) noexcept
+    schedule_visitor(bool reset, transwarp::executor* executor) noexcept
     : reset_(reset), executor_(executor) {}
 
     template<typename Task>
