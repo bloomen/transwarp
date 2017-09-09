@@ -23,7 +23,7 @@ for mode in $modes;do
     echo "+++ Running $app ..."
     count=0
     while [ $count -lt 100 ]; do
-        $app > /dev/null
+        $app -p 4 -z 0 > /dev/null
         let count+=1
     done
     echo "+++ Valgrinding $app ..."
