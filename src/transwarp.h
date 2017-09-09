@@ -233,8 +233,17 @@ public:
 // Exception thrown when a task is canceled
 class task_canceled : public transwarp::transwarp_error {
 public:
-    explicit task_canceled(const transwarp::node& node)
-    : transwarp::transwarp_error("canceled: " + transwarp::to_string(node, " "))
+    explicit task_canceled(const std::string& node_repr)
+    : transwarp::transwarp_error("task canceled: " + node_repr)
+    {}
+};
+
+
+// Exception thrown when a task was destroyed prematurely)
+class task_destroyed : public transwarp::transwarp_error {
+public:
+    explicit task_destroyed(const std::string& node_repr)
+    : transwarp::transwarp_error("task destroyed: " + node_repr)
     {}
 };
 
@@ -335,18 +344,18 @@ private:
 template<typename TaskType, bool done, int total, int... n>
 struct call_with_futures_impl {
     template<typename Result, typename Functor, typename Tuple>
-    static Result work(const std::atomic_bool& canceled, const transwarp::node& node, const Functor& f, const Tuple& t) {
+    static Result work(const std::atomic_bool& canceled, const std::string& node_repr, const Functor& f, const Tuple& t) {
         return call_with_futures_impl<TaskType, total == 1 + sizeof...(n), total, n..., sizeof...(n)>::template
-                work<Result>(canceled, node, f, t);
+                work<Result>(canceled, node_repr, f, t);
     }
 };
 
 template<int total, int... n>
 struct call_with_futures_impl<transwarp::root_type, true, total, n...> {
     template<typename Result, typename Functor, typename Tuple>
-    static Result work(const std::atomic_bool& canceled, const transwarp::node& node, const Functor& f, const Tuple&) {
+    static Result work(const std::atomic_bool& canceled, const std::string& node_repr, const Functor& f, const Tuple&) {
         if (canceled) {
-            throw transwarp::task_canceled(node);
+            throw transwarp::task_canceled(node_repr);
         }
         return f();
     }
@@ -355,10 +364,10 @@ struct call_with_futures_impl<transwarp::root_type, true, total, n...> {
 template<int total, int... n>
 struct call_with_futures_impl<transwarp::consume_type, true, total, n...> {
     template<typename Result, typename Functor, typename Tuple>
-    static Result work(const std::atomic_bool& canceled, const transwarp::node& node, const Functor& f, const Tuple& t) {
+    static Result work(const std::atomic_bool& canceled, const std::string& node_repr, const Functor& f, const Tuple& t) {
         auto results = std::tie(std::get<n>(t).get()...);
         if (canceled) {
-            throw transwarp::task_canceled(node);
+            throw transwarp::task_canceled(node_repr);
         }
         return f(std::get<n>(results)...);
     }
@@ -367,14 +376,14 @@ struct call_with_futures_impl<transwarp::consume_type, true, total, n...> {
 template<int total, int... n>
 struct call_with_futures_impl<transwarp::consume_any_type, true, total, n...> {
     template<typename Result, typename Functor, typename Tuple>
-    static Result work(const std::atomic_bool& canceled, const transwarp::node& node, const Functor& f, const Tuple& t) {
+    static Result work(const std::atomic_bool& canceled, const std::string& node_repr, const Functor& f, const Tuple& t) {
         using future_t = typename std::remove_reference<decltype(std::get<0>(t))>::type; // use first type as reference
         for (;;) {
             bool ready = false;
             auto future = waiter<future_t>::template wait(ready, std::get<n>(t)...);
             if (ready) {
                 if (canceled) {
-                    throw transwarp::task_canceled(node);
+                    throw transwarp::task_canceled(node_repr);
                 }
                 return f(future.get());
             }
@@ -401,10 +410,10 @@ struct call_with_futures_impl<transwarp::consume_any_type, true, total, n...> {
 template<int total, int... n>
 struct call_with_futures_impl<transwarp::wait_type, true, total, n...> {
     template<typename Result, typename Functor, typename Tuple>
-    static Result work(const std::atomic_bool& canceled, const transwarp::node& node, const Functor& f, const Tuple& t) {
+    static Result work(const std::atomic_bool& canceled, const std::string& node_repr, const Functor& f, const Tuple& t) {
         wait(std::get<n>(t)...);
         if (canceled) {
-            throw transwarp::task_canceled(node);
+            throw transwarp::task_canceled(node_repr);
         }
         return f();
     }
@@ -419,10 +428,10 @@ struct call_with_futures_impl<transwarp::wait_type, true, total, n...> {
 template<int total, int... n>
 struct call_with_futures_impl<transwarp::wait_any_type, true, total, n...> {
     template<typename Result, typename Functor, typename Tuple>
-    static Result work(const std::atomic_bool& canceled, const transwarp::node& node, const Functor& f, const Tuple& t) {
+    static Result work(const std::atomic_bool& canceled, const std::string& node_repr, const Functor& f, const Tuple& t) {
         while (!wait(std::get<n>(t)...));
         if (canceled) {
-            throw transwarp::task_canceled(node);
+            throw transwarp::task_canceled(node_repr);
         }
         return f();
     }
@@ -442,11 +451,11 @@ struct call_with_futures_impl<transwarp::wait_any_type, true, total, n...> {
 // Calls the given functor with or without the tuple of futures depending on the task type.
 // Throws task_canceled if canceled becomes true
 template<typename TaskType, typename Result, typename Functor, typename Tuple>
-Result call_with_futures(const std::atomic_bool& canceled, const transwarp::node& node, const Functor& f, const Tuple& t) {
+Result call_with_futures(const std::atomic_bool& canceled, const std::string& node_repr, const Functor& f, const Tuple& t) {
     using tuple_t = typename std::decay<Tuple>::type;
     static const std::size_t n = std::tuple_size<tuple_t>::value;
     return transwarp::detail::call_with_futures_impl<TaskType, 0 == n, n>::template
-            work<Result>(canceled, node, f, t);
+            work<Result>(canceled, node_repr, f, t);
 }
 
 template<std::size_t...> struct indices {};
@@ -716,7 +725,8 @@ private:
 // A task representing a piece of work given by a functor and parent tasks.
 // By connecting tasks a directed acyclic graph is built.
 template<typename TaskType, typename Functor, typename... Tasks>
-class task : public transwarp::itask<typename transwarp::detail::result<TaskType, Functor, Tasks...>::type> {
+class task : public transwarp::itask<typename transwarp::detail::result<TaskType, Functor, Tasks...>::type>,
+             public std::enable_shared_from_this<task<TaskType, Functor, Tasks...>> {
 public:
     // The task type
     using task_type = TaskType;
@@ -725,6 +735,7 @@ public:
     using result_type = typename transwarp::detail::result<task_type, Functor, Tasks...>::type;
 
     // A task is defined by name, functor, and parent tasks. name is optional, see overload
+    // Note: A task must be created using shared_ptr (because of shared_from_this)
     template<typename F>
     // cppcheck-suppress passedByValue
     // cppcheck-suppress uninitMemberVar
@@ -733,6 +744,7 @@ public:
     {}
 
     // This overload is for omitting the task name
+    // Note: A task must be created using shared_ptr (because of shared_from_this)
     template<typename F>
     // cppcheck-suppress uninitMemberVar
     explicit task(F&& functor, std::shared_ptr<Tasks>... parents)
@@ -883,9 +895,11 @@ private:
     // nor the task-specific executor is found.
     void schedule_impl(bool reset, transwarp::executor* executor=nullptr) {
         if (!canceled_ && (reset || !future_.valid())) {
+            auto node_repr = transwarp::to_string(*node_, " ");
+            std::weak_ptr<task> self = this->shared_from_this();
             auto futures = transwarp::detail::get_futures(parents_);
             auto pack_task = std::make_shared<std::packaged_task<result_type()>>(
-                    std::bind(&task::evaluate, std::ref(*this), std::move(futures)));
+                    std::bind(&task::evaluate, std::move(node_repr), std::move(self), std::move(futures)));
             future_ = pack_task->get_future();
             if (executor_) {
                 executor_->execute([pack_task] { (*pack_task)(); }, node_);
@@ -930,9 +944,14 @@ private:
 
     // Calls the functor of the given task with the results from the futures.
     // Throws transwarp::task_canceled if the task is canceled.
-    static result_type evaluate(transwarp::task<task_type, Functor, Tasks...>& task,
-                                std::tuple<std::shared_future<typename Tasks::result_type>...> futures) {
-        return transwarp::detail::call_with_futures<task_type, result_type>(task.canceled_, *task.node_, task.functor_, futures);
+    // Throws transwarp::task_destroyed in case the task was destroyed prematurely.
+    static result_type evaluate(const std::string& node_repr, const std::weak_ptr<task>& weak_task,
+                                const std::tuple<std::shared_future<typename Tasks::result_type>...>& futures) {
+        auto task = weak_task.lock();
+        if (!task) {
+            throw transwarp::task_destroyed(node_repr);
+        }
+        return transwarp::detail::call_with_futures<task_type, result_type>(task->canceled_, node_repr, task->functor_, futures);
     }
 
     std::shared_ptr<transwarp::node> node_;

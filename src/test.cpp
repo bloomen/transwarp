@@ -191,10 +191,18 @@ TEST(transwarp_error) {
 }
 
 TEST(task_canceled) {
-    const std::string msg = "canceled: \"<cool> consume id=1 par=0\"";
-    const auto node = generic_node();
+    const std::string msg = "task canceled: node";
     try {
-        throw transwarp::task_canceled(node);
+        throw transwarp::task_canceled("node");
+    } catch (const transwarp::transwarp_error& e) {
+        ASSERT_EQUAL(msg, e.what());
+    }
+}
+
+TEST(task_destroyed) {
+    const std::string msg = "task destroyed: node";
+    try {
+        throw transwarp::task_destroyed("node");
     } catch (const transwarp::transwarp_error& e) {
         ASSERT_EQUAL(msg, e.what());
     }
@@ -795,6 +803,29 @@ TEST(pass_by_reference) {
     using data_t = std::array<double, 10>;
     make_test_pass_by_reference<const data_t&>();
     make_test_pass_by_reference<data_t&>();
+}
+
+TEST(future_throws_task_destroyed) {
+    std::shared_future<void> future;
+    transwarp::parallel exec{1};
+    std::atomic_bool cont{false};
+    {
+        auto task1 = make_task(transwarp::root, [&cont]{
+            while (!cont);
+        });
+        auto task2 = make_task(transwarp::wait, []{}, task1);
+        task2->schedule_all(exec);
+        future = task2->get_future();
+    }
+    cont = true;
+    ASSERT_TRUE(future.valid());
+    try {
+        future.get();
+        ASSERT_FALSE(true); // shouldn't get here
+    } catch (const transwarp::task_destroyed& e) {
+        const std::string exp = "task destroyed: \"wait id=1 par=1\"";
+        ASSERT_EQUAL(exp, e.what());
+    }
 }
 
 COLLECTION(test_examples) {
