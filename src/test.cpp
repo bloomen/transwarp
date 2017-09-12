@@ -819,13 +819,7 @@ TEST(future_throws_task_destroyed) {
     }
     cont = true;
     ASSERT_TRUE(future.valid());
-    try {
-        future.get();
-        ASSERT_FALSE(true); // shouldn't get here
-    } catch (const transwarp::task_destroyed& e) {
-        const std::string exp = "task destroyed: \"wait id=1 par=1\"";
-        ASSERT_EQUAL(exp, e.what());
-    }
+    ASSERT_THROW(transwarp::task_destroyed, [&future]{ future.get(); });
 }
 
 COLLECTION(test_examples) {

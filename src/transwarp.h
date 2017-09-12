@@ -239,7 +239,7 @@ public:
 };
 
 
-// Exception thrown when a task was destroyed prematurely)
+// Exception thrown when a task was destroyed prematurely
 class task_destroyed : public transwarp::transwarp_error {
 public:
     explicit task_destroyed(const std::string& node_repr)
@@ -452,7 +452,7 @@ struct call_with_futures_impl<transwarp::wait_any_type, true, total, n...> {
 // Throws transwarp::task_destroyed in case the task was destroyed prematurely.
 template<typename TaskType, typename Result, typename Task, typename Tuple>
 Result call_with_futures(const std::string& node_repr, const Task& task, const Tuple& futures) {
-    constexpr const std::size_t n = std::tuple_size<typename std::decay<Tuple>::type>::value;
+    constexpr const std::size_t n = std::tuple_size<Tuple>::value;
     return transwarp::detail::call_with_futures_impl<TaskType, 0 == n, n>::template
             work<Result>(node_repr, task, futures);
 }
@@ -491,7 +491,7 @@ void call_with_each_index(transwarp::detail::indices<i, j...>, const Functor& f,
 // task pointers only and dereferences each element before passing it into the functor
 template<typename Functor, typename Tuple>
 void call_with_each(const Functor& f, const Tuple& t) {
-    constexpr const std::size_t n = std::tuple_size<typename std::decay<Tuple>::type>::value;
+    constexpr const std::size_t n = std::tuple_size<Tuple>::value;
     using index_t = typename transwarp::detail::index_range<0, n>::type;
     transwarp::detail::call_with_each_index(index_t(), f, t);
 }
