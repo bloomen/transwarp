@@ -84,8 +84,10 @@ struct executor_setter;
 class node {
 public:
     // cppcheck-suppress passedByValue
-    node(std::size_t id, transwarp::task_type type, std::shared_ptr<std::string> name, std::vector<std::shared_ptr<node>> parents) noexcept
-    : id_(id), type_(type), name_(std::move(name)), parents_(std::move(parents))
+    node(std::size_t id, transwarp::task_type type, std::shared_ptr<std::string> name,
+         std::shared_ptr<std::string> executor, std::vector<std::shared_ptr<node>> parents) noexcept
+    : id_(id), type_(type), name_(std::move(name)),
+      executor_(std::move(executor)), parents_(std::move(parents))
     {}
 
     // The task ID
@@ -865,7 +867,7 @@ private:
     task(bool has_name, std::string name, F&& functor, std::shared_ptr<Tasks>... parents)
     : node_(std::make_shared<transwarp::node>(0, task_type::value,
             (has_name ? std::make_shared<std::string>(std::move(name)) : nullptr),
-            std::vector<std::shared_ptr<transwarp::node>>{})),
+            nullptr, std::vector<std::shared_ptr<transwarp::node>>{})),
       functor_(std::forward<F>(functor)),
       parents_(std::make_tuple(std::move(parents)...)),
       visited_(false),
