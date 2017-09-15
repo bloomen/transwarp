@@ -4,7 +4,6 @@ language: cpp
 
 install:
     - sudo apt-get install -y libboost-all-dev
-    - valgrind --version
     - wget https://downloads.sourceforge.net/project/libunittest/libunittest-9.3.5.tar.gz
     - tar xfz libunittest-9.3.5.tar.gz
     - cd libunittest-9.3.5
