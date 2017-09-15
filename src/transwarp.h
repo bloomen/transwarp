@@ -204,10 +204,10 @@ class executor {
 public:
     virtual ~executor() = default;
 
-    // Returns the name of the executor
+    // Is supposed to return the name of the executor
     virtual std::string get_name() const = 0;
 
-    // This actually runs a task which is wrapped by the functor. The functor only
+    // Is supposed to run a task which is wrapped by the functor. The functor only
     // captures a shared_ptr and can hence be copied at low cost. node represents
     // the task that the functor belongs to.
     virtual void execute(const std::function<void()>& functor, const std::shared_ptr<transwarp::node>& node) = 0;
@@ -717,10 +717,12 @@ public:
     sequential(sequential&&) = delete;
     sequential& operator=(sequential&&) = delete;
 
+    // Returns the name of the executor
     std::string get_name() const override {
         return "transwarp::sequential";
     }
 
+    // Runs the functor on the current thread
     void execute(const std::function<void()>& functor, const std::shared_ptr<transwarp::node>&) override {
         functor();
     }
@@ -741,10 +743,12 @@ public:
     parallel(parallel&&) = delete;
     parallel& operator=(parallel&&) = delete;
 
+    // Returns the name of the executor
     std::string get_name() const override {
         return "transwarp::parallel";
     }
 
+    // Pushes the functor into the thread pool for asynchronous execution
     void execute(const std::function<void()>& functor, const std::shared_ptr<transwarp::node>&) override {
         pool_.push(functor);
     }
@@ -865,7 +869,7 @@ public:
     // throw transwarp::task_canceled when asking the future for its result.
     // Canceling pending tasks does not affect currently running tasks.
     // As long as cancel is enabled new computations cannot be scheduled.
-    // Passing true is equivalent to resume.
+    // Passing false is equivalent to resume.
     void cancel(bool enabled) noexcept override {
         canceled_ = enabled;
     }
@@ -874,7 +878,7 @@ public:
     // throw transwarp::task_canceled when asking a future for its result.
     // Canceling pending tasks does not affect currently running tasks.
     // As long as cancel is enabled new computations cannot be scheduled.
-    // Passing true is equivalent to resume.
+    // Passing false is equivalent to resume.
     void cancel_all(bool enabled) noexcept override {
         transwarp::detail::cancel_visitor visitor(enabled);
         visit(visitor);
