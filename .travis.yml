@@ -10,6 +10,7 @@ install:
     - ./configure
     - make -j4
     - sudo make install
+    - cd ..
 
 script:
     - ./make_check.sh 
