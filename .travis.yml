@@ -5,7 +5,7 @@ language: cpp
 install:
     - sudo apt-get install -y libboost-thread1.54-dev valgrind
     - wget https://github.com/danmar/cppcheck/archive/1.80.tar.gz
-    - tar xfz cppcheck-1.80.tar.gz
+    - tar xfz 1.80.tar.gz
     - cd cppcheck-1.80
     - make -j4
     - sudo make install
