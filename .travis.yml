@@ -15,7 +15,8 @@ install:
     - rm -rf libunittest-9.3.5
 
 script:
-    - ./make_check.sh 
+    - ./make_check.sh g++ 
+    - ./make_check.sh clang++ 
 
 notifications:
   email:
