@@ -10,10 +10,6 @@ export CXX=$compiler
 
 modes='debug release'
 
-echo "+++ Running CppCheck ..."
-$thisdir/cppcheck.sh
-echo "CppCheck OK"
-
 for mode in $modes;do
     echo "+++ Checking $mode with $compiler ..."
 
