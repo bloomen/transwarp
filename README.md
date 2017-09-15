@@ -18,7 +18,7 @@ transwarp is designed for ease of use, portability, and scalability. It is writt
 C++11 and only depends on the standard library. Just copy `src/transwarp.h` 
 to your project and off you go! Tested with GCC, Clang, and Visual Studio.
 
-*Contents*
+**Table of Contents**
 
   * [Example](#example)
   * [API doc](#api-doc)
