@@ -181,7 +181,6 @@ meta-data of the current task.
 You'll need:
 * [libunittest](http://libunittest.sourceforge.net/)
 * [boost](http://www.boost.org/)
-* [cppcheck](http://cppcheck.sourceforge.net/) 
 * [valgrind](http://valgrind.org/) 
 
 If you're on Mac or Linux, just do:
