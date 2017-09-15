@@ -3,7 +3,14 @@ sudo: required
 language: cpp
 
 install:
-    - sudo apt-get install -y libboost-thread1.54-dev valgrind cppcheck
+    - sudo apt-get install -y libboost-thread1.54-dev valgrind
+    - wget https://github.com/danmar/cppcheck/archive/1.80.tar.gz
+    - tar xfz cppcheck-1.80.tar.gz
+    - cd cppcheck-1.80
+    - make -j4
+    - sudo make install
+    - cd ..
+    - rm -rf cppcheck-1.80
     - wget https://downloads.sourceforge.net/project/libunittest/libunittest-9.3.5.tar.gz
     - tar xfz libunittest-9.3.5.tar.gz
     - cd libunittest-9.3.5
@@ -11,6 +18,7 @@ install:
     - make -j4
     - sudo make install
     - cd ..
+    - rm -rf libunittest-9.3.5
 
 script:
     - ./make_check.sh 
