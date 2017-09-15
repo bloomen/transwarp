@@ -179,9 +179,10 @@ meta-data of the current task.
 ## Running the tests
 
 You'll need:
-* [libunittest](http://libunittest.sourceforge.net/)
-* [boost](http://www.boost.org/)
-* [valgrind](http://valgrind.org/) 
+* [libunittest](http://libunittest.sourceforge.net/) (>=9.3)
+* [boost](http://www.boost.org/) (>=1.53)
+* [cppcheck](http://cppcheck.sourceforge.net/) (>=1.8)
+* [valgrind](http://valgrind.org/) (>=3.11)
 
 If you're on Mac or Linux, just do:
 ```
