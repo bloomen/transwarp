@@ -12,6 +12,7 @@ modes='debug release'
 
 for mode in $modes;do
     echo "+++ Checking $mode with $compiler ..."
+    $compiler --version
 
     # Checking tests
     $thisdir/src/compile_test.sh $mode
