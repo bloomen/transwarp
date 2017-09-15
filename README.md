@@ -184,11 +184,15 @@ You'll need:
 * [cppcheck](http://cppcheck.sourceforge.net/) (>=1.8)
 * [valgrind](http://valgrind.org/) (>=3.11)
 
-If you're on Mac or Linux, just do:
+If you're on Mac or Linux and want to run all checks, just do:
 ```
 ./make_check.sh [compiler]
 ```
-where compiler defaults to `g++` and can also be `clang++`.
+where compiler defaults to `g++` and can also be `clang++`. In order to only
+run the unit tests, you can do:
+```
+./src/compile_test.sh && ./src/test.release
+```
 
 If you're using Visual Studio you will have to set up a project
 manually to run all tests.
