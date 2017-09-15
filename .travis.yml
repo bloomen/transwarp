@@ -8,7 +8,7 @@ install:
     - wget https://downloads.sourceforge.net/project/libunittest/libunittest-9.3.5.tar.gz
     - tar xfz libunittest-9.3.5.tar.gz
     - cd libunittest-9.3.5
-    - ./configure
+    - ./configure --prefix=/usr
     - make -j4
     - sudo make install
     - cd ..
