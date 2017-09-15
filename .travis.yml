@@ -3,7 +3,7 @@ sudo: required
 language: cpp
 
 install:
-    - sudo apt-get install -y libboost-all-dev valgrind
+    - sudo apt-get install -y libboost-all-dev
     - valgrind --version
     - wget https://downloads.sourceforge.net/project/libunittest/libunittest-9.3.5.tar.gz
     - tar xfz libunittest-9.3.5.tar.gz
@@ -15,8 +15,19 @@ install:
     - rm -rf libunittest-9.3.5
 
 script:
-    - ./make_check.sh g++ 
-    - ./make_check.sh clang++ 
+    - cd src
+    - g++ --version
+    - export CXX=g++
+    - ./compile_test.sh debug
+    - ./test.debug -z 0 
+    - ./compile_test.sh release
+    - ./test.release -z 0
+    - clang++ --version 
+    - export CXX=clang++
+    - ./compile_test.sh debug
+    - ./test.debug -z 0 
+    - ./compile_test.sh release
+    - ./test.release -z 0 
 
 notifications:
   email:
