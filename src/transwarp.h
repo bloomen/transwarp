@@ -90,6 +90,12 @@ public:
       executor_(std::move(executor)), parents_(std::move(parents))
     {}
 
+    // delete copy/move semantics
+    node(const node&) = delete;
+    node& operator=(const node&) = delete;
+    node(node&&) = delete;
+    node& operator=(node&&) = delete;
+
     // The task ID
     std::size_t get_id() const noexcept {
         return id_;
@@ -154,6 +160,12 @@ public:
     edge(std::shared_ptr<transwarp::node> parent, std::shared_ptr<transwarp::node> child) noexcept
     : parent_(std::move(parent)), child_(std::move(child))
     {}
+
+    // default copy/move semantics
+    edge(const edge&) = default;
+    edge& operator=(const edge&) = default;
+    edge(edge&&) = default;
+    edge& operator=(edge&&) = default;
 
     // Returns the parent node
     const std::shared_ptr<transwarp::node>& get_parent() const noexcept {
@@ -291,6 +303,12 @@ public:
             throw transwarp::thread_pool_error("number of threads must be larger than zero");
         }
     }
+
+    // delete copy/move semantics
+    thread_pool(const thread_pool&) = delete;
+    thread_pool& operator=(const thread_pool&) = delete;
+    thread_pool(thread_pool&&) = delete;
+    thread_pool& operator=(thread_pool&&) = delete;
 
     ~thread_pool() {
         shutdown();
@@ -691,6 +709,14 @@ struct result<transwarp::wait_any_type, Functor, Tasks...> {
 class sequential : public transwarp::executor {
 public:
 
+    sequential() = default;
+
+    // delete copy/move semantics
+    sequential(const sequential&) = delete;
+    sequential& operator=(const sequential&) = delete;
+    sequential(sequential&&) = delete;
+    sequential& operator=(sequential&&) = delete;
+
     std::string get_name() const override {
         return "transwarp::sequential";
     }
@@ -708,6 +734,12 @@ public:
     explicit parallel(std::size_t n_threads)
     : pool_(n_threads)
     {}
+
+    // delete copy/move semantics
+    parallel(const parallel&) = delete;
+    parallel& operator=(const parallel&) = delete;
+    parallel(parallel&&) = delete;
+    parallel& operator=(parallel&&) = delete;
 
     std::string get_name() const override {
         return "transwarp::parallel";
