@@ -22,7 +22,12 @@ script:
     - ./compile_test.sh release
     - ./test.release -z 0
     - clang++ --version 
-    - export CXX=clang++
+    - export CXX='clang++ -stdlib=libstdc++'
+    - ./compile_test.sh debug
+    - ./test.debug -z 0 
+    - ./compile_test.sh release
+    - ./test.release -z 0 
+    - export CXX='clang++ -stdlib=libc++'
     - ./compile_test.sh debug
     - ./test.debug -z 0 
     - ./compile_test.sh release
