@@ -18,7 +18,7 @@ add_executable(benchmark_statistical examples/benchmark_statistical.cpp)
 target_compile_definitions(transwarp_test PRIVATE UNITTEST)
 
 if (MSVC)
-   set(CMAKE_CXX_FLAGS "/W4 /bigobj /EHsc /wd4503")
+   set(CMAKE_CXX_FLAGS "/W4 /WX /bigobj /EHsc /wd4503 /wd4996 /wd4702")
 else()
    set(CMAKE_CXX_FLAGS "-std=c++11 -pedantic -Wall -Wextra -Wconversion -Werror -pthread")
    target_link_libraries(transwarp_test ${CMAKE_THREAD_LIBS_INIT})

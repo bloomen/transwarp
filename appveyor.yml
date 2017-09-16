@@ -34,4 +34,6 @@ build:
 
 test_script:
   - cmd: cd C:\projects\transwarp\build
+  - cmd: ls 
+  - cmd: ls %configuration%
   - cmd: transwarp_test --use-colour no
