@@ -10,7 +10,6 @@ export CXX=$compiler
 
 modes='debug release'
 
-echo "+++ Running CppCheck ..."
 $thisdir/cppcheck.sh
 
 for mode in $modes;do
@@ -23,11 +22,10 @@ for mode in $modes;do
     echo "+++ Running $app ..."
     count=0
     while [ $count -lt 100 ]; do
-        $app -z 0 > /dev/null
+        $app --use-colour no --order rand --rng-seed 'time' > /dev/null
         let count+=1
     done
-    echo "+++ Valgrinding $app ..."
-    $thisdir/valgrind.sh $app
+    $thisdir/valgrind.sh $app --use-colour no
     echo "Tests OK"
 
     # Checking examples
@@ -38,7 +36,6 @@ for mode in $modes;do
         echo "+++ Running $app ..."
         $app
         if [[ $app != *"benchmark_"* ]]; then
-            echo "+++ Valgrinding $app ..."
             $thisdir/valgrind.sh $app
         fi
         mv $(basename ${ex%.cpp}.dot) $thisdir/examples/

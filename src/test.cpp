@@ -1,4 +1,5 @@
-#include <libunittest/all.hpp>
+#define CATCH_CONFIG_MAIN
+#include "catch.hpp"
 #include "transwarp.h"
 #include "../examples/basic_with_three_tasks.h"
 #include "../examples/statistical_key_facts.h"
@@ -11,8 +12,6 @@
 using transwarp::make_task;
 using transwarp::make_task;
 
-
-COLLECTION(test_transwarp) {
 
 using nodes_t = std::vector<std::shared_ptr<transwarp::node>>;
 
@@ -32,17 +31,17 @@ void make_test_one_task(std::size_t threads) {
         task = make_task(transwarp::root, f1);
         executor = std::make_shared<transwarp::sequential>();
     }
-    ASSERT_EQUAL(0u, task->get_node()->get_id());
-    ASSERT_EQUAL(0u, task->get_node()->get_parents().size());
-    ASSERT_FALSE(task->get_node()->get_name());
+    REQUIRE(0u == task->get_node()->get_id());
+    REQUIRE(0u == task->get_node()->get_parents().size());
+    REQUIRE_FALSE(task->get_node()->get_name());
     const auto graph = task->get_graph();
-    ASSERT_EQUAL(0u, graph.size());
+    REQUIRE(0u == graph.size());
     task->schedule_all(*executor);
     auto future = task->get_future();
-    ASSERT_EQUAL(42, future.get());
+    REQUIRE(42 == future.get());
 }
 
-TEST(one_task) {
+TEST_CASE("one_task") {
     make_test_one_task(0);
     make_test_one_task(1);
     make_test_one_task(2);
@@ -71,31 +70,31 @@ TEST(one_task) {
         executor = std::make_shared<transwarp::sequential>();
     }
 
-    ASSERT_EQUAL(0u, task1->get_node()->get_id());
-    ASSERT_EQUAL(0u, task1->get_node()->get_parents().size());
-    ASSERT_EQUAL("t1", *task1->get_node()->get_name());
+    REQUIRE(0u == task1->get_node()->get_id());
+    REQUIRE(0u == task1->get_node()->get_parents().size());
+    REQUIRE("t1" == *task1->get_node()->get_name());
 
-    ASSERT_EQUAL(1u, task2->get_node()->get_id());
-    ASSERT_EQUAL(1u, task2->get_node()->get_parents().size());
-    ASSERT_EQUAL("t2", *task2->get_node()->get_name());
+    REQUIRE(1u == task2->get_node()->get_id());
+    REQUIRE(1u == task2->get_node()->get_parents().size());
+    REQUIRE("t2" == *task2->get_node()->get_name());
     task2->set_executor(std::make_shared<transwarp::sequential>());
 
-    ASSERT_EQUAL(2u, task3->get_node()->get_id());
-    ASSERT_EQUAL(2u, task3->get_node()->get_parents().size());
-    ASSERT_EQUAL("t3", *task3->get_node()->get_name());
+    REQUIRE(2u == task3->get_node()->get_id());
+    REQUIRE(2u == task3->get_node()->get_parents().size());
+    REQUIRE("t3" == *task3->get_node()->get_name());
 
     task3->schedule_all(*executor);
-    ASSERT_EQUAL(89, task3->get_future().get());
-    ASSERT_EQUAL(42, task1->get_future().get());
+    REQUIRE(89 == task3->get_future().get());
+    REQUIRE(42 == task1->get_future().get());
 
     ++value;
 
     task3->schedule_all(*executor);
-    ASSERT_EQUAL(91, task3->get_future().get());
-    ASSERT_EQUAL(43, task1->get_future().get());
+    REQUIRE(91 == task3->get_future().get());
+    REQUIRE(43 == task1->get_future().get());
 
     const auto graph = task3->get_graph();
-    ASSERT_EQUAL(3u, graph.size());
+    REQUIRE(3u == graph.size());
     const auto dot_graph = transwarp::to_string(graph);
 
     const std::string exp_dot_graph = "digraph {\n"
@@ -110,10 +109,10 @@ TEST(one_task) {
 "id=2 par=2\"\n"
 "}";
 
-    ASSERT_EQUAL(exp_dot_graph, dot_graph);
+    REQUIRE(exp_dot_graph == dot_graph);
 }
 
-TEST(three_tasks) {
+TEST_CASE("three_tasks") {
     make_test_three_tasks(0);
     make_test_three_tasks(1);
     make_test_three_tasks(2);
@@ -161,21 +160,21 @@ void make_test_bunch_of_tasks(std::size_t threads) {
     const auto exp_result = 42042;
 
     task13->schedule_all(*executor);
-    ASSERT_EQUAL(exp_result, task13->get_future().get());
-    ASSERT_EQUAL(task0_result, task0->get_future().get());
-    ASSERT_EQUAL(task3_result, task3->get_future().get());
-    ASSERT_EQUAL(task11_result, task11->get_future().get());
+    REQUIRE(exp_result == task13->get_future().get());
+    REQUIRE(task0_result == task0->get_future().get());
+    REQUIRE(task3_result == task3->get_future().get());
+    REQUIRE(task11_result == task11->get_future().get());
 
     for (auto i=0; i<100; ++i) {
         task13->schedule_all(*executor);
-        ASSERT_EQUAL(task0_result, task0->get_future().get());
-        ASSERT_EQUAL(task3_result, task3->get_future().get());
-        ASSERT_EQUAL(task11_result, task11->get_future().get());
-        ASSERT_EQUAL(exp_result, task13->get_future().get());
+        REQUIRE(task0_result == task0->get_future().get());
+        REQUIRE(task3_result == task3->get_future().get());
+        REQUIRE(task11_result == task11->get_future().get());
+        REQUIRE(exp_result == task13->get_future().get());
     }
 }
 
-TEST(bunch_of_tasks) {
+TEST_CASE("bunch_of_tasks") {
     make_test_bunch_of_tasks(0);
     make_test_bunch_of_tasks(1);
     make_test_bunch_of_tasks(2);
@@ -183,41 +182,41 @@ TEST(bunch_of_tasks) {
     make_test_bunch_of_tasks(4);
 }
 
-TEST(transwarp_error) {
+TEST_CASE("transwarp_error") {
     const std::string msg = "text";
     try {
         throw transwarp::transwarp_error(msg);
     } catch (const std::runtime_error& e) {
-        ASSERT_EQUAL(msg, e.what());
+        REQUIRE(msg == e.what());
     }
 }
 
-TEST(task_canceled) {
+TEST_CASE("task_canceled") {
     const std::string msg = "task canceled: node";
     try {
         throw transwarp::task_canceled("node");
     } catch (const transwarp::transwarp_error& e) {
-        ASSERT_EQUAL(msg, e.what());
+        REQUIRE(msg == e.what());
     }
 }
 
-TEST(task_destroyed) {
+TEST_CASE("task_destroyed") {
     const std::string msg = "task destroyed: node";
     try {
         throw transwarp::task_destroyed("node");
     } catch (const transwarp::transwarp_error& e) {
-        ASSERT_EQUAL(msg, e.what());
+        REQUIRE(msg == e.what());
     }
 }
 
-TEST(make_dot_graph_with_empty_graph) {
+TEST_CASE("make_dot_graph_with_empty_graph") {
     const std::vector<transwarp::edge> graph;
     const auto dot_graph = transwarp::to_string(graph);
     const std::string exp_dot_graph = "digraph {\n}";
-    ASSERT_EQUAL(exp_dot_graph, dot_graph);
+    REQUIRE(exp_dot_graph == dot_graph);
 }
 
-TEST(make_dot_graph_with_three_nodes) {
+TEST_CASE("make_dot_graph_with_three_nodes") {
     auto node2 = std::make_shared<transwarp::node>(1, transwarp::task_type::consume, std::make_shared<std::string>("node2"), nullptr, nodes_t{});
     auto node3 = std::make_shared<transwarp::node>(2, transwarp::task_type::wait, std::make_shared<std::string>("node3"), std::make_shared<std::string>("exec"), nodes_t{});
     auto node1 = std::make_shared<transwarp::node>(0, transwarp::task_type::consume, std::make_shared<std::string>("node1"), nullptr, nodes_t{node2, node3});
@@ -234,10 +233,10 @@ TEST(make_dot_graph_with_three_nodes) {
 "id=0 par=2\"\n"
 "}";
 
-    ASSERT_EQUAL(exp_dot_graph, dot_graph);
+    REQUIRE(exp_dot_graph == dot_graph);
 }
 
-TEST(get_node) {
+TEST_CASE("get_node") {
     auto f1 = [] { return 42; };
     auto task1 = make_task(transwarp::root, f1);
     auto f2 = [] { return 13; };
@@ -246,21 +245,21 @@ TEST(get_node) {
     auto task3 = make_task(transwarp::consume, f3, task1, task2);
 
     // task3
-    ASSERT_EQUAL(2, task3->get_node()->get_id());
-    ASSERT_FALSE(task3->get_node()->get_name());
-    ASSERT_EQUAL(2u, task3->get_node()->get_parents().size());
-    ASSERT_EQUAL(task1->get_node().get(), task3->get_node()->get_parents()[0].get());
-    ASSERT_EQUAL(task2->get_node().get(), task3->get_node()->get_parents()[1].get());
+    REQUIRE(2 == task3->get_node()->get_id());
+    REQUIRE_FALSE(task3->get_node()->get_name());
+    REQUIRE(2u == task3->get_node()->get_parents().size());
+    REQUIRE(task1->get_node().get() == task3->get_node()->get_parents()[0].get());
+    REQUIRE(task2->get_node().get() == task3->get_node()->get_parents()[1].get());
 
     // task1
-    ASSERT_EQUAL(0, task1->get_node()->get_id());
-    ASSERT_FALSE(task1->get_node()->get_name());
-    ASSERT_EQUAL(0u, task1->get_node()->get_parents().size());
+    REQUIRE(0 == task1->get_node()->get_id());
+    REQUIRE_FALSE(task1->get_node()->get_name());
+    REQUIRE(0u == task1->get_node()->get_parents().size());
 
     // task2
-    ASSERT_EQUAL(1, task2->get_node()->get_id());
-    ASSERT_FALSE(task2->get_node()->get_name());
-    ASSERT_EQUAL(0u, task2->get_node()->get_parents().size());
+    REQUIRE(1 == task2->get_node()->get_id());
+    REQUIRE_FALSE(task2->get_node()->get_name());
+    REQUIRE(0u == task2->get_node()->get_parents().size());
 }
 
 void make_test_task_with_exception_thrown(std::size_t threads) {
@@ -291,13 +290,13 @@ void make_test_task_with_exception_thrown(std::size_t threads) {
     task3->schedule_all(*executor);
     try {
         task3->get_future().get();
-        ASSERT_TRUE(false);
+        REQUIRE(false);
     } catch (const std::logic_error& e) {
-        ASSERT_EQUAL(std::string("from f1"), e.what());
+        REQUIRE(std::string("from f1") == e.what());
     }
 }
 
-TEST(task_with_exception_thrown) {
+TEST_CASE("task_with_exception_thrown") {
     make_test_task_with_exception_thrown(0);
     make_test_task_with_exception_thrown(1);
     make_test_task_with_exception_thrown(2);
@@ -318,20 +317,20 @@ void cancel_with_schedule_all(int expected, Functor functor, TaskType task_type)
     task2->schedule_all(executor);
     task2->cancel_all(true);
     cont = true;
-    ASSERT_THROW(transwarp::task_canceled, [task2] { task2->get_future().get(); });
+    REQUIRE_THROWS_AS(task2->get_future().get(), transwarp::task_canceled&);
     task2->cancel_all(false);
     task2->schedule_all(executor);
-    ASSERT_EQUAL(expected, task2->get_future().get());
+    REQUIRE(expected == task2->get_future().get());
 }
 
-TEST(cancel_with_schedule_all_called_before_in_parallel_and_uncancel) {
+TEST_CASE("cancel_with_schedule_all_called_before_in_parallel_and_uncancel") {
     cancel_with_schedule_all(55, [] (int x) { return x + 13; }, transwarp::consume);
     cancel_with_schedule_all(55, [] (int x) { return x + 13; }, transwarp::consume_any);
     cancel_with_schedule_all(13, [] () { return 13; }, transwarp::wait);
     cancel_with_schedule_all(13, [] () { return 13; }, transwarp::wait_any);
 }
 
-TEST(cancel_with_schedule_all_called_after) {
+TEST_CASE("cancel_with_schedule_all_called_after") {
     auto f0 = [] { return 42; };
     auto f1 = [] (int x) { return x + 13; };
     auto task1 = make_task(transwarp::root, f0);
@@ -339,10 +338,10 @@ TEST(cancel_with_schedule_all_called_after) {
     task2->cancel_all(true);
     transwarp::sequential executor;
     task2->schedule_all(executor);
-    ASSERT_FALSE(task2->get_future().valid());
+    REQUIRE_FALSE(task2->get_future().valid());
 }
 
-TEST(itask) {
+TEST_CASE("itask") {
     std::shared_ptr<transwarp::itask<int>> final;
     {
         auto f0 = [] { return 42; };
@@ -353,70 +352,67 @@ TEST(itask) {
     }
     transwarp::parallel executor(2);
     final->schedule_all(executor);
-    ASSERT_EQUAL(55, final->get_future().get());
+    REQUIRE(55 == final->get_future().get());
 }
 
-TEST(sequenced) {
+TEST_CASE("sequenced") {
     transwarp::sequential seq;
     int value = 5;
     auto functor = [&value]{ value *= 2; };
     seq.execute(functor, generic_node());
-    ASSERT_EQUAL(10, value);
+    REQUIRE(10 == value);
 }
 
-TEST(parallel) {
+TEST_CASE("parallel") {
     transwarp::parallel par(4);
     std::atomic_bool done(false);
     int value = 5;
     auto functor = [&value, &done]{ value *= 2; done = true; };
     par.execute(functor, generic_node());
     while (!done);
-    ASSERT_EQUAL(10, value);
+    REQUIRE(10 == value);
 }
 
-TEST(schedule_all_without_executor) {
+TEST_CASE("schedule_all_without_executor") {
     int x = 13;
     auto task = make_task(transwarp::root, [&x]{ x *= 2; });
     task->schedule_all();
     task->get_future().wait();
-    ASSERT_EQUAL(26, x);
+    REQUIRE(26 == x);
 }
 
-TEST(schedule_all_with_task_specific_executor) {
+TEST_CASE("schedule_all_with_task_specific_executor") {
     int value = 42;
     auto functor = [value] { return value*2; };
     auto task = make_task(transwarp::root, functor);
     task->set_executor(std::make_shared<transwarp::sequential>());
     task->schedule_all();
-    ASSERT_EQUAL(84, task->get_future().get());
+    REQUIRE(84 == task->get_future().get());
 }
 
-TEST(invalid_task_specific_executor) {
+TEST_CASE("invalid_task_specific_executor") {
     auto task = make_task(transwarp::root, []{});
-    auto functor = [&task] { task->set_executor(nullptr); };
-    ASSERT_THROW(transwarp::transwarp_error, functor);
+    REQUIRE_THROWS_AS(task->set_executor(nullptr), transwarp::transwarp_error&);
 }
 
-TEST(invalid_parent_task) {
+TEST_CASE("invalid_parent_task") {
     auto parent = make_task(transwarp::root, [] { return 42; });
     parent.reset();
-    auto functor = [&parent] { make_task(transwarp::consume, [](int) {}, parent); };
-    ASSERT_THROW(transwarp::transwarp_error, functor);
+    REQUIRE_THROWS_AS(make_task(transwarp::consume, [](int) {}, parent), transwarp::transwarp_error&);
 }
 
-TEST(parallel_with_zero_threads) {
-    auto functor = [] { transwarp::parallel{0}; };
-    ASSERT_THROW(transwarp::thread_pool_error, functor);
+TEST_CASE("parallel_with_zero_threads") {
+    REQUIRE_THROWS_AS(transwarp::parallel{0}, transwarp::thread_pool_error&);
 }
 
-TEST(schedule_single_task) {
+TEST_CASE("schedule_single_task") {
     int x = 13;
     auto task = make_task(transwarp::root, [&x]{ x *= 2; });
     task->schedule();
-    ASSERT_EQUAL(26, x);
+    REQUIRE(26 == x);
 }
 
-TEST(schedule_with_three_tasks_sequential) {
+TEST_CASE("schedule_with_three_tasks_sequential") {
     auto f1 = [] { return 42; };
     auto task1 = make_task(transwarp::root, f1);
     auto f2 = [] { return 13; };
@@ -426,12 +422,12 @@ TEST(schedule_with_three_tasks_sequential) {
     task1->schedule();
     task2->schedule();
     task3->schedule();
-    ASSERT_EQUAL(55, task3->get_future().get());
+    REQUIRE(55 == task3->get_future().get());
     task3->schedule_all();
-    ASSERT_EQUAL(55, task3->get_future().get());
+    REQUIRE(55 == task3->get_future().get());
 }
 
-TEST(schedule_with_three_tasks_parallel) {
+TEST_CASE("schedule_with_three_tasks_parallel") {
     auto f1 = [] { return 42; };
     auto task1 = make_task(transwarp::root, f1);
     auto f2 = [] { return 13; };
@@ -442,12 +438,12 @@ TEST(schedule_with_three_tasks_parallel) {
     task1->schedule(executor);
     task2->schedule(executor);
     task3->schedule(executor);
-    ASSERT_EQUAL(55, task3->get_future().get());
+    REQUIRE(55 == task3->get_future().get());
     task3->schedule_all(executor);
-    ASSERT_EQUAL(55, task3->get_future().get());
+    REQUIRE(55 == task3->get_future().get());
 }
 
-TEST(schedule_with_three_tasks_but_different_schedule) {
+TEST_CASE("schedule_with_three_tasks_but_different_schedule") {
     auto f1 = [] { return 42; };
     auto task1 = make_task(transwarp::root, f1);
     auto f2 = [] { return 13; };
@@ -456,10 +452,10 @@ TEST(schedule_with_three_tasks_but_different_schedule) {
     auto task3 = make_task(transwarp::consume, f3, task1, task2);
     task1->schedule();
     task3->schedule_all();
-    ASSERT_EQUAL(55, task3->get_future().get());
+    REQUIRE(55 == task3->get_future().get());
 }
 
-TEST(schedule_with_three_tasks_wait) {
+TEST_CASE("schedule_with_three_tasks_wait") {
     auto f1 = [] { return 42; };
     auto task1 = make_task(transwarp::root, f1);
     auto f2 = [] { return 13; };
@@ -467,15 +463,15 @@ TEST(schedule_with_three_tasks_wait) {
     auto f3 = []() { return 17; };
     auto task3 = make_task(transwarp::wait, f3, task1, task2);
 
-    ASSERT_TRUE(transwarp::task_type::root == task1->get_node()->get_type());
-    ASSERT_TRUE(transwarp::task_type::root == task2->get_node()->get_type());
-    ASSERT_TRUE(transwarp::task_type::wait == task3->get_node()->get_type());
+    REQUIRE(transwarp::task_type::root == task1->get_node()->get_type());
+    REQUIRE(transwarp::task_type::root == task2->get_node()->get_type());
+    REQUIRE(transwarp::task_type::wait == task3->get_node()->get_type());
 
     task3->schedule_all();
-    ASSERT_EQUAL(17, task3->get_future().get());
+    REQUIRE(17 == task3->get_future().get());
 }
 
-TEST(schedule_with_three_tasks_wait_any) {
+TEST_CASE("schedule_with_three_tasks_wait_any") {
     auto f1 = [] { return 42; };
     auto task1 = make_task(transwarp::root, f1);
     auto f2 = [] { return 13; };
@@ -483,15 +479,15 @@ TEST(schedule_with_three_tasks_wait_any) {
     auto f3 = []() { return 17; };
     auto task3 = make_task(transwarp::wait_any, f3, task1, task2);
 
-    ASSERT_TRUE(transwarp::task_type::root == task1->get_node()->get_type());
-    ASSERT_TRUE(transwarp::task_type::root == task2->get_node()->get_type());
-    ASSERT_TRUE(transwarp::task_type::wait_any == task3->get_node()->get_type());
+    REQUIRE(transwarp::task_type::root == task1->get_node()->get_type());
+    REQUIRE(transwarp::task_type::root == task2->get_node()->get_type());
+    REQUIRE(transwarp::task_type::wait_any == task3->get_node()->get_type());
 
     task3->schedule_all();
-    ASSERT_EQUAL(17, task3->get_future().get());
+    REQUIRE(17 == task3->get_future().get());
 }
 
-TEST(schedule_with_three_tasks_consume_any) {
+TEST_CASE("schedule_with_three_tasks_consume_any") {
     std::atomic_bool cont(false);
     auto value1 = std::make_shared<int>(42);
     auto f1 = [&cont,value1]() -> int& {
@@ -505,63 +501,63 @@ TEST(schedule_with_three_tasks_consume_any) {
     auto f3 = [](int& x) -> int { return x; };
     auto task3 = make_task(transwarp::consume_any, f3, task1, task2);
 
-    ASSERT_TRUE(transwarp::task_type::root == task1->get_node()->get_type());
-    ASSERT_TRUE(transwarp::task_type::root == task2->get_node()->get_type());
-    ASSERT_TRUE(transwarp::task_type::consume_any == task3->get_node()->get_type());
+    REQUIRE(transwarp::task_type::root == task1->get_node()->get_type());
+    REQUIRE(transwarp::task_type::root == task2->get_node()->get_type());
+    REQUIRE(transwarp::task_type::consume_any == task3->get_node()->get_type());
 
     transwarp::parallel exec{4};
     task3->schedule_all(exec);
-    ASSERT_EQUAL(13, task3->get_future().get());
+    REQUIRE(13 == task3->get_future().get());
     cont = true;
 }
 
-TEST(schedule_with_two_tasks_wait_with_void_return) {
+TEST_CASE("schedule_with_two_tasks_wait_with_void_return") {
     auto f1 = [] {};
     auto task1 = make_task(transwarp::root, f1);
     auto f2 = [] { return 13; };
     auto task2 = make_task(transwarp::wait, f2, task1);
 
     task2->schedule_all();
-    ASSERT_EQUAL(13, task2->get_future().get());
+    REQUIRE(13 == task2->get_future().get());
 }
 
-TEST(schedule_with_two_tasks_wait_any_with_void_return) {
+TEST_CASE("schedule_with_two_tasks_wait_any_with_void_return") {
     auto f1 = [] {};
     auto task1 = make_task(transwarp::root, f1);
     auto f2 = [] { return 13; };
     auto task2 = make_task(transwarp::wait_any, f2, task1);
 
     task2->schedule_all();
-    ASSERT_EQUAL(13, task2->get_future().get());
+    REQUIRE(13 == task2->get_future().get());
 }
 
-TEST(task_type_output_stream) {
+TEST_CASE("task_type_output_stream") {
     const auto os1 = transwarp::to_string(transwarp::task_type::root);
-    ASSERT_EQUAL("root", os1);
+    REQUIRE("root" == os1);
     const auto os1a = transwarp::to_string(transwarp::task_type::consume);
-    ASSERT_EQUAL("consume", os1a);
+    REQUIRE("consume" == os1a);
     const auto os1b = transwarp::to_string(transwarp::task_type::consume_any);
-    ASSERT_EQUAL("consume_any", os1b);
+    REQUIRE("consume_any" == os1b);
     const auto os2 = transwarp::to_string(transwarp::task_type::wait);
-    ASSERT_EQUAL("wait", os2);
+    REQUIRE("wait" == os2);
     const auto os2b = transwarp::to_string(transwarp::task_type::wait_any);
-    ASSERT_EQUAL("wait_any", os2b);
+    REQUIRE("wait_any" == os2b);
 }
 
-TEST(task_with_const_reference_return_type) {
+TEST_CASE("task_with_const_reference_return_type") {
     auto value = std::make_shared<const int>(42);
     auto functor = [value]() -> const int& { return *value; };
     auto task = make_task(transwarp::root, functor);
     task->schedule();
-    ASSERT_EQUAL(*value, task->get_future().get());
+    REQUIRE(*value == task->get_future().get());
 }
 
-TEST(task_with_reference_return_type) {
+TEST_CASE("task_with_reference_return_type") {
     auto value = std::make_shared<int>(42);
     auto functor = [value]() -> int& { return *value; };
     auto task = make_task(transwarp::root, functor);
     task->schedule();
-    ASSERT_EQUAL(*value, task->get_future().get());
+    REQUIRE(*value == task->get_future().get());
 }
 
 struct non_copy_functor {
@@ -586,35 +582,35 @@ struct non_move_functor {
     }
 };
 
-TEST(make_task_with_non_copy_functor) {
+TEST_CASE("make_task_with_non_copy_functor") {
     non_copy_functor functor;
     auto task = make_task(transwarp::root, std::move(functor));
     task->schedule();
-    ASSERT_EQUAL(42, task->get_future().get());
+    REQUIRE(42 == task->get_future().get());
 }
 
-TEST(make_task_with_non_move_functor) {
+TEST_CASE("make_task_with_non_move_functor") {
     non_move_functor functor;
     auto task = make_task(transwarp::root, functor);
     task->schedule();
-    ASSERT_EQUAL(43, task->get_future().get());
+    REQUIRE(43 == task->get_future().get());
 }
 
-TEST(make_task_std_function) {
+TEST_CASE("make_task_std_function") {
     std::function<int()> functor = [] { return 44; };
     auto task = make_task(transwarp::root, functor);
     task->schedule();
-    ASSERT_EQUAL(44, task->get_future().get());
+    REQUIRE(44 == task->get_future().get());
 }
 
 int myfunc() {
     return 45;
 }
 
-TEST(make_task_raw_function) {
+TEST_CASE("make_task_raw_function") {
     auto task = make_task(transwarp::root, myfunc);
     task->schedule();
-    ASSERT_EQUAL(45, task->get_future().get());
+    REQUIRE(45 == task->get_future().get());
 }
 
 struct mock_exec : transwarp::executor {
@@ -628,27 +624,27 @@ struct mock_exec : transwarp::executor {
     }
 };
 
-TEST(set_executor_name_and_reset) {
+TEST_CASE("set_executor_name_and_reset") {
     auto task = make_task(transwarp::root, []{});
     auto exec = std::make_shared<mock_exec>();
     task->set_executor(exec);
-    ASSERT_EQUAL(exec->get_name(), *task->get_node()->get_executor());
+    REQUIRE(exec->get_name() == *task->get_node()->get_executor());
     task->remove_executor();
-    ASSERT_FALSE(task->get_node()->get_executor());
+    REQUIRE_FALSE(task->get_node()->get_executor());
 }
 
-TEST(set_executor_without_exec_passed_to_schedule) {
+TEST_CASE("set_executor_without_exec_passed_to_schedule") {
     int value = 42;
     auto functor = [value] { return value*2; };
     auto task = make_task(transwarp::root, functor);
     auto exec = std::make_shared<mock_exec>();
     task->set_executor(exec);
     task->schedule();
-    ASSERT_TRUE(exec->called);
-    ASSERT_EQUAL(84, task->get_future().get());
+    REQUIRE(exec->called);
+    REQUIRE(84 == task->get_future().get());
 }
 
-TEST(set_executor_with_exec_passed_to_schedule) {
+TEST_CASE("set_executor_with_exec_passed_to_schedule") {
     int value = 42;
     auto functor = [value] { return value*2; };
     auto task = make_task(transwarp::root, functor);
@@ -656,11 +652,11 @@ TEST(set_executor_with_exec_passed_to_schedule) {
     task->set_executor(exec);
     transwarp::sequential exec_seq;
     task->schedule(exec_seq);
-    ASSERT_TRUE(exec->called);
-    ASSERT_EQUAL(84, task->get_future().get());
+    REQUIRE(exec->called);
+    REQUIRE(84 == task->get_future().get());
 }
 
-TEST(remove_executor_with_exec_passed_to_schedule) {
+TEST_CASE("remove_executor_with_exec_passed_to_schedule") {
     int value = 42;
     auto functor = [value] { return value*2; };
     auto task = make_task(transwarp::root, functor);
@@ -669,72 +665,72 @@ TEST(remove_executor_with_exec_passed_to_schedule) {
     task->remove_executor();
     mock_exec exec_seq;
     task->schedule(exec_seq);
-    ASSERT_FALSE(exec->called);
-    ASSERT_TRUE(exec_seq.called);
-    ASSERT_EQUAL(84, task->get_future().get());
+    REQUIRE_FALSE(exec->called);
+    REQUIRE(exec_seq.called);
+    REQUIRE(84 == task->get_future().get());
 }
 
-TEST(reset) {
+TEST_CASE("reset") {
     int value = 42;
     auto functor = [&value] { return value*2; };
     auto task = make_task(transwarp::root, functor);
     task->schedule(false);
-    ASSERT_EQUAL(84, task->get_future().get());
+    REQUIRE(84 == task->get_future().get());
     value = 43;
     task->schedule(false);
-    ASSERT_EQUAL(84, task->get_future().get());
+    REQUIRE(84 == task->get_future().get());
     task->reset();
     task->schedule(false);
-    ASSERT_EQUAL(86, task->get_future().get());
+    REQUIRE(86 == task->get_future().get());
 }
 
-TEST(reset_through_schedule) {
+TEST_CASE("reset_through_schedule") {
     int value = 42;
     auto functor = [&value] { return value*2; };
     auto task = make_task(transwarp::root, functor);
     task->schedule();
-    ASSERT_EQUAL(84, task->get_future().get());
+    REQUIRE(84 == task->get_future().get());
     value = 43;
     task->schedule(false);
-    ASSERT_EQUAL(84, task->get_future().get());
+    REQUIRE(84 == task->get_future().get());
     task->schedule();
-    ASSERT_EQUAL(86, task->get_future().get());
+    REQUIRE(86 == task->get_future().get());
 }
 
-TEST(reset_all) {
+TEST_CASE("reset_all") {
     int value = 42;
     auto task = make_task(transwarp::root, [&value] { return value * 2; });
     auto task2 = make_task(transwarp::consume, [](int x) { return x + 3; }, task);
     task2->schedule_all(false);
-    ASSERT_EQUAL(84, task->get_future().get());
-    ASSERT_EQUAL(87, task2->get_future().get());
+    REQUIRE(84 == task->get_future().get());
+    REQUIRE(87 == task2->get_future().get());
     value = 43;
     task2->schedule_all(false);
-    ASSERT_EQUAL(84, task->get_future().get());
-    ASSERT_EQUAL(87, task2->get_future().get());
+    REQUIRE(84 == task->get_future().get());
+    REQUIRE(87 == task2->get_future().get());
     task2->reset_all();
     task2->schedule_all(false);
-    ASSERT_EQUAL(86, task->get_future().get());
-    ASSERT_EQUAL(89, task2->get_future().get());
+    REQUIRE(86 == task->get_future().get());
+    REQUIRE(89 == task2->get_future().get());
 }
 
-TEST(reset_all_through_schedule_all) {
+TEST_CASE("reset_all_through_schedule_all") {
     int value = 42;
     auto task = make_task(transwarp::root, [&value] { return value * 2; });
     auto task2 = make_task(transwarp::consume, [](int x) { return x + 3; }, task);
     task2->schedule_all();
-    ASSERT_EQUAL(84, task->get_future().get());
-    ASSERT_EQUAL(87, task2->get_future().get());
+    REQUIRE(84 == task->get_future().get());
+    REQUIRE(87 == task2->get_future().get());
     value = 43;
     task2->schedule_all(false);
-    ASSERT_EQUAL(84, task->get_future().get());
-    ASSERT_EQUAL(87, task2->get_future().get());
+    REQUIRE(84 == task->get_future().get());
+    REQUIRE(87 == task2->get_future().get());
     task2->schedule_all();
-    ASSERT_EQUAL(86, task->get_future().get());
-    ASSERT_EQUAL(89, task2->get_future().get());
+    REQUIRE(86 == task->get_future().get());
+    REQUIRE(89 == task2->get_future().get());
 }
 
-TEST(consume_any) {
+TEST_CASE("consume_any") {
     std::atomic_bool cont(false);
     auto task1 = make_task(transwarp::root, [&cont] {
         while (!cont);
@@ -746,11 +742,11 @@ TEST(consume_any) {
     auto task3 = make_task(transwarp::consume_any, [](int x) { return x; }, task1, task2);
     transwarp::parallel exec{2};
     task3->schedule_all(exec);
-    ASSERT_EQUAL(43, task3->get_future().get());
+    REQUIRE(43 == task3->get_future().get());
     cont = true;
 }
 
-TEST(wait_any) {
+TEST_CASE("wait_any") {
     int result = 0;
     std::atomic_bool cont(false);
     auto task1 = make_task(transwarp::root, [&cont, &result] {
@@ -764,11 +760,11 @@ TEST(wait_any) {
     transwarp::parallel exec{2};
     task3->schedule_all(exec);
     task3->get_future().wait();
-    ASSERT_EQUAL(43, result);
+    REQUIRE(43 == result);
     cont = true;
 }
 
-TEST(wait) {
+TEST_CASE("wait") {
     int result1 = 0;
     int result2 = 0;
     auto task1 = make_task(transwarp::root, [&result1] {
@@ -781,8 +777,8 @@ TEST(wait) {
     transwarp::parallel exec{2};
     task3->schedule_all(exec);
     task3->get_future().wait();
-    ASSERT_EQUAL(42, result1);
-    ASSERT_EQUAL(43, result2);
+    REQUIRE(42 == result1);
+    REQUIRE(43 == result2);
 }
 
 template<typename T>
@@ -798,16 +794,16 @@ void make_test_pass_by_reference() {
 
     auto& result = t3->get_future().get();
     const auto result_ptr = &result;
-    ASSERT_EQUAL(data_ptr, result_ptr);
+    REQUIRE(data_ptr == result_ptr);
 }
 
-TEST(pass_by_reference) {
+TEST_CASE("pass_by_reference") {
     using data_t = std::array<double, 10>;
     make_test_pass_by_reference<const data_t&>();
     make_test_pass_by_reference<data_t&>();
 }
 
-TEST(future_throws_task_destroyed) {
+TEST_CASE("future_throws_task_destroyed") {
     std::shared_future<void> future;
     transwarp::parallel exec{1};
     std::atomic_bool cont{false};
@@ -820,47 +816,44 @@ TEST(future_throws_task_destroyed) {
         future = task2->get_future();
     }
     cont = true;
-    ASSERT_TRUE(future.valid());
-    ASSERT_THROW(transwarp::task_destroyed, [&future]{ future.get(); });
+    REQUIRE(future.valid());
+    REQUIRE_THROWS_AS(future.get(), transwarp::task_destroyed&);
 }
 
-COLLECTION(test_examples) {
+// Examples
 
-TEST(basic_with_three_tasks) {
+TEST_CASE("example__basic_with_three_tasks") {
     std::ostringstream os;
     examples::basic_with_three_tasks(os);
     const std::string expected = "result = 55.3\nresult = 58.8\n";
-    ASSERT_EQUAL(expected, os.str());
+    REQUIRE(expected == os.str());
 }
 
 void make_test_statistical_keys_facts(bool parallel) {
     std::ostringstream os;
     examples::statistical_key_facts(os, 10000, parallel);
-    ASSERT_GREATER(os.str().size(), 0u);
+    REQUIRE(os.str().size() > 0u);
 }
 
-TEST(statistical_key_facts) {
+TEST_CASE("example__statistical_key_facts") {
     make_test_statistical_keys_facts(false);
     make_test_statistical_keys_facts(true);
 }
 
-TEST(benchmark_simple) {
+TEST_CASE("example__benchmark_simple") {
     std::ostringstream os;
     examples::benchmark_simple(os, 10);
-    ASSERT_GREATER(os.str().size(), 0u);
+    REQUIRE(os.str().size() > 0u);
 }
 
-TEST(benchmark_statistical) {
+TEST_CASE("example__benchmark_statistical") {
     std::ostringstream os;
     examples::benchmark_statistical(os, 3);
-    ASSERT_GREATER(os.str().size(), 0u);
+    REQUIRE(os.str().size() > 0u);
 }
 
-TEST(single_thread_lock_free) {
+TEST_CASE("example__single_thread_lock_free") {
     std::ostringstream os;
     examples::single_thread_lock_free(os);
-    ASSERT_GREATER(os.str().size(), 0u);
+    REQUIRE(os.str().size() > 0u);
 }
-
-} // test_examples
-} // test_transwarp
