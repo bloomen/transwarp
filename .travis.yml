@@ -4,29 +4,26 @@ language: cpp
 
 install:
     - sudo apt-get install -y libboost-all-dev
-    - wget https://downloads.sourceforge.net/project/libunittest/libunittest-9.3.5.tar.gz
-    - tar xfz libunittest-9.3.5.tar.gz
-    - cd libunittest-9.3.5
-    - ./configure --prefix=/usr
-    - make -j4
-    - sudo make install
-    - cd ..
-    - rm -rf libunittest-9.3.5
 
 script:
     - cd src
     - g++ --version
     - export CXX=g++
     - ./compile_test.sh debug
-    - ./test.debug -z 0 
+    - ./test.debug --use-colour no --order rand --rng-seed 'time' 
     - ./compile_test.sh release
-    - ./test.release -z 0
+    - ./test.release --use-colour no --order rand --rng-seed 'time'
     - clang++ --version 
-    - export CXX=clang++
+    - export CXX='clang++ --stdlib=libstdc++'
     - ./compile_test.sh debug
-    - ./test.debug -z 0 
+    - ./test.debug --use-colour no --order rand --rng-seed 'time'
     - ./compile_test.sh release
-    - ./test.release -z 0 
+    - ./test.release --use-colour no --order rand --rng-seed 'time'
+    - export CXX='clang++ --stdlib=libc++'
+    - ./compile_test.sh debug
+    - ./test.debug --use-colour no --order rand --rng-seed 'time'
+    - ./compile_test.sh release
+    - ./test.release --use-colour no --order rand --rng-seed 'time'
 
 notifications:
   email:
