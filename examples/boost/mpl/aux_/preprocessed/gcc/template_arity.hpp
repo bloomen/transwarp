@@ -81,7 +81,7 @@ template< typename F, int N >
 struct template_arity_impl
 {
     BOOST_STATIC_CONSTANT(int, value =
-          sizeof(::boost::mpl::aux::arity_helper(type_wrapper<F>(), arity_tag<N>())) - 1
+          static_cast<int>(sizeof(::boost::mpl::aux::arity_helper(type_wrapper<F>(), arity_tag<N>()))) - 1
         );
 };
 
