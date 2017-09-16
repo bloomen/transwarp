@@ -2,22 +2,6 @@
 
 # transwarp 
 
-**GCC/Clang**
-
-master branch: [![Travis](https://travis-ci.org/bloomen/transwarp.svg?branch=master)](https://travis-ci.org/bloomen/transwarp)
- 
-develop branch: [![Travis](https://travis-ci.org/bloomen/transwarp.svg?branch=develop)](https://travis-ci.org/bloomen/transwarp)
-
-**Table of contents**
-
-  * [Example](#example)
-  * [API doc](#api-doc)
-     * [Creating tasks](#creating-tasks)
-     * [Scheduling tasks](#scheduling-tasks)
-     * [More on executors](#more-on-executors)
-  * [Running the tests](#running-the-tests)
-  * [Feedback](#feedback)
-
 transwarp is a header-only C++ library for task concurrency. It enables you to free
 your functors from explicit threads and transparently manage dependencies.
 Under the hood, a directed acyclic graph is built at compile-time enabling efficient 
@@ -33,6 +17,22 @@ decoupled from tasks and simply provide a way of running a given function.
 transwarp is designed for ease of use, portability, and scalability. It is written in 
 C++11 and only depends on the standard library. Just copy `src/transwarp.h` 
 to your project and off you go! Tested with GCC, Clang, and Visual Studio.
+
+**Table of contents**
+
+  * [Build status](#build-status)
+  * [Example](#example)
+  * [API doc](#api-doc)
+     * [Creating tasks](#creating-tasks)
+     * [Scheduling tasks](#scheduling-tasks)
+     * [More on executors](#more-on-executors)
+  * [Running the tests](#running-the-tests)
+  * [Feedback](#feedback)
+
+## Build status
+
+GCC/Clang on master/develop: [![Travis](https://travis-ci.org/bloomen/transwarp.svg?branch=master)](https://travis-ci.org/bloomen/transwarp) [![Travis](https://travis-ci.org/bloomen/transwarp.svg?branch=develop)](https://travis-ci.org/bloomen/transwarp)
+
 
 ## Example
 

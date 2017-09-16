@@ -1,10 +1,6 @@
 dist: trusty
 sudo: false
 language: cpp
-
-os:
-    - linux
-    - osx
   
 compiler:
     - gcc
