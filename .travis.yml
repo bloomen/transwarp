@@ -7,8 +7,8 @@ matrix:
       compiler: gcc
     - os: linux
       compiler: clang
-#    - os: osx
-#      compiler: clang
+    - os: osx
+      compiler: clang
 
 script:
     - $CXX --version
