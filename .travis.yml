@@ -1,13 +1,14 @@
 sudo: false
 language: cpp
 
-os:
-    - linux
-    - osx
-
-compiler:
-    - gcc
-    - clang
+matrix:
+  include:
+    - os: linux
+      compiler: gcc
+    - os: linux
+      compiler: clang
+    - os: osx
+      compiler: clang
 
 script:
     - cd src
