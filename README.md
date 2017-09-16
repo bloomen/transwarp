@@ -31,7 +31,7 @@ to your project and off you go! Tested with GCC, Clang, and Visual Studio.
 
 ## Build status
 
-GCC/Clang on master/develop: [![Travis](https://travis-ci.org/bloomen/transwarp.svg?branch=master)](https://travis-ci.org/bloomen/transwarp) [![Travis](https://travis-ci.org/bloomen/transwarp.svg?branch=develop)](https://travis-ci.org/bloomen/transwarp)
+GCC/Clang on master [![Travis](https://travis-ci.org/bloomen/transwarp.svg?branch=master)](https://travis-ci.org/bloomen/transwarp/branches) and develop [![Travis](https://travis-ci.org/bloomen/transwarp.svg?branch=develop)](https://travis-ci.org/bloomen/transwarp/branches)
 
 
 ## Example
