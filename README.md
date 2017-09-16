@@ -1,6 +1,10 @@
 **_Not production ready!_**
 
-# transwarp [![master branch](https://travis-ci.org/bloomen/transwarp.svg?branch=master)](https://travis-ci.org/bloomen/transwarp) [![develop branch](https://travis-ci.org/bloomen/transwarp.svg?branch=develop)](https://travis-ci.org/bloomen/transwarp)
+# transwarp 
+
+**GCC/Clang**
+master branch: [![Travis](https://travis-ci.org/bloomen/transwarp.svg?branch=master)](https://travis-ci.org/bloomen/transwarp) 
+develop branch: [![Travis](https://travis-ci.org/bloomen/transwarp.svg?branch=develop)](https://travis-ci.org/bloomen/transwarp)
 
 transwarp is a header-only C++ library for task concurrency. It enables you to free
 your functors from explicit threads and transparently manage dependencies.
@@ -179,7 +183,6 @@ meta-data of the current task.
 ## Running the tests
 
 You'll need:
-* [libunittest](http://libunittest.sourceforge.net/) (>=9.3)
 * [boost](http://www.boost.org/) (>=1.53)
 * [cppcheck](http://cppcheck.sourceforge.net/) (>=1.8)
 * [valgrind](http://valgrind.org/) (>=3.11)

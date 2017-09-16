@@ -144,7 +144,7 @@ void statistical_key_facts(std::ostream& os, std::size_t sample_size, bool paral
 
 }
 
-#ifndef USE_LIBUNITTEST
+#ifndef UNITTEST
 int main() {
     std::cout << "Running example: statistical_key_facts ..." << std::endl;
     examples::statistical_key_facts(std::cout);

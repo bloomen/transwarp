@@ -97,7 +97,7 @@ void benchmark_simple(std::ostream& os, std::size_t sample_size) {
 
 }
 
-#ifndef USE_LIBUNITTEST
+#ifndef UNITTEST
 int main() {
     std::cout << "Running example: benchmark_simple ..." << std::endl;
     examples::benchmark_simple(std::cout);

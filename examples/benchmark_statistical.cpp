@@ -146,7 +146,7 @@ void benchmark_statistical(std::ostream& os, std::size_t sample_size) {
 
 }
 
-#ifndef USE_LIBUNITTEST
+#ifndef UNITTEST
 int main() {
     std::cout << "Running example: benchmark_statistical ..." << std::endl;
     examples::benchmark_statistical(std::cout);

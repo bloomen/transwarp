@@ -129,7 +129,7 @@ void single_thread_lock_free(std::ostream& os, std::size_t sample_size) {
 
 }
 
-#ifndef USE_LIBUNITTEST
+#ifndef UNITTEST
 int main() {
     std::cout << "Running example: single_thread_lock_free ..." << std::endl;
     examples::single_thread_lock_free(std::cout);
