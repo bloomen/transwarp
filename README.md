@@ -32,6 +32,7 @@ to your project and off you go! Tested with GCC, Clang, and Visual Studio.
 
 GCC/Clang on master [![Travis](https://travis-ci.org/bloomen/transwarp.svg?branch=master)](https://travis-ci.org/bloomen/transwarp/branches) and develop [![Travis](https://travis-ci.org/bloomen/transwarp.svg?branch=develop)](https://travis-ci.org/bloomen/transwarp/branches)
 
+Visual Studio on master [![Appveyor](https://ci.appveyor.com/api/projects/status/wrtbk9l3b94eeb9t/branch/master?svg=true)](https://ci.appveyor.com/project/bloomen/transwarp) and develop [![Appveyor](https://ci.appveyor.com/api/projects/status/wrtbk9l3b94eeb9t/branch/develop?svg=true)](https://ci.appveyor.com/project/bloomen/transwarp)
 
 ## Example
 
