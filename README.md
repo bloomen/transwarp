@@ -26,7 +26,6 @@ to your project and off you go! Tested with GCC, Clang, and Visual Studio.
      * [Creating tasks](#creating-tasks)
      * [Scheduling tasks](#scheduling-tasks)
      * [More on executors](#more-on-executors)
-  * [Running the tests](#running-the-tests)
   * [Feedback](#feedback)
 
 ## Build status
@@ -181,25 +180,6 @@ public:
 ``` 
 where `functor` denotes the function to be run and `node` an object that holds 
 meta-data of the current task.
-
-## Running the tests
-
-You'll need:
-* [cppcheck](http://cppcheck.sourceforge.net/) (>=1.8)
-* [valgrind](http://valgrind.org/) (>=3.11)
-
-If you're on Mac or Linux and want to run all checks, just do:
-```
-./make_check.sh [compiler]
-```
-where compiler defaults to `g++` and can also be `clang++`. In order to only
-run the unit tests, you can do:
-```
-./src/compile_test.sh && ./src/test.release
-```
-
-If you're using Visual Studio you will have to set up a project
-manually to run all tests.
 
 ## Feedback
 
