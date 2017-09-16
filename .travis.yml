@@ -1,4 +1,4 @@
-sudo: false
+sudo: required
 language: cpp
 
 matrix:
@@ -9,6 +9,9 @@ matrix:
       compiler: clang
     - os: osx
       compiler: clang
+
+install:
+    - if [[ "$TRAVIS_OS_NAME" == "linux" ]];then sudo apt-get install -y valgrind; fi
 
 script:
     - $CXX --version
