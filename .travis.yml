@@ -7,17 +7,14 @@ matrix:
       compiler: gcc
     - os: linux
       compiler: clang
-    - os: osx
-      compiler: clang
+#    - os: osx
+#      compiler: clang
 
 script:
-    - cd src
     - $CXX --version
-    - ./compile_test.sh debug
-    - ./test.debug --use-colour no --order rand --rng-seed 'time' 
-    - ./compile_test.sh release
-    - ./test.release --use-colour no --order rand --rng-seed 'time'
-
+    - ./test.sh Debug
+    - ./test.sh Release
+	
 notifications:
   email:
     on_success: change
