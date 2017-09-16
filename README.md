@@ -8,6 +8,16 @@ master branch: [![Travis](https://travis-ci.org/bloomen/transwarp.svg?branch=mas
  
 develop branch: [![Travis](https://travis-ci.org/bloomen/transwarp.svg?branch=develop)](https://travis-ci.org/bloomen/transwarp)
 
+**Table of contents**
+
+  * [Example](#example)
+  * [API doc](#api-doc)
+     * [Creating tasks](#creating-tasks)
+     * [Scheduling tasks](#scheduling-tasks)
+     * [More on executors](#more-on-executors)
+  * [Running the tests](#running-the-tests)
+  * [Feedback](#feedback)
+
 transwarp is a header-only C++ library for task concurrency. It enables you to free
 your functors from explicit threads and transparently manage dependencies.
 Under the hood, a directed acyclic graph is built at compile-time enabling efficient 
@@ -23,16 +33,6 @@ decoupled from tasks and simply provide a way of running a given function.
 transwarp is designed for ease of use, portability, and scalability. It is written in 
 C++11 and only depends on the standard library. Just copy `src/transwarp.h` 
 to your project and off you go! Tested with GCC, Clang, and Visual Studio.
-
-**Table of contents**
-
-  * [Example](#example)
-  * [API doc](#api-doc)
-     * [Creating tasks](#creating-tasks)
-     * [Scheduling tasks](#scheduling-tasks)
-     * [More on executors](#more-on-executors)
-  * [Running the tests](#running-the-tests)
-  * [Feedback](#feedback)
 
 ## Example
 
@@ -185,7 +185,6 @@ meta-data of the current task.
 ## Running the tests
 
 You'll need:
-* [boost](http://www.boost.org/) (>=1.53)
 * [cppcheck](http://cppcheck.sourceforge.net/) (>=1.8)
 * [valgrind](http://valgrind.org/) (>=3.11)
 
