@@ -12,7 +12,7 @@ if [ "$mode" != "Debug" ];then
 fi
 
 cmake -DCMAKE_BUILD_TYPE=$1 $thisdir
-make -j4
+make -j4 VERBOSE=1
 
 app=./transwarp_test
 echo "+++ Running $app ..."
