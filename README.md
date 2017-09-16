@@ -3,7 +3,9 @@
 # transwarp 
 
 **GCC/Clang**
-master branch: [![Travis](https://travis-ci.org/bloomen/transwarp.svg?branch=master)](https://travis-ci.org/bloomen/transwarp) 
+
+master branch: [![Travis](https://travis-ci.org/bloomen/transwarp.svg?branch=master)](https://travis-ci.org/bloomen/transwarp)
+ 
 develop branch: [![Travis](https://travis-ci.org/bloomen/transwarp.svg?branch=develop)](https://travis-ci.org/bloomen/transwarp)
 
 transwarp is a header-only C++ library for task concurrency. It enables you to free

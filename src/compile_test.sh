@@ -18,4 +18,4 @@ if [ "x$CXX" != "x" ];then
 fi
 
 echo "Compiling $cpp with $compiler ..."
-$compiler -std=c++11 $opt -g -DUNITTEST -pedantic -Wall -Wextra -Wconversion -Werror -pthread $examples $cpp -o ${cpp%.cpp}.$mode
+$compiler -std=c++11 $opt -g -DUNITTEST -pedantic -Wall -Wextra -Wconversion -pthread -I"$thisdir/../examples" $examples $cpp -o ${cpp%.cpp}.$mode

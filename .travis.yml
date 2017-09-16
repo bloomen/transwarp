@@ -1,27 +1,16 @@
 dist: trusty
-sudo: required
+sudo: false
 language: cpp
 
-install:
-    - sudo apt-get install -y libboost-all-dev
+compiler:
+    - gcc
+    - clang
 
 script:
     - cd src
-    - g++ --version
-    - export CXX=g++
+    - $CXX --version
     - ./compile_test.sh debug
     - ./test.debug --use-colour no --order rand --rng-seed 'time' 
-    - ./compile_test.sh release
-    - ./test.release --use-colour no --order rand --rng-seed 'time'
-    - clang++ --version 
-    - export CXX='clang++ --stdlib=libstdc++'
-    - ./compile_test.sh debug
-    - ./test.debug --use-colour no --order rand --rng-seed 'time'
-    - ./compile_test.sh release
-    - ./test.release --use-colour no --order rand --rng-seed 'time'
-    - export CXX='clang++ --stdlib=libc++'
-    - ./compile_test.sh debug
-    - ./test.debug --use-colour no --order rand --rng-seed 'time'
     - ./compile_test.sh release
     - ./test.release --use-colour no --order rand --rng-seed 'time'
 
