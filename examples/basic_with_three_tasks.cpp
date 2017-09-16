@@ -36,7 +36,7 @@ void basic_with_three_tasks(std::ostream& os) {
     // parallel execution with 4 threads for independent tasks
     tw::parallel executor(4);
 
-    task3->schedule_all(executor);  // schedules all tasks for execution, assigning a future to each task
+    task3->schedule_all(executor);  // schedules all tasks for execution, assigning a future to each
     os << "result = " << task3->get_future().get() << std::endl;  // result = 55.3
 
     // modifying data input
