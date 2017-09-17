@@ -10,7 +10,7 @@ namespace {
 const double expected = 4273.5;
 
 void sleep() {
-    std::this_thread::sleep_for(std::chrono::microseconds(100));
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
 }
 
 int func0() {
