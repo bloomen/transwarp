@@ -18,7 +18,11 @@ add_executable(benchmark_statistical examples/benchmark_statistical.cpp)
 
 target_compile_definitions(transwarp_test PRIVATE UNITTEST)
 
-add_test(transwarp_test ${PROJECT_SOURCE_DIR}/runtest.sh ${PROJECT_BINARY_DIR}/transwarp_test)
+if (MSVC)
+	add_test(transwarp_test ${PROJECT_SOURCE_DIR}/runtest.bat ${PROJECT_BINARY_DIR}/transwarp_test)
+else()
+	add_test(transwarp_test ${PROJECT_SOURCE_DIR}/runtest.sh ${PROJECT_BINARY_DIR}/transwarp_test)
+endif()
 add_test(basic_with_three_tasks basic_with_three_tasks)
 add_test(single_thread_lock_free single_thread_lock_free)
 add_test(benchmark_simple benchmark_simple)
