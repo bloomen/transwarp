@@ -19,7 +19,7 @@ add_executable(benchmark_statistical examples/benchmark_statistical.cpp)
 target_compile_definitions(transwarp_test PRIVATE UNITTEST)
 
 if (MSVC)
-	add_test(transwarp_test ${PROJECT_SOURCE_DIR}/runtest.bat ${PROJECT_BINARY_DIR}/${CMAKE_BUILD_TYPE}/transwarp_test)
+	add_test(transwarp_test transwarp_test)
 else()
 	add_test(transwarp_test ${PROJECT_SOURCE_DIR}/runtest.sh ${PROJECT_BINARY_DIR}/transwarp_test)
 endif()
