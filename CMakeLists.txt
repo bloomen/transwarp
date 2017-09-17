@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 2.8)
 project(transwarp)
+enable_testing()
  
 include_directories(examples)
 include_directories(src)
@@ -16,6 +17,13 @@ add_executable(statistical_key_facts examples/statistical_key_facts.cpp)
 add_executable(benchmark_statistical examples/benchmark_statistical.cpp)
 
 target_compile_definitions(transwarp_test PRIVATE UNITTEST)
+
+add_test(transwarp_test ${PROJECT_SOURCE_DIR}/runtest.sh ${PROJECT_BINARY_DIR}/transwarp_test)
+add_test(basic_with_three_tasks basic_with_three_tasks)
+add_test(single_thread_lock_free single_thread_lock_free)
+add_test(benchmark_simple benchmark_simple)
+add_test(statistical_key_facts statistical_key_facts)
+add_test(benchmark_statistical benchmark_statistical)
 
 if (MSVC)
    set(CMAKE_CXX_FLAGS "/W4 /WX /bigobj /EHsc /wd4503 /wd4996 /wd4702")

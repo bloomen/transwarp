@@ -33,5 +33,4 @@ build:
   verbosity: quiet
 
 test_script:
-  - cmd: cd C:\projects\transwarp\build\%configuration%
-  - cmd: transwarp_test --use-colour no
+  - cmd: ctest --verbose
