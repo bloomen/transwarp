@@ -3,6 +3,6 @@
 
 namespace examples {
 
-void benchmark_simple(std::ostream& os, std::size_t sample_size=10000);
+void benchmark_simple(std::ostream& os, std::size_t sample_size=1000);
 
 }
