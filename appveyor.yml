@@ -33,7 +33,5 @@ build:
   verbosity: quiet
 
 test_script:
-  - cmd: cd C:\projects\transwarp
-  - cmd: runtest.bat build\%configuration%\transwarp_test
   - cmd: cd C:\projects\transwarp\build
   - cmd: ctest --verbose
