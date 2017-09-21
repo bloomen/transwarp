@@ -18,7 +18,7 @@ add_executable(benchmark_statistical examples/benchmark_statistical.cpp)
 
 target_compile_definitions(transwarp_test PRIVATE UNITTEST)
 
-add_test(transwarp_test transwarp_test --use-colour no)
+add_test(transwarp_test transwarp_test --use-colour no --order rand --rng-seed time)
 add_test(basic_with_three_tasks basic_with_three_tasks)
 add_test(single_thread_lock_free single_thread_lock_free)
 add_test(benchmark_simple benchmark_simple)
