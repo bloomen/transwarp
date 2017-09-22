@@ -81,7 +81,7 @@ result aggregate_results(double avg, double stddev, double median, int mode) {
     return {avg, stddev, median, mode};
 }
 
-std::shared_ptr<tw::itask<result>> build_graph(std::size_t sample_size, double& alpha, double& beta) {
+std::shared_ptr<tw::task<result>> build_graph(std::size_t sample_size, double& alpha, double& beta) {
     auto gen = std::make_shared<std::mt19937>(1);
     auto gen_task = tw::make_task(tw::root, "rand gen", [gen] { return gen; });
     auto size_task = tw::make_task(tw::root, "sample size", [sample_size] { return sample_size; });

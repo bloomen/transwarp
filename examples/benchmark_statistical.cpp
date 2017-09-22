@@ -94,7 +94,7 @@ void calculate_via_functions(std::mt19937& gen) {
 }
 
 // cppcheck-suppress passedByValue
-std::shared_ptr<tw::itask<result>> build_graph(std::shared_ptr<std::mt19937> gen) {
+std::shared_ptr<tw::task<result>> build_graph(std::shared_ptr<std::mt19937> gen) {
     auto gen_task = tw::make_task(tw::root, [gen]() -> std::mt19937& { return *gen; });
     auto data_task = tw::make_task(tw::consume, generate_gamma, gen_task);
 
@@ -107,7 +107,7 @@ std::shared_ptr<tw::itask<result>> build_graph(std::shared_ptr<std::mt19937> gen
                          avg_task, stddev_task, median_task, mode_task);
 }
 
-void calculate_via_transwarp(tw::itask<result>& task) {
+void calculate_via_transwarp(tw::task<result>& task) {
     task.schedule_all();
     const auto& res = task.get_future().get();
     check_result(res);

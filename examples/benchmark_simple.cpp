@@ -49,7 +49,7 @@ void calculate_via_functions() {
     }
 }
 
-std::shared_ptr<tw::itask<double>> build_graph() {
+std::shared_ptr<tw::task<double>> build_graph() {
     auto task0 = tw::make_task(tw::root, func0);
     auto task1 = tw::make_task(tw::root, func1);
     auto task2 = tw::make_task(tw::consume, func2, task0, task1);
@@ -58,7 +58,7 @@ std::shared_ptr<tw::itask<double>> build_graph() {
     return task4;
 }
 
-void calculate_via_transwarp(tw::itask<double>& task) {
+void calculate_via_transwarp(tw::task<double>& task) {
     task.schedule_all();
     if (task.get_future().get() != expected) {
         throw std::runtime_error("wrong result");

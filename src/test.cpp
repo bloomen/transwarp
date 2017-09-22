@@ -23,7 +23,7 @@ void make_test_one_task(std::size_t threads) {
     const int value = 42;
     auto f1 = [value]{ return value; };
     std::shared_ptr<transwarp::executor> executor;
-    std::shared_ptr<transwarp::itask<int>> task;
+    std::shared_ptr<transwarp::task<int>> task;
     if (threads > 0) {
         task = make_task(transwarp::root, f1);
         executor = std::make_shared<transwarp::parallel>(threads);
@@ -61,7 +61,7 @@ TEST_CASE("one_task") {
     auto f3 = [](int v, int w) { return v + w + 3; }; 
 
     std::shared_ptr<transwarp::executor> executor;
-    std::shared_ptr<transwarp::itask<int>> task3;
+    std::shared_ptr<transwarp::task<int>> task3;
     if (threads > 0) {
         task3 = make_task(transwarp::consume, "t3", f3, task1, task2);
         executor = std::make_shared<transwarp::parallel>(threads);
@@ -145,7 +145,7 @@ void make_test_bunch_of_tasks(std::size_t threads) {
     auto task12 = make_task(transwarp::consume, f2, task11, task6);
 
     std::shared_ptr<transwarp::executor> executor;
-    std::shared_ptr<transwarp::itask<int>> task13;
+    std::shared_ptr<transwarp::task<int>> task13;
     if (threads > 0) {
         task13 = make_task(transwarp::consume, f3, task10, task11, task12);
         executor = std::make_shared<transwarp::parallel>(threads);
@@ -279,7 +279,7 @@ void make_test_task_with_exception_thrown(std::size_t threads) {
     auto task2 = make_task(transwarp::consume, f2, task1);
 
     std::shared_ptr<transwarp::executor> executor;
-    std::shared_ptr<transwarp::itask<int>> task3;
+    std::shared_ptr<transwarp::task<int>> task3;
     if (threads > 0) {
         task3 = make_task(transwarp::consume, f3, task2);
         executor = std::make_shared<transwarp::parallel>(threads);
@@ -342,7 +342,7 @@ TEST_CASE("cancel_with_schedule_all_called_after") {
 }
 
 TEST_CASE("itask") {
-    std::shared_ptr<transwarp::itask<int>> final;
+    std::shared_ptr<transwarp::task<int>> final;
     {
         auto f0 = [] { return 42; };
         auto f1 = [] (int x) { return x + 13; };

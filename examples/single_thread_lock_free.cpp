@@ -87,7 +87,7 @@ std::ostream& operator<<(std::ostream& os, const result& r) {
     return os;
 }
 
-std::shared_ptr<tw::itask<result>> build_graph(data_t& buffer) {
+std::shared_ptr<tw::task<result>> build_graph(data_t& buffer) {
     auto gen = std::make_shared<std::mt19937>(1);
     auto gen_task = tw::make_task(tw::root, "rand gen", [gen] { return gen; });
     auto buffer_task = tw::make_task(tw::root, "buffer", [&buffer]() -> data_t& { return buffer; });

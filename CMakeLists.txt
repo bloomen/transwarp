@@ -26,7 +26,7 @@ add_test(statistical_key_facts statistical_key_facts)
 add_test(benchmark_statistical benchmark_statistical)
 
 if (MSVC)
-   set(CMAKE_CXX_FLAGS "/W4 /WX /bigobj /EHsc /wd4503 /wd4996 /wd4702")
+   set(CMAKE_CXX_FLAGS "/W4 /WX /EHsc /wd4503 /wd4996 /wd4702")
 else()
    set(CMAKE_CXX_FLAGS "-std=c++11 -pedantic -Wall -Wextra -Wconversion -Werror")
    if (CMAKE_COMPILER_IS_GNUCC)
