@@ -1001,17 +1001,17 @@ private:
 
 
 // A factory function to create a new task
-template<typename TaskType, typename Functor, typename... ParentResults>
-std::shared_ptr<transwarp::task<typename transwarp::detail::result<TaskType, Functor, ParentResults...>::type>>
-make_task(TaskType, std::string name, Functor&& functor, std::shared_ptr<transwarp::task<ParentResults>>... parents) {
-    return std::make_shared<transwarp::task_impl<TaskType, typename std::decay<Functor>::type, ParentResults...>>(std::move(name), std::forward<Functor>(functor), std::move(parents)...);
+template<typename TaskType, typename Functor, typename... Parents>
+auto
+make_task(TaskType, std::string name, Functor&& functor, std::shared_ptr<Parents>... parents) -> decltype(std::make_shared<transwarp::task_impl<TaskType, typename std::decay<Functor>::type, typename Parents::result_type...>>(std::move(name), std::forward<Functor>(functor), std::move(parents)...)) {
+    return std::make_shared<transwarp::task_impl<TaskType, typename std::decay<Functor>::type, typename Parents::result_type...>>(std::move(name), std::forward<Functor>(functor), std::move(parents)...);
 }
 
 // A factory function to create a new task. Overload for omitting the task name
-template<typename TaskType, typename Functor, typename... ParentResults>
-std::shared_ptr<transwarp::task<typename transwarp::detail::result<TaskType, Functor, ParentResults...>::type>>
-make_task(TaskType, Functor&& functor, std::shared_ptr<transwarp::task<ParentResults>>... parents) {
-    return std::make_shared<transwarp::task_impl<TaskType, typename std::decay<Functor>::type, ParentResults...>>(std::forward<Functor>(functor), std::move(parents)...);
+template<typename TaskType, typename Functor, typename... Parents>
+auto
+make_task(TaskType, Functor&& functor, std::shared_ptr<Parents>... parents) -> decltype(std::make_shared<transwarp::task_impl<TaskType, typename std::decay<Functor>::type, typename Parents::result_type...>>(std::forward<Functor>(functor), std::move(parents)...)) {
+    return std::make_shared<transwarp::task_impl<TaskType, typename std::decay<Functor>::type, typename Parents::result_type...>>(std::forward<Functor>(functor), std::move(parents)...);
 }
 
 
