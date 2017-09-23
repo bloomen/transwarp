@@ -49,7 +49,7 @@ TEST_CASE("one_task") {
     make_test_one_task(4);
 }
 
- void make_test_three_tasks(std::size_t threads) {
+void make_test_three_tasks(std::size_t threads) {
     int value = 42;
 
     auto f1 = [&value]{ return value; };

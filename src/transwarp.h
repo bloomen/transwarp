@@ -240,7 +240,7 @@ private:
 
     virtual void visit(const std::function<void(itask&)>& visitor) = 0;
     virtual void unvisit() noexcept = 0;
-    virtual void set_node_id(std::size_t id) = 0;
+    virtual void set_node_id(std::size_t id) noexcept = 0;
     virtual void schedule_impl(bool reset, transwarp::executor* executor=nullptr) = 0;
 };
 
@@ -297,7 +297,7 @@ namespace detail {
 // Node manipulation
 struct node_manip {
 
-    static void set_id(transwarp::node& node, std::size_t id) {
+    static void set_id(transwarp::node& node, std::size_t id) noexcept {
         node.id_ = id;
     }
 
@@ -769,7 +769,7 @@ private:
 };
 
 
-// A task representing a piece of work given by a functor and parent tasks.
+// A task representing a piece of work given by functor and parent tasks.
 // By connecting tasks a directed acyclic graph is built.
 template<typename TaskType, typename Functor, typename... ParentResults>
 class task_impl : public transwarp::task<typename transwarp::detail::result<TaskType, Functor, ParentResults...>::type>,
@@ -930,7 +930,7 @@ private:
     friend R transwarp::detail::run_task(std::size_t, const T&, A&&...);
 
     // Assigns the given id to the node
-    void set_node_id(std::size_t id) override {
+    void set_node_id(std::size_t id) noexcept override {
         transwarp::detail::node_manip::set_id(*node_, id);
     }
 
@@ -1004,15 +1004,13 @@ private:
 
 // A factory function to create a new task
 template<typename TaskType, typename Functor, typename... Parents>
-auto
-make_task(TaskType, std::string name, Functor&& functor, std::shared_ptr<Parents>... parents) -> decltype(std::make_shared<transwarp::task_impl<TaskType, typename std::decay<Functor>::type, typename Parents::result_type...>>(std::move(name), std::forward<Functor>(functor), std::move(parents)...)) {
+auto make_task(TaskType, std::string name, Functor&& functor, std::shared_ptr<Parents>... parents) -> decltype(std::make_shared<transwarp::task_impl<TaskType, typename std::decay<Functor>::type, typename Parents::result_type...>>(std::move(name), std::forward<Functor>(functor), std::move(parents)...)) {
     return std::make_shared<transwarp::task_impl<TaskType, typename std::decay<Functor>::type, typename Parents::result_type...>>(std::move(name), std::forward<Functor>(functor), std::move(parents)...);
 }
 
 // A factory function to create a new task. Overload for omitting the task name
 template<typename TaskType, typename Functor, typename... Parents>
-auto
-make_task(TaskType, Functor&& functor, std::shared_ptr<Parents>... parents) -> decltype(std::make_shared<transwarp::task_impl<TaskType, typename std::decay<Functor>::type, typename Parents::result_type...>>(std::forward<Functor>(functor), std::move(parents)...)) {
+auto make_task(TaskType, Functor&& functor, std::shared_ptr<Parents>... parents) -> decltype(std::make_shared<transwarp::task_impl<TaskType, typename std::decay<Functor>::type, typename Parents::result_type...>>(std::forward<Functor>(functor), std::move(parents)...)) {
     return std::make_shared<transwarp::task_impl<TaskType, typename std::decay<Functor>::type, typename Parents::result_type...>>(std::forward<Functor>(functor), std::move(parents)...);
 }
 
