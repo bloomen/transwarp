@@ -218,6 +218,7 @@ public:
 class itask {
 public:
     virtual ~itask() = default;
+
     virtual void set_executor(std::shared_ptr<transwarp::executor> executor) = 0;
     virtual void remove_executor() noexcept = 0;
     virtual const std::shared_ptr<transwarp::node>& get_node() const noexcept = 0;
@@ -249,6 +250,7 @@ template<typename ResultType>
 class task : public transwarp::itask {
 public:
     virtual ~task() = default;
+
     virtual const std::shared_future<ResultType>& get_future() const noexcept = 0;
 };
 
