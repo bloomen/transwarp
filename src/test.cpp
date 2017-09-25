@@ -820,6 +820,13 @@ TEST_CASE("future_throws_task_destroyed") {
     REQUIRE_THROWS_AS(future.get(), transwarp::task_destroyed&);
 }
 
+TEST_CASE("make_task_from_base_task") {
+    std::shared_ptr<transwarp::task<int>> t1 = make_task(transwarp::root, []{ return 42; });
+    auto t2 = make_task(transwarp::consume, [](int x){ return x; }, t1);
+    t2->schedule_all();
+    REQUIRE(42 == t2->get_future().get());
+}
+
 // Examples
 
 TEST_CASE("example__basic_with_three_tasks") {

@@ -249,6 +249,8 @@ private:
 template<typename ResultType>
 class task : public transwarp::itask {
 public:
+    using result_type = ResultType;
+
     virtual ~task() = default;
 
     virtual const std::shared_future<ResultType>& get_future() const noexcept = 0;
