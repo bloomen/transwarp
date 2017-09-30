@@ -2,21 +2,31 @@
 
 # transwarp 
 
-transwarp is a header-only C++ library for task concurrency. It enables you to free
-your functors from explicit threads and transparently manage dependencies.
-Under the hood, a directed acyclic graph is built at compile-time enabling efficient 
-traversal and type-safe dependencies. Once a graph is created its structure
-cannot be changed at runtime.
+transwarp is a header-only C++ library for task concurrency. It
+enables you to free your functors from explicit threads and
+transparently manage dependencies.  Under the hood, a directed acyclic
+graph is built that allows for efficient traversal and type-safe
+dependencies. Use transwarp if you want to model your dependent
+operations in a graph of tasks and intend to invoke the graph more than
+once.
 
-A task in transwarp is defined through a functor, parent tasks, and an optional name. 
-A task can either be consuming all or just one of its parents, or simply wait for their 
-completion similar to continuations. transwarp supports executors 
-either per task or globally when scheduling the tasks in the graph. Executors are
-decoupled from tasks and simply provide a way of running a given function.
+A task in transwarp is defined through a functor, parent tasks, and an
+optional name. Chaining tasks creates an acyclic graph. The children
+in this graph cannot change their parents, i.e., tasks cannot alter
+their dependencies. However, new children can be added at any time to
+existing parents.
 
-transwarp is designed for ease of use, portability, and scalability. It is written in 
-C++11 and only depends on the standard library. Just copy `src/transwarp.h` 
-to your project and off you go! Tested with GCC, Clang, and Visual Studio.
+A task can either be consuming all or just one of its
+parents, or simply wait for their completion similar to
+continuations. transwarp supports executors either per task or
+globally when scheduling the tasks in the graph. Executors are
+decoupled from tasks and simply provide a way of running a given
+function.
+
+transwarp is designed for ease of use, portability, and
+scalability. It is written in C++11 and only depends on the standard
+library. Just copy `src/transwarp.h` to your project and off you go!
+Tested with GCC, Clang, and Visual Studio.
 
 **Table of contents**
 
@@ -26,6 +36,13 @@ to your project and off you go! Tested with GCC, Clang, and Visual Studio.
      * [Creating tasks](#creating-tasks)
      * [Scheduling tasks](#scheduling-tasks)
      * [More on executors](#more-on-executors)
+  * [Comparison to other libraries](#comparison-to-other-libraries)
+     * [Standard library](#standard-library)
+     * [Boost](#boost)
+     * [HPX](#hpx)
+     * [TBB](#tbb)
+     * [Stlab](#stlab)
+     * [Conclusions](#conclusions)
   * [Feedback](#feedback)
 
 ## Build status
@@ -169,7 +186,7 @@ The task-specific executor will always be preferred over other executors when
 scheduling tasks.
 
 transwarp defines an executor interface which can be implemented to perform custom 
-behaviour when scheduling tasks. The interface looks like this:
+behavior when scheduling tasks. The interface looks like this:
 ```cpp
 class executor {
 public:
@@ -182,7 +199,213 @@ public:
 where `functor` denotes the function to be run and `node` an object that holds 
 meta-data of the current task.
 
+## Comparison to other libraries
+
+This comparison should serve as nothing more than a quick overview of
+a few portable, open-source libraries for task parallelism in C++.  By
+no means is this an exhaustive summary of the features those libraries
+provide.
+
+### Standard library
+
+**C++11/14/17**
+
+These language standards only provide a basic way of dealing with
+tasks. The simplest way to launch an asynchronous task is through:
+```cpp
+auto future = std::async(std::launch::async, functor, param1, param2);
+```
+which will run the given `functor` with `param1` and `param2` on a
+separate thread and return a `std::future` object. There are other
+primitives such as `std::promise` and `std::packaged_task` that assist
+with constructing asynchronous tasks. The latter is used internally by
+transwarp to schedule functions.
+
+Unfortunately, there is no way to chain futures together to create a
+graph of dependent operations. There is also no way of _easily_
+scheduling these operations on certain, user-defined threads. The
+standard library does, however, provide all the tools to build a
+framework, such as a transwarp, which implements these features.
+
+**C++20 and beyond**
+
+There are proposals through the [concurrency
+ts](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2015/p0159r0.html)
+to extend `std::future` and `std::shared_future` to support
+_continuations_, e.g.
+
+```cpp
+std::future<int> f1 = std::async([]() { return 123; });
+std::future<std::string> f2 = f1.then([](std::future<int> f) { return std::to_string(f.get()); });
+```
+
+In addition, there is talk about adding support for `when_all` and
+`when_any`. These features combined would make it possible to create a
+dependency graph much like the one in transwarp. Future continuations
+will, however, not support a re-scheduling of tasks in the graph but
+rather serve as one-shot operations. Also, there seems to be currently
+no efforts towards custom executors.
+
+The above example in transwarp would look something like this:
+
+```cpp
+tw::parallel executor{4};
+auto t1 = tw::make_task(tw::root, []() { return 123; });
+auto t2 = tw::make_task(tw::consume, [](int x) { return std::to_string(x); }, t1);
+t2->schedule_all(executor);
+```
+
+### Boost
+
+Boost supports
+[continuations](http://www.boost.org/doc/libs/1_65_1/doc/html/thread/synchronization.html#thread.synchronization.futures.then)
+much like the ones proposed in the above concurrency ts. In addition,
+boost supports custom executors that can be passed into overloaded
+versions of `future::then` and `async`. The custom executor is
+expected to implement a `submit` method accepting a `function<void()>`
+which then runs the given function, possibly asynchronously. Hence,
+this is quite similar to what transwarp does.
+
+A difference to point out is that transwarp uses `std::shared_future`
+to implement transfer between tasks which may be more expensive in
+certain situations compared to `std::future`. Note that a call to
+`get()` on a future will either return a reference or a moved result
+while the same call on a shared future will either provide a reference
+or a copy but never move.
+
+Boost also supports a form of scheduling of tasks. This allows users
+to schedule tasks when certain events take place, such as reaching a
+certain time. In transwarp, tasks are scheduled by calling `schedule`
+or `schedule_all` on the task object.
+
+### HPX
+
+HPX implements all of the features proposed in the concurrency ts and
+currently available in boost regarding continuations. It also supports
+custom executors and goes slightly beyond what boost has to
+offer. This [blog
+post](http://stellar-group.org/2015/07/hpx-and-cpp-futures/) has a
+nice summary.
+
+Neither Boost nor HPX seem to support task graphs for multiple
+invocations.
+
+### TBB
+
+TBB implements its own version of [task-based
+programming](https://www.threadingbuildingblocks.org/tutorial-intel-tbb-task-based-programming), for instance
+
+```cpp
+int Fib(int n) {
+    if ( n < 2 ) {
+        return n;
+    } else {
+        int x, y;
+        tbb::task_group g;
+        g.run([&]{ x = Fib(n-1); }); // spawn a task
+        g.run([&]{ y = Fib(n-2); }); // spawn another task
+        g.wait();                // wait for both tasks to complete
+        return x+y;
+    }
+}
+```
+
+which computes the Fibonacci series in a parallel fashion. The
+corresponding code in transwarp would look like this:
+
+```cpp
+tw::parallel executor{4};
+
+int Fib(int n) {
+    if ( n < 2 ) {
+        return n;
+    } else {
+        int x, y;
+        auto t1 = tw::make_task(tw::root, [&]{ x = Fib(n-1); });
+        auto t2 = tw::make_task(tw::root, [&]{ y = Fib(n-2); });
+        auto t3 = tw::make_task(tw::wait, []{}, t1, t2);
+        t3->schedule_all(executor);
+        t3->get_future().wait();
+        return x+y;
+    }
+}
+```
+
+Note that for any real-world application the graph of tasks should be
+created upfront and not on the fly.
+
+TBB supports both automatic and fine-grained task scheduling. Creating
+an acyclic graph of tasks appears to be somewhat cumbersome and is not
+nearly as straightforward as in transwarp. This
+[post](https://software.intel.com/en-us/node/506110) shows an example
+of such a graph. Simple continuations suffer from the same usability
+problem, though, it is possible to use them.
+
+### Stlab
+
+[Stlab](http://stlab.cc/libraries/concurrency/index.html) appears to
+be the library in the list that's the closest to what transwarp is
+trying to achieve. It supports future continuations in multiple
+directions (essentially a graph) and also canceling futures. Stlab
+splits its implementation into futures for single-shot graphs and
+channels for multiple invocations. A simple example using channels:
+
+```cpp
+stlab::sender<int> send;
+stlab::receiver<int> receive;
+
+std::tie(send, receive) = stlab::channel<int>(stlab::default_executor);
+
+std::atomic_int v{0};
+
+auto result = receive 
+    | stlab::executor{ stlab::immediate_executor } & [](int x) { return x * 2; }
+    | [&v](int x) { v = x; };
+
+receive.set_ready();
+
+send(1);
+
+// Waiting just for illustrational purpose
+while (v == 0) {
+    this_thread::sleep_for(chrono::milliseconds(1));
+}
+```
+
+This will take the input provided via `send`, multiply it by two, and
+then assign `v` the result. The corresponding code in transwarp would
+look like this:
+
+```cpp
+int x = 0;
+
+auto t1 = tw::make_task(tw::root, [&x] { return x; });
+auto t2 = tw::make_task(tw::consume, [](int x) { return x * 2; }, t1);
+
+x = 1;
+t2->schedule_all();
+
+int v = t2->get_future().get();
+```
+
+### Conclusions
+
+As can be seen from the comparison, transwarp shares many similarities
+to existing libraries. The notion of chaining dependent, possibly
+asynchronous operations and scheduling them using custom executors is a
+common use case. To summarize:
+
+Use transwarp if:
+* you want to model your dependent operations in a task graph
+* you construct the task graph upfront and invoke it multiple times
+* you possibly now or later want to run some tasks on different threads
+* you want a header-only task library that is easy to use and has no dependencies
+
+Don't use transwarp if:
+* you construct the task graph on the fly for one-shot operations (use futures instead)
+* significant chunks of memory are copied when invoking dependent tasks (transwarp uses shared_futures to communicate results between tasks)
+
 ## Feedback
 
 Contact me if you have any questions or suggestions to make this a better library!
-Email me at `chr.blume@gmail.com` or create a GitHub issue.
+Email me at `chr.blume@gmail.com` or create a Github issue.
