@@ -1,10 +1,13 @@
-0.X.X
+1.0.0
 
-- added ability to assign custom executors per task
+- made the library safer and more user-friendly
 - merge final_task and task together to a single class
-- add task types to support consuming or waiting
+- add task types to support consuming and waiting
+- added ability to assign custom executors per task
 - changed schedule functions to accept an executor
-- only use noexcept where appropriate
+- improved documentation and examples
+- switch to using cmake and catch
+- add continuous integration on Linux, Mac, and Windows
 
 0.2.0
 

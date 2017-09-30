@@ -1,6 +1,6 @@
-**_Not production ready!_**
-
 # transwarp 
+
+**Version 1.0.0**
 
 transwarp is a header-only C++ library for task concurrency. It
 enables you to free your functors from explicit threads and
