@@ -1,4 +1,4 @@
-sudo: required
+sudo: false
 language: cpp
 
 branches:
@@ -27,14 +27,10 @@ matrix:
       env: CONFIGURATION=Release
       compiler: clang
 
-install:
-    - if [[ "$TRAVIS_OS_NAME" == "linux" ]];then sudo apt-get install -y valgrind; fi
- 
 script:
     - mkdir build && cd build
     - cmake -DCMAKE_BUILD_TYPE=$CONFIGURATION .. 
     - make -j4
-    - ../valgrind.sh ./transwarp_test
     - ctest --verbose
 
 notifications:
