@@ -9,6 +9,11 @@ platform:
 environment:
   MSVC_DEFAULT_OPTIONS: ON
 
+branches:
+  only:
+    - master
+    - develop
+
 configuration:
   - Debug
   - Release
