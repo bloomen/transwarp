@@ -1,6 +1,6 @@
 # transwarp 
 
-**Version 1.0.0**
+**Version 1.0.0+X**
 
 transwarp is a header-only C++ library for task concurrency. It
 enables you to free your functors from explicit threads and
@@ -46,6 +46,9 @@ Tested with GCC, Clang, and Visual Studio.
   * [Feedback](#feedback)
 
 ## Build status
+
+The *master* branch is always at the latest release. The *develop* branch is at 
+the latest release plus some delta.
 
 GCC/Clang on master [![Travis](https://travis-ci.org/bloomen/transwarp.svg?branch=master)](https://travis-ci.org/bloomen/transwarp/branches) and develop [![Travis](https://travis-ci.org/bloomen/transwarp.svg?branch=develop)](https://travis-ci.org/bloomen/transwarp/branches)
 
