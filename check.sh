@@ -32,3 +32,6 @@ for mode in $modes; do
     cd $thisdir    
     rm -rf $dir
 done
+
+echo
+echo "+++ All Good!"
