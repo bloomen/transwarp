@@ -1,6 +1,6 @@
 # transwarp 
 
-**Version 1.0.0+X**
+**Version 1.0.1**
 
 [![Gitter](https://badges.gitter.im/bloomen/transwarp.svg)](https://gitter.im/bloomen/transwarp)
 
@@ -413,4 +413,5 @@ Don't use transwarp if:
 ## Feedback
 
 Contact me if you have any questions or suggestions to make this a better library!
-Email me at `chr.blume@gmail.com` or create a Github issue.
+You can post on [gitter](https://gitter.im/bloomen/transwarp), submit a pull request,
+create a Github issue, or simply email me at `chr.blume@gmail.com`.
