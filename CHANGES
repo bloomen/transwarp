@@ -1,3 +1,9 @@
+1.0.1
+
+- improved documentation
+- added gitter badge
+- added script for checking all of transwarp
+
 1.0.0
 
 - made the library safer and more user-friendly
