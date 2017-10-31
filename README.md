@@ -2,6 +2,8 @@
 
 **Version 1.0.0+X**
 
+[![Gitter](https://badges.gitter.im/bloomen/transwarp.svg)](https://gitter.im/bloomen/transwarp)
+
 transwarp is a header-only C++ library for task concurrency. It
 enables you to free your functors from explicit threads and
 transparently manage dependencies.  Under the hood, a directed acyclic
