@@ -415,3 +415,9 @@ Don't use transwarp if:
 Contact me if you have any questions or suggestions to make this a better library!
 You can post on [gitter](https://gitter.im/bloomen/transwarp), submit a pull request,
 create a Github issue, or simply email me at `chr.blume@gmail.com`.
+
+If you're serious about contributing code to transwarp (which would be awesome!) then 
+please submit a pull request and keep in mind that:
+- all new development happens on the _develop_ branch while the _master_ branch is at the latest release
+- unit tests should be added for all new code by extending the existing unit test suite
+- C++ code uses spaces throughout 
