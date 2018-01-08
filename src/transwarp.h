@@ -226,6 +226,7 @@ public:
     virtual void schedule(transwarp::executor& executor, bool reset=true) = 0;
     virtual void schedule_all(bool reset_all=true) = 0;
     virtual void schedule_all(transwarp::executor& executor, bool reset_all=true) = 0;
+    virtual void wait() const noexcept = 0;
     virtual void reset() = 0;
     virtual void reset_all() = 0;
     virtual void cancel(bool enabled) noexcept = 0;
@@ -864,6 +865,13 @@ public:
     // futures and schedule even if the futures are already present.
     void schedule_all(transwarp::executor& executor, bool reset_all=true) override {
         schedule_all_impl(reset_all, &executor);
+    }
+
+    // Waits for the task to complete
+    void wait() const noexcept override {
+        if (future_.valid()) {
+            future_.wait();
+        }
     }
 
     // Resets the future of this task

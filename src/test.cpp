@@ -381,6 +381,15 @@ TEST_CASE("schedule_all_without_executor") {
     REQUIRE(26 == x);
 }
 
+TEST_CASE("schedule_all_without_executor_wait_method") {
+    int x = 13;
+    auto task = make_task(transwarp::root, [&x]{ x *= 2; });
+    task->wait(); // not scheduled yet
+    task->schedule_all();
+    task->wait();
+    REQUIRE(26 == x);
+}
+
 TEST_CASE("schedule_all_with_task_specific_executor") {
     int value = 42;
     auto functor = [value] { return value*2; };
