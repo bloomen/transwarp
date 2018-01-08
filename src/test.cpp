@@ -396,7 +396,7 @@ TEST_CASE("schedule_all_with_task_specific_executor") {
     auto task = make_task(transwarp::root, functor);
     task->set_executor(std::make_shared<transwarp::sequential>());
     task->schedule_all();
-    REQUIRE(84 == task->get_future().get());
+    REQUIRE(84 == task->get());
 }
 
 TEST_CASE("invalid_task_specific_executor") {
@@ -431,9 +431,9 @@ TEST_CASE("schedule_with_three_tasks_sequential") {
     task1->schedule();
     task2->schedule();
     task3->schedule();
-    REQUIRE(55 == task3->get_future().get());
+    REQUIRE(55 == task3->get());
     task3->schedule_all();
-    REQUIRE(55 == task3->get_future().get());
+    REQUIRE(55 == task3->get());
 }
 
 TEST_CASE("schedule_with_three_tasks_parallel") {
@@ -559,6 +559,7 @@ TEST_CASE("task_with_const_reference_return_type") {
     auto task = make_task(transwarp::root, functor);
     task->schedule();
     REQUIRE(*value == task->get_future().get());
+    REQUIRE(*value == task->get());
 }
 
 TEST_CASE("task_with_reference_return_type") {
@@ -567,6 +568,7 @@ TEST_CASE("task_with_reference_return_type") {
     auto task = make_task(transwarp::root, functor);
     task->schedule();
     REQUIRE(*value == task->get_future().get());
+    REQUIRE(*value == task->get());
 }
 
 struct non_copy_functor {
@@ -804,6 +806,10 @@ void make_test_pass_by_reference() {
     auto& result = t3->get_future().get();
     const auto result_ptr = &result;
     REQUIRE(data_ptr == result_ptr);
+
+    auto& result2 = t3->get();
+    const auto result2_ptr = &result2;
+    REQUIRE(data_ptr == result2_ptr);
 }
 
 TEST_CASE("pass_by_reference") {
@@ -834,6 +840,17 @@ TEST_CASE("make_task_from_base_task") {
     auto t2 = make_task(transwarp::consume, [](int x){ return x; }, t1);
     t2->schedule_all();
     REQUIRE(42 == t2->get_future().get());
+}
+
+TEST_CASE("schedule_with_two_tasks_wait_with_void_return_method_get") {
+    auto f1 = [] {};
+    auto task1 = make_task(transwarp::root, f1);
+    auto f2 = [] { return 13; };
+    auto task2 = make_task(transwarp::wait, f2, task1);
+
+    task2->schedule_all();
+    task1->get();
+    REQUIRE(13 == task2->get());
 }
 
 // Examples

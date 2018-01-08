@@ -246,6 +246,29 @@ private:
 };
 
 
+namespace detail {
+
+template<typename ResultType, bool is_void>
+struct rinfo_impl;
+
+template<typename ResultType>
+struct rinfo_impl<ResultType, true> {
+    using type = void;
+};
+
+template<typename ResultType>
+struct rinfo_impl<ResultType, false> {
+    using type = const ResultType&;
+};
+
+template<typename ResultType>
+struct rinfo {
+    using type = typename rinfo_impl<ResultType, std::is_void<ResultType>::value>::type;
+};
+
+} // detail
+
+
 // The task class which is implemented by task_impl
 template<typename ResultType>
 class task : public transwarp::itask {
@@ -255,6 +278,7 @@ public:
     virtual ~task() = default;
 
     virtual const std::shared_future<ResultType>& get_future() const noexcept = 0;
+    virtual typename transwarp::detail::rinfo<ResultType>::type get() const = 0;
 };
 
 
@@ -872,6 +896,13 @@ public:
         if (future_.valid()) {
             future_.wait();
         }
+    }
+
+    // Returns the result of this task. Throws any exceptions that the underlying
+    // functor throws. Throws std::future_error if the task was not scheduled.
+    // Note that the return type is either 'void' or 'const result_type&'
+    typename transwarp::detail::rinfo<result_type>::type get() const override {
+        return future_.get();
     }
 
     // Resets the future of this task
