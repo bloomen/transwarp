@@ -918,7 +918,7 @@ public:
     }
 
     // If enabled then this task is canceled which will
-    // throw transwarp::task_canceled when asking the future for its result.
+    // throw transwarp::task_canceled when retrieving the task result.
     // Canceling pending tasks does not affect currently running tasks.
     // As long as cancel is enabled new computations cannot be scheduled.
     // Passing false is equivalent to resume.
@@ -927,7 +927,7 @@ public:
     }
 
     // If enabled then all pending tasks in the graph are canceled which will
-    // throw transwarp::task_canceled when asking a future for its result.
+    // throw transwarp::task_canceled when retrieving the task result.
     // Canceling pending tasks does not affect currently running tasks.
     // As long as cancel is enabled new computations cannot be scheduled.
     // Passing false is equivalent to resume.
