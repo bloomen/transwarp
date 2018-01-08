@@ -132,7 +132,7 @@ void statistical_key_facts(std::ostream& os, std::size_t sample_size, bool paral
     double count = 1;
     while (count < 4) {
         final_task->schedule_all(*executor);
-        const result res = final_task->get_future().get();
+        const result res = final_task->get();
         os << res << std::endl;
         // Changing input
         alpha += count;

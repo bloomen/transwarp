@@ -122,7 +122,7 @@ void single_thread_lock_free(std::ostream& os, std::size_t sample_size) {
     std::size_t count = 0;
     while (count < sample_size) {
         task->schedule_all(executor);
-        os << task->get_future().get() << std::endl;
+        os << task->get() << std::endl;
         ++count;
     }
 }

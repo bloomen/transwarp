@@ -109,7 +109,7 @@ std::shared_ptr<tw::task<result>> build_graph(std::shared_ptr<std::mt19937> gen)
 
 void calculate_via_transwarp(tw::task<result>& task) {
     task.schedule_all();
-    const auto& res = task.get_future().get();
+    const auto& res = task.get();
     check_result(res);
 }
 

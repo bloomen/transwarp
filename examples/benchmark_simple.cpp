@@ -60,7 +60,7 @@ std::shared_ptr<tw::task<double>> build_graph() {
 
 void calculate_via_transwarp(tw::task<double>& task) {
     task.schedule_all();
-    if (task.get_future().get() != expected) {
+    if (task.get() != expected) {
         throw std::runtime_error("wrong result");
     }
 }
