@@ -1,6 +1,6 @@
 # transwarp 
 
-**Version 1.0.1**
+**Version 1.1.0**
 
 [![Gitter](https://badges.gitter.im/bloomen/transwarp.svg)](https://gitter.im/bloomen/transwarp)
 
@@ -13,14 +13,9 @@ operations in a graph of tasks and intend to invoke the graph more than
 once.
 
 A task in transwarp is defined through a functor, parent tasks, and an
-optional name. Chaining tasks creates an acyclic graph. The children
-in this graph cannot change their parents, i.e., tasks cannot alter
-their dependencies. However, new children can be added at any time to
-existing parents.
-
-A task can either be consuming all or just one of its
-parents, or simply wait for their completion similar to
-continuations. transwarp supports executors either per task or
+optional name. Chaining tasks creates an acyclic graph. A task can either be 
+consuming all or just one of its parents, or simply wait for their completion 
+similar to continuations. transwarp supports executors either per task or
 globally when scheduling the tasks in the graph. Executors are
 decoupled from tasks and simply provide a way of running a given
 function.
