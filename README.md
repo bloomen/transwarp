@@ -89,15 +89,15 @@ int main() {
     // parallel execution with 4 threads for independent tasks
     tw::parallel executor{4};
 
-    task3->schedule_all(executor);  // schedules all tasks for execution, assigning a future to each
-    std::cout << "result = " << task3->get_future().get() << std::endl;  // result = 55.3
+    task3->schedule_all(executor);  // schedules all tasks for execution
+    std::cout << "result = " << task3->get() << std::endl;  // result = 55.3
 
     // modifying data input
     value1 += 2.5;
     value2 += 1;
 
-    task3->schedule_all(executor);  // schedules all tasks for execution, assigning new futures
-    std::cout << "result = " << task3->get_future().get() << std::endl;  // result = 58.8
+    task3->schedule_all(executor);  // re-schedules all tasks for execution
+    std::cout << "result = " << task3->get() << std::endl;  // result = 58.8
 }
 ```
 
@@ -150,11 +150,9 @@ tw::parallel executor{4};  // thread pool with 4 threads
 auto task = tw::make_task(tw::root, functor);
 task->schedule(executor);
 ```
-Regardless of how you schedule, the shared future associated to the underlying 
-execution can be retrieved through:
+Regardless of how you schedule, the task result can be retrieved through:
 ```cpp
-auto future = task->get_future();
-std::cout << future.get() << std::endl;
+std::cout << task->get() << std::endl;
 ```  
 When chaining multiple tasks together a directed acyclic graph is built in which
 every task can be scheduled individually. Though, in many scenarios it is useful
@@ -325,7 +323,7 @@ int Fib(int n) {
         auto t2 = tw::make_task(tw::root, [&]{ y = Fib(n-2); });
         auto t3 = tw::make_task(tw::wait, []{}, t1, t2);
         t3->schedule_all(executor);
-        t3->get_future().wait();
+        t3->wait();
         return x+y;
     }
 }
@@ -385,7 +383,7 @@ auto t2 = tw::make_task(tw::consume, [](int x) { return x * 2; }, t1);
 x = 1;
 t2->schedule_all();
 
-int v = t2->get_future().get();
+int v = t2->get();
 ```
 
 ### Conclusions
