@@ -89,7 +89,17 @@ public:
     node(std::size_t id, transwarp::task_type type, std::shared_ptr<std::string> name,
          std::shared_ptr<std::string> executor, std::vector<std::shared_ptr<node>> parents) noexcept
     : id_(id), type_(type), name_(std::move(name)),
-      executor_(std::move(executor)), parents_(std::move(parents))
+      executor_(std::move(executor)), parents_(std::move(parents)),
+      priority_(0), custom_data_(nullptr)
+    {}
+
+    // cppcheck-suppress passedByValue
+    node(std::size_t id, transwarp::task_type type, std::shared_ptr<std::string> name,
+         std::shared_ptr<std::string> executor, std::vector<std::shared_ptr<node>> parents,
+         std::size_t priority, std::shared_ptr<void> custom_data) noexcept
+    : id_(id), type_(type), name_(std::move(name)),
+      executor_(std::move(executor)), parents_(std::move(parents)),
+      priority_(priority), custom_data_(std::move(custom_data))
     {}
 
     // delete copy/move semantics
@@ -123,6 +133,16 @@ public:
         return parents_;
     }
 
+    // The task priority (defaults to 0)
+    std::size_t get_priority() const noexcept {
+        return priority_;
+    }
+
+    // The custom task data (may be null)
+    const std::shared_ptr<void>& get_custom_data() const noexcept {
+        return custom_data_;
+    }
+
 private:
     friend struct transwarp::detail::node_manip;
 
@@ -131,6 +151,8 @@ private:
     std::shared_ptr<std::string> name_;
     std::shared_ptr<std::string> executor_;
     std::vector<std::shared_ptr<node>> parents_;
+    std::size_t priority_;
+    std::shared_ptr<void> custom_data_;
 };
 
 // String conversion for the node class
@@ -221,6 +243,10 @@ public:
 
     virtual void set_executor(std::shared_ptr<transwarp::executor> executor) = 0;
     virtual void remove_executor() noexcept = 0;
+    virtual void set_priority(std::size_t priority) noexcept = 0;
+    virtual void remove_priority() noexcept = 0;
+    virtual void set_custom_data(std::shared_ptr<void> custom_data) = 0;
+    virtual void remove_custom_data() = 0;
     virtual const std::shared_ptr<transwarp::node>& get_node() const noexcept = 0;
     virtual void schedule(bool reset=true) = 0;
     virtual void schedule(transwarp::executor& executor, bool reset=true) = 0;
@@ -339,6 +365,19 @@ struct node_manip {
             node.executor_.reset();
         }
     }
+
+    static void set_priority(transwarp::node& node, std::size_t priority) noexcept {
+        node.priority_ = priority;
+    }
+
+    static void set_custom_data(transwarp::node& node, std::shared_ptr<void> custom_data) {
+        if (custom_data) {
+            node.custom_data_ = std::move(custom_data);
+        } else {
+            node.custom_data_.reset();
+        }
+    }
+
 };
 
 
@@ -847,6 +886,31 @@ public:
     void remove_executor() noexcept override {
         executor_.reset();
         transwarp::detail::node_manip::set_executor(*node_, nullptr);
+    }
+
+    // Sets a task priority (defaults to 0). transwarp will not directly use this.
+    // This is only useful if a custom executor deals with priorities.
+    void set_priority(std::size_t priority) noexcept override {
+        transwarp::detail::node_manip::set_priority(*node_, priority);
+    }
+
+    // Resets the task priority to 0
+    void remove_priority() noexcept override {
+        transwarp::detail::node_manip::set_priority(*node_, 0);
+    }
+
+    // Assigns custom data to this task. transwarp will not directly use this.
+    // This is only useful if something else is using this custom data.
+    void set_custom_data(std::shared_ptr<void> custom_data) override {
+        if (!custom_data) {
+            throw transwarp::transwarp_error("Not a valid pointer to custom data");
+        }
+        transwarp::detail::node_manip::set_custom_data(*node_, std::move(custom_data));
+    }
+
+    // Removes custom data from this task
+    void remove_custom_data() override {
+        transwarp::detail::node_manip::set_custom_data(*node_, nullptr);
     }
 
     // Returns the future associated to the underlying execution

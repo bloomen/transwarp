@@ -853,6 +853,25 @@ TEST_CASE("schedule_with_two_tasks_wait_with_void_return_method_get") {
     REQUIRE(13 == task2->get());
 }
 
+TEST_CASE("task_priority") {
+    auto t = make_task(transwarp::root, []{});
+    REQUIRE(0 == t->get_node()->get_priority());
+    t->set_priority(3);
+    REQUIRE(3 == t->get_node()->get_priority());
+    t->remove_priority();
+    REQUIRE(0 == t->get_node()->get_priority());
+}
+
+TEST_CASE("task_custom_data") {
+    auto t = make_task(transwarp::root, []{});
+    REQUIRE(nullptr == t->get_node()->get_custom_data());
+    auto cd = std::make_shared<int>(42);
+    t->set_custom_data(cd);
+    REQUIRE(cd.get() == t->get_node()->get_custom_data().get());
+    t->remove_custom_data();
+    REQUIRE(nullptr == t->get_node()->get_custom_data());
+}
+
 // Examples
 
 TEST_CASE("example__basic_with_three_tasks") {
