@@ -244,7 +244,7 @@ public:
     virtual void set_executor(std::shared_ptr<transwarp::executor> executor) = 0;
     virtual void remove_executor() noexcept = 0;
     virtual void set_priority(std::size_t priority) noexcept = 0;
-    virtual void remove_priority() noexcept = 0;
+    virtual void reset_priority() noexcept = 0;
     virtual void set_custom_data(std::shared_ptr<void> custom_data) = 0;
     virtual void remove_custom_data() = 0;
     virtual const std::shared_ptr<transwarp::node>& get_node() const noexcept = 0;
@@ -895,7 +895,7 @@ public:
     }
 
     // Resets the task priority to 0
-    void remove_priority() noexcept override {
+    void reset_priority() noexcept override {
         transwarp::detail::node_manip::set_priority(*node_, 0);
     }
 

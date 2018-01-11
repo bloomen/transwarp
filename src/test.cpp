@@ -858,7 +858,7 @@ TEST_CASE("task_priority") {
     REQUIRE(0 == t->get_node()->get_priority());
     t->set_priority(3);
     REQUIRE(3 == t->get_node()->get_priority());
-    t->remove_priority();
+    t->reset_priority();
     REQUIRE(0 == t->get_node()->get_priority());
 }
 
