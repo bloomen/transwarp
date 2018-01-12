@@ -10,10 +10,9 @@
 
 
 using transwarp::make_task;
-using transwarp::make_task;
-
 
 using nodes_t = std::vector<std::shared_ptr<transwarp::node>>;
+
 
 std::shared_ptr<transwarp::node> generic_node() {
     return std::make_shared<transwarp::node>(1, transwarp::task_type::consume, std::make_shared<std::string>("cool"), nullptr, nodes_t{});
