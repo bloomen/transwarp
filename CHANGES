@@ -1,3 +1,10 @@
+1.1.0
+
+- added 'wait()' method to wait for the task to finish
+- added 'get()' method to retrieve the task result
+- added methods to assign/query priority and custom data of a task
+- improved documentation
+
 1.0.1
 
 - improved documentation
