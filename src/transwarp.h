@@ -837,6 +837,7 @@ private:
 
 // A task representing a piece of work given by functor and parent tasks.
 // By connecting tasks a directed acyclic graph is built.
+// Tasks should be created using the make_task factory functions.
 template<typename TaskType, typename Functor, typename... ParentResults>
 class task_impl : public transwarp::task<typename transwarp::detail::result<TaskType, Functor, ParentResults...>::type>,
                   public std::enable_shared_from_this<task_impl<TaskType, Functor, ParentResults...>> {
