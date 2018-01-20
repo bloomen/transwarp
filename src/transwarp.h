@@ -1157,22 +1157,25 @@ public:
     }
 
     // Waits for the task to complete. Should only be called if was_scheduled()
-    // is true, throws std::future_error otherwise
+    // is true, throws transwarp::transwarp_error otherwise
     void wait() const override {
+        check_task_was_scheduled();
         future_.wait();
     }
 
     // Returns whether the task has finished processing. Should only be called
-    // if was_scheduled() is true, throws std::future_error otherwise
+    // if was_scheduled() is true, throws transwarp::transwarp_error otherwise
     bool is_ready() const override {
+        check_task_was_scheduled();
         return future_.wait_for(std::chrono::seconds(0)) == std::future_status::ready;
     }
 
     // Returns the result of this task. Throws any exceptions that the underlying
     // functor throws. Should only be called if was_scheduled() is true,
-    // throws std::future_error otherwise
+    // throws transwarp::transwarp_error otherwise
     // Note that the return type is either 'void' or 'const result_type&'
     typename transwarp::detail::rinfo<result_type>::type get() const override {
+        check_task_was_scheduled();
         return future_.get();
     }
 
@@ -1304,6 +1307,13 @@ private:
             throw transwarp::transwarp_error("the task is currently running");
         }
 #endif
+    }
+
+    // Checks if the task was scheduled and throws transwarp::transwarp_error if it's not
+    void check_task_was_scheduled() const {
+        if (!was_scheduled()) {
+            throw transwarp::transwarp_error("the task was not scheduled");
+        }
     }
 
     // Calls the functor of the given task with the results from the futures.
