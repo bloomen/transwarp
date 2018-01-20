@@ -251,12 +251,12 @@ public:
 
     virtual void set_executor(std::shared_ptr<transwarp::executor> executor) = 0;
     virtual void set_executor_all(std::shared_ptr<transwarp::executor> executor) = 0;
-    virtual void remove_executor() noexcept = 0;
-    virtual void remove_executor_all() noexcept = 0;
-    virtual void set_priority(std::size_t priority) noexcept = 0;
-    virtual void set_priority_all(std::size_t priority) noexcept = 0;
-    virtual void reset_priority() noexcept = 0;
-    virtual void reset_priority_all() noexcept = 0;
+    virtual void remove_executor() = 0;
+    virtual void remove_executor_all() = 0;
+    virtual void set_priority(std::size_t priority) = 0;
+    virtual void set_priority_all(std::size_t priority) = 0;
+    virtual void reset_priority() = 0;
+    virtual void reset_priority_all() = 0;
     virtual void set_custom_data(std::shared_ptr<void> custom_data) = 0;
     virtual void set_custom_data_all(std::shared_ptr<void> custom_data) = 0;
     virtual void remove_custom_data() = 0;
@@ -1027,14 +1027,14 @@ public:
     }
 
     // Removes the executor from this task
-    void remove_executor() noexcept override {
+    void remove_executor() override {
         assert_task_not_running();
         executor_.reset();
         transwarp::detail::node_manip::set_executor(*node_, nullptr);
     }
 
     // Removes the executor from all tasks
-    void remove_executor_all() noexcept override {
+    void remove_executor_all() override {
         assert_task_not_running();
         transwarp::detail::remove_executor_visitor visitor;
         visit(visitor);
@@ -1043,14 +1043,14 @@ public:
 
     // Sets a task priority (defaults to 0). transwarp will not directly use this.
     // This is only useful if something else is using the priority (e.g. a custom executor)
-    void set_priority(std::size_t priority) noexcept override {
+    void set_priority(std::size_t priority) override {
         assert_task_not_running();
         transwarp::detail::node_manip::set_priority(*node_, priority);
     }
 
     // Sets a priority to all tasks (defaults to 0). transwarp will not directly use this.
     // This is only useful if something else is using the priority (e.g. a custom executor)
-    void set_priority_all(std::size_t priority) noexcept override {
+    void set_priority_all(std::size_t priority) override {
         assert_task_not_running();
         transwarp::detail::set_priority_visitor visitor(priority);
         visit(visitor);
@@ -1058,13 +1058,13 @@ public:
     }
 
     // Resets the task priority to 0
-    void reset_priority() noexcept override {
+    void reset_priority() override {
         assert_task_not_running();
         transwarp::detail::node_manip::set_priority(*node_, 0);
     }
 
     // Resets the priority of all tasks to 0
-    void reset_priority_all() noexcept override {
+    void reset_priority_all() override {
         assert_task_not_running();
         transwarp::detail::reset_priority_visitor visitor;
         visit(visitor);
