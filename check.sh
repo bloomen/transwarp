@@ -1,6 +1,7 @@
 #!/bin/bash
 set -e
 thisdir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+echo "Compiler: "$CXX
 
 $thisdir/cppcheck.sh
 
