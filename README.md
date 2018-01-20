@@ -1,6 +1,6 @@
 # transwarp 
 
-**Version 1.1.0**
+**Version 1.2.0**
 
 [![Gitter](https://badges.gitter.im/bloomen/transwarp.svg)](https://gitter.im/bloomen/transwarp)
 
@@ -169,6 +169,12 @@ tw::parallel executor{4};
 task->schedule_all(executor);
 ```
 which will run those tasks in parallel that do not depend on each other.
+
+A task can be canceled by calling `task->cancel(true)` which will, by default, 
+only affect tasks that are not currently running yet. However, if you create a functor
+that inherits from `transwarp::functor` you get access to the `transwarp_cancel_point` 
+function. This function can be used to denote well defined points where the functor
+will exit when the associated task is canceled. 
 
 ### More on executors
 

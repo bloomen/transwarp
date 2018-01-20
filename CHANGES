@@ -1,3 +1,8 @@
+1.2.0
+
+- added means of canceling a task while its running through transwarp::functor
+- added new methods to the task class that forward to all parent tasks 
+
 1.1.0
 
 - added 'wait()' method to wait for the task to finish
