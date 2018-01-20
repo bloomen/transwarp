@@ -1,3 +1,7 @@
+1.2.1
+
+- add an explicit check for if a task was scheduled to certain methods
+
 1.2.0
 
 - added means of canceling a task while its running through transwarp::functor

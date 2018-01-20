@@ -1,5 +1,5 @@
 // transwarp is a header-only C++ library for task concurrency
-// Version: 1.2.0
+// Version: 1.2.1
 // Repository: https://github.com/bloomen/transwarp
 // Copyright: 2017 Christian Blume
 // License: http://www.opensource.org/licenses/mit-license.php
@@ -1299,7 +1299,7 @@ private:
         }
     }
 
-    // Checks if the task is currently running and throws an transwarp::transwarp_error if it is
+    // Checks if the task is currently running and throws transwarp::transwarp_error if it is
     void check_task_not_running() const {
         if (future_.valid() && future_.wait_for(std::chrono::seconds(0)) != std::future_status::ready) {
             throw transwarp::transwarp_error("the task is currently running");
