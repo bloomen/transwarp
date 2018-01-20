@@ -1,5 +1,5 @@
 // transwarp is a header-only C++ library for task concurrency
-// Version: 1.1.0
+// Version: 1.2.0
 // Repository: https://github.com/bloomen/transwarp
 // Copyright: 2017 Christian Blume
 // License: http://www.opensource.org/licenses/mit-license.php
@@ -78,6 +78,8 @@ struct unvisit;
 struct final_visitor;
 struct schedule_visitor;
 struct node_manip;
+template<bool>
+struct assign_node_if_impl;
 
 } // detail
 
@@ -90,7 +92,7 @@ public:
          std::shared_ptr<std::string> executor, std::vector<std::shared_ptr<node>> parents) noexcept
     : id_(id), type_(type), name_(std::move(name)),
       executor_(std::move(executor)), parents_(std::move(parents)),
-      priority_(0), custom_data_(nullptr)
+      priority_(0), custom_data_(nullptr), canceled_(false)
     {}
 
     // cppcheck-suppress passedByValue
@@ -99,7 +101,7 @@ public:
          std::size_t priority, std::shared_ptr<void> custom_data) noexcept
     : id_(id), type_(type), name_(std::move(name)),
       executor_(std::move(executor)), parents_(std::move(parents)),
-      priority_(priority), custom_data_(std::move(custom_data))
+      priority_(priority), custom_data_(std::move(custom_data)), canceled_(false)
     {}
 
     // delete copy/move semantics
@@ -143,6 +145,11 @@ public:
         return custom_data_;
     }
 
+    // Returns whether the associated task is canceled
+    bool is_canceled() const noexcept {
+        return canceled_.load();
+    }
+
 private:
     friend struct transwarp::detail::node_manip;
 
@@ -153,6 +160,7 @@ private:
     std::vector<std::shared_ptr<node>> parents_;
     std::size_t priority_;
     std::shared_ptr<void> custom_data_;
+    std::atomic_bool canceled_;
 };
 
 // String conversion for the node class
@@ -344,6 +352,36 @@ public:
 };
 
 
+// A base class for a user-defined functor that needs access to the node associated
+// to the task or a cancel point to stop a task while it's running
+class functor {
+public:
+
+    virtual ~functor() = default;
+
+protected:
+
+    // The node associated to the task
+    const std::shared_ptr<transwarp::node>& transwarp_node() const noexcept {
+        return transwarp_node_;
+    }
+
+    // If the associated task is canceled then this will throw transwarp::task_canceled
+    // which will stop the task while it's running
+    void transwarp_cancel_point() const {
+        if (transwarp_node_->is_canceled()) {
+            throw transwarp::task_canceled(std::to_string(transwarp_node_->get_id()));
+        }
+    }
+
+private:
+    template<bool>
+    friend struct transwarp::detail::assign_node_if_impl;
+
+    std::shared_ptr<transwarp::node> transwarp_node_;
+};
+
+
 namespace detail {
 
 
@@ -376,6 +414,10 @@ struct node_manip {
         } else {
             node.custom_data_.reset();
         }
+    }
+
+    static void set_canceled(transwarp::node& node, bool enabled) noexcept {
+        node.canceled_ = enabled;
     }
 
 };
@@ -475,7 +517,7 @@ Result run_task(std::size_t node_id, const Task& task, Args&&... args) {
     if (!t) {
         throw transwarp::task_destroyed(std::to_string(node_id));
     }
-    if (t->canceled_) {
+    if (t->node_->is_canceled()) {
         throw transwarp::task_canceled(std::to_string(node_id));
     }
     return t->functor_(std::forward<Args>(args)...);
@@ -779,6 +821,29 @@ struct result<transwarp::wait_any_type, Functor, ParentResults...> {
     using type = decltype(std::declval<Functor>()());
 };
 
+template<bool is_transwarp_functor>
+struct assign_node_if_impl;
+
+template<>
+struct assign_node_if_impl<true> {
+    template<typename Functor>
+    void operator()(Functor& functor, std::shared_ptr<transwarp::node> node) const noexcept {
+        functor.transwarp_node_ = std::move(node);
+    }
+};
+
+template<>
+struct assign_node_if_impl<false> {
+    template<typename Functor>
+    void operator()(Functor&, std::shared_ptr<transwarp::node>) const noexcept {}
+};
+
+// Assigns the node to the given functor if the functor is a subclass of transwarp::functor
+template<typename Functor>
+void assign_node_if(Functor& functor, std::shared_ptr<transwarp::node> node) {
+    transwarp::detail::assign_node_if_impl<std::is_base_of<transwarp::functor, Functor>::value>{}(functor, std::move(node));
+}
+
 } // detail
 
 
@@ -988,7 +1053,7 @@ public:
     // As long as cancel is enabled new computations cannot be scheduled.
     // Passing false is equivalent to resume.
     void cancel(bool enabled) noexcept override {
-        canceled_ = enabled;
+        transwarp::detail::node_manip::set_canceled(*node_, enabled);
     }
 
     // If enabled then all pending tasks in the graph are canceled which will
@@ -1023,9 +1088,9 @@ private:
             nullptr, std::vector<std::shared_ptr<transwarp::node>>{})),
       functor_(std::forward<F>(functor)),
       parents_(std::make_tuple(std::move(parents)...)),
-      visited_(false),
-      canceled_(false)
+      visited_(false)
     {
+        transwarp::detail::assign_node_if(functor_, node_);
         transwarp::detail::call_with_each(transwarp::detail::parent_visitor(node_), parents_);
         transwarp::detail::final_visitor visitor;
         visit(visitor);
@@ -1045,7 +1110,7 @@ private:
     // Runs the task on the same thread as the caller if neither the global
     // nor the task-specific executor is found.
     void schedule_impl(bool reset, transwarp::executor* executor=nullptr) override {
-        if (!canceled_ && (reset || !future_.valid())) {
+        if (!node_->is_canceled() && (reset || !future_.valid())) {
             std::weak_ptr<task_impl> self = this->shared_from_this();
             auto futures = transwarp::detail::get_futures(parents_);
             auto pack_task = std::make_shared<std::packaged_task<result_type()>>(
@@ -1066,7 +1131,7 @@ private:
     // Runs tasks on the same thread as the caller if neither the global
     // nor a task-specific executor is found.
     void schedule_all_impl(bool reset_all, transwarp::executor* executor=nullptr) {
-        if (!canceled_) {
+        if (!node_->is_canceled()) {
             transwarp::detail::schedule_visitor visitor(reset_all, executor);
             visit(visitor);
             unvisit();
@@ -1102,7 +1167,6 @@ private:
     Functor functor_;
     std::tuple<std::shared_ptr<transwarp::task<ParentResults>>...> parents_;
     bool visited_;
-    std::atomic_bool canceled_;
     std::shared_ptr<transwarp::executor> executor_;
     std::shared_future<result_type> future_;
 };

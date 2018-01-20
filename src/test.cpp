@@ -871,6 +871,58 @@ TEST_CASE("task_custom_data") {
     REQUIRE(nullptr == t->get_node()->get_custom_data());
 }
 
+struct functor : transwarp::functor {
+
+    functor(std::condition_variable& cv, std::mutex& mutex, bool& flag,
+            std::atomic_bool& cont, bool& started, bool& ended)
+    : cv(cv), mutex(mutex), flag(flag), cont(cont),
+      started(started), ended(ended)
+    {}
+
+    void operator()() {
+        {
+            std::lock_guard<std::mutex> lock(mutex);
+            flag = true;
+        }
+        cv.notify_one();
+        while (!cont);
+        started = true;
+        transwarp_cancel_point();
+        ended = true;
+    }
+
+private:
+    std::condition_variable& cv;
+    std::mutex& mutex;
+    bool& flag;
+    std::atomic_bool& cont;
+    bool& started;
+    bool& ended;
+};
+
+TEST_CASE("cancel_task_while_running") {
+    transwarp::parallel exec{1};
+    std::condition_variable cv;
+    std::mutex mutex;
+    bool flag = false;
+    std::atomic_bool cont{false};
+    bool started = false;
+    bool ended = false;
+    functor f(cv, mutex, flag, cont, started, ended);
+    auto task = make_task(transwarp::root, f);
+    task->schedule(exec);
+    {
+        std::unique_lock<std::mutex> lock(mutex);
+        cv.wait(lock, [&flag] { return flag; });
+    }
+    task->cancel(true);
+    cont = true;
+    task->wait();
+    REQUIRE(started);
+    REQUIRE_FALSE(ended);
+    REQUIRE_THROWS_AS(task->get(), transwarp::task_canceled&);
+}
+
 // Examples
 
 TEST_CASE("example__basic_with_three_tasks") {
