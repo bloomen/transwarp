@@ -1,7 +1,11 @@
 #!/bin/bash
 set -e
 thisdir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-echo "Compiler: "$CXX
+if [ -z "$CXX" ];then
+    echo "Compiler: default"
+else
+    echo "Compiler: "$CXX     
+fi
 
 $thisdir/cppcheck.sh
 
