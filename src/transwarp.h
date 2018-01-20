@@ -250,11 +250,17 @@ public:
     virtual ~itask() = default;
 
     virtual void set_executor(std::shared_ptr<transwarp::executor> executor) = 0;
+    virtual void set_executor_all(std::shared_ptr<transwarp::executor> executor) = 0;
     virtual void remove_executor() noexcept = 0;
+    virtual void remove_executor_all() noexcept = 0;
     virtual void set_priority(std::size_t priority) noexcept = 0;
+    virtual void set_priority_all(std::size_t priority) noexcept = 0;
     virtual void reset_priority() noexcept = 0;
+    virtual void reset_priority_all() noexcept = 0;
     virtual void set_custom_data(std::shared_ptr<void> custom_data) = 0;
+    virtual void set_custom_data_all(std::shared_ptr<void> custom_data) = 0;
     virtual void remove_custom_data() = 0;
+    virtual void remove_custom_data_all() = 0;
     virtual const std::shared_ptr<transwarp::node>& get_node() const noexcept = 0;
     virtual void schedule(bool reset=true) = 0;
     virtual void schedule(transwarp::executor& executor, bool reset=true) = 0;
@@ -759,6 +765,66 @@ struct cancel_visitor {
     bool enabled_;
 };
 
+// Assigns an executor to the given task
+struct set_executor_visitor {
+    explicit set_executor_visitor(std::shared_ptr<transwarp::executor> executor) noexcept
+    : executor_(std::move(executor)) {}
+
+    void operator()(transwarp::itask& task) const noexcept {
+        task.set_executor(executor_);
+    }
+
+    std::shared_ptr<transwarp::executor> executor_;
+};
+
+// Removes the executor from the given task
+struct remove_executor_visitor {
+
+    void operator()(transwarp::itask& task) const noexcept {
+        task.remove_executor();
+    }
+};
+
+// Assigns a priority to the given task
+struct set_priority_visitor {
+    explicit set_priority_visitor(std::size_t priority) noexcept
+    : priority_(priority) {}
+
+    void operator()(transwarp::itask& task) const noexcept {
+        task.set_priority(priority_);
+    }
+
+    std::size_t priority_;
+};
+
+// Resets the priority of the given task
+struct reset_priority_visitor {
+
+    void operator()(transwarp::itask& task) const noexcept {
+        task.reset_priority();
+    }
+};
+
+// Assigns custom data to the given task
+struct set_custom_data_visitor {
+    explicit set_custom_data_visitor(std::shared_ptr<void> custom_data) noexcept
+    : custom_data_(std::move(custom_data)) {}
+
+    void operator()(transwarp::itask& task) const noexcept {
+        task.set_custom_data(custom_data_);
+    }
+
+    std::shared_ptr<void> custom_data_;
+};
+
+// Removes custom data from the given task
+struct remove_custom_data_visitor {
+
+    void operator()(transwarp::itask& task) const noexcept {
+        task.remove_custom_data();
+    }
+};
+
 // Visits the given task using the visitor given in the constructor
 struct visit {
     explicit visit(const std::function<void(transwarp::itask&)>& visitor) noexcept
@@ -948,16 +1014,39 @@ public:
         transwarp::detail::node_manip::set_executor(*node_, std::make_shared<std::string>(executor_->get_name()));
     }
 
+    // Assigns an executor to all tasks which takes precedence over
+    // the executor provided in schedule() or schedule_all()
+    void set_executor_all(std::shared_ptr<transwarp::executor> executor) override {
+        transwarp::detail::set_executor_visitor visitor(std::move(executor));
+        visit(visitor);
+        unvisit();
+    }
+
     // Removes the executor from this task
     void remove_executor() noexcept override {
         executor_.reset();
         transwarp::detail::node_manip::set_executor(*node_, nullptr);
     }
 
+    // Removes the executor from all tasks
+    void remove_executor_all() noexcept override {
+        transwarp::detail::remove_executor_visitor visitor;
+        visit(visitor);
+        unvisit();
+    }
+
     // Sets a task priority (defaults to 0). transwarp will not directly use this.
-    // This is only useful if a custom executor deals with priorities.
+    // This is only useful if something else is using this custom data (e.g. a custom executor)
     void set_priority(std::size_t priority) noexcept override {
         transwarp::detail::node_manip::set_priority(*node_, priority);
+    }
+
+    // Sets a priority to all tasks (defaults to 0). transwarp will not directly use this.
+    // This is only useful if something else is using this custom data (e.g. a custom executor)
+    void set_priority_all(std::size_t priority) noexcept override {
+        transwarp::detail::set_priority_visitor visitor(priority);
+        visit(visitor);
+        unvisit();
     }
 
     // Resets the task priority to 0
@@ -965,8 +1054,15 @@ public:
         transwarp::detail::node_manip::set_priority(*node_, 0);
     }
 
+    // Resets the priority of all tasks to 0
+    void reset_priority_all() noexcept override {
+        transwarp::detail::reset_priority_visitor visitor;
+        visit(visitor);
+        unvisit();
+    }
+
     // Assigns custom data to this task. transwarp will not directly use this.
-    // This is only useful if something else is using this custom data.
+    // This is only useful if something else is using this custom data (e.g. a custom executor)
     void set_custom_data(std::shared_ptr<void> custom_data) override {
         if (!custom_data) {
             throw transwarp::transwarp_error("Not a valid pointer to custom data");
@@ -974,9 +1070,24 @@ public:
         transwarp::detail::node_manip::set_custom_data(*node_, std::move(custom_data));
     }
 
+    // Assigns custom data to all tasks. transwarp will not directly use this.
+    // This is only useful if something else is using this custom data (e.g. a custom executor)
+    void set_custom_data_all(std::shared_ptr<void> custom_data) override {
+        transwarp::detail::set_custom_data_visitor visitor(std::move(custom_data));
+        visit(visitor);
+        unvisit();
+    }
+
     // Removes custom data from this task
     void remove_custom_data() override {
         transwarp::detail::node_manip::set_custom_data(*node_, nullptr);
+    }
+
+    // Removes custom data from all tasks
+    void remove_custom_data_all() override {
+        transwarp::detail::remove_custom_data_visitor visitor;
+        visit(visitor);
+        unvisit();
     }
 
     // Returns the future associated to the underlying execution

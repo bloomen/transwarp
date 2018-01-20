@@ -923,6 +923,67 @@ TEST_CASE("cancel_task_while_running") {
     REQUIRE_THROWS_AS(task->get(), transwarp::task_canceled&);
 }
 
+TEST_CASE("set_executor_all") {
+    auto t1 = make_task(transwarp::root, []{});
+    auto t2 = make_task(transwarp::wait, []{}, t1);
+    auto exec = std::make_shared<transwarp::sequential>();
+    t2->set_executor_all(exec);
+    REQUIRE(*(t1->get_node()->get_executor()) == exec->get_name());
+    REQUIRE(*(t2->get_node()->get_executor()) == exec->get_name());
+}
+
+TEST_CASE("remove_executor_all") {
+    auto t1 = make_task(transwarp::root, []{});
+    auto t2 = make_task(transwarp::wait, []{}, t1);
+    auto exec = std::make_shared<transwarp::sequential>();
+    t2->set_executor_all(exec);
+    REQUIRE(*(t1->get_node()->get_executor()) == exec->get_name());
+    REQUIRE(*(t2->get_node()->get_executor()) == exec->get_name());
+    t2->remove_executor_all();
+    REQUIRE_FALSE(t1->get_node()->get_executor());
+    REQUIRE_FALSE(t2->get_node()->get_executor());
+}
+
+TEST_CASE("set_priority_all") {
+    auto t1 = make_task(transwarp::root, []{});
+    auto t2 = make_task(transwarp::wait, []{}, t1);
+    t2->set_priority_all(42);
+    REQUIRE(t1->get_node()->get_priority() == 42);
+    REQUIRE(t2->get_node()->get_priority() == 42);
+}
+
+TEST_CASE("reset_priority_all") {
+    auto t1 = make_task(transwarp::root, []{});
+    auto t2 = make_task(transwarp::wait, []{}, t1);
+    t2->set_priority_all(42);
+    REQUIRE(t1->get_node()->get_priority() == 42);
+    REQUIRE(t2->get_node()->get_priority() == 42);
+    t2->reset_priority_all();
+    REQUIRE(t1->get_node()->get_priority() == 0);
+    REQUIRE(t2->get_node()->get_priority() == 0);
+}
+
+TEST_CASE("set_custom_data_all") {
+    auto t1 = make_task(transwarp::root, []{});
+    auto t2 = make_task(transwarp::wait, []{}, t1);
+    auto data = std::make_shared<int>(42);
+    t2->set_custom_data_all(data);
+    REQUIRE(*static_cast<int*>(t1->get_node()->get_custom_data().get()) == *data);
+    REQUIRE(*static_cast<int*>(t2->get_node()->get_custom_data().get()) == *data);
+}
+
+TEST_CASE("remove_custom_data_all") {
+    auto t1 = make_task(transwarp::root, []{});
+    auto t2 = make_task(transwarp::wait, []{}, t1);
+    auto data = std::make_shared<int>(42);
+    t2->set_custom_data_all(data);
+    REQUIRE(*static_cast<int*>(t1->get_node()->get_custom_data().get()) == *data);
+    REQUIRE(*static_cast<int*>(t2->get_node()->get_custom_data().get()) == *data);
+    t2->remove_custom_data_all();
+    REQUIRE_FALSE(t1->get_node()->get_custom_data());
+    REQUIRE_FALSE(t2->get_node()->get_custom_data());
+}
+
 // Examples
 
 TEST_CASE("example__basic_with_three_tasks") {
