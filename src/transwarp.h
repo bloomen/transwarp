@@ -1308,7 +1308,7 @@ private:
 
     // Checks if the task was scheduled and throws transwarp::transwarp_error if it's not
     void check_task_was_scheduled() const {
-        if (!was_scheduled()) {
+        if (!future_.valid()) {
             throw transwarp::transwarp_error("the task was not scheduled");
         }
     }
