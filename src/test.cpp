@@ -82,9 +82,26 @@ void make_test_three_tasks(std::size_t threads) {
     REQUIRE(2u == task3->get_node()->get_parents().size());
     REQUIRE("t3" == *task3->get_node()->get_name());
 
+    REQUIRE_FALSE(task1->was_scheduled());
+    REQUIRE_FALSE(task2->was_scheduled());
+    REQUIRE_FALSE(task3->was_scheduled());
+
+    REQUIRE_THROWS_AS(task1->is_ready(), std::future_error&); // not scheduled yet
+    REQUIRE_THROWS_AS(task2->is_ready(), std::future_error&); // not scheduled yet
+    REQUIRE_THROWS_AS(task3->is_ready(), std::future_error&); // not scheduled yet
+
     task3->schedule_all(*executor);
+
+    REQUIRE(task1->was_scheduled());
+    REQUIRE(task2->was_scheduled());
+    REQUIRE(task3->was_scheduled());
+
     REQUIRE(89 == task3->get_future().get());
     REQUIRE(42 == task1->get_future().get());
+
+    REQUIRE(task1->is_ready());
+    REQUIRE(task2->is_ready());
+    REQUIRE(task3->is_ready());
 
     ++value;
 
@@ -383,7 +400,7 @@ TEST_CASE("schedule_all_without_executor") {
 TEST_CASE("schedule_all_without_executor_wait_method") {
     int x = 13;
     auto task = make_task(transwarp::root, [&x]{ x *= 2; });
-    task->wait(); // not scheduled yet
+    REQUIRE_THROWS_AS(task->wait(), std::future_error&); // not scheduled yet
     task->schedule_all();
     task->wait();
     REQUIRE(26 == x);

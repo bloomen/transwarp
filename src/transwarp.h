@@ -266,7 +266,9 @@ public:
     virtual void schedule(transwarp::executor& executor, bool reset=true) = 0;
     virtual void schedule_all(bool reset_all=true) = 0;
     virtual void schedule_all(transwarp::executor& executor, bool reset_all=true) = 0;
-    virtual void wait() const noexcept = 0;
+    virtual bool was_scheduled() const noexcept = 0;
+    virtual void wait() const = 0;
+    virtual bool is_ready() const = 0;
     virtual void reset() = 0;
     virtual void reset_all() = 0;
     virtual void cancel(bool enabled) noexcept = 0;
@@ -1148,15 +1150,27 @@ public:
         schedule_all_impl(reset_all, &executor);
     }
 
-    // Waits for the task to complete
-    void wait() const noexcept override {
-        if (future_.valid()) {
-            future_.wait();
-        }
+    // Returns whether the task was scheduled and not reset afterwards.
+    // This means that the underlying future is valid
+    bool was_scheduled() const noexcept override {
+        return future_.valid();
+    }
+
+    // Waits for the task to complete. Should only be called if was_scheduled()
+    // is true, throws std::future_error otherwise
+    void wait() const override {
+        future_.wait();
+    }
+
+    // Returns whether the task has finished processing. Should only be called
+    // if was_scheduled() is true, throws std::future_error otherwise
+    bool is_ready() const override {
+        return future_.wait_for(std::chrono::seconds(0)) == std::future_status::ready;
     }
 
     // Returns the result of this task. Throws any exceptions that the underlying
-    // functor throws. Throws std::future_error if the task was not scheduled.
+    // functor throws. Should only be called if was_scheduled() is true,
+    // throws std::future_error otherwise
     // Note that the return type is either 'void' or 'const result_type&'
     typename transwarp::detail::rinfo<result_type>::type get() const override {
         return future_.get();
