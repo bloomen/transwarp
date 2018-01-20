@@ -1,7 +1,8 @@
 1.2.0
 
 - added means of canceling a task while its running through transwarp::functor
-- added new methods to the task class that forward to all parent tasks 
+- added new methods to the task class that forward to all parent tasks
+- added safety checks to methods that shouldn't be called when a task is running
 
 1.1.0
 

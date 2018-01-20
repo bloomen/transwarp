@@ -1007,6 +1007,7 @@ public:
     // Assigns an executor to this task which takes precedence over
     // the executor provided in schedule() or schedule_all()
     void set_executor(std::shared_ptr<transwarp::executor> executor) override {
+        assert_task_not_running();
         if (!executor) {
             throw transwarp::transwarp_error("Not a valid pointer to executor");
         }
@@ -1017,6 +1018,7 @@ public:
     // Assigns an executor to all tasks which takes precedence over
     // the executor provided in schedule() or schedule_all()
     void set_executor_all(std::shared_ptr<transwarp::executor> executor) override {
+        assert_task_not_running();
         transwarp::detail::set_executor_visitor visitor(std::move(executor));
         visit(visitor);
         unvisit();
@@ -1024,26 +1026,30 @@ public:
 
     // Removes the executor from this task
     void remove_executor() noexcept override {
+        assert_task_not_running();
         executor_.reset();
         transwarp::detail::node_manip::set_executor(*node_, nullptr);
     }
 
     // Removes the executor from all tasks
     void remove_executor_all() noexcept override {
+        assert_task_not_running();
         transwarp::detail::remove_executor_visitor visitor;
         visit(visitor);
         unvisit();
     }
 
     // Sets a task priority (defaults to 0). transwarp will not directly use this.
-    // This is only useful if something else is using this custom data (e.g. a custom executor)
+    // This is only useful if something else is using the priority (e.g. a custom executor)
     void set_priority(std::size_t priority) noexcept override {
+        assert_task_not_running();
         transwarp::detail::node_manip::set_priority(*node_, priority);
     }
 
     // Sets a priority to all tasks (defaults to 0). transwarp will not directly use this.
-    // This is only useful if something else is using this custom data (e.g. a custom executor)
+    // This is only useful if something else is using the priority (e.g. a custom executor)
     void set_priority_all(std::size_t priority) noexcept override {
+        assert_task_not_running();
         transwarp::detail::set_priority_visitor visitor(priority);
         visit(visitor);
         unvisit();
@@ -1051,11 +1057,13 @@ public:
 
     // Resets the task priority to 0
     void reset_priority() noexcept override {
+        assert_task_not_running();
         transwarp::detail::node_manip::set_priority(*node_, 0);
     }
 
     // Resets the priority of all tasks to 0
     void reset_priority_all() noexcept override {
+        assert_task_not_running();
         transwarp::detail::reset_priority_visitor visitor;
         visit(visitor);
         unvisit();
@@ -1064,6 +1072,7 @@ public:
     // Assigns custom data to this task. transwarp will not directly use this.
     // This is only useful if something else is using this custom data (e.g. a custom executor)
     void set_custom_data(std::shared_ptr<void> custom_data) override {
+        assert_task_not_running();
         if (!custom_data) {
             throw transwarp::transwarp_error("Not a valid pointer to custom data");
         }
@@ -1073,6 +1082,7 @@ public:
     // Assigns custom data to all tasks. transwarp will not directly use this.
     // This is only useful if something else is using this custom data (e.g. a custom executor)
     void set_custom_data_all(std::shared_ptr<void> custom_data) override {
+        assert_task_not_running();
         transwarp::detail::set_custom_data_visitor visitor(std::move(custom_data));
         visit(visitor);
         unvisit();
@@ -1080,11 +1090,13 @@ public:
 
     // Removes custom data from this task
     void remove_custom_data() override {
+        assert_task_not_running();
         transwarp::detail::node_manip::set_custom_data(*node_, nullptr);
     }
 
     // Removes custom data from all tasks
     void remove_custom_data_all() override {
+        assert_task_not_running();
         transwarp::detail::remove_custom_data_visitor visitor;
         visit(visitor);
         unvisit();
@@ -1105,6 +1117,7 @@ public:
     // reset denotes whether schedule should reset the underlying
     // future and schedule even if the future is already valid.
     void schedule(bool reset=true) override {
+        assert_task_not_running();
         schedule_impl(reset);
     }
 
@@ -1113,6 +1126,7 @@ public:
     // reset denotes whether schedule should reset the underlying
     // future and schedule even if the future is already valid.
     void schedule(transwarp::executor& executor, bool reset=true) override {
+        assert_task_not_running();
         schedule_impl(reset, &executor);
     }
 
@@ -1121,6 +1135,7 @@ public:
     // reset_all denotes whether schedule_all should reset the underlying
     // futures and schedule even if the futures are already present.
     void schedule_all(bool reset_all=true) override {
+        assert_task_not_running();
         schedule_all_impl(reset_all);
     }
 
@@ -1129,6 +1144,7 @@ public:
     // reset_all denotes whether schedule_all should reset the underlying
     // futures and schedule even if the futures are already present.
     void schedule_all(transwarp::executor& executor, bool reset_all=true) override {
+        assert_task_not_running();
         schedule_all_impl(reset_all, &executor);
     }
 
@@ -1148,11 +1164,13 @@ public:
 
     // Resets the future of this task
     void reset() override {
+        assert_task_not_running();
         future_ = std::shared_future<result_type>();
     }
 
     // Resets the futures of all tasks in the graph
     void reset_all() override {
+        assert_task_not_running();
         transwarp::detail::reset_visitor visitor;
         visit(visitor);
         unvisit();
@@ -1262,6 +1280,16 @@ private:
             visited_ = false;
             transwarp::detail::call_with_each(transwarp::detail::unvisit(), parents_);
         }
+    }
+
+    // Checks if the task is currently running and throws an transwarp::transwarp_error if it is.
+    // This check can be disabled by defining TRANSWARP_NO_SAFETY_CHECKS during compilation
+    void assert_task_not_running() const {
+#ifndef TRANSWARP_NO_SAFETY_CHECKS
+        if (future_.valid() && future_.wait_for(std::chrono::seconds(0)) != std::future_status::ready) {
+            throw transwarp::transwarp_error("the task is currently running");
+        }
+#endif
     }
 
     // Calls the functor of the given task with the results from the futures.
