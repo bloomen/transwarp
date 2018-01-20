@@ -1,6 +1,6 @@
 1.2.1
 
-- add an explicit check for if a task was scheduled to certain methods
+- added an explicit check to certain methods to ensure that a task was scheduled 
 
 1.2.0
 
