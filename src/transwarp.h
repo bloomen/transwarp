@@ -487,9 +487,9 @@ private:
             {
                 std::unique_lock<std::mutex> lock(mutex_);
                 cond_var_.wait(lock, [this]{
-                    return done_ || !functors_.empty();
+                    return done_.load(std::memory_order_acquire) || !functors_.empty();
                 });
-                if (done_ && functors_.empty()) {
+                if (done_.load(std::memory_order_acquire) && functors_.empty()) {
                     break;
                 }
                 functor = functors_.front();
@@ -502,7 +502,7 @@ private:
     void shutdown() {
         {
             std::lock_guard<std::mutex> lock(mutex_);
-            done_ = true;
+            done_.store(true, std::memory_order_release);
         }
         cond_var_.notify_all();
         for (auto& thread : threads_) {
@@ -511,7 +511,7 @@ private:
         threads_.clear();
     }
 
-    bool done_;
+    std::atomic<bool> done_;
     std::vector<std::thread> threads_;
     std::queue<std::function<void()>> functors_;
     std::condition_variable cond_var_;
