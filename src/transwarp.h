@@ -52,23 +52,23 @@ inline std::string to_string(const transwarp::task_type& type) {
 
 // The root type. Used for tag dispatch
 struct root_type : std::integral_constant<transwarp::task_type, transwarp::task_type::root> {};
-constexpr const transwarp::root_type root{};
+constexpr transwarp::root_type root{};
 
 // The consume type. Used for tag dispatch
 struct consume_type : std::integral_constant<transwarp::task_type, transwarp::task_type::consume> {};
-constexpr const transwarp::consume_type consume{};
+constexpr transwarp::consume_type consume{};
 
 // The consume_any type. Used for tag dispatch
 struct consume_any_type : std::integral_constant<transwarp::task_type, transwarp::task_type::consume_any> {};
-constexpr const transwarp::consume_any_type consume_any{};
+constexpr transwarp::consume_any_type consume_any{};
 
 // The wait type. Used for tag dispatch
 struct wait_type : std::integral_constant<transwarp::task_type, transwarp::task_type::wait> {};
-constexpr const transwarp::wait_type wait{};
+constexpr transwarp::wait_type wait{};
 
 // The wait_any type. Used for tag dispatch
 struct wait_any_type : std::integral_constant<transwarp::task_type, transwarp::task_type::wait_any> {};
-constexpr const transwarp::wait_any_type wait_any{};
+constexpr transwarp::wait_any_type wait_any{};
 
 
 namespace detail {
@@ -629,7 +629,7 @@ struct call_with_futures_impl<transwarp::wait_any_type, true, total, n...> {
 // Throws transwarp::task_destroyed in case the task was destroyed prematurely.
 template<typename TaskType, typename Result, typename Task, typename Tuple>
 Result call_with_futures(std::size_t node_id, const Task& task, const Tuple& futures) {
-    constexpr const std::size_t n = std::tuple_size<Tuple>::value;
+    constexpr std::size_t n = std::tuple_size<Tuple>::value;
     return transwarp::detail::call_with_futures_impl<TaskType, 0 == n, n>::template
             work<Result>(node_id, task, futures);
 }
@@ -668,7 +668,7 @@ void call_with_each_index(transwarp::detail::indices<i, j...>, const Functor& f,
 // task pointers only and dereferences each element before passing it into the functor
 template<typename Functor, typename Tuple>
 void call_with_each(const Functor& f, const Tuple& t) {
-    constexpr const std::size_t n = std::tuple_size<Tuple>::value;
+    constexpr std::size_t n = std::tuple_size<Tuple>::value;
     using index_t = typename transwarp::detail::index_range<0, n>::type;
     transwarp::detail::call_with_each_index(index_t(), f, t);
 }
