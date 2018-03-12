@@ -86,9 +86,9 @@ void make_test_three_tasks(std::size_t threads) {
     REQUIRE_FALSE(task2->was_scheduled());
     REQUIRE_FALSE(task3->was_scheduled());
 
-    REQUIRE_THROWS_AS(task1->is_ready(), transwarp::transwarp_error&); // not scheduled yet
-    REQUIRE_THROWS_AS(task2->is_ready(), transwarp::transwarp_error&); // not scheduled yet
-    REQUIRE_THROWS_AS(task3->is_ready(), transwarp::transwarp_error&); // not scheduled yet
+    REQUIRE_THROWS_AS(task1->is_ready(), transwarp::transwarp_error); // not scheduled yet
+    REQUIRE_THROWS_AS(task2->is_ready(), transwarp::transwarp_error); // not scheduled yet
+    REQUIRE_THROWS_AS(task3->is_ready(), transwarp::transwarp_error); // not scheduled yet
 
     task3->schedule_all(*executor);
 
@@ -333,7 +333,7 @@ void cancel_with_schedule_all(int expected, Functor functor, TaskType task_type)
     task2->schedule_all(executor);
     task2->cancel_all(true);
     cont = true;
-    REQUIRE_THROWS_AS(task2->get_future().get(), transwarp::task_canceled&);
+    REQUIRE_THROWS_AS(task2->get_future().get(), transwarp::task_canceled);
     task2->cancel_all(false);
     task2->schedule_all(executor);
     REQUIRE(expected == task2->get_future().get());
@@ -400,8 +400,8 @@ TEST_CASE("schedule_all_without_executor") {
 TEST_CASE("schedule_all_without_executor_wait_method") {
     int x = 13;
     auto task = make_task(transwarp::root, [&x]{ x *= 2; });
-    REQUIRE_THROWS_AS(task->wait(), transwarp::transwarp_error&); // not scheduled yet
-    REQUIRE_THROWS_AS(task->get(), transwarp::transwarp_error&); // not scheduled yet
+    REQUIRE_THROWS_AS(task->wait(), transwarp::transwarp_error); // not scheduled yet
+    REQUIRE_THROWS_AS(task->get(), transwarp::transwarp_error); // not scheduled yet
     task->schedule_all();
     task->wait();
     REQUIRE(26 == x);
@@ -418,17 +418,17 @@ TEST_CASE("schedule_all_with_task_specific_executor") {
 
 TEST_CASE("invalid_task_specific_executor") {
     auto task = make_task(transwarp::root, []{});
-    REQUIRE_THROWS_AS(task->set_executor(nullptr), transwarp::transwarp_error&);
+    REQUIRE_THROWS_AS(task->set_executor(nullptr), transwarp::transwarp_error);
 }
 
 TEST_CASE("invalid_parent_task") {
     auto parent = make_task(transwarp::root, [] { return 42; });
     parent.reset();
-    REQUIRE_THROWS_AS(make_task(transwarp::consume, [](int) {}, parent), transwarp::transwarp_error&);
+    REQUIRE_THROWS_AS(make_task(transwarp::consume, [](int) {}, parent), transwarp::transwarp_error);
 }
 
 TEST_CASE("parallel_with_zero_threads") {
-    REQUIRE_THROWS_AS(transwarp::parallel{0}, transwarp::thread_pool_error&);
+    REQUIRE_THROWS_AS(transwarp::parallel{0}, transwarp::thread_pool_error);
 }
 
 TEST_CASE("schedule_single_task") {
@@ -849,7 +849,7 @@ TEST_CASE("future_throws_task_destroyed") {
     }
     cont = true;
     REQUIRE(future.valid());
-    REQUIRE_THROWS_AS(future.get(), transwarp::task_destroyed&);
+    REQUIRE_THROWS_AS(future.get(), transwarp::task_destroyed);
 }
 
 TEST_CASE("make_task_from_base_task") {
@@ -938,7 +938,7 @@ TEST_CASE("cancel_task_while_running") {
     task->wait();
     REQUIRE(started);
     REQUIRE_FALSE(ended);
-    REQUIRE_THROWS_AS(task->get(), transwarp::task_canceled&);
+    REQUIRE_THROWS_AS(task->get(), transwarp::task_canceled);
 }
 
 TEST_CASE("set_executor_all") {
