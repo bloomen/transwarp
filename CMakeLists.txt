@@ -5,16 +5,16 @@ enable_testing()
 include_directories(examples)
 include_directories(src)
 
-set(SOURCES src/test.cpp examples/basic_with_three_tasks.cpp  examples/single_thread_lock_free.cpp examples/benchmark_simple.cpp examples/statistical_key_facts.cpp examples/benchmark_statistical.cpp)
+set(SOURCES src/transwarp.h src/test.cpp examples/basic_with_three_tasks.cpp  examples/single_thread_lock_free.cpp examples/benchmark_simple.cpp examples/statistical_key_facts.cpp examples/benchmark_statistical.cpp)
 
 find_package(Threads)
 
 add_executable(transwarp_test ${SOURCES})
-add_executable(basic_with_three_tasks examples/basic_with_three_tasks.cpp)
-add_executable(single_thread_lock_free examples/single_thread_lock_free.cpp)
-add_executable(benchmark_simple examples/benchmark_simple.cpp)
-add_executable(statistical_key_facts examples/statistical_key_facts.cpp)
-add_executable(benchmark_statistical examples/benchmark_statistical.cpp)
+add_executable(basic_with_three_tasks src/transwarp.h examples/basic_with_three_tasks.cpp)
+add_executable(single_thread_lock_free src/transwarp.h examples/single_thread_lock_free.cpp)
+add_executable(benchmark_simple src/transwarp.h examples/benchmark_simple.cpp)
+add_executable(statistical_key_facts src/transwarp.h examples/statistical_key_facts.cpp)
+add_executable(benchmark_statistical src/transwarp.h examples/benchmark_statistical.cpp)
 
 target_compile_definitions(transwarp_test PRIVATE UNITTEST)
 
