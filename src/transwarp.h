@@ -1289,14 +1289,14 @@ private:
     // Checks if the task is currently running and throws transwarp::transwarp_error if it is
     void ensure_task_not_running() const {
         if (future_.valid() && future_.wait_for(std::chrono::seconds(0)) != std::future_status::ready) {
-            throw transwarp::transwarp_error("the task is currently running");
+            throw transwarp::transwarp_error("the task is currently running: " + std::to_string(node_->get_id()));
         }
     }
 
     // Checks if the task was scheduled and throws transwarp::transwarp_error if it's not
     void ensure_task_was_scheduled() const {
         if (!future_.valid()) {
-            throw transwarp::transwarp_error("the task was not scheduled");
+            throw transwarp::transwarp_error("the task was not scheduled: " + std::to_string(node_->get_id()));
         }
     }
 

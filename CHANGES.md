@@ -1,7 +1,8 @@
 1.2.2
 
+- improved error reporting 
 - general code clean up; addressed compiler warnings
-- simplify the node class by removing an unnecessary constructor
+- simplify the node class by addressing the constructors
 
 1.2.1
 
