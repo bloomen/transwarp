@@ -438,26 +438,25 @@ public:
     explicit thread_pool(std::size_t n_threads)
     : done_(false)
     {
-        if (n_threads > 0) {
-            const auto n_target = threads_.size() + n_threads;
-            while (threads_.size() < n_target) {
-                std::thread thread;
-                try {
-                    thread = std::thread(&thread_pool::worker, this);
-                } catch (...) {
-                    shutdown();
-                    throw;
-                }
-                try {
-                    threads_.push_back(std::move(thread));
-                } catch (...) {
-                    shutdown();
-                    thread.join();
-                    throw;
-                }
-            }
-        } else {
+        if (n_threads == 0) {
             throw transwarp::thread_pool_error("number of threads must be larger than zero");
+        }
+        const auto n_target = threads_.size() + n_threads;
+        while (threads_.size() < n_target) {
+            std::thread thread;
+            try {
+                thread = std::thread(&thread_pool::worker, this);
+            } catch (...) {
+                shutdown();
+                throw;
+            }
+            try {
+                threads_.push_back(std::move(thread));
+            } catch (...) {
+                shutdown();
+                thread.join();
+                throw;
+            }
         }
     }
 
