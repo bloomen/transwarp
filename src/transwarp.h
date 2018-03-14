@@ -89,14 +89,6 @@ class node {
 public:
     // cppcheck-suppress passedByValue
     node(std::size_t id, transwarp::task_type type, std::shared_ptr<std::string> name,
-         std::shared_ptr<std::string> executor, std::vector<std::shared_ptr<node>> parents) noexcept
-    : id_(id), type_(type), name_(std::move(name)),
-      executor_(std::move(executor)), parents_(std::move(parents)),
-      priority_(0), custom_data_(nullptr), canceled_(false)
-    {}
-
-    // cppcheck-suppress passedByValue
-    node(std::size_t id, transwarp::task_type type, std::shared_ptr<std::string> name,
          std::shared_ptr<std::string> executor, std::vector<std::shared_ptr<node>> parents,
          std::size_t priority, std::shared_ptr<void> custom_data) noexcept
     : id_(id), type_(type), name_(std::move(name)),
@@ -1228,7 +1220,7 @@ private:
     task_impl(bool has_name, std::string name, F&& functor, std::shared_ptr<transwarp::task<ParentResults>>... parents)
     : node_(std::make_shared<transwarp::node>(0, task_type::value,
             (has_name ? std::make_shared<std::string>(std::move(name)) : nullptr),
-            nullptr, std::vector<std::shared_ptr<transwarp::node>>{})),
+            nullptr, std::vector<std::shared_ptr<transwarp::node>>{}, 0, nullptr)),
       functor_(std::forward<F>(functor)),
       parents_(std::make_tuple(std::move(parents)...)),
       visited_(false)

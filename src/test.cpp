@@ -15,7 +15,7 @@ using nodes_t = std::vector<std::shared_ptr<transwarp::node>>;
 
 
 std::shared_ptr<transwarp::node> generic_node() {
-    return std::make_shared<transwarp::node>(1, transwarp::task_type::consume, std::make_shared<std::string>("cool"), nullptr, nodes_t{});
+    return std::make_shared<transwarp::node>(1, transwarp::task_type::consume, std::make_shared<std::string>("cool"), nullptr, nodes_t{}, 0, nullptr);
 }
 
 void make_test_one_task(std::size_t threads) {
@@ -233,9 +233,9 @@ TEST_CASE("make_dot_graph_with_empty_graph") {
 }
 
 TEST_CASE("make_dot_graph_with_three_nodes") {
-    auto node2 = std::make_shared<transwarp::node>(1, transwarp::task_type::consume, std::make_shared<std::string>("node2"), nullptr, nodes_t{});
-    auto node3 = std::make_shared<transwarp::node>(2, transwarp::task_type::wait, std::make_shared<std::string>("node3"), std::make_shared<std::string>("exec"), nodes_t{});
-    auto node1 = std::make_shared<transwarp::node>(0, transwarp::task_type::consume, std::make_shared<std::string>("node1"), nullptr, nodes_t{node2, node3});
+    auto node2 = std::make_shared<transwarp::node>(1, transwarp::task_type::consume, std::make_shared<std::string>("node2"), nullptr, nodes_t{}, 0, nullptr);
+    auto node3 = std::make_shared<transwarp::node>(2, transwarp::task_type::wait, std::make_shared<std::string>("node3"), std::make_shared<std::string>("exec"), nodes_t{}, 0, nullptr);
+    auto node1 = std::make_shared<transwarp::node>(0, transwarp::task_type::consume, std::make_shared<std::string>("node1"), nullptr, nodes_t{node2, node3}, 0, nullptr);
     std::vector<transwarp::edge> graph;
     graph.emplace_back(node2, node1);
     graph.emplace_back(node3, node1);
