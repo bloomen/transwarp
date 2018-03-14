@@ -535,7 +535,7 @@ template<typename TaskType, bool done, int total, int... n>
 struct call_with_futures_impl {
     template<typename Result, typename Task, typename Tuple>
     static Result work(std::size_t node_id, const Task& task, const Tuple& futures) {
-        return call_with_futures_impl<TaskType, total == 1 + sizeof...(n), total, n..., sizeof...(n)>::template
+        return call_with_futures_impl<TaskType, total == 1 + static_cast<int>(sizeof...(n)), total, n..., static_cast<int>(sizeof...(n))>::template
                 work<Result>(node_id, task, futures);
     }
 };
@@ -629,7 +629,7 @@ struct call_with_futures_impl<transwarp::wait_any_type, true, total, n...> {
 template<typename TaskType, typename Result, typename Task, typename Tuple>
 Result call_with_futures(std::size_t node_id, const Task& task, const Tuple& futures) {
     constexpr std::size_t n = std::tuple_size<Tuple>::value;
-    return transwarp::detail::call_with_futures_impl<TaskType, 0 == n, n>::template
+    return transwarp::detail::call_with_futures_impl<TaskType, 0 == n, static_cast<int>(n)>::template
             work<Result>(node_id, task, futures);
 }
 
