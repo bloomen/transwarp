@@ -1,3 +1,8 @@
+1.2.2
+
+- general code clean up; addressed compiler warnings
+- simplify the node class by removing an unnecessary constructor
+
 1.2.1
 
 - added an explicit check to certain methods to ensure that a task was scheduled 

@@ -1,6 +1,6 @@
 # transwarp 
 
-**Version 1.2.1**
+**Version 1.2.2**
 
 [![Gitter](https://badges.gitter.im/bloomen/transwarp.svg)](https://gitter.im/bloomen/transwarp)
 
