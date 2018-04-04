@@ -597,7 +597,7 @@ struct call_with_futures_impl<transwarp::wait_type, true, total, n...> {
     }
     template<typename T, typename... Args>
     static void wait(const T& arg, const Args& ...args) {
-        arg.get();
+        arg.wait();
         wait(args...);
     }
     static void wait() {}
@@ -614,7 +614,7 @@ struct call_with_futures_impl<transwarp::wait_any_type, true, total, n...> {
     static bool wait(const T& arg, const Args& ...args) {
         const auto status = arg.wait_for(std::chrono::microseconds(1));
         if (status == std::future_status::ready) {
-            arg.get();
+            arg.wait();
             return true;
         }
         return wait(args...);
