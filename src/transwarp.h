@@ -35,18 +35,14 @@ enum class task_type {
 
 // String conversion for the task_type enumeration
 inline std::string to_string(const transwarp::task_type& type) {
-    if (type == transwarp::task_type::root) {
-        return "root";
-    } else if (type == transwarp::task_type::consume) {
-        return "consume";
-    } else if (type == transwarp::task_type::consume_any) {
-        return "consume_any";
-    } else if (type == transwarp::task_type::wait) {
-        return "wait";
-    } else if (type == transwarp::task_type::wait_any) {
-        return "wait_any";
+    switch (type) {
+    case transwarp::task_type::root: return "root";
+    case transwarp::task_type::consume: return "consume";
+    case transwarp::task_type::consume_any: return "consume_any";
+    case transwarp::task_type::wait: return "wait";
+    case transwarp::task_type::wait_any: return "wait_any";
+    default: return "unknown";
     }
-    return "unknown";
 }
 
 
@@ -87,11 +83,8 @@ struct assign_node_if_impl;
 // A node carrying meta-data of a task
 class node {
 public:
-    // cppcheck-suppress passedByValue
-    node(transwarp::task_type type, std::shared_ptr<std::string> name) noexcept
-    : id_(0), type_(type), name_(std::move(name)), executor_(nullptr),
-      parents_(), priority_(0), custom_data_(nullptr), canceled_(false)
-    {}
+
+    node() = default;
 
     // delete copy/move semantics
     node(const node&) = delete;
@@ -142,14 +135,14 @@ public:
 private:
     friend struct transwarp::detail::node_manip;
 
-    std::size_t id_;
-    transwarp::task_type type_;
+    std::size_t id_ = 0;
+    transwarp::task_type type_ = transwarp::task_type::root;
     std::shared_ptr<std::string> name_;
     std::shared_ptr<std::string> executor_;
     std::vector<std::shared_ptr<node>> parents_;
-    std::size_t priority_;
+    std::size_t priority_ = 0;
     std::shared_ptr<void> custom_data_;
-    std::atomic_bool canceled_;
+    std::atomic_bool canceled_{false};
 };
 
 // String conversion for the node class
@@ -384,6 +377,14 @@ namespace detail {
 
 // Node manipulation
 struct node_manip {
+
+    static void set_type(transwarp::node& node, transwarp::task_type type) noexcept {
+        node.type_ = type;
+    }
+
+    static void set_name(transwarp::node& node, std::shared_ptr<std::string> name) noexcept {
+        node.name_ = name;
+    }
 
     static void set_id(transwarp::node& node, std::size_t id) noexcept {
         node.id_ = id;
@@ -1215,12 +1216,13 @@ private:
     template<typename F>
     // cppcheck-suppress passedByValue
     task_impl(bool has_name, std::string name, F&& functor, std::shared_ptr<transwarp::task<ParentResults>>... parents)
-    : node_(std::make_shared<transwarp::node>(task_type::value,
-            (has_name ? std::make_shared<std::string>(std::move(name)) : nullptr))),
+    : node_(std::make_shared<transwarp::node>()),
       functor_(std::forward<F>(functor)),
       parents_(std::make_tuple(std::move(parents)...)),
       visited_(false)
     {
+        transwarp::detail::node_manip::set_type(*node_, task_type::value);
+        transwarp::detail::node_manip::set_name(*node_, (has_name ? std::make_shared<std::string>(std::move(name)) : nullptr));
         transwarp::detail::assign_node_if(functor_, node_);
         transwarp::detail::call_with_each(transwarp::detail::parent_visitor(node_), parents_);
         transwarp::detail::final_visitor visitor;

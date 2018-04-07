@@ -15,7 +15,9 @@ using nodes_t = std::vector<std::shared_ptr<transwarp::node>>;
 
 
 std::shared_ptr<transwarp::node> generic_node() {
-    auto node = std::make_shared<transwarp::node>(transwarp::task_type::consume, std::make_shared<std::string>("cool"));
+    auto node = std::make_shared<transwarp::node>();
+    transwarp::detail::node_manip::set_type(*node, transwarp::task_type::consume);
+    transwarp::detail::node_manip::set_name(*node, std::make_shared<std::string>("cool"));
     transwarp::detail::node_manip::set_id(*node, 1);
     return node;
 }
@@ -235,12 +237,18 @@ TEST_CASE("make_dot_graph_with_empty_graph") {
 }
 
 TEST_CASE("make_dot_graph_with_three_nodes") {
-    auto node2 = std::make_shared<transwarp::node>(transwarp::task_type::consume, std::make_shared<std::string>("node2"));
+    auto node2 = std::make_shared<transwarp::node>();
+    transwarp::detail::node_manip::set_type(*node2, transwarp::task_type::consume);
+    transwarp::detail::node_manip::set_name(*node2, std::make_shared<std::string>("node2"));
     transwarp::detail::node_manip::set_id(*node2, 1);
-    auto node3 = std::make_shared<transwarp::node>(transwarp::task_type::wait, std::make_shared<std::string>("node3"));
+    auto node3 = std::make_shared<transwarp::node>();
+    transwarp::detail::node_manip::set_type(*node3, transwarp::task_type::wait);
+    transwarp::detail::node_manip::set_name(*node3, std::make_shared<std::string>("node3"));
     transwarp::detail::node_manip::set_id(*node3, 2);
     transwarp::detail::node_manip::set_executor(*node3, std::make_shared<std::string>("exec"));
-    auto node1 = std::make_shared<transwarp::node>(transwarp::task_type::consume, std::make_shared<std::string>("node1"));
+    auto node1 = std::make_shared<transwarp::node>();
+    transwarp::detail::node_manip::set_type(*node1, transwarp::task_type::consume);
+    transwarp::detail::node_manip::set_name(*node1, std::make_shared<std::string>("node1"));
     transwarp::detail::node_manip::set_id(*node1, 0);
     transwarp::detail::node_manip::add_parent(*node1, node2);
     transwarp::detail::node_manip::add_parent(*node1, node3);
