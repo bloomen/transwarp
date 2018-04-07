@@ -1,5 +1,5 @@
 // transwarp is a header-only C++ library for task concurrency
-// Version: 1.2.2
+// Version: 1.3.0
 // Repository: https://github.com/bloomen/transwarp
 // Copyright: 2018 Christian Blume
 // License: http://www.opensource.org/licenses/mit-license.php
@@ -27,6 +27,8 @@ namespace transwarp {
 // The possible task types
 enum class task_type {
     root,        // The task has no parents
+    accept,      // The task's functor accepts all parent futures
+    accept_any,  // The task's functor accepts the first parent future that becomes ready
     consume,     // The task's functor consumes all parent results
     consume_any, // The task's functor consumes the first parent result that becomes ready
     wait,        // The task's functor takes no arguments but waits for all parents to finish
@@ -37,6 +39,8 @@ enum class task_type {
 inline std::string to_string(const transwarp::task_type& type) {
     switch (type) {
     case transwarp::task_type::root: return "root";
+    case transwarp::task_type::accept: return "accept";
+    case transwarp::task_type::accept_any: return "accept_any";
     case transwarp::task_type::consume: return "consume";
     case transwarp::task_type::consume_any: return "consume_any";
     case transwarp::task_type::wait: return "wait";
@@ -49,6 +53,14 @@ inline std::string to_string(const transwarp::task_type& type) {
 // The root type. Used for tag dispatch
 struct root_type : std::integral_constant<transwarp::task_type, transwarp::task_type::root> {};
 constexpr transwarp::root_type root{};
+
+// The accept type. Used for tag dispatch
+struct accept_type : std::integral_constant<transwarp::task_type, transwarp::task_type::accept> {};
+constexpr transwarp::accept_type accept{};
+
+// The accept_any type. Used for tag dispatch
+struct accept_any_type : std::integral_constant<transwarp::task_type, transwarp::task_type::accept_any> {};
+constexpr transwarp::accept_any_type accept_any{};
 
 // The consume type. Used for tag dispatch
 struct consume_type : std::integral_constant<transwarp::task_type, transwarp::task_type::consume> {};
@@ -539,6 +551,52 @@ struct call_with_futures_impl<transwarp::root_type, true, total, n...> {
 };
 
 template<int total, int... n>
+struct call_with_futures_impl<transwarp::accept_type, true, total, n...> {
+    template<typename Result, typename Task, typename Tuple>
+    static Result work(std::size_t node_id, const Task& task, const Tuple& futures) {
+        wait(std::get<n>(futures)...);
+        return transwarp::detail::run_task<Result>(node_id, task, std::get<n>(futures)...);
+    }
+    template<typename T, typename... Args>
+    static void wait(const T& arg, const Args& ...args) {
+        arg.wait();
+        wait(args...);
+    }
+    static void wait() {}
+};
+
+template<int total, int... n>
+struct call_with_futures_impl<transwarp::accept_any_type, true, total, n...> {
+    template<typename Result, typename Task, typename Tuple>
+    static Result work(std::size_t node_id, const Task& task, const Tuple& futures) {
+        using future_t = typename std::remove_reference<decltype(std::get<0>(futures))>::type; // use first type as reference
+        for (;;) {
+            bool ready = false;
+            auto future = waiter<future_t>::template wait(ready, std::get<n>(futures)...);
+            if (ready) {
+                return transwarp::detail::run_task<Result>(node_id, task, future);
+            }
+        }
+    }
+
+    template<typename Future>
+    struct waiter {
+        template<typename T, typename... Args>
+        static Future wait(bool& ready, const T& arg, const Args& ...args) {
+            const auto status = arg.wait_for(std::chrono::microseconds(1));
+            if (status == std::future_status::ready) {
+                ready = true;
+                return arg;
+            }
+            return wait(ready, args...);
+        }
+        static Future wait(bool&) {
+            return {};
+        }
+    };
+};
+
+template<int total, int... n>
 struct call_with_futures_impl<transwarp::consume_type, true, total, n...> {
     template<typename Result, typename Task, typename Tuple>
     static Result work(std::size_t node_id, const Task& task, const Tuple& futures) {
@@ -840,17 +898,32 @@ struct unvisit {
 template<typename TaskType, typename Functor, typename... ParentResults>
 struct result {
     static_assert(std::is_same<TaskType, transwarp::root_type>::value ||
+                  std::is_same<TaskType, transwarp::accept_type>::value ||
+                  std::is_same<TaskType, transwarp::accept_any_type>::value ||
                   std::is_same<TaskType, transwarp::consume_type>::value ||
                   std::is_same<TaskType, transwarp::consume_any_type>::value ||
                   std::is_same<TaskType, transwarp::wait_type>::value ||
                   std::is_same<TaskType, transwarp::wait_any_type>::value,
-                  "Invalid task type, must be one of: root, consume, consume_any, wait, wait_any");
+                  "Invalid task type, must be one of: root, accept, accept_any, consume, consume_any, wait, wait_any");
 };
 
 template<typename Functor, typename... ParentResults>
 struct result<transwarp::root_type, Functor, ParentResults...> {
     static_assert(sizeof...(ParentResults) == 0, "A root task cannot have parent tasks");
     using type = decltype(std::declval<Functor>()());
+};
+
+template<typename Functor, typename... ParentResults>
+struct result<transwarp::accept_type, Functor, ParentResults...> {
+    static_assert(sizeof...(ParentResults) > 0, "An accept task must have at least one parent");
+    using type = decltype(std::declval<Functor>()(std::declval<std::shared_future<ParentResults>>()...));
+};
+
+template<typename Functor, typename... ParentResults>
+struct result<transwarp::accept_any_type, Functor, ParentResults...> {
+    static_assert(sizeof...(ParentResults) > 0, "An accept_any task must have at least one parent");
+    using arg_t = typename std::tuple_element<0, std::tuple<ParentResults...>>::type; // using first type as reference
+    using type = decltype(std::declval<Functor>()(std::declval<std::shared_future<arg_t>>()));
 };
 
 template<typename Functor, typename... ParentResults>

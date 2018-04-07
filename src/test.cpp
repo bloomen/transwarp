@@ -573,17 +573,14 @@ TEST_CASE("schedule_with_two_tasks_wait_any_with_void_return") {
     REQUIRE(13 == task2->get_future().get());
 }
 
-TEST_CASE("task_type_output_stream") {
-    const auto os1 = transwarp::to_string(transwarp::task_type::root);
-    REQUIRE("root" == os1);
-    const auto os1a = transwarp::to_string(transwarp::task_type::consume);
-    REQUIRE("consume" == os1a);
-    const auto os1b = transwarp::to_string(transwarp::task_type::consume_any);
-    REQUIRE("consume_any" == os1b);
-    const auto os2 = transwarp::to_string(transwarp::task_type::wait);
-    REQUIRE("wait" == os2);
-    const auto os2b = transwarp::to_string(transwarp::task_type::wait_any);
-    REQUIRE("wait_any" == os2b);
+TEST_CASE("task_type_to_string") {
+    REQUIRE("root" == transwarp::to_string(transwarp::task_type::root));
+    REQUIRE("accept" == transwarp::to_string(transwarp::task_type::accept));
+    REQUIRE("accept_any" == transwarp::to_string(transwarp::task_type::accept_any));
+    REQUIRE("consume" == transwarp::to_string(transwarp::task_type::consume));
+    REQUIRE("consume_any" == transwarp::to_string(transwarp::task_type::consume_any));
+    REQUIRE("wait" == transwarp::to_string(transwarp::task_type::wait));
+    REQUIRE("wait_any" == transwarp::to_string(transwarp::task_type::wait_any));
 }
 
 TEST_CASE("task_with_const_reference_return_type") {
@@ -1016,6 +1013,44 @@ TEST_CASE("remove_custom_data_all") {
     t2->remove_custom_data_all();
     REQUIRE_FALSE(t1->get_node()->get_custom_data());
     REQUIRE_FALSE(t2->get_node()->get_custom_data());
+}
+
+TEST_CASE("accept_with_one_parent") {
+    auto t1 = make_task(transwarp::root, []{ return 42; });
+    auto t2 = make_task(transwarp::accept, [](std::shared_future<int> p1) { return p1.get(); }, t1);
+    t2->schedule_all();
+    REQUIRE(42 == t2->get());
+}
+
+TEST_CASE("accept_with_two_parents") {
+    auto t1 = make_task(transwarp::root, []{ return 42; });
+    auto t2 = make_task(transwarp::root, []{ return 13.3; });
+    auto t3 = make_task(transwarp::accept, [](std::shared_future<int> p1, const std::shared_future<double>& p2) { return p1.get() + p2.get(); }, t1, t2);
+    t3->schedule_all();
+    REQUIRE(55.3 == t3->get());
+}
+
+TEST_CASE("accept_any_with_one_parent") {
+    auto t1 = make_task(transwarp::root, []{ return 42; });
+    auto t2 = make_task(transwarp::accept_any, [](std::shared_future<int> p1) { return p1.get(); }, t1);
+    t2->schedule_all();
+    REQUIRE(42 == t2->get());
+}
+
+TEST_CASE("accept_any_with_two_parents") {
+    std::atomic_bool cont(false);
+    auto t1 = make_task(transwarp::root, [&cont] {
+        while (!cont);
+        return 42;
+    });
+    auto t2 = make_task(transwarp::root, [] {
+        return 43;
+    });
+    auto t3 = make_task(transwarp::accept_any, [](std::shared_future<int> x) { return x.get(); }, t1, t2);
+    transwarp::parallel exec{2};
+    t3->schedule_all(exec);
+    REQUIRE(43 == t3->get_future().get());
+    cont = true;
 }
 
 // Examples
