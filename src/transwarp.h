@@ -970,7 +970,7 @@ struct assign_node_if_impl<false> {
 
 // Assigns the node to the given functor if the functor is a subclass of transwarp::functor
 template<typename Functor>
-void assign_node_if(Functor& functor, std::shared_ptr<transwarp::node> node) {
+void assign_node_if(Functor& functor, std::shared_ptr<transwarp::node> node) noexcept {
     transwarp::detail::assign_node_if_impl<std::is_base_of<transwarp::functor, Functor>::value>{}(functor, std::move(node));
 }
 
