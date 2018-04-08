@@ -554,7 +554,7 @@ template<int total, int... n>
 struct call_with_futures_impl<transwarp::accept_type, true, total, n...> {
     template<typename Result, typename Task, typename Tuple>
     static Result work(std::size_t node_id, const Task& task, const Tuple& futures) {
-        wait(std::get<n>(futures)...);
+        wait(std::get<n>(futures)...); // wait for all to finish
         return transwarp::detail::run_task<Result>(node_id, task, std::get<n>(futures)...);
     }
     template<typename T, typename... Args>
@@ -600,8 +600,15 @@ template<int total, int... n>
 struct call_with_futures_impl<transwarp::consume_type, true, total, n...> {
     template<typename Result, typename Task, typename Tuple>
     static Result work(std::size_t node_id, const Task& task, const Tuple& futures) {
+        wait(std::get<n>(futures)...); // wait for all to finish
         return transwarp::detail::run_task<Result>(node_id, task, std::get<n>(futures).get()...);
     }
+    template<typename T, typename... Args>
+    static void wait(const T& arg, const Args& ...args) {
+        arg.wait();
+        wait(args...);
+    }
+    static void wait() {}
 };
 
 template<int total, int... n>
@@ -639,15 +646,22 @@ template<int total, int... n>
 struct call_with_futures_impl<transwarp::wait_type, true, total, n...> {
     template<typename Result, typename Task, typename Tuple>
     static Result work(std::size_t node_id, const Task& task, const Tuple& futures) {
-        wait(std::get<n>(futures)...);
+        wait(std::get<n>(futures)...); // wait for all to finish
+        get(std::get<n>(futures)...); // ensures that exceptions are propagated
         return transwarp::detail::run_task<Result>(node_id, task);
     }
     template<typename T, typename... Args>
     static void wait(const T& arg, const Args& ...args) {
-        arg.get();
+        arg.wait();
         wait(args...);
     }
     static void wait() {}
+    template<typename T, typename... Args>
+    static void get(const T& arg, const Args& ...args) {
+        arg.get();
+        get(args...);
+    }
+    static void get() {}
 };
 
 template<int total, int... n>
@@ -661,7 +675,7 @@ struct call_with_futures_impl<transwarp::wait_any_type, true, total, n...> {
     static bool wait(const T& arg, const Args& ...args) {
         const auto status = arg.wait_for(std::chrono::microseconds(1));
         if (status == std::future_status::ready) {
-            arg.get();
+            arg.get(); // ensures that exceptions are propagated
             return true;
         }
         return wait(args...);
