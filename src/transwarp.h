@@ -533,6 +533,42 @@ Result run_task(std::size_t node_id, const Task& task, Args&&... args) {
 }
 
 
+inline void wait_for_all() {}
+
+// Waits for all futures to finish
+template<typename Future, typename... Futures>
+void wait_for_all(const Future& future, const Futures& ...futures) {
+    future.wait();
+    transwarp::detail::wait_for_all(futures...);
+}
+
+
+template<typename FutureResult>
+FutureResult wait_for_any_impl() {
+    return {};
+}
+
+template<typename FutureResult, typename Future, typename... Futures>
+FutureResult wait_for_any_impl(const Future& future, const Futures& ...futures) {
+    const auto status = future.wait_for(std::chrono::microseconds(1));
+    if (status == std::future_status::ready) {
+        return future;
+    }
+    return transwarp::detail::wait_for_any_impl<FutureResult>(futures...);
+}
+
+// Waits for the first future to finish
+template<typename FutureResult, typename... Futures>
+FutureResult wait_for_any(const Futures& ...futures) {
+    for (;;) {
+        auto future = transwarp::detail::wait_for_any_impl<FutureResult>(futures...);
+        if (future.valid()) {
+            return future;
+        }
+    }
+}
+
+
 template<typename TaskType, bool done, int total, int... n>
 struct call_with_futures_impl {
     template<typename Result, typename Task, typename Tuple>
@@ -554,15 +590,9 @@ template<int total, int... n>
 struct call_with_futures_impl<transwarp::accept_type, true, total, n...> {
     template<typename Result, typename Task, typename Tuple>
     static Result work(std::size_t node_id, const Task& task, const Tuple& futures) {
-        wait(std::get<n>(futures)...); // wait for all to finish
+        transwarp::detail::wait_for_all(std::get<n>(futures)...);
         return transwarp::detail::run_task<Result>(node_id, task, std::get<n>(futures)...);
     }
-    template<typename T, typename... Args>
-    static void wait(const T& arg, const Args& ...args) {
-        arg.wait();
-        wait(args...);
-    }
-    static void wait() {}
 };
 
 template<int total, int... n>
@@ -570,45 +600,18 @@ struct call_with_futures_impl<transwarp::accept_any_type, true, total, n...> {
     template<typename Result, typename Task, typename Tuple>
     static Result work(std::size_t node_id, const Task& task, const Tuple& futures) {
         using future_t = typename std::remove_reference<decltype(std::get<0>(futures))>::type; // use first type as reference
-        for (;;) {
-            bool ready = false;
-            auto future = waiter<future_t>::template wait(ready, std::get<n>(futures)...);
-            if (ready) {
-                return transwarp::detail::run_task<Result>(node_id, task, future);
-            }
-        }
+        auto future = transwarp::detail::wait_for_any<future_t>(std::get<n>(futures)...);
+        return transwarp::detail::run_task<Result>(node_id, task, future);
     }
-
-    template<typename Future>
-    struct waiter {
-        template<typename T, typename... Args>
-        static Future wait(bool& ready, const T& arg, const Args& ...args) {
-            const auto status = arg.wait_for(std::chrono::microseconds(1));
-            if (status == std::future_status::ready) {
-                ready = true;
-                return arg;
-            }
-            return wait(ready, args...);
-        }
-        static Future wait(bool&) {
-            return {};
-        }
-    };
 };
 
 template<int total, int... n>
 struct call_with_futures_impl<transwarp::consume_type, true, total, n...> {
     template<typename Result, typename Task, typename Tuple>
     static Result work(std::size_t node_id, const Task& task, const Tuple& futures) {
-        wait(std::get<n>(futures)...); // wait for all to finish
+        transwarp::detail::wait_for_all(std::get<n>(futures)...);
         return transwarp::detail::run_task<Result>(node_id, task, std::get<n>(futures).get()...);
     }
-    template<typename T, typename... Args>
-    static void wait(const T& arg, const Args& ...args) {
-        arg.wait();
-        wait(args...);
-    }
-    static void wait() {}
 };
 
 template<int total, int... n>
@@ -616,52 +619,25 @@ struct call_with_futures_impl<transwarp::consume_any_type, true, total, n...> {
     template<typename Result, typename Task, typename Tuple>
     static Result work(std::size_t node_id, const Task& task, const Tuple& futures) {
         using future_t = typename std::remove_reference<decltype(std::get<0>(futures))>::type; // use first type as reference
-        for (;;) {
-            bool ready = false;
-            auto future = waiter<future_t>::template wait(ready, std::get<n>(futures)...);
-            if (ready) {
-                return transwarp::detail::run_task<Result>(node_id, task, future.get());
-            }
-        }
+        auto future = transwarp::detail::wait_for_any<future_t>(std::get<n>(futures)...);
+        return transwarp::detail::run_task<Result>(node_id, task, future.get());
     }
-
-    template<typename Future>
-    struct waiter {
-        template<typename T, typename... Args>
-        static Future wait(bool& ready, const T& arg, const Args& ...args) {
-            const auto status = arg.wait_for(std::chrono::microseconds(1));
-            if (status == std::future_status::ready) {
-                ready = true;
-                return arg;
-            }
-            return wait(ready, args...);
-        }
-        static Future wait(bool&) {
-            return {};
-        }
-    };
 };
 
 template<int total, int... n>
 struct call_with_futures_impl<transwarp::wait_type, true, total, n...> {
     template<typename Result, typename Task, typename Tuple>
     static Result work(std::size_t node_id, const Task& task, const Tuple& futures) {
-        wait(std::get<n>(futures)...); // wait for all to finish
-        get(std::get<n>(futures)...); // ensures that exceptions are propagated
+        transwarp::detail::wait_for_all(std::get<n>(futures)...);
+        get_all(std::get<n>(futures)...); // ensures that exceptions are propagated
         return transwarp::detail::run_task<Result>(node_id, task);
     }
     template<typename T, typename... Args>
-    static void wait(const T& arg, const Args& ...args) {
-        arg.wait();
-        wait(args...);
-    }
-    static void wait() {}
-    template<typename T, typename... Args>
-    static void get(const T& arg, const Args& ...args) {
+    static void get_all(const T& arg, const Args& ...args) {
         arg.get();
-        get(args...);
+        get_all(args...);
     }
-    static void get() {}
+    static void get_all() {}
 };
 
 template<int total, int... n>
