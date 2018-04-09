@@ -83,8 +83,8 @@ result aggregate_results(double avg, double stddev, double median, int mode) {
 
 std::shared_ptr<tw::task<result>> build_graph(std::size_t sample_size, double& alpha, double& beta) {
     auto gen = std::make_shared<std::mt19937>(1);
-    auto gen_task = tw::make_task(tw::root, "rand gen", [gen] { return gen; });
-    auto size_task = tw::make_task(tw::root, "sample size", [sample_size] { return sample_size; });
+    auto gen_task = tw::make_value_task("rand gen", gen);
+    auto size_task = tw::make_value_task("sample size", sample_size);
     auto alpha_task = tw::make_task(tw::root, "alpha", [&alpha] { return alpha; });
     auto beta_task = tw::make_task(tw::root, "beta", [&beta] { return beta; });
 

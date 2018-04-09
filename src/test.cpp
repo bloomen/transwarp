@@ -10,6 +10,7 @@
 
 
 using transwarp::make_task;
+using transwarp::make_value_task;
 
 using nodes_t = std::vector<std::shared_ptr<transwarp::node>>;
 
@@ -1051,6 +1052,163 @@ TEST_CASE("accept_any_with_two_parents") {
     t3->schedule_all(exec);
     REQUIRE(43 == t3->get_future().get());
     cont = true;
+}
+
+TEST_CASE("value_task") {
+    auto t = make_value_task(42);
+    REQUIRE(42 == t->get());
+    REQUIRE(42 == t->get_future().get());
+    REQUIRE(t->was_scheduled());
+    REQUIRE(t->is_ready());
+    REQUIRE(t->get_graph().empty());
+    auto n = t->get_node();
+    REQUIRE(0u == n->get_id());
+    REQUIRE(transwarp::task_type::root == n->get_type());
+    REQUIRE(!n->get_name());
+    REQUIRE(!n->get_executor());
+    REQUIRE(n->get_parents().empty());
+    REQUIRE(0u == n->get_priority());
+    REQUIRE(!n->get_custom_data());
+    REQUIRE(!n->is_canceled());
+}
+
+TEST_CASE("value_task_with_name") {
+    const std::string name = "albert";
+    auto t = make_value_task(name, 42);
+    REQUIRE(42 == t->get());
+    REQUIRE(42 == t->get_future().get());
+    REQUIRE(t->was_scheduled());
+    REQUIRE(t->is_ready());
+    REQUIRE(t->get_graph().empty());
+    auto n = t->get_node();
+    REQUIRE(0u == n->get_id());
+    REQUIRE(transwarp::task_type::root == n->get_type());
+    REQUIRE(name == *n->get_name());
+    REQUIRE(!n->get_executor());
+    REQUIRE(n->get_parents().empty());
+    REQUIRE(0u == n->get_priority());
+    REQUIRE(!n->get_custom_data());
+    REQUIRE(!n->is_canceled());
+}
+
+TEST_CASE("value_task_with_priority_and_custom_data") {
+    auto t = make_value_task(42);
+    t->set_priority(13);
+    auto data = std::make_shared<double>(13.5);
+    t->set_custom_data(data);
+    auto n = t->get_node();
+    REQUIRE(13u == n->get_priority());
+    REQUIRE(data.get() == n->get_custom_data().get());
+    t->remove_custom_data();
+    t->reset_priority();
+    REQUIRE(0u == n->get_priority());
+    REQUIRE(!n->get_custom_data());
+}
+
+TEST_CASE("value_task_with_priority_all_and_custom_data_all") {
+    auto t = make_value_task(42);
+    t->set_priority_all(13);
+    auto data = std::make_shared<double>(13.5);
+    t->set_custom_data_all(data);
+    auto n = t->get_node();
+    REQUIRE(13u == n->get_priority());
+    REQUIRE(data.get() == n->get_custom_data().get());
+    t->remove_custom_data_all();
+    t->reset_priority_all();
+    REQUIRE(0u == n->get_priority());
+    REQUIRE(!n->get_custom_data());
+}
+
+TEST_CASE("value_task_in_a_graph") {
+    auto t1 = make_value_task(42);
+    REQUIRE(42 == t1->get());
+    auto t2 = make_value_task(13.3);
+    REQUIRE(13.3 == t2->get());
+    auto t3 = make_task(transwarp::consume, [](int x, double y) { return x + y; }, t1, t2);
+    t3->schedule();
+    REQUIRE(55.3 == t3->get());
+}
+
+TEST_CASE("value_task_and_executor") {
+    auto t = make_value_task(42);
+    REQUIRE(42 == t->get());
+    auto exec = std::make_shared<transwarp::sequential>();
+    t->set_executor(exec);
+    REQUIRE(!t->get_node()->get_executor());
+    t->remove_executor();
+    REQUIRE(!t->get_node()->get_executor());
+    REQUIRE(42 == t->get());
+}
+
+TEST_CASE("value_task_and_executor_all") {
+    auto t = make_value_task(42);
+    REQUIRE(42 == t->get());
+    auto exec = std::make_shared<transwarp::sequential>();
+    t->set_executor_all(exec);
+    REQUIRE(!t->get_node()->get_executor());
+    t->remove_executor_all();
+    REQUIRE(!t->get_node()->get_executor());
+    REQUIRE(42 == t->get());
+}
+
+TEST_CASE("value_task_and_schedule") {
+    auto t = make_value_task(42);
+    REQUIRE(42 == t->get());
+    transwarp::sequential exec;
+    t->schedule(true);
+    t->schedule(exec, true);
+    REQUIRE(42 == t->get());
+}
+
+TEST_CASE("value_task_and_schedule_all") {
+    auto t = make_value_task(42);
+    REQUIRE(42 == t->get());
+    transwarp::sequential exec;
+    t->schedule_all(true);
+    t->schedule_all(exec, true);
+    REQUIRE(42 == t->get());
+}
+
+TEST_CASE("value_task_and_wait") {
+    auto t = make_value_task(42);
+    REQUIRE(42 == t->get());
+    t->wait();
+    REQUIRE(42 == t->get());
+}
+
+TEST_CASE("value_task_and_reset_and_cancel") {
+    auto t = make_value_task(42);
+    REQUIRE(42 == t->get());
+    t->reset();
+    t->cancel(true);
+    REQUIRE(42 == t->get());
+}
+
+TEST_CASE("value_task_and_reset_all_and_cancel_all") {
+    auto t = make_value_task(42);
+    REQUIRE(42 == t->get());
+    t->reset_all();
+    t->cancel_all(true);
+    REQUIRE(42 == t->get());
+}
+
+TEST_CASE("value_task_with_lvalue_reference") {
+    const int x = 42;
+    auto t = make_value_task(x);
+    REQUIRE(x == t->get());
+}
+
+TEST_CASE("value_task_with_rvalue_reference") {
+    int x = 42;
+    auto t = make_value_task(std::move(x));
+    REQUIRE(42 == t->get());
+}
+
+TEST_CASE("value_task_with_changing_value") {
+    int x = 42;
+    auto t = make_value_task(x);
+    x = 43;
+    REQUIRE(42 == t->get());
 }
 
 // Examples

@@ -1382,6 +1382,199 @@ private:
 };
 
 
+// A value task that stores a single value and doesn't require scheduling.
+template<typename ResultType>
+class value_task : public transwarp::task<ResultType> {
+public:
+    // The task type
+    using task_type = transwarp::root_type;
+
+    // The result type of this task
+    using result_type = ResultType;
+
+    // A value task is defined by name and result. name is optional, see overload
+    template<typename R>
+    // cppcheck-suppress passedByValue
+    // cppcheck-suppress uninitMemberVar
+    value_task(std::string name, R&& result)
+    : value_task(true, std::move(name), std::forward<R>(result))
+    {}
+
+    // This overload is for omitting the task name
+    template<typename R>
+    // cppcheck-suppress uninitMemberVar
+    explicit value_task(R&& result)
+    : value_task(false, "", std::forward<R>(result))
+    {}
+
+    virtual ~value_task() = default;
+
+    // delete copy/move semantics
+    value_task(const value_task&) = delete;
+    value_task& operator=(const value_task&) = delete;
+    value_task(value_task&&) = delete;
+    value_task& operator=(value_task&&) = delete;
+
+    // No-op because a value task never runs
+    void set_executor(std::shared_ptr<transwarp::executor>) override {}
+
+    // No-op because a value task never runs and doesn't have parents
+    void set_executor_all(std::shared_ptr<transwarp::executor>) override {}
+
+    // No-op because a value task never runs
+    void remove_executor() override {}
+
+    // No-op because a value task never runs and doesn't have parents
+    void remove_executor_all() override {}
+
+    // Sets a task priority (defaults to 0). transwarp will not directly use this.
+    // This is only useful if something else is using the priority
+    void set_priority(std::size_t priority) override {
+        transwarp::detail::node_manip::set_priority(*node_, priority);
+    }
+
+    // Sets a priority to all tasks (defaults to 0). transwarp will not directly use this.
+    // This is only useful if something else is using the priority
+    void set_priority_all(std::size_t priority) override {
+        set_priority(priority);
+    }
+
+    // Resets the task priority to 0
+    void reset_priority() override {
+        transwarp::detail::node_manip::set_priority(*node_, 0);
+    }
+
+    // Resets the priority of all tasks to 0
+    void reset_priority_all() override {
+        reset_priority();
+    }
+
+    // Assigns custom data to this task. transwarp will not directly use this.
+    // This is only useful if something else is using this custom data
+    void set_custom_data(std::shared_ptr<void> custom_data) override {
+        if (!custom_data) {
+            throw transwarp::transwarp_error("Not a valid pointer to custom data");
+        }
+        transwarp::detail::node_manip::set_custom_data(*node_, std::move(custom_data));
+    }
+
+    // Assigns custom data to all tasks. transwarp will not directly use this.
+    // This is only useful if something else is using this custom data
+    void set_custom_data_all(std::shared_ptr<void> custom_data) override {
+        set_custom_data(std::move(custom_data));
+    }
+
+    // Removes custom data from this task
+    void remove_custom_data() override {
+        transwarp::detail::node_manip::set_custom_data(*node_, nullptr);
+    }
+
+    // Removes custom data from all tasks
+    void remove_custom_data_all() override {
+        remove_custom_data();
+    }
+
+    // Returns the future associated to the underlying execution
+    const std::shared_future<result_type>& get_future() const noexcept override {
+        return future_;
+    }
+
+    // Returns the associated node
+    const std::shared_ptr<transwarp::node>& get_node() const noexcept override {
+        return node_;
+    }
+
+    // No-op because a value task never runs
+    void schedule(bool) override {}
+
+    // No-op because a value task never runs
+    void schedule(transwarp::executor&, bool) override {}
+
+    // No-op because a value task never runs and doesn't have parents
+    void schedule_all(bool) override {}
+
+    // No-op because a value task never runs and doesn't have parents
+    void schedule_all(transwarp::executor&, bool) override {}
+
+    // Returns true because a value task is scheduled once on construction
+    bool was_scheduled() const noexcept override {
+        return true;
+    }
+
+    // No-op because a value task never runs
+    void wait() const override {}
+
+    // Returns true because a value task is always ready
+    bool is_ready() const override {
+        return true;
+    }
+
+    // Returns the result of this task
+    const result_type& get() const override {
+        return future_.get();
+    }
+
+    // No-op because a value task never runs
+    void reset() override {}
+
+    // No-op because a value task never runs and doesn't have parents
+    void reset_all() override {}
+
+    // No-op because a value task never runs
+    void cancel(bool) noexcept override {}
+
+    // No-op because a value task never runs and doesn't have parents
+    void cancel_all(bool) noexcept override {}
+
+    // Returns an empty graph because a value doesn't have parents
+    std::vector<transwarp::edge> get_graph() const override {
+        return {};
+    }
+
+private:
+
+    template<typename R>
+    // cppcheck-suppress passedByValue
+    value_task(bool has_name, std::string name, R&& result)
+    : node_(std::make_shared<transwarp::node>()),
+      visited_(false)
+    {
+        std::promise<result_type> promise;
+        promise.set_value(std::forward<R>(result));
+        future_ = promise.get_future();
+        transwarp::detail::node_manip::set_type(*node_, task_type::value);
+        transwarp::detail::node_manip::set_name(*node_, (has_name ? std::make_shared<std::string>(std::move(name)) : nullptr));
+    }
+
+    // Assigns the given id to the node
+    void set_node_id(std::size_t id) noexcept override {
+        transwarp::detail::node_manip::set_id(*node_, id);
+    }
+
+    // No-op because a value task never runs
+    void schedule_impl(bool, transwarp::executor*) override {}
+
+    // Visits this task
+    void visit(const std::function<void(transwarp::itask&)>& visitor) override {
+        if (!visited_) {
+            visitor(*this);
+            visited_ = true;
+        }
+    }
+
+    // Marks this task as not visited
+    void unvisit() noexcept override {
+        if (visited_) {
+            visited_ = false;
+        }
+    }
+
+    std::shared_ptr<transwarp::node> node_;
+    bool visited_;
+    std::shared_future<result_type> future_;
+};
+
+
 // A factory function to create a new task
 template<typename TaskType, typename Functor, typename... Parents>
 auto make_task(TaskType, std::string name, Functor&& functor, std::shared_ptr<Parents>... parents) -> decltype(std::make_shared<transwarp::task_impl<TaskType, typename std::decay<Functor>::type, typename Parents::result_type...>>(std::move(name), std::forward<Functor>(functor), std::move(parents)...)) {
@@ -1392,6 +1585,19 @@ auto make_task(TaskType, std::string name, Functor&& functor, std::shared_ptr<Pa
 template<typename TaskType, typename Functor, typename... Parents>
 auto make_task(TaskType, Functor&& functor, std::shared_ptr<Parents>... parents) -> decltype(std::make_shared<transwarp::task_impl<TaskType, typename std::decay<Functor>::type, typename Parents::result_type...>>(std::forward<Functor>(functor), std::move(parents)...)) {
     return std::make_shared<transwarp::task_impl<TaskType, typename std::decay<Functor>::type, typename Parents::result_type...>>(std::forward<Functor>(functor), std::move(parents)...);
+}
+
+
+// A factory function to create a new value task
+template<typename Value>
+auto make_value_task(std::string name, Value&& value) -> decltype(std::make_shared<transwarp::value_task<typename std::decay<Value>::type>>(std::move(name), std::forward<Value>(value))) {
+    return std::make_shared<transwarp::value_task<typename std::decay<Value>::type>>(std::move(name), std::forward<Value>(value));
+}
+
+// A factory function to create a new value task. Overload for omitting the task name
+template<typename Value>
+auto make_value_task(Value&& value) -> decltype(std::make_shared<transwarp::value_task<typename std::decay<Value>::type>>(std::forward<Value>(value))) {
+    return std::make_shared<transwarp::value_task<typename std::decay<Value>::type>>(std::forward<Value>(value));
 }
 
 
