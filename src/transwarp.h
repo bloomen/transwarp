@@ -1200,22 +1200,30 @@ public:
     }
 
     void set_value(const ResultType& value) override {
-        // stuff
+        std::promise<result_type> promise;
+        promise.set_value(value);
+        future_ = promise.get_future();
+        schedule_enabled_ = false;
     }
 
     // Removes the value from this task
     void remove_value() override {
-        // stuff
+        schedule_enabled_ = true;
+        reset();
     }
 
-    // Assigns an exception to this value task
+    // Assigns an exception to this task
     void set_exception(std::exception_ptr exception) override {
-        // stuff
+        std::promise<result_type> promise;
+        promise.set_exception(exception);
+        future_ = promise.get_future();
+        schedule_enabled_ = false;
     }
 
     // Removes the exception from this task
     void remove_exception() override {
-        // stuff
+        schedule_enabled_ = true;
+        reset();
     }
 
     // Returns whether the task was scheduled and not reset afterwards.
@@ -1296,8 +1304,7 @@ private:
     task_impl(bool has_name, std::string name, F&& functor, std::shared_ptr<transwarp::task<ParentResults>>... parents)
     : node_(std::make_shared<transwarp::node>()),
       functor_(std::forward<F>(functor)),
-      parents_(std::make_tuple(std::move(parents)...)),
-      visited_(false)
+      parents_(std::make_tuple(std::move(parents)...))
     {
         transwarp::detail::node_manip::set_type(*node_, task_type::value);
         transwarp::detail::node_manip::set_name(*node_, (has_name ? std::make_shared<std::string>(std::move(name)) : nullptr));
@@ -1321,7 +1328,7 @@ private:
     // Runs the task on the same thread as the caller if neither the global
     // nor the task-specific executor is found.
     void schedule_impl(bool reset, transwarp::executor* executor=nullptr) override {
-        if (!node_->is_canceled() && (reset || !future_.valid())) {
+        if (schedule_enabled_ && !node_->is_canceled() && (reset || !future_.valid())) {
             std::weak_ptr<task_impl> self = this->shared_from_this();
             auto futures = transwarp::detail::get_futures(parents_);
             auto pack_task = std::make_shared<std::packaged_task<result_type()>>(
@@ -1391,7 +1398,8 @@ private:
     std::shared_ptr<transwarp::node> node_;
     Functor functor_;
     std::tuple<std::shared_ptr<transwarp::task<ParentResults>>...> parents_;
-    bool visited_;
+    bool visited_ = false;
+    bool schedule_enabled_ = true;
     std::shared_ptr<transwarp::executor> executor_;
     std::shared_future<result_type> future_;
 };
@@ -1580,14 +1588,18 @@ public:
         schedule_all_impl(reset_all, &executor);
     }
 
-    // Assigns an exception to this value task
+    // Assigns an exception to this task
     void set_exception(std::exception_ptr exception) override {
-        // stuff
+        std::promise<result_type> promise;
+        promise.set_exception(exception);
+        future_ = promise.get_future();
+        schedule_enabled_ = false;
     }
 
     // Removes the exception from this task
     void remove_exception() override {
-        // stuff
+        schedule_enabled_ = true;
+        reset();
     }
 
     // Returns whether the task was scheduled and not reset afterwards.
@@ -1668,8 +1680,7 @@ private:
     task_impl(bool has_name, std::string name, F&& functor, std::shared_ptr<transwarp::task<ParentResults>>... parents)
     : node_(std::make_shared<transwarp::node>()),
       functor_(std::forward<F>(functor)),
-      parents_(std::make_tuple(std::move(parents)...)),
-      visited_(false)
+      parents_(std::make_tuple(std::move(parents)...))
     {
         transwarp::detail::node_manip::set_type(*node_, task_type::value);
         transwarp::detail::node_manip::set_name(*node_, (has_name ? std::make_shared<std::string>(std::move(name)) : nullptr));
@@ -1693,7 +1704,7 @@ private:
     // Runs the task on the same thread as the caller if neither the global
     // nor the task-specific executor is found.
     void schedule_impl(bool reset, transwarp::executor* executor=nullptr) override {
-        if (!node_->is_canceled() && (reset || !future_.valid())) {
+        if (schedule_enabled_ && !node_->is_canceled() && (reset || !future_.valid())) {
             std::weak_ptr<task_impl> self = this->shared_from_this();
             auto futures = transwarp::detail::get_futures(parents_);
             auto pack_task = std::make_shared<std::packaged_task<result_type()>>(
@@ -1763,7 +1774,8 @@ private:
     std::shared_ptr<transwarp::node> node_;
     Functor functor_;
     std::tuple<std::shared_ptr<transwarp::task<ParentResults>>...> parents_;
-    bool visited_;
+    bool visited_ = false;
+    bool schedule_enabled_ = true;
     std::shared_ptr<transwarp::executor> executor_;
     std::shared_future<result_type> future_;
 };
@@ -1883,8 +1895,8 @@ public:
     // No-op because a value task never runs and doesn't have parents
     void schedule_all(transwarp::executor&, bool) override {}
 
-    void set_value(const ResultType& value) override {
-        // stuff
+    void set_value(const result_type& value) override {
+        set_value_impl(value);
     }
 
     // No-op because a value task must either contain a value or an exception
@@ -1892,7 +1904,9 @@ public:
 
     // Assigns an exception to this value task
     void set_exception(std::exception_ptr exception) override {
-        // stuff
+        std::promise<result_type> promise;
+        promise.set_exception(exception);
+        future_ = promise.get_future();
     }
 
     // No-op because a value task must either contain a value or an exception
@@ -1941,9 +1955,7 @@ private:
     : node_(std::make_shared<transwarp::node>()),
       visited_(false)
     {
-        std::promise<result_type> promise;
-        promise.set_value(std::forward<R>(result));
-        future_ = promise.get_future();
+        set_value_impl(result);
         transwarp::detail::node_manip::set_type(*node_, task_type::value);
         transwarp::detail::node_manip::set_name(*node_, (has_name ? std::make_shared<std::string>(std::move(name)) : nullptr));
     }
@@ -1969,6 +1981,13 @@ private:
         if (visited_) {
             visited_ = false;
         }
+    }
+
+    template<typename R>
+    void set_value_impl(R&& value) {
+        std::promise<result_type> promise;
+        promise.set_value(std::forward<R>(value));
+        future_ = promise.get_future();
     }
 
     std::shared_ptr<transwarp::node> node_;
