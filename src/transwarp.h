@@ -19,6 +19,7 @@
 #include <stdexcept>
 #include <atomic>
 #include <chrono>
+#include <exception>
 
 
 namespace transwarp {
@@ -260,6 +261,8 @@ public:
     virtual void schedule(transwarp::executor& executor, bool reset=true) = 0;
     virtual void schedule_all(bool reset_all=true) = 0;
     virtual void schedule_all(transwarp::executor& executor, bool reset_all=true) = 0;
+    virtual void set_exception(std::exception_ptr exception) = 0;
+    virtual void remove_exception() = 0;
     virtual bool was_scheduled() const noexcept = 0;
     virtual void wait() const = 0;
     virtual bool is_ready() const = 0;
@@ -282,30 +285,7 @@ private:
 };
 
 
-namespace detail {
-
-template<typename ResultType, bool is_void>
-struct rinfo_impl;
-
-template<typename ResultType>
-struct rinfo_impl<ResultType, true> {
-    using type = void;
-};
-
-template<typename ResultType>
-struct rinfo_impl<ResultType, false> {
-    using type = const ResultType&;
-};
-
-template<typename ResultType>
-struct rinfo {
-    using type = typename rinfo_impl<ResultType, std::is_void<ResultType>::value>::type;
-};
-
-} // detail
-
-
-// The task class which is implemented by task_impl
+// The task class which is implemented by task_impl (non-void result type)
 template<typename ResultType>
 class task : public transwarp::itask {
 public:
@@ -313,8 +293,22 @@ public:
 
     virtual ~task() = default;
 
-    virtual const std::shared_future<ResultType>& get_future() const noexcept = 0;
-    virtual typename transwarp::detail::rinfo<ResultType>::type get() const = 0;
+    virtual void set_value(const ResultType& value) = 0;
+    virtual void remove_value() = 0;
+    virtual const std::shared_future<result_type>& get_future() const noexcept = 0;
+    virtual const result_type& get() const = 0;
+};
+
+// The task class which is implemented by task_impl (void result type)
+template<>
+class task<void> : public transwarp::itask {
+public:
+    using result_type = void;
+
+    virtual ~task() = default;
+
+    virtual const std::shared_future<result_type>& get_future() const noexcept = 0;
+    virtual result_type get() const = 0;
 };
 
 
@@ -1019,19 +1013,22 @@ private:
     transwarp::detail::thread_pool pool_;
 };
 
+//typename transwarp::detail::result<TaskType, Functor, ParentResults...>::type
 
+
+// A task for non-void result type.
 // A task representing a piece of work given by functor and parent tasks.
 // By connecting tasks a directed acyclic graph is built.
 // Tasks should be created using the make_task factory functions.
-template<typename TaskType, typename Functor, typename... ParentResults>
-class task_impl : public transwarp::task<typename transwarp::detail::result<TaskType, Functor, ParentResults...>::type>,
-                  public std::enable_shared_from_this<task_impl<TaskType, Functor, ParentResults...>> {
+template<typename ResultType, typename TaskType, typename Functor, typename... ParentResults>
+class task_impl : public transwarp::task<ResultType>,
+                  public std::enable_shared_from_this<task_impl<ResultType, TaskType, Functor, ParentResults...>> {
 public:
     // The task type
     using task_type = TaskType;
 
     // The result type of this task
-    using result_type = typename transwarp::detail::result<task_type, Functor, ParentResults...>::type;
+    using result_type = ResultType;
 
     // A task is defined by name, functor, and parent tasks. name is optional, see overload
     // Note: A task must be created using shared_ptr (because of shared_from_this)
@@ -1202,6 +1199,25 @@ public:
         schedule_all_impl(reset_all, &executor);
     }
 
+    void set_value(const ResultType& value) override {
+        // stuff
+    }
+
+    // Removes the value from this task
+    void remove_value() override {
+        // stuff
+    }
+
+    // Assigns an exception to this value task
+    void set_exception(std::exception_ptr exception) override {
+        // stuff
+    }
+
+    // Removes the exception from this task
+    void remove_exception() override {
+        // stuff
+    }
+
     // Returns whether the task was scheduled and not reset afterwards.
     // This means that the underlying future is valid
     bool was_scheduled() const noexcept override {
@@ -1225,8 +1241,7 @@ public:
     // Returns the result of this task. Throws any exceptions that the underlying
     // functor throws. Should only be called if was_scheduled() is true,
     // throws transwarp::transwarp_error otherwise
-    // Note that the return type is either 'void' or 'const result_type&'
-    typename transwarp::detail::rinfo<result_type>::type get() const override {
+    const result_type& get() const override {
         ensure_task_was_scheduled();
         return future_.get();
     }
@@ -1382,6 +1397,378 @@ private:
 };
 
 
+// A task for void result type.
+// A task representing a piece of work given by functor and parent tasks.
+// By connecting tasks a directed acyclic graph is built.
+// Tasks should be created using the make_task factory functions.
+template<typename TaskType, typename Functor, typename... ParentResults>
+class task_impl<void, TaskType, Functor, ParentResults...> : public transwarp::task<void>,
+                                                             public std::enable_shared_from_this<task_impl<void, TaskType, Functor, ParentResults...>> {
+public:
+    // The task type
+    using task_type = TaskType;
+
+    // The result type of this task
+    using result_type = void;
+
+    // A task is defined by name, functor, and parent tasks. name is optional, see overload
+    // Note: A task must be created using shared_ptr (because of shared_from_this)
+    template<typename F>
+    // cppcheck-suppress passedByValue
+    // cppcheck-suppress uninitMemberVar
+    task_impl(std::string name, F&& functor, std::shared_ptr<transwarp::task<ParentResults>>... parents)
+    : task_impl(true, std::move(name), std::forward<F>(functor), std::move(parents)...)
+    {}
+
+    // This overload is for omitting the task name
+    // Note: A task must be created using shared_ptr (because of shared_from_this)
+    template<typename F>
+    // cppcheck-suppress uninitMemberVar
+    explicit task_impl(F&& functor, std::shared_ptr<transwarp::task<ParentResults>>... parents)
+    : task_impl(false, "", std::forward<F>(functor), std::move(parents)...)
+    {}
+
+    virtual ~task_impl() = default;
+
+    // delete copy/move semantics
+    task_impl(const task_impl&) = delete;
+    task_impl& operator=(const task_impl&) = delete;
+    task_impl(task_impl&&) = delete;
+    task_impl& operator=(task_impl&&) = delete;
+
+    // Assigns an executor to this task which takes precedence over
+    // the executor provided in schedule() or schedule_all()
+    void set_executor(std::shared_ptr<transwarp::executor> executor) override {
+        ensure_task_not_running();
+        if (!executor) {
+            throw transwarp::transwarp_error("Not a valid pointer to executor");
+        }
+        executor_ = std::move(executor);
+        transwarp::detail::node_manip::set_executor(*node_, std::make_shared<std::string>(executor_->get_name()));
+    }
+
+    // Assigns an executor to all tasks which takes precedence over
+    // the executor provided in schedule() or schedule_all()
+    void set_executor_all(std::shared_ptr<transwarp::executor> executor) override {
+        ensure_task_not_running();
+        transwarp::detail::set_executor_visitor visitor(std::move(executor));
+        visit(visitor);
+        unvisit();
+    }
+
+    // Removes the executor from this task
+    void remove_executor() override {
+        ensure_task_not_running();
+        executor_.reset();
+        transwarp::detail::node_manip::set_executor(*node_, nullptr);
+    }
+
+    // Removes the executor from all tasks
+    void remove_executor_all() override {
+        ensure_task_not_running();
+        transwarp::detail::remove_executor_visitor visitor;
+        visit(visitor);
+        unvisit();
+    }
+
+    // Sets a task priority (defaults to 0). transwarp will not directly use this.
+    // This is only useful if something else is using the priority (e.g. a custom executor)
+    void set_priority(std::size_t priority) override {
+        ensure_task_not_running();
+        transwarp::detail::node_manip::set_priority(*node_, priority);
+    }
+
+    // Sets a priority to all tasks (defaults to 0). transwarp will not directly use this.
+    // This is only useful if something else is using the priority (e.g. a custom executor)
+    void set_priority_all(std::size_t priority) override {
+        ensure_task_not_running();
+        transwarp::detail::set_priority_visitor visitor(priority);
+        visit(visitor);
+        unvisit();
+    }
+
+    // Resets the task priority to 0
+    void reset_priority() override {
+        ensure_task_not_running();
+        transwarp::detail::node_manip::set_priority(*node_, 0);
+    }
+
+    // Resets the priority of all tasks to 0
+    void reset_priority_all() override {
+        ensure_task_not_running();
+        transwarp::detail::reset_priority_visitor visitor;
+        visit(visitor);
+        unvisit();
+    }
+
+    // Assigns custom data to this task. transwarp will not directly use this.
+    // This is only useful if something else is using this custom data (e.g. a custom executor)
+    void set_custom_data(std::shared_ptr<void> custom_data) override {
+        ensure_task_not_running();
+        if (!custom_data) {
+            throw transwarp::transwarp_error("Not a valid pointer to custom data");
+        }
+        transwarp::detail::node_manip::set_custom_data(*node_, std::move(custom_data));
+    }
+
+    // Assigns custom data to all tasks. transwarp will not directly use this.
+    // This is only useful if something else is using this custom data (e.g. a custom executor)
+    void set_custom_data_all(std::shared_ptr<void> custom_data) override {
+        ensure_task_not_running();
+        transwarp::detail::set_custom_data_visitor visitor(std::move(custom_data));
+        visit(visitor);
+        unvisit();
+    }
+
+    // Removes custom data from this task
+    void remove_custom_data() override {
+        ensure_task_not_running();
+        transwarp::detail::node_manip::set_custom_data(*node_, nullptr);
+    }
+
+    // Removes custom data from all tasks
+    void remove_custom_data_all() override {
+        ensure_task_not_running();
+        transwarp::detail::remove_custom_data_visitor visitor;
+        visit(visitor);
+        unvisit();
+    }
+
+    // Returns the future associated to the underlying execution
+    const std::shared_future<result_type>& get_future() const noexcept override {
+        return future_;
+    }
+
+    // Returns the associated node
+    const std::shared_ptr<transwarp::node>& get_node() const noexcept override {
+        return node_;
+    }
+
+    // Schedules this task for execution on the caller thread.
+    // The task-specific executor gets precedence if it exists.
+    // reset denotes whether schedule should reset the underlying
+    // future and schedule even if the future is already valid.
+    void schedule(bool reset=true) override {
+        ensure_task_not_running();
+        schedule_impl(reset);
+    }
+
+    // Schedules this task for execution using the provided executor.
+    // The task-specific executor gets precedence if it exists.
+    // reset denotes whether schedule should reset the underlying
+    // future and schedule even if the future is already valid.
+    void schedule(transwarp::executor& executor, bool reset=true) override {
+        ensure_task_not_running();
+        schedule_impl(reset, &executor);
+    }
+
+    // Schedules all tasks in the graph for execution on the caller thread.
+    // The task-specific executors get precedence if they exist.
+    // reset_all denotes whether schedule_all should reset the underlying
+    // futures and schedule even if the futures are already present.
+    void schedule_all(bool reset_all=true) override {
+        ensure_task_not_running();
+        schedule_all_impl(reset_all);
+    }
+
+    // Schedules all tasks in the graph for execution using the provided executor.
+    // The task-specific executors get precedence if they exist.
+    // reset_all denotes whether schedule_all should reset the underlying
+    // futures and schedule even if the futures are already present.
+    void schedule_all(transwarp::executor& executor, bool reset_all=true) override {
+        ensure_task_not_running();
+        schedule_all_impl(reset_all, &executor);
+    }
+
+    // Assigns an exception to this value task
+    void set_exception(std::exception_ptr exception) override {
+        // stuff
+    }
+
+    // Removes the exception from this task
+    void remove_exception() override {
+        // stuff
+    }
+
+    // Returns whether the task was scheduled and not reset afterwards.
+    // This means that the underlying future is valid
+    bool was_scheduled() const noexcept override {
+        return future_.valid();
+    }
+
+    // Waits for the task to complete. Should only be called if was_scheduled()
+    // is true, throws transwarp::transwarp_error otherwise
+    void wait() const override {
+        ensure_task_was_scheduled();
+        future_.wait();
+    }
+
+    // Returns whether the task has finished processing. Should only be called
+    // if was_scheduled() is true, throws transwarp::transwarp_error otherwise
+    bool is_ready() const override {
+        ensure_task_was_scheduled();
+        return future_.wait_for(std::chrono::seconds(0)) == std::future_status::ready;
+    }
+
+    // Blocks until the task completes. Throws any exceptions that the underlying
+    // functor throws. Should only be called if was_scheduled() is true,
+    // throws transwarp::transwarp_error otherwise
+    void get() const override {
+        ensure_task_was_scheduled();
+        return future_.get();
+    }
+
+    // Resets the future of this task
+    void reset() override {
+        ensure_task_not_running();
+        future_ = std::shared_future<result_type>();
+    }
+
+    // Resets the futures of all tasks in the graph
+    void reset_all() override {
+        ensure_task_not_running();
+        transwarp::detail::reset_visitor visitor;
+        visit(visitor);
+        unvisit();
+    }
+
+    // If enabled then this task is canceled which will
+    // throw transwarp::task_canceled when retrieving the task result.
+    // As long as cancel is enabled new computations cannot be scheduled.
+    // Passing false is equivalent to resume.
+    void cancel(bool enabled) noexcept override {
+        transwarp::detail::node_manip::set_canceled(*node_, enabled);
+    }
+
+    // If enabled then all pending tasks in the graph are canceled which will
+    // throw transwarp::task_canceled when retrieving the task result.
+    // As long as cancel is enabled new computations cannot be scheduled.
+    // Passing false is equivalent to resume.
+    void cancel_all(bool enabled) noexcept override {
+        transwarp::detail::cancel_visitor visitor(enabled);
+        visit(visitor);
+        unvisit();
+    }
+
+    // Returns the graph of the task structure. This is mainly for visualizing
+    // the tasks and their interdependencies. Pass the result into transwarp::to_string
+    // to retrieve a dot-style graph representation for easy viewing.
+    std::vector<transwarp::edge> get_graph() const override {
+        std::vector<transwarp::edge> graph;
+        transwarp::detail::graph_visitor visitor(graph);
+        const_cast<task_impl*>(this)->visit(visitor);
+        const_cast<task_impl*>(this)->unvisit();
+        return graph;
+    }
+
+private:
+
+    template<typename F>
+    // cppcheck-suppress passedByValue
+    task_impl(bool has_name, std::string name, F&& functor, std::shared_ptr<transwarp::task<ParentResults>>... parents)
+    : node_(std::make_shared<transwarp::node>()),
+      functor_(std::forward<F>(functor)),
+      parents_(std::make_tuple(std::move(parents)...)),
+      visited_(false)
+    {
+        transwarp::detail::node_manip::set_type(*node_, task_type::value);
+        transwarp::detail::node_manip::set_name(*node_, (has_name ? std::make_shared<std::string>(std::move(name)) : nullptr));
+        transwarp::detail::assign_node_if(functor_, node_);
+        transwarp::detail::call_with_each(transwarp::detail::parent_visitor(node_), parents_);
+        transwarp::detail::final_visitor visitor;
+        visit(visitor);
+        unvisit();
+    }
+
+    template<typename R, typename T, typename... A>
+    friend R transwarp::detail::run_task(std::size_t, const T&, A&&...);
+
+    // Assigns the given id to the node
+    void set_node_id(std::size_t id) noexcept override {
+        transwarp::detail::node_manip::set_id(*node_, id);
+    }
+
+    // Schedules this task for execution using the provided executor.
+    // The task-specific executor gets precedence if it exists.
+    // Runs the task on the same thread as the caller if neither the global
+    // nor the task-specific executor is found.
+    void schedule_impl(bool reset, transwarp::executor* executor=nullptr) override {
+        if (!node_->is_canceled() && (reset || !future_.valid())) {
+            std::weak_ptr<task_impl> self = this->shared_from_this();
+            auto futures = transwarp::detail::get_futures(parents_);
+            auto pack_task = std::make_shared<std::packaged_task<result_type()>>(
+                    std::bind(&task_impl::evaluate, node_->get_id(), std::move(self), std::move(futures)));
+            future_ = pack_task->get_future();
+            if (executor_) {
+                executor_->execute([pack_task] { (*pack_task)(); }, node_);
+            } else if (executor) {
+                executor->execute([pack_task] { (*pack_task)(); }, node_);
+            } else {
+                (*pack_task)();
+            }
+        }
+    }
+
+    // Schedules all tasks in the graph for execution using the provided executor.
+    // The task-specific executors get precedence if they exist.
+    // Runs tasks on the same thread as the caller if neither the global
+    // nor a task-specific executor is found.
+    void schedule_all_impl(bool reset_all, transwarp::executor* executor=nullptr) {
+        if (!node_->is_canceled()) {
+            transwarp::detail::schedule_visitor visitor(reset_all, executor);
+            visit(visitor);
+            unvisit();
+        }
+    }
+
+    // Visits each task in a depth-first traversal.
+    void visit(const std::function<void(transwarp::itask&)>& visitor) override {
+        if (!visited_) {
+            transwarp::detail::call_with_each(transwarp::detail::visit(visitor), parents_);
+            visitor(*this);
+            visited_ = true;
+        }
+    }
+
+    // Traverses through all tasks and marks them as not visited.
+    void unvisit() noexcept override {
+        if (visited_) {
+            visited_ = false;
+            transwarp::detail::call_with_each(transwarp::detail::unvisit(), parents_);
+        }
+    }
+
+    // Checks if the task is currently running and throws transwarp::transwarp_error if it is
+    void ensure_task_not_running() const {
+        if (future_.valid() && future_.wait_for(std::chrono::seconds(0)) != std::future_status::ready) {
+            throw transwarp::transwarp_error("the task is currently running: " + std::to_string(node_->get_id()));
+        }
+    }
+
+    // Checks if the task was scheduled and throws transwarp::transwarp_error if it's not
+    void ensure_task_was_scheduled() const {
+        if (!future_.valid()) {
+            throw transwarp::transwarp_error("the task was not scheduled: " + std::to_string(node_->get_id()));
+        }
+    }
+
+    // Calls the functor of the given task with the results from the futures.
+    // Throws transwarp::task_canceled if the task is canceled.
+    // Throws transwarp::task_destroyed in case the task was destroyed prematurely.
+    static result_type evaluate(std::size_t node_id, const std::weak_ptr<task_impl>& task,
+                                const std::tuple<std::shared_future<ParentResults>...>& futures) {
+        transwarp::detail::call_with_futures<task_type, result_type>(node_id, task, futures);
+    }
+
+    std::shared_ptr<transwarp::node> node_;
+    Functor functor_;
+    std::tuple<std::shared_ptr<transwarp::task<ParentResults>>...> parents_;
+    bool visited_;
+    std::shared_ptr<transwarp::executor> executor_;
+    std::shared_future<result_type> future_;
+};
+
+
 // A value task that stores a single value and doesn't require scheduling.
 template<typename ResultType>
 class value_task : public transwarp::task<ResultType> {
@@ -1496,6 +1883,21 @@ public:
     // No-op because a value task never runs and doesn't have parents
     void schedule_all(transwarp::executor&, bool) override {}
 
+    void set_value(const ResultType& value) override {
+        // stuff
+    }
+
+    // No-op because a value task must either contain a value or an exception
+    void remove_value() override {}
+
+    // Assigns an exception to this value task
+    void set_exception(std::exception_ptr exception) override {
+        // stuff
+    }
+
+    // No-op because a value task must either contain a value or an exception
+    void remove_exception() override {}
+
     // Returns true because a value task is scheduled once on construction
     bool was_scheduled() const noexcept override {
         return true;
@@ -1577,14 +1979,16 @@ private:
 
 // A factory function to create a new task
 template<typename TaskType, typename Functor, typename... Parents>
-auto make_task(TaskType, std::string name, Functor&& functor, std::shared_ptr<Parents>... parents) -> decltype(std::make_shared<transwarp::task_impl<TaskType, typename std::decay<Functor>::type, typename Parents::result_type...>>(std::move(name), std::forward<Functor>(functor), std::move(parents)...)) {
-    return std::make_shared<transwarp::task_impl<TaskType, typename std::decay<Functor>::type, typename Parents::result_type...>>(std::move(name), std::forward<Functor>(functor), std::move(parents)...);
+auto make_task(TaskType, std::string name, Functor&& functor, std::shared_ptr<Parents>... parents) -> decltype(std::make_shared<transwarp::task_impl<typename transwarp::detail::result<TaskType, typename std::decay<Functor>::type, typename Parents::result_type...>::type, TaskType, typename std::decay<Functor>::type, typename Parents::result_type...>>(std::move(name), std::forward<Functor>(functor), std::move(parents)...)) {
+    using result_type = typename transwarp::detail::result<TaskType, typename std::decay<Functor>::type, typename Parents::result_type...>::type;
+    return std::make_shared<transwarp::task_impl<result_type, TaskType, typename std::decay<Functor>::type, typename Parents::result_type...>>(std::move(name), std::forward<Functor>(functor), std::move(parents)...);
 }
 
 // A factory function to create a new task. Overload for omitting the task name
 template<typename TaskType, typename Functor, typename... Parents>
-auto make_task(TaskType, Functor&& functor, std::shared_ptr<Parents>... parents) -> decltype(std::make_shared<transwarp::task_impl<TaskType, typename std::decay<Functor>::type, typename Parents::result_type...>>(std::forward<Functor>(functor), std::move(parents)...)) {
-    return std::make_shared<transwarp::task_impl<TaskType, typename std::decay<Functor>::type, typename Parents::result_type...>>(std::forward<Functor>(functor), std::move(parents)...);
+auto make_task(TaskType, Functor&& functor, std::shared_ptr<Parents>... parents) -> decltype(std::make_shared<transwarp::task_impl<typename transwarp::detail::result<TaskType, typename std::decay<Functor>::type, typename Parents::result_type...>::type, TaskType, typename std::decay<Functor>::type, typename Parents::result_type...>>(std::forward<Functor>(functor), std::move(parents)...)) {
+    using result_type = typename transwarp::detail::result<TaskType, typename std::decay<Functor>::type, typename Parents::result_type...>::type;
+    return std::make_shared<transwarp::task_impl<result_type, TaskType, typename std::decay<Functor>::type, typename Parents::result_type...>>(std::forward<Functor>(functor), std::move(parents)...);
 }
 
 
