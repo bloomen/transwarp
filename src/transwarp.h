@@ -293,7 +293,8 @@ public:
 
     virtual ~task() = default;
 
-    virtual void set_value(const ResultType& value) = 0;
+    virtual void set_value(typename std::remove_reference<ResultType>::type& value) = 0;
+    virtual void set_value(typename std::decay<ResultType>::type&& value) = 0;
     virtual void remove_value() = 0;
     virtual const std::shared_future<result_type>& get_future() const noexcept = 0;
     virtual const result_type& get() const = 0;
@@ -1199,21 +1200,26 @@ public:
         schedule_all_impl(reset_all, &executor);
     }
 
-    void set_value(const ResultType& value) override {
-        std::promise<result_type> promise;
-        promise.set_value(value);
-        future_ = promise.get_future();
-        schedule_enabled_ = false;
+    // Assigns a value to this task
+    void set_value(typename std::remove_reference<result_type>::type& value) override {
+        set_value_impl(value);
+    }
+
+    // Assigns a value to this task
+    void set_value(typename std::decay<result_type>::type&& value) override {
+        set_value_impl(value);
     }
 
     // Removes the value from this task
     void remove_value() override {
+        ensure_task_not_running();
         schedule_enabled_ = true;
         reset();
     }
 
     // Assigns an exception to this task
     void set_exception(std::exception_ptr exception) override {
+        ensure_task_not_running();
         std::promise<result_type> promise;
         promise.set_exception(exception);
         future_ = promise.get_future();
@@ -1222,6 +1228,7 @@ public:
 
     // Removes the exception from this task
     void remove_exception() override {
+        ensure_task_not_running();
         schedule_enabled_ = true;
         reset();
     }
@@ -1393,6 +1400,15 @@ private:
     static result_type evaluate(std::size_t node_id, const std::weak_ptr<task_impl>& task,
                                 const std::tuple<std::shared_future<ParentResults>...>& futures) {
         return transwarp::detail::call_with_futures<task_type, result_type>(node_id, task, futures);
+    }
+
+    template<typename R>
+    void set_value_impl(R&& value) {
+        ensure_task_not_running();
+        std::promise<result_type> promise;
+        promise.set_value(std::forward<R>(value));
+        future_ = promise.get_future();
+        schedule_enabled_ = false;
     }
 
     std::shared_ptr<transwarp::node> node_;
@@ -1590,6 +1606,7 @@ public:
 
     // Assigns an exception to this task
     void set_exception(std::exception_ptr exception) override {
+        ensure_task_not_running();
         std::promise<result_type> promise;
         promise.set_exception(exception);
         future_ = promise.get_future();
@@ -1598,6 +1615,7 @@ public:
 
     // Removes the exception from this task
     void remove_exception() override {
+        ensure_task_not_running();
         schedule_enabled_ = true;
         reset();
     }
@@ -1627,7 +1645,7 @@ public:
     // throws transwarp::transwarp_error otherwise
     void get() const override {
         ensure_task_was_scheduled();
-        return future_.get();
+        future_.get();
     }
 
     // Resets the future of this task
@@ -1895,7 +1913,13 @@ public:
     // No-op because a value task never runs and doesn't have parents
     void schedule_all(transwarp::executor&, bool) override {}
 
-    void set_value(const result_type& value) override {
+    // Assigns a value to this task
+    void set_value(typename std::remove_reference<result_type>::type& value) override {
+        set_value_impl(value);
+    }
+
+    // Assigns a value to this task
+    void set_value(typename std::decay<result_type>::type&& value) override {
         set_value_impl(value);
     }
 
