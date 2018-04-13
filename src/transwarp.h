@@ -1305,17 +1305,17 @@ private:
     // Runs the task on the same thread as the caller if neither the global
     // nor the task-specific executor is found.
     void schedule_impl(bool reset, transwarp::executor* executor=nullptr) override {
-        if (this->schedule_enabled_ && !this->node_->is_canceled() && (reset || !this->future_.valid())) {
+        if (schedule_enabled_ && !node_->is_canceled() && (reset || !future_.valid())) {
             std::weak_ptr<task_impl_base> self = this->shared_from_this();
-            auto futures = transwarp::detail::get_futures(this->parents_);
+            auto futures = transwarp::detail::get_futures(parents_);
             auto pack_task = std::make_shared<std::packaged_task<result_type()>>(
                     std::bind(&transwarp::detail::call_with_futures<task_type, result_type, decltype(self), decltype(futures)>,
-                              this->node_->get_id(), self, futures));
-            this->future_ = pack_task->get_future();
-            if (this->executor_) {
-                this->executor_->execute([pack_task] { (*pack_task)(); }, this->node_);
+                              node_->get_id(), std::move(self), std::move(futures)));
+            future_ = pack_task->get_future();
+            if (executor_) {
+                executor_->execute([pack_task] { (*pack_task)(); }, node_);
             } else if (executor) {
-                executor->execute([pack_task] { (*pack_task)(); }, this->node_);
+                executor->execute([pack_task] { (*pack_task)(); }, node_);
             } else {
                 (*pack_task)();
             }
@@ -1422,11 +1422,11 @@ public:
 
 private:
 
-    template<typename R>
-    void set_value_impl(R&& value) {
+    template<typename T>
+    void set_value_impl(T&& value) {
         this->ensure_task_not_running();
         std::promise<result_type> promise;
-        promise.set_value(std::forward<R>(value));
+        promise.set_value(std::forward<T>(value));
         this->future_ = promise.get_future();
         this->schedule_enabled_ = false;
     }
@@ -1492,18 +1492,18 @@ public:
     using result_type = ResultType;
 
     // A value task is defined by name and result. name is optional, see overload
-    template<typename R>
+    template<typename T>
     // cppcheck-suppress passedByValue
     // cppcheck-suppress uninitMemberVar
-    value_task(std::string name, R&& result)
-    : value_task(true, std::move(name), std::forward<R>(result))
+    value_task(std::string name, T&& value)
+    : value_task(true, std::move(name), std::forward<T>(value))
     {}
 
     // This overload is for omitting the task name
-    template<typename R>
+    template<typename T>
     // cppcheck-suppress uninitMemberVar
-    explicit value_task(R&& result)
-    : value_task(false, "", std::forward<R>(result))
+    explicit value_task(T&& value)
+    : value_task(false, "", std::forward<T>(value))
     {}
 
     virtual ~value_task() = default;
@@ -1655,13 +1655,13 @@ public:
 
 private:
 
-    template<typename R>
+    template<typename T>
     // cppcheck-suppress passedByValue
-    value_task(bool has_name, std::string name, R&& result)
+    value_task(bool has_name, std::string name, T&& value)
     : node_(std::make_shared<transwarp::node>()),
       visited_(false)
     {
-        set_value_impl(result);
+        set_value_impl(std::forward<T>(value));
         transwarp::detail::node_manip::set_type(*node_, task_type::value);
         transwarp::detail::node_manip::set_name(*node_, (has_name ? std::make_shared<std::string>(std::move(name)) : nullptr));
     }
@@ -1689,10 +1689,10 @@ private:
         }
     }
 
-    template<typename R>
-    void set_value_impl(R&& value) {
+    template<typename T>
+    void set_value_impl(T&& value) {
         std::promise<result_type> promise;
-        promise.set_value(std::forward<R>(value));
+        promise.set_value(std::forward<T>(value));
         future_ = promise.get_future();
     }
 
