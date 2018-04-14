@@ -35,7 +35,6 @@ before_build:
 build:
   project: C:\projects\transwarp\build\transwarp.sln
   parallel: false
-  verbosity: quiet
 
 test_script:
   - cmd: cd C:\projects\transwarp\build
