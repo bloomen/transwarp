@@ -1719,14 +1719,14 @@ auto make_task(TaskType, Functor&& functor, std::shared_ptr<Parents>... parents)
 
 // A factory function to create a new value task
 template<typename Value>
-auto make_value_task(std::string name, Value&& value) -> decltype(std::make_shared<transwarp::value_task<typename std::decay<Value>::type>>(std::move(name), std::forward<Value>(value))) {
-    return std::make_shared<transwarp::value_task<typename std::decay<Value>::type>>(std::move(name), std::forward<Value>(value));
+auto make_value_task(std::string name, Value&& value) -> decltype(std::make_shared<transwarp::value_task<typename std::remove_reference<Value>::type>>(std::move(name), std::forward<Value>(value))) {
+    return std::make_shared<transwarp::value_task<typename std::remove_reference<Value>::type>>(std::move(name), std::forward<Value>(value));
 }
 
 // A factory function to create a new value task. Overload for omitting the task name
 template<typename Value>
-auto make_value_task(Value&& value) -> decltype(std::make_shared<transwarp::value_task<typename std::decay<Value>::type>>(std::forward<Value>(value))) {
-    return std::make_shared<transwarp::value_task<typename std::decay<Value>::type>>(std::forward<Value>(value));
+auto make_value_task(Value&& value) -> decltype(std::make_shared<transwarp::value_task<typename std::remove_reference<Value>::type>>(std::forward<Value>(value))) {
+    return std::make_shared<transwarp::value_task<typename std::remove_reference<Value>::type>>(std::forward<Value>(value));
 }
 
 
