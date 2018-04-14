@@ -90,11 +90,6 @@ struct node_manip;
 template<bool>
 struct assign_node_if_impl;
 
-template<typename T>
-struct remove_refc {
-    using type = typename std::remove_reference<typename std::remove_const<T>::type>::type;
-};
-
 } // detail
 
 
@@ -292,6 +287,20 @@ private:
 };
 
 
+// Removes reference and const from a type
+template<typename T>
+struct remove_refc {
+    using type = typename std::remove_reference<typename std::remove_const<T>::type>::type;
+};
+
+
+// Returns the result type of a std::shared_future<T>
+template<typename T>
+struct result_info {
+    using type = typename std::result_of<decltype(&std::shared_future<T>::get)(std::shared_future<T>)>::type;
+};
+
+
 // The task class which is implemented by task_impl (non-void result type)
 template<typename ResultType>
 class task : public transwarp::itask {
@@ -301,10 +310,10 @@ public:
     virtual ~task() = default;
 
     virtual void set_value(typename std::remove_reference<result_type>::type& value) = 0;
-    virtual void set_value(typename transwarp::detail::remove_refc<result_type>::type&& value) = 0;
+    virtual void set_value(typename transwarp::remove_refc<result_type>::type&& value) = 0;
     virtual void remove_value() = 0;
     virtual const std::shared_future<result_type>& get_future() const noexcept = 0;
-    virtual decltype(std::declval<std::shared_future<result_type>>().get()) get() const = 0;
+    virtual typename transwarp::result_info<result_type>::type get() const = 0;
 };
 
 // The task class which is implemented by task_impl (void result type)
@@ -1401,7 +1410,7 @@ public:
     }
 
     // Assigns a value to this task
-    void set_value(typename transwarp::detail::remove_refc<result_type>::type&& value) override {
+    void set_value(typename transwarp::remove_refc<result_type>::type&& value) override {
         set_value_impl(value);
     }
 
@@ -1415,7 +1424,7 @@ public:
     // Returns the result of this task. Throws any exceptions that the underlying
     // functor throws. Should only be called if was_scheduled() is true,
     // throws transwarp::transwarp_error otherwise
-    decltype(std::declval<std::shared_future<result_type>>().get()) get() const override {
+    typename transwarp::result_info<result_type>::type get() const override {
         this->ensure_task_was_scheduled();
         return this->future_.get();
     }
@@ -1601,7 +1610,7 @@ public:
     }
 
     // Assigns a value to this task
-    void set_value(typename transwarp::detail::remove_refc<result_type>::type&& value) override {
+    void set_value(typename transwarp::remove_refc<result_type>::type&& value) override {
         set_value_impl(value);
     }
 
@@ -1632,7 +1641,7 @@ public:
     }
 
     // Returns the result of this task
-    decltype(std::declval<std::shared_future<result_type>>().get()) get() const override {
+    typename transwarp::result_info<result_type>::type get() const override {
         return future_.get();
     }
 
