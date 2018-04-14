@@ -1228,22 +1228,6 @@ TEST_CASE("value_task_with_constref_value") {
     REQUIRE(x == t->get());
 }
 
-TEST_CASE("value_task_with_volatile_ref_value") {
-    volatile int z = 42;
-    volatile int& x = z;
-    auto t = make_value_task(x);
-    static_assert(std::is_same<const volatile int&, decltype(t->get())>::value, "");
-    REQUIRE(x == t->get());
-}
-
-TEST_CASE("value_task_with_volatile_constref_value") {
-    const volatile int z = 42;
-    const volatile int& x = z;
-    auto t = make_value_task(x);
-    static_assert(std::is_same<const volatile int&, decltype(t->get())>::value, "");
-    REQUIRE(x == t->get());
-}
-
 TEST_CASE("value_task_with_rvalueref_value") {
     int x = 42;
     auto t = make_value_task(std::move(x));
