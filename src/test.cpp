@@ -1212,8 +1212,6 @@ TEST_CASE("value_task_with_changing_value") {
     REQUIRE(42 == t->get());
 }
 
-#ifndef _WIN32
-
 TEST_CASE("value_task_with_ref_value") {
     int z = 42;
     int& x = z;
@@ -1253,8 +1251,6 @@ TEST_CASE("value_task_with_rvalueref_value") {
     REQUIRE(x == t->get());
 }
 
-// This test fails to compile on Windows due to a bug in Visual C++ where it can
-// not create a std::promise<T> object if T is not default constructible.
 TEST_CASE("value_task_with_ref_wrapper_value") {
     int x = 42;
     auto t = make_value_task(std::ref(x));
@@ -1262,7 +1258,6 @@ TEST_CASE("value_task_with_ref_wrapper_value") {
     x = 43;
     REQUIRE(x == t->get().get());
 }
-#endif
 
 // Examples
 
