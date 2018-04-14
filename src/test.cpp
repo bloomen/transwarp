@@ -1251,6 +1251,7 @@ TEST_CASE("value_task_with_rvalueref_value") {
     REQUIRE(x == t->get());
 }
 
+#ifndef _WIN32
 TEST_CASE("value_task_with_ref_wrapper_value") {
     int x = 42;
     auto t = make_value_task(std::ref(x));
@@ -1258,6 +1259,7 @@ TEST_CASE("value_task_with_ref_wrapper_value") {
     x = 43;
     REQUIRE(x == t->get().get());
 }
+#endif
 
 // Examples
 
