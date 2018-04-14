@@ -300,11 +300,11 @@ public:
 
     virtual ~task() = default;
 
-    virtual void set_value(typename std::remove_reference<ResultType>::type& value) = 0;
-    virtual void set_value(typename transwarp::detail::remove_refc<ResultType>::type&& value) = 0;
+    virtual void set_value(typename std::remove_reference<result_type>::type& value) = 0;
+    virtual void set_value(typename transwarp::detail::remove_refc<result_type>::type&& value) = 0;
     virtual void remove_value() = 0;
     virtual const std::shared_future<result_type>& get_future() const noexcept = 0;
-    virtual const result_type& get() const = 0;
+    virtual decltype(std::declval<std::shared_future<result_type>>().get()) get() const = 0;
 };
 
 // The task class which is implemented by task_impl (void result type)
@@ -1415,7 +1415,7 @@ public:
     // Returns the result of this task. Throws any exceptions that the underlying
     // functor throws. Should only be called if was_scheduled() is true,
     // throws transwarp::transwarp_error otherwise
-    const result_type& get() const override {
+    decltype(std::declval<std::shared_future<result_type>>().get()) get() const override {
         this->ensure_task_was_scheduled();
         return this->future_.get();
     }
@@ -1632,7 +1632,7 @@ public:
     }
 
     // Returns the result of this task
-    const result_type& get() const override {
+    decltype(std::declval<std::shared_future<result_type>>().get()) get() const override {
         return future_.get();
     }
 
