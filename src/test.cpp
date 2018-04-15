@@ -1235,9 +1235,11 @@ TEST_CASE("value_task_with_rvalueref_value") {
     REQUIRE(x == t->get());
 }
 
-#ifndef _WIN32
-// This test fails to compile on Windows due to a bug in Visual C++ where it can
-// not create a std::promise<T> object if T is not default constructible.
+struct not_def_constr {
+    explicit not_def_constr(int x) : x(x) {}
+    int x;
+};
+
 TEST_CASE("value_task_with_ref_wrapper_value") {
     int x = 42;
     auto t = make_value_task(std::ref(x));
@@ -1245,7 +1247,42 @@ TEST_CASE("value_task_with_ref_wrapper_value") {
     x = 43;
     REQUIRE(x == t->get().get());
 }
-#endif
+
+TEST_CASE("value_task_with_not_def_constr_value") {
+    not_def_constr obj(42);
+    auto t = make_value_task(obj);
+    static_assert(std::is_same<const not_def_constr&, decltype(t->get())>::value, "");
+    REQUIRE(42 == t->get().x);
+}
+
+TEST_CASE("make_ready_future_with_lvalue") {
+    not_def_constr obj(42);
+    auto future = transwarp::detail::make_ready_future<not_def_constr>(obj);
+    REQUIRE(42 == future.get().x);
+}
+
+TEST_CASE("make_ready_future_with_rvalue") {
+    not_def_constr obj(42);
+    auto future = transwarp::detail::make_ready_future<not_def_constr>(std::move(obj));
+    REQUIRE(42 == future.get().x);
+}
+
+TEST_CASE("make_ready_future_with_exception") {
+    std::runtime_error e{"42"};
+    auto future = transwarp::detail::make_ready_future<not_def_constr>(std::make_exception_ptr(e));
+    try {
+        future.get();
+    } catch (std::runtime_error& e) {
+        REQUIRE(std::string{"42"} == e.what());
+        return;
+    }
+    throw std::runtime_error{"shouldn't get here"};
+}
+
+TEST_CASE("make_ready_future_with_invalid_exception") {
+    auto future = transwarp::detail::make_ready_future<not_def_constr>(std::exception_ptr{});
+    REQUIRE_THROWS_AS(future.get(), transwarp::transwarp_error);
+}
 
 // Examples
 

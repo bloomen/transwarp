@@ -975,6 +975,32 @@ void assign_node_if(Functor& functor, std::shared_ptr<transwarp::node> node) noe
     transwarp::detail::assign_node_if_impl<std::is_base_of<transwarp::functor, Functor>::value>{}(functor, std::move(node));
 }
 
+// This workaround is necessary because of a bug in Visual Studio where it can
+// not create a std::promise<T> object if T is not default constructible.
+template<typename ResultType, typename Value>
+std::shared_future<ResultType> make_ready_future(Value&& value) {
+    std::packaged_task<ResultType()> pack_task([&value]() -> ResultType {
+        return std::forward<Value>(value);
+    });
+    pack_task();
+    return pack_task.get_future();
+}
+
+// This workaround is necessary because of a bug in Visual Studio where it can
+// not create a std::promise<T> object if T is not default constructible.
+template<typename ResultType>
+std::shared_future<ResultType> make_ready_future(std::exception_ptr exception) {
+    std::packaged_task<ResultType()> pack_task([&exception]() -> ResultType {
+        if (exception) {
+            std::rethrow_exception(exception);
+        } else {
+            throw transwarp::transwarp_error{"invalid exception pointer"};
+        }
+    });
+    pack_task();
+    return pack_task.get_future();
+}
+
 } // detail
 
 
@@ -1188,9 +1214,7 @@ public:
     // Assigns an exception to this task
     void set_exception(std::exception_ptr exception) override {
         ensure_task_not_running();
-        std::promise<result_type> promise;
-        promise.set_exception(exception);
-        future_ = promise.get_future();
+        future_ = transwarp::detail::make_ready_future<result_type>(exception);
         schedule_enabled_ = false;
     }
 
@@ -1434,9 +1458,7 @@ private:
     template<typename T>
     void set_value_impl(T&& value) {
         this->ensure_task_not_running();
-        std::promise<result_type> promise;
-        promise.set_value(std::forward<T>(value));
-        this->future_ = promise.get_future();
+        this->future_ = transwarp::detail::make_ready_future<result_type>(std::forward<T>(value));
         this->schedule_enabled_ = false;
     }
 
@@ -1656,9 +1678,7 @@ public:
 
     // Assigns an exception to this value task
     void set_exception(std::exception_ptr exception) override {
-        std::promise<result_type> promise;
-        promise.set_exception(exception);
-        future_ = promise.get_future();
+        future_ = transwarp::detail::make_ready_future<result_type>(exception);
     }
 
     // No-op because a value task must either contain a value or an exception
@@ -1737,9 +1757,7 @@ private:
 
     template<typename T>
     void set_value_impl(T&& value) {
-        std::promise<result_type> promise;
-        promise.set_value(std::forward<T>(value));
-        future_ = promise.get_future();
+        future_ = transwarp::detail::make_ready_future<result_type>(std::forward<T>(value));
     }
 
     std::shared_ptr<transwarp::node> node_;
