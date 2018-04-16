@@ -1,5 +1,6 @@
-1.2.2
+1.3.0
 
+- ???
 - improved error reporting 
 - general code clean up; addressed compiler warnings
 - simplify the node class by addressing the constructors
