@@ -975,30 +975,23 @@ void assign_node_if(Functor& functor, std::shared_ptr<transwarp::node> node) noe
     transwarp::detail::assign_node_if_impl<std::is_base_of<transwarp::functor, Functor>::value>{}(functor, std::move(node));
 }
 
-// This workaround is necessary because of a bug in Visual Studio where it can
-// not create a std::promise<T> object if T is not default constructible.
+// Returns a ready future with the given value as its state
 template<typename ResultType, typename Value>
 std::shared_future<ResultType> make_ready_future(Value&& value) {
-    std::packaged_task<ResultType()> pack_task([&value]() -> ResultType {
-        return std::forward<Value>(value);
-    });
-    pack_task();
-    return pack_task.get_future();
+    std::promise<ResultType> promise;
+    promise.set_value(std::forward<Value>(value));
+    return promise.get_future();
 }
 
-// This workaround is necessary because of a bug in Visual Studio where it can
-// not create a std::promise<T> object if T is not default constructible.
+// Returns a ready future with the given exception as its state
 template<typename ResultType>
 std::shared_future<ResultType> make_ready_future(std::exception_ptr exception) {
-    std::packaged_task<ResultType()> pack_task([&exception]() -> ResultType {
-        if (exception) {
-            std::rethrow_exception(exception);
-        } else {
-            throw transwarp::transwarp_error{"invalid exception pointer"};
-        }
-    });
-    pack_task();
-    return pack_task.get_future();
+    if (!exception) {
+        throw transwarp::transwarp_error{"invalid exception pointer"};
+    }
+    std::promise<ResultType> promise;
+    promise.set_exception(exception);
+    return promise.get_future();
 }
 
 } // detail
@@ -1057,6 +1050,8 @@ private:
 };
 
 
+// The base task class that contains the functionality that can be used
+// with all result types (void and non-void) which is almost everything.
 template<typename ResultType, typename TaskType, typename Functor, typename... ParentResults>
 class task_impl_base : public transwarp::task<ResultType>,
                        public std::enable_shared_from_this<task_impl_base<ResultType, TaskType, Functor, ParentResults...>> {
@@ -1405,29 +1400,6 @@ public:
     // The result type of this task
     using result_type = ResultType;
 
-    // A task is defined by name, functor, and parent tasks. name is optional, see overload
-    // Note: A task must be created using shared_ptr (because of shared_from_this)
-    template<typename F>
-    // cppcheck-suppress passedByValue
-    // cppcheck-suppress uninitMemberVar
-    task_impl_proxy(std::string name, F&& functor, std::shared_ptr<transwarp::task<ParentResults>>... parents)
-    : transwarp::task_impl_base<result_type, task_type, Functor, ParentResults...>(true, std::move(name), std::forward<F>(functor), std::move(parents)...)
-    {}
-
-    // This overload is for omitting the task name
-    // Note: A task must be created using shared_ptr (because of shared_from_this)
-    template<typename F>
-    // cppcheck-suppress uninitMemberVar
-    explicit task_impl_proxy(F&& functor, std::shared_ptr<transwarp::task<ParentResults>>... parents)
-    : transwarp::task_impl_base<result_type, task_type, Functor, ParentResults...>(false, "", std::forward<F>(functor), std::move(parents)...)
-    {}
-
-    // delete copy/move semantics
-    task_impl_proxy(const task_impl_proxy&) = delete;
-    task_impl_proxy& operator=(const task_impl_proxy&) = delete;
-    task_impl_proxy(task_impl_proxy&&) = delete;
-    task_impl_proxy& operator=(task_impl_proxy&&) = delete;
-
     // Assigns a value to this task
     void set_value(typename std::remove_reference<result_type>::type& value) override {
         set_value_impl(value);
@@ -1438,7 +1410,7 @@ public:
         set_value_impl(value);
     }
 
-    // Removes the value from this task
+    // Removes the value from this task. Will reset the underlying future
     void remove_value() override {
         this->ensure_task_not_running();
         this->schedule_enabled_ = true;
@@ -1452,6 +1424,21 @@ public:
         this->ensure_task_was_scheduled();
         return this->future_.get();
     }
+
+protected:
+
+    template<typename F>
+    // cppcheck-suppress passedByValue
+    // cppcheck-suppress uninitMemberVar
+    task_impl_proxy(std::string name, F&& functor, std::shared_ptr<transwarp::task<ParentResults>>... parents)
+    : transwarp::task_impl_base<result_type, task_type, Functor, ParentResults...>(true, std::move(name), std::forward<F>(functor), std::move(parents)...)
+    {}
+
+    template<typename F>
+    // cppcheck-suppress uninitMemberVar
+    explicit task_impl_proxy(F&& functor, std::shared_ptr<transwarp::task<ParentResults>>... parents)
+    : transwarp::task_impl_base<result_type, task_type, Functor, ParentResults...>(false, "", std::forward<F>(functor), std::move(parents)...)
+    {}
 
 private:
 
@@ -1478,29 +1465,6 @@ public:
     // The result type of this task
     using result_type = void;
 
-    // A task is defined by name, functor, and parent tasks. name is optional, see overload
-    // Note: A task must be created using shared_ptr (because of shared_from_this)
-    template<typename F>
-    // cppcheck-suppress passedByValue
-    // cppcheck-suppress uninitMemberVar
-    task_impl_proxy(std::string name, F&& functor, std::shared_ptr<transwarp::task<ParentResults>>... parents)
-    : transwarp::task_impl_base<result_type, task_type, Functor, ParentResults...>(true, std::move(name), std::forward<F>(functor), std::move(parents)...)
-    {}
-
-    // This overload is for omitting the task name
-    // Note: A task must be created using shared_ptr (because of shared_from_this)
-    template<typename F>
-    // cppcheck-suppress uninitMemberVar
-    explicit task_impl_proxy(F&& functor, std::shared_ptr<transwarp::task<ParentResults>>... parents)
-    : transwarp::task_impl_base<result_type, task_type, Functor, ParentResults...>(false, "", std::forward<F>(functor), std::move(parents)...)
-    {}
-
-    // delete copy/move semantics
-    task_impl_proxy(const task_impl_proxy&) = delete;
-    task_impl_proxy& operator=(const task_impl_proxy&) = delete;
-    task_impl_proxy(task_impl_proxy&&) = delete;
-    task_impl_proxy& operator=(task_impl_proxy&&) = delete;
-
     // Blocks until the task finishes. Throws any exceptions that the underlying
     // functor throws. Should only be called if was_scheduled() is true,
     // throws transwarp::transwarp_error otherwise
@@ -1508,6 +1472,21 @@ public:
         this->ensure_task_was_scheduled();
         this->future_.get();
     }
+
+protected:
+
+    template<typename F>
+    // cppcheck-suppress passedByValue
+    // cppcheck-suppress uninitMemberVar
+    task_impl_proxy(std::string name, F&& functor, std::shared_ptr<transwarp::task<ParentResults>>... parents)
+    : transwarp::task_impl_base<result_type, task_type, Functor, ParentResults...>(true, std::move(name), std::forward<F>(functor), std::move(parents)...)
+    {}
+
+    template<typename F>
+    // cppcheck-suppress uninitMemberVar
+    explicit task_impl_proxy(F&& functor, std::shared_ptr<transwarp::task<ParentResults>>... parents)
+    : transwarp::task_impl_base<result_type, task_type, Functor, ParentResults...>(false, "", std::forward<F>(functor), std::move(parents)...)
+    {}
 
 };
 
@@ -1559,7 +1538,7 @@ public:
     // The result type of this task
     using result_type = ResultType;
 
-    // A value task is defined by name and result. name is optional, see overload
+    // A value task is defined by name and value. name is optional, see overload
     template<typename T>
     // cppcheck-suppress passedByValue
     // cppcheck-suppress uninitMemberVar
@@ -1665,13 +1644,13 @@ public:
 
     // Assigns a value to this task
     void set_value(typename std::remove_reference<result_type>::type& value) override {
-        set_value_impl(value);
+        future_ = transwarp::detail::make_ready_future<result_type>(value);
     }
 
     // Assigns a value to this task
     void set_value(typename transwarp::remove_refc<result_type>::type&& value) override {
-        set_value_impl(value);
-    }
+        future_ = transwarp::detail::make_ready_future<result_type>(value);
+    };
 
     // No-op because a value task must either contain a value or an exception
     void remove_value() override {}
@@ -1725,9 +1704,8 @@ private:
     // cppcheck-suppress passedByValue
     value_task(bool has_name, std::string name, T&& value)
     : node_(std::make_shared<transwarp::node>()),
-      visited_(false)
+      future_(transwarp::detail::make_ready_future<result_type>(std::forward<T>(value)))
     {
-        set_value_impl(std::forward<T>(value));
         transwarp::detail::node_manip::set_type(*node_, task_type::value);
         transwarp::detail::node_manip::set_name(*node_, (has_name ? std::make_shared<std::string>(std::move(name)) : nullptr));
     }
@@ -1755,14 +1733,9 @@ private:
         }
     }
 
-    template<typename T>
-    void set_value_impl(T&& value) {
-        future_ = transwarp::detail::make_ready_future<result_type>(std::forward<T>(value));
-    }
-
     std::shared_ptr<transwarp::node> node_;
-    bool visited_;
     std::shared_future<result_type> future_;
+    bool visited_ = false;
 };
 
 

@@ -1207,69 +1207,19 @@ TEST_CASE("value_task_with_rvalue_reference") {
 TEST_CASE("value_task_with_changing_value") {
     int x = 42;
     auto t = make_value_task(x);
-    static_assert(std::is_same<const int&, decltype(t->get())>::value, "");
     x = 43;
     REQUIRE(42 == t->get());
 }
 
-TEST_CASE("value_task_with_ref_value") {
-    int z = 42;
-    int& x = z;
-    auto t = make_value_task(x);
-    static_assert(std::is_same<const int&, decltype(t->get())>::value, "");
-    REQUIRE(x == t->get());
-}
-
-TEST_CASE("value_task_with_constref_value") {
-    const int z = 42;
-    const int& x = z;
-    auto t = make_value_task(x);
-    static_assert(std::is_same<const int&, decltype(t->get())>::value, "");
-    REQUIRE(x == t->get());
-}
-
-TEST_CASE("value_task_with_rvalueref_value") {
-    int x = 42;
-    auto t = make_value_task(std::move(x));
-    static_assert(std::is_same<const int&, decltype(t->get())>::value, "");
-    REQUIRE(x == t->get());
-}
-
-struct not_def_constr {
-    explicit not_def_constr(int x) : x(x) {}
-    int x;
-};
-
-TEST_CASE("value_task_with_ref_wrapper_value") {
-    int x = 42;
-    auto t = make_value_task(std::ref(x));
-    static_assert(std::is_same<const std::reference_wrapper<int>&, decltype(t->get())>::value, "");
-    x = 43;
-    REQUIRE(x == t->get().get());
-}
-
-TEST_CASE("value_task_with_not_def_constr_value") {
-    not_def_constr obj(42);
-    auto t = make_value_task(obj);
-    static_assert(std::is_same<const not_def_constr&, decltype(t->get())>::value, "");
-    REQUIRE(42 == t->get().x);
-}
-
-TEST_CASE("make_ready_future_with_lvalue") {
-    not_def_constr obj(42);
-    auto future = transwarp::detail::make_ready_future<not_def_constr>(obj);
-    REQUIRE(42 == future.get().x);
-}
-
-TEST_CASE("make_ready_future_with_rvalue") {
-    not_def_constr obj(42);
-    auto future = transwarp::detail::make_ready_future<not_def_constr>(std::move(obj));
-    REQUIRE(42 == future.get().x);
+TEST_CASE("make_ready_future_with_value") {
+    const int x = 42;
+    auto future = transwarp::detail::make_ready_future<int>(x);
+    REQUIRE(x == future.get());
 }
 
 TEST_CASE("make_ready_future_with_exception") {
     std::runtime_error e{"42"};
-    auto future = transwarp::detail::make_ready_future<not_def_constr>(std::make_exception_ptr(e));
+    auto future = transwarp::detail::make_ready_future<int>(std::make_exception_ptr(e));
     try {
         future.get();
     } catch (std::runtime_error& e) {
@@ -1280,8 +1230,7 @@ TEST_CASE("make_ready_future_with_exception") {
 }
 
 TEST_CASE("make_ready_future_with_invalid_exception") {
-    auto future = transwarp::detail::make_ready_future<not_def_constr>(std::exception_ptr{});
-    REQUIRE_THROWS_AS(future.get(), transwarp::transwarp_error);
+    REQUIRE_THROWS_AS(transwarp::detail::make_ready_future<int>(std::exception_ptr{}), transwarp::transwarp_error);
 }
 
 // Examples
