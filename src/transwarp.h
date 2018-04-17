@@ -261,6 +261,7 @@ public:
     virtual void schedule(transwarp::executor& executor, bool reset=true) = 0;
     virtual void schedule_all(bool reset_all=true) = 0;
     virtual void schedule_all(transwarp::executor& executor, bool reset_all=true) = 0;
+    virtual void remove_value() = 0;
     virtual void set_exception(std::exception_ptr exception) = 0;
     virtual void remove_exception() = 0;
     virtual bool was_scheduled() const noexcept = 0;
@@ -301,7 +302,7 @@ struct result_info {
 };
 
 
-// The task class which is implemented by task_impl (non-void result type)
+// The task class (non-void result type)
 template<typename ResultType>
 class task : public transwarp::itask {
 public:
@@ -309,14 +310,26 @@ public:
 
     virtual ~task() = default;
 
-    virtual void set_value(typename std::remove_reference<result_type>::type& value) = 0;
+    virtual void set_value(const typename transwarp::remove_refc<result_type>::type& value) = 0;
     virtual void set_value(typename transwarp::remove_refc<result_type>::type&& value) = 0;
-    virtual void remove_value() = 0;
     virtual const std::shared_future<result_type>& get_future() const noexcept = 0;
     virtual typename transwarp::result_info<result_type>::type get() const = 0;
 };
 
-// The task class which is implemented by task_impl (void result type)
+// The task class (non-void, non-const reference result type)
+template<typename ResultType>
+class task<ResultType&> : public transwarp::itask {
+public:
+    using result_type = ResultType&;
+
+    virtual ~task() = default;
+
+    virtual void set_value(typename transwarp::remove_refc<result_type>::type& value) = 0;
+    virtual const std::shared_future<result_type>& get_future() const noexcept = 0;
+    virtual typename transwarp::result_info<result_type>::type get() const = 0;
+};
+
+// The task class (void result type)
 template<>
 class task<void> : public transwarp::itask {
 public:
@@ -324,6 +337,7 @@ public:
 
     virtual ~task() = default;
 
+    virtual void set_value() = 0;
     virtual const std::shared_future<result_type>& get_future() const noexcept = 0;
     virtual result_type get() const = 0;
 };
@@ -983,6 +997,13 @@ std::shared_future<ResultType> make_ready_future(Value&& value) {
     return promise.get_future();
 }
 
+// Returns a ready future
+inline std::shared_future<void> make_ready_future() {
+    std::promise<void> promise;
+    promise.set_value();
+    return promise.get_future();
+}
+
 // Returns a ready future with the given exception as its state
 template<typename ResultType>
 std::shared_future<ResultType> make_ready_future(std::exception_ptr exception) {
@@ -1208,17 +1229,24 @@ public:
         schedule_all_impl(reset_all, &executor);
     }
 
+    // Removes the value from this task. Will reset the underlying future
+    void remove_value() override {
+        ensure_task_not_running();
+        schedule_mode_ = true;
+        reset();
+    }
+
     // Assigns an exception to this task
     void set_exception(std::exception_ptr exception) override {
         ensure_task_not_running();
         future_ = transwarp::detail::make_ready_future<result_type>(exception);
-        schedule_enabled_ = false;
+        schedule_mode_ = false;
     }
 
     // Removes the exception from this task
     void remove_exception() override {
         ensure_task_not_running();
-        schedule_enabled_ = true;
+        schedule_mode_ = true;
         reset();
     }
 
@@ -1317,7 +1345,7 @@ protected:
         }
     }
 
-    bool schedule_enabled_ = true;
+    bool schedule_mode_ = true;
     std::shared_future<result_type> future_;
 
 private:
@@ -1335,7 +1363,7 @@ private:
     // Runs the task on the same thread as the caller if neither the global
     // nor the task-specific executor is found.
     void schedule_impl(bool reset, transwarp::executor* executor=nullptr) override {
-        if (schedule_enabled_ && !node_->is_canceled() && (reset || !future_.valid())) {
+        if (schedule_mode_ && !node_->is_canceled() && (reset || !future_.valid())) {
             std::weak_ptr<task_impl_base> self = this->shared_from_this();
             auto futures = transwarp::detail::get_futures(parents_);
             auto pack_task = std::make_shared<std::packaged_task<result_type()>>(
@@ -1403,20 +1431,13 @@ public:
     using result_type = ResultType;
 
     // Assigns a value to this task
-    void set_value(typename std::remove_reference<result_type>::type& value) override {
+    void set_value(const typename transwarp::remove_refc<result_type>::type& value) override {
         set_value_impl(value);
     }
 
     // Assigns a value to this task
     void set_value(typename transwarp::remove_refc<result_type>::type&& value) override {
         set_value_impl(value);
-    }
-
-    // Removes the value from this task. Will reset the underlying future
-    void remove_value() override {
-        this->ensure_task_not_running();
-        this->schedule_enabled_ = true;
-        this->reset();
     }
 
     // Returns the result of this task. Throws any exceptions that the underlying
@@ -1448,11 +1469,62 @@ private:
     void set_value_impl(T&& value) {
         this->ensure_task_not_running();
         this->future_ = transwarp::detail::make_ready_future<result_type>(std::forward<T>(value));
-        this->schedule_enabled_ = false;
+        this->schedule_mode_ = false;
     }
 
 };
 
+// A task for non-void, non-const reference result type.
+// A task representing a piece of work given by functor and parent tasks.
+// By connecting tasks a directed acyclic graph is built.
+// Tasks should be created using the make_task factory functions.
+template<typename ResultType, typename TaskType, typename Functor, typename... ParentResults>
+class task_impl_proxy<ResultType&, TaskType, Functor, ParentResults...> : public transwarp::detail::task_impl_base<ResultType&, TaskType, Functor, ParentResults...> {
+public:
+    // The task type
+    using task_type = TaskType;
+
+    // The result type of this task
+    using result_type = ResultType&;
+
+    // Assigns a value to this task
+    void set_value(typename transwarp::remove_refc<result_type>::type& value) override {
+        set_value_impl(value);
+    }
+
+    // Returns the result of this task. Throws any exceptions that the underlying
+    // functor throws. Should only be called if was_scheduled() is true,
+    // throws transwarp::transwarp_error otherwise
+    typename transwarp::result_info<result_type>::type get() const override {
+        this->ensure_task_was_scheduled();
+        return this->future_.get();
+    }
+
+protected:
+
+    template<typename F>
+    // cppcheck-suppress passedByValue
+    // cppcheck-suppress uninitMemberVar
+    task_impl_proxy(std::string name, F&& functor, std::shared_ptr<transwarp::task<ParentResults>>... parents)
+    : transwarp::detail::task_impl_base<result_type, task_type, Functor, ParentResults...>(true, std::move(name), std::forward<F>(functor), std::move(parents)...)
+    {}
+
+    template<typename F>
+    // cppcheck-suppress uninitMemberVar
+    explicit task_impl_proxy(F&& functor, std::shared_ptr<transwarp::task<ParentResults>>... parents)
+    : transwarp::detail::task_impl_base<result_type, task_type, Functor, ParentResults...>(false, "", std::forward<F>(functor), std::move(parents)...)
+    {}
+
+private:
+
+    template<typename T>
+    void set_value_impl(T&& value) {
+        this->ensure_task_not_running();
+        this->future_ = transwarp::detail::make_ready_future<result_type>(std::forward<T>(value));
+        this->schedule_mode_ = false;
+    }
+
+};
 
 // A task for void result type.
 // A task representing a piece of work given by functor and parent tasks.
@@ -1466,6 +1538,13 @@ public:
 
     // The result type of this task
     using result_type = void;
+
+    // Makes this task ready
+    void set_value() override {
+        this->ensure_task_not_running();
+        this->future_ = transwarp::detail::make_ready_future();
+        this->schedule_mode_ = false;
+    }
 
     // Blocks until the task finishes. Throws any exceptions that the underlying
     // functor throws. Should only be called if was_scheduled() is true,
@@ -1647,7 +1726,7 @@ public:
     void schedule_all(transwarp::executor&, bool) override {}
 
     // Assigns a value to this task
-    void set_value(typename std::remove_reference<result_type>::type& value) override {
+    void set_value(const typename transwarp::remove_refc<result_type>::type& value) override {
         future_ = transwarp::detail::make_ready_future<result_type>(value);
     }
 

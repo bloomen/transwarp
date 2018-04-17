@@ -1233,6 +1233,65 @@ TEST_CASE("make_ready_future_with_invalid_exception") {
     REQUIRE_THROWS_AS(transwarp::detail::make_ready_future<int>(std::exception_ptr{}), transwarp::transwarp_error);
 }
 
+TEST_CASE("task_set_value_and_remove_value") {
+    const int x = 42;
+    const int y = 55;
+    auto t = make_task(transwarp::root, [x]{ return x; });
+    t->schedule();
+    REQUIRE(x == t->get());
+    t->set_value(y);
+    REQUIRE(t->is_ready());
+    REQUIRE(y == t->get());
+    t->remove_value();
+    REQUIRE_THROWS_AS(t->is_ready(), transwarp::transwarp_error);
+    t->schedule();
+    REQUIRE(t->is_ready());
+    REQUIRE(x == t->get());
+}
+
+TEST_CASE("task_set_value_and_remove_value_for_mutable_ref") {
+    int x = 42;
+    int y = 55;
+    auto t = make_task(transwarp::root, [x]{ return x; });
+    t->schedule();
+    REQUIRE(x == t->get());
+    t->set_value(y);
+    REQUIRE(t->is_ready());
+    REQUIRE(y == t->get());
+    t->remove_value();
+    REQUIRE_THROWS_AS(t->is_ready(), transwarp::transwarp_error);
+    t->schedule();
+    REQUIRE(t->is_ready());
+    REQUIRE(x == t->get());
+}
+
+TEST_CASE("task_set_value_and_remove_value_for_void") {
+    auto t = make_task(transwarp::root, []{});
+    t->schedule();
+    t->reset();
+    REQUIRE_THROWS_AS(t->is_ready(), transwarp::transwarp_error);
+    t->set_value();
+    REQUIRE(t->is_ready());
+    t->remove_value();
+    REQUIRE_THROWS_AS(t->is_ready(), transwarp::transwarp_error);
+    t->schedule();
+    REQUIRE(t->is_ready());
+}
+
+TEST_CASE("task_set_exception_and_remove_exception") {
+    const int x = 42;
+    auto t = make_task(transwarp::root, [x]{ return x; });
+    std::runtime_error e{"blah"};
+    t->set_exception(std::make_exception_ptr(e));
+    REQUIRE(t->is_ready());
+    REQUIRE_THROWS_AS(t->get(), std::runtime_error);
+    t->remove_exception();
+    REQUIRE_THROWS_AS(t->is_ready(), transwarp::transwarp_error);
+    t->schedule();
+    REQUIRE(t->is_ready());
+    REQUIRE(x == t->get());
+}
+
 // Examples
 
 TEST_CASE("example__basic_with_three_tasks") {
