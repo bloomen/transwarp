@@ -2,6 +2,8 @@
 
 **Version 1.3.0**
 
+[Direct download from here](https://raw.githubusercontent.com/bloomen/transwarp/master/src/transwarp.h)
+
 [![Gitter](https://badges.gitter.im/bloomen/transwarp.svg)](https://gitter.im/bloomen/transwarp)
 
 transwarp is a header-only C++ library for task concurrency. It
@@ -68,15 +70,10 @@ double add_em_up(double x, int y) {
 }
 
 int main() {
-    double value1 = 13.3;
-    int value2 = 42;
-
-    auto something = [&value1] { return value1; };
-    auto something_else = [&value2] { return value2; };
 
     // building the task graph
-    auto task1 = tw::make_task(tw::root, "something", something);
-    auto task2 = tw::make_task(tw::root, "something else", something_else);
+    auto task1 = tw::make_value_task("something", 13.3);
+    auto task2 = tw::make_value_task("something else", 42);
     auto task3 = tw::make_task(tw::consume, "adder", add_em_up, task1, task2);
 
     // creating a dot-style graph for visualization
@@ -93,8 +90,8 @@ int main() {
     std::cout << "result = " << task3->get() << std::endl;  // result = 55.3
 
     // modifying data input
-    value1 += 2.5;
-    value2 += 1;
+    task1->set_value(15.8);
+    task2->set_value(43);
 
     task3->schedule_all(executor);  // re-schedules all tasks for execution
     std::cout << "result = " << task3->get() << std::endl;  // result = 58.8
@@ -118,6 +115,8 @@ This is a brief API doc of transwarp. In the following we will use `tw` as a nam
 transwarp supports five different task types:
 ```cpp
 root,        // The task has no parents
+accept,      // The task's functor accepts all parent futures
+accept_any,  // The task's functor accepts the first parent future that becomes ready
 consume,     // The task's functor consumes all parent results
 consume_any, // The task's functor consumes the first parent result that becomes ready
 wait,        // The task's functor takes no arguments but waits for all parents to finish
@@ -134,6 +133,16 @@ result types of the parent tasks.
 
 Tasks can be freely chained together using the different task types. 
 The only restriction is that tasks without parents have to be labeled as `root` tasks. 
+
+The `accept` and `accept_any` types give you the greatest flexibility but require your
+functor to take `std::shared_future<T>` types. The `consume` and `consume_any` task types, however, require your functor to take the direct result types of the parent tasks. 
+
+If you have a task that doesn't require a functor and should only ever return a given
+value or throw an exception then a value task can be used:
+```cpp
+auto task = tw::make_value_task(42);  
+```
+A call to `task->get()` will now always return 42.
 
 ### Scheduling tasks
 
@@ -254,7 +263,7 @@ The above example in transwarp would look something like this:
 
 ```cpp
 tw::parallel executor{4};
-auto t1 = tw::make_task(tw::root, []() { return 123; });
+auto t1 = tw::make_value_task(123);
 auto t2 = tw::make_task(tw::consume, [](int x) { return std::to_string(x); }, t1);
 t2->schedule_all(executor);
 ```
@@ -381,12 +390,10 @@ then assign `v` the result. The corresponding code in transwarp would
 look like this:
 
 ```cpp
-int x = 0;
-
-auto t1 = tw::make_task(tw::root, [&x] { return x; });
+auto t1 = tw::make_value_task(0);
 auto t2 = tw::make_task(tw::consume, [](int x) { return x * 2; }, t1);
 
-x = 1;
+t1->set_value(1);
 t2->schedule_all();
 
 int v = t2->get();
