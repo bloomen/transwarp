@@ -1,6 +1,8 @@
 1.3.0
 
-- ???
+- added new task types: accept and accept_any
+- added new functions: set_value and set_exception
+- added a value_task class that doesn't require scheduling
 - improved error reporting 
 - general code clean up; addressed compiler warnings
 - simplify the node class by addressing the constructors
