@@ -25,7 +25,7 @@ std::shared_ptr<transwarp::node> generic_node() {
 
 void make_test_one_task(std::size_t threads) {
     const int value = 42;
-    auto f1 = []{ return value; };
+    auto f1 = [value]{ return value; };
     std::shared_ptr<transwarp::executor> executor;
     std::shared_ptr<transwarp::task<int>> task;
     if (threads > 0) {
@@ -1241,7 +1241,7 @@ TEST_CASE("make_ready_future_with_invalid_exception") {
 TEST_CASE("task_set_value_and_remove_value") {
     const int x = 42;
     const int y = 55;
-    auto t = make_task(transwarp::root, []{ return x; });
+    auto t = make_task(transwarp::root, [x]{ return x; });
     t->schedule();
     REQUIRE(x == t->get());
     t->set_value(y);
@@ -1285,7 +1285,7 @@ TEST_CASE("task_set_value_and_remove_value_for_void") {
 
 TEST_CASE("task_set_exception_and_remove_exception") {
     const int x = 42;
-    auto t = make_task(transwarp::root, []{ return x; });
+    auto t = make_task(transwarp::root, [x]{ return x; });
     std::runtime_error e{"blah"};
     t->set_exception(std::make_exception_ptr(e));
     REQUIRE(t->is_ready());
