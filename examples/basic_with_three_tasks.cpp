@@ -15,15 +15,10 @@ double add_em_up(double x, int y) {
 // a two-level graph. The tasks are then scheduled twice for computation
 // while using 4 threads.
 void basic_with_three_tasks(std::ostream& os) {
-    double value1 = 13.3;
-    int value2 = 42;
-
-    auto something = [&value1] { return value1; };
-    auto something_else = [&value2] { return value2; };
 
     // building the task graph
-    auto task1 = tw::make_task(tw::root, "something", something);
-    auto task2 = tw::make_task(tw::root, "something else", something_else);
+    auto task1 = tw::make_value_task("something", 13.3);
+    auto task2 = tw::make_value_task("something else", 42);
     auto task3 = tw::make_task(tw::consume, "adder", add_em_up, task1, task2);
 
     // creating a dot-style graph for visualization
@@ -40,11 +35,8 @@ void basic_with_three_tasks(std::ostream& os) {
     os << "result = " << task3->get() << std::endl;  // result = 55.3
 
     // modifying data input
-
-    // cppcheck-suppress unreadVariable
-    value1 += 2.5;
-    // cppcheck-suppress unreadVariable
-    value2 += 1;
+    task1->set_value(15.8);
+    task2->set_value(43);
 
     task3->schedule_all(executor);  // re-schedules all tasks for execution
     os << "result = " << task3->get() << std::endl;  // result = 58.8
