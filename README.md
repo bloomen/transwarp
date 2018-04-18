@@ -2,7 +2,7 @@
 
 **Version 1.3.0**
 
-[Direct download from here](https://raw.githubusercontent.com/bloomen/transwarp/master/src/transwarp.h)
+<a href="https://raw.githubusercontent.com/bloomen/transwarp/master/src/transwarp.h" download>Download as single header from here</a>
 
 [![Gitter](https://badges.gitter.im/bloomen/transwarp.svg)](https://gitter.im/bloomen/transwarp)
 
