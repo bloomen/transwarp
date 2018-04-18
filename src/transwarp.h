@@ -261,9 +261,7 @@ public:
     virtual void schedule(transwarp::executor& executor, bool reset=true) = 0;
     virtual void schedule_all(bool reset_all=true) = 0;
     virtual void schedule_all(transwarp::executor& executor, bool reset_all=true) = 0;
-    virtual void remove_value() = 0;
     virtual void set_exception(std::exception_ptr exception) = 0;
-    virtual void remove_exception() = 0;
     virtual bool was_scheduled() const noexcept = 0;
     virtual void wait() const = 0;
     virtual bool is_ready() const = 0;
@@ -1229,25 +1227,12 @@ public:
         schedule_all_impl(reset_all, &executor);
     }
 
-    // Removes the value from this task. Will reset the underlying future
-    void remove_value() override {
-        ensure_task_not_running();
-        schedule_mode_ = true;
-        reset();
-    }
-
-    // Assigns an exception to this task
+    // Assigns an exception to this task. Scheduling will have no effect after an exception
+    // has been set. Calling reset() will remove the exception and re-enable scheduling.
     void set_exception(std::exception_ptr exception) override {
         ensure_task_not_running();
         future_ = transwarp::detail::make_ready_future<result_type>(exception);
         schedule_mode_ = false;
-    }
-
-    // Removes the exception from this task
-    void remove_exception() override {
-        ensure_task_not_running();
-        schedule_mode_ = true;
-        reset();
     }
 
     // Returns whether the task was scheduled and not reset afterwards.
@@ -1274,6 +1259,7 @@ public:
     void reset() override {
         ensure_task_not_running();
         future_ = std::shared_future<result_type>();
+        schedule_mode_ = true;
     }
 
     // Resets the futures of all tasks in the graph
@@ -1430,12 +1416,14 @@ public:
     // The result type of this task
     using result_type = ResultType;
 
-    // Assigns a value to this task
+    // Assigns a value to this task. Scheduling will have no effect after a value
+    // has been set. Calling reset() will remove the value and re-enable scheduling.
     void set_value(const typename transwarp::remove_refc<result_type>::type& value) override {
         set_value_impl(value);
     }
 
-    // Assigns a value to this task
+    // Assigns a value to this task. Scheduling will have no effect after a value
+    // has been set. Calling reset() will remove the value and re-enable scheduling.
     void set_value(typename transwarp::remove_refc<result_type>::type&& value) override {
         set_value_impl(value);
     }
@@ -1487,7 +1475,8 @@ public:
     // The result type of this task
     using result_type = ResultType&;
 
-    // Assigns a value to this task
+    // Assigns a value to this task. Scheduling will have no effect after a value
+    // has been set. Calling reset() will remove the value and re-enable scheduling.
     void set_value(typename transwarp::remove_refc<result_type>::type& value) override {
         set_value_impl(value);
     }
@@ -1539,7 +1528,8 @@ public:
     // The result type of this task
     using result_type = void;
 
-    // Makes this task ready
+    // Assigns a value to this task. Scheduling will have no effect after a call
+    // to this. Calling reset() will reset this and re-enable scheduling.
     void set_value() override {
         this->ensure_task_not_running();
         this->future_ = transwarp::detail::make_ready_future();
@@ -1612,6 +1602,7 @@ public:
 
 
 // A value task that stores a single value and doesn't require scheduling.
+// Value tasks should be created using the make_value_task factory functions.
 template<typename ResultType>
 class value_task : public transwarp::task<ResultType> {
 public:
@@ -1735,16 +1726,10 @@ public:
         future_ = transwarp::detail::make_ready_future<result_type>(value);
     };
 
-    // No-op because a value task must either contain a value or an exception
-    void remove_value() override {}
-
     // Assigns an exception to this value task
     void set_exception(std::exception_ptr exception) override {
         future_ = transwarp::detail::make_ready_future<result_type>(exception);
     }
-
-    // No-op because a value task must either contain a value or an exception
-    void remove_exception() override {}
 
     // Returns true because a value task is scheduled once on construction
     bool was_scheduled() const noexcept override {

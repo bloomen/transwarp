@@ -1242,7 +1242,7 @@ TEST_CASE("task_set_value_and_remove_value") {
     t->set_value(y);
     REQUIRE(t->is_ready());
     REQUIRE(y == t->get());
-    t->remove_value();
+    t->reset();
     REQUIRE_THROWS_AS(t->is_ready(), transwarp::transwarp_error);
     t->schedule();
     REQUIRE(t->is_ready());
@@ -1258,7 +1258,7 @@ TEST_CASE("task_set_value_and_remove_value_for_mutable_ref") {
     t->set_value(y);
     REQUIRE(t->is_ready());
     REQUIRE(y == t->get());
-    t->remove_value();
+    t->reset();
     REQUIRE_THROWS_AS(t->is_ready(), transwarp::transwarp_error);
     t->schedule();
     REQUIRE(t->is_ready());
@@ -1272,7 +1272,7 @@ TEST_CASE("task_set_value_and_remove_value_for_void") {
     REQUIRE_THROWS_AS(t->is_ready(), transwarp::transwarp_error);
     t->set_value();
     REQUIRE(t->is_ready());
-    t->remove_value();
+    t->reset();
     REQUIRE_THROWS_AS(t->is_ready(), transwarp::transwarp_error);
     t->schedule();
     REQUIRE(t->is_ready());
@@ -1285,7 +1285,7 @@ TEST_CASE("task_set_exception_and_remove_exception") {
     t->set_exception(std::make_exception_ptr(e));
     REQUIRE(t->is_ready());
     REQUIRE_THROWS_AS(t->get(), std::runtime_error);
-    t->remove_exception();
+    t->reset();
     REQUIRE_THROWS_AS(t->is_ready(), transwarp::transwarp_error);
     t->schedule();
     REQUIRE(t->is_ready());
