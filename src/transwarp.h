@@ -989,7 +989,7 @@ void assign_node_if(Functor& functor, std::shared_ptr<transwarp::node> node) noe
 
 // Returns a ready future with the given value as its state
 template<typename ResultType, typename Value>
-std::shared_future<ResultType> make_ready_future(Value&& value) {
+std::shared_future<ResultType> make_future_with_value(Value&& value) {
     std::promise<ResultType> promise;
     promise.set_value(std::forward<Value>(value));
     return promise.get_future();
@@ -1004,7 +1004,7 @@ inline std::shared_future<void> make_ready_future() {
 
 // Returns a ready future with the given exception as its state
 template<typename ResultType>
-std::shared_future<ResultType> make_ready_future(std::exception_ptr exception) {
+std::shared_future<ResultType> make_future_with_exception(std::exception_ptr exception) {
     if (!exception) {
         throw transwarp::transwarp_error{"invalid exception pointer"};
     }
@@ -1231,7 +1231,7 @@ public:
     // has been set. Calling reset() will remove the exception and re-enable scheduling.
     void set_exception(std::exception_ptr exception) override {
         ensure_task_not_running();
-        future_ = transwarp::detail::make_ready_future<result_type>(exception);
+        future_ = transwarp::detail::make_future_with_exception<result_type>(exception);
         schedule_mode_ = false;
     }
 
@@ -1456,7 +1456,7 @@ private:
     template<typename T>
     void set_value_impl(T&& value) {
         this->ensure_task_not_running();
-        this->future_ = transwarp::detail::make_ready_future<result_type>(std::forward<T>(value));
+        this->future_ = transwarp::detail::make_future_with_value<result_type>(std::forward<T>(value));
         this->schedule_mode_ = false;
     }
 
@@ -1509,7 +1509,7 @@ private:
     template<typename T>
     void set_value_impl(T&& value) {
         this->ensure_task_not_running();
-        this->future_ = transwarp::detail::make_ready_future<result_type>(std::forward<T>(value));
+        this->future_ = transwarp::detail::make_future_with_value<result_type>(std::forward<T>(value));
         this->schedule_mode_ = false;
     }
 
@@ -1718,17 +1718,17 @@ public:
 
     // Assigns a value to this task
     void set_value(const typename transwarp::remove_refc<result_type>::type& value) override {
-        future_ = transwarp::detail::make_ready_future<result_type>(value);
+        future_ = transwarp::detail::make_future_with_value<result_type>(value);
     }
 
     // Assigns a value to this task
     void set_value(typename transwarp::remove_refc<result_type>::type&& value) override {
-        future_ = transwarp::detail::make_ready_future<result_type>(value);
+        future_ = transwarp::detail::make_future_with_value<result_type>(value);
     };
 
     // Assigns an exception to this value task
     void set_exception(std::exception_ptr exception) override {
-        future_ = transwarp::detail::make_ready_future<result_type>(exception);
+        future_ = transwarp::detail::make_future_with_exception<result_type>(exception);
     }
 
     // Returns true because a value task is scheduled once on construction
@@ -1772,7 +1772,7 @@ private:
     // cppcheck-suppress passedByValue
     value_task(bool has_name, std::string name, T&& value)
     : node_(std::make_shared<transwarp::node>()),
-      future_(transwarp::detail::make_ready_future<result_type>(std::forward<T>(value)))
+      future_(transwarp::detail::make_future_with_value<result_type>(std::forward<T>(value)))
     {
         transwarp::detail::node_manip::set_type(*node_, task_type::value);
         transwarp::detail::node_manip::set_name(*node_, (has_name ? std::make_shared<std::string>(std::move(name)) : nullptr));

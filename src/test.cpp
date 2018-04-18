@@ -25,7 +25,7 @@ std::shared_ptr<transwarp::node> generic_node() {
 
 void make_test_one_task(std::size_t threads) {
     const int value = 42;
-    auto f1 = [value]{ return value; };
+    auto f1 = []{ return value; };
     std::shared_ptr<transwarp::executor> executor;
     std::shared_ptr<transwarp::task<int>> task;
     if (threads > 0) {
@@ -1213,13 +1213,18 @@ TEST_CASE("value_task_with_changing_value") {
 
 TEST_CASE("make_ready_future_with_value") {
     const int x = 42;
-    auto future = transwarp::detail::make_ready_future<int>(x);
+    auto future = transwarp::detail::make_future_with_value<int>(x);
     REQUIRE(x == future.get());
+}
+
+TEST_CASE("make_ready_future") {
+    auto future = transwarp::detail::make_ready_future();
+    REQUIRE(future.valid());
 }
 
 TEST_CASE("make_ready_future_with_exception") {
     std::runtime_error e{"42"};
-    auto future = transwarp::detail::make_ready_future<int>(std::make_exception_ptr(e));
+    auto future = transwarp::detail::make_future_with_exception<int>(std::make_exception_ptr(e));
     try {
         future.get();
     } catch (std::runtime_error& e) {
@@ -1230,13 +1235,13 @@ TEST_CASE("make_ready_future_with_exception") {
 }
 
 TEST_CASE("make_ready_future_with_invalid_exception") {
-    REQUIRE_THROWS_AS(transwarp::detail::make_ready_future<int>(std::exception_ptr{}), transwarp::transwarp_error);
+    REQUIRE_THROWS_AS(transwarp::detail::make_future_with_exception<int>(std::exception_ptr{}), transwarp::transwarp_error);
 }
 
 TEST_CASE("task_set_value_and_remove_value") {
     const int x = 42;
     const int y = 55;
-    auto t = make_task(transwarp::root, [x]{ return x; });
+    auto t = make_task(transwarp::root, []{ return x; });
     t->schedule();
     REQUIRE(x == t->get());
     t->set_value(y);
@@ -1280,7 +1285,7 @@ TEST_CASE("task_set_value_and_remove_value_for_void") {
 
 TEST_CASE("task_set_exception_and_remove_exception") {
     const int x = 42;
-    auto t = make_task(transwarp::root, [x]{ return x; });
+    auto t = make_task(transwarp::root, []{ return x; });
     std::runtime_error e{"blah"};
     t->set_exception(std::make_exception_ptr(e));
     REQUIRE(t->is_ready());
@@ -1290,6 +1295,20 @@ TEST_CASE("task_set_exception_and_remove_exception") {
     t->schedule();
     REQUIRE(t->is_ready());
     REQUIRE(x == t->get());
+}
+
+TEST_CASE("task_pass_exception_to_set_value") {
+    auto t = make_task(transwarp::root, []{ return std::make_exception_ptr(std::runtime_error{"foo"}); });
+    std::runtime_error e{"blah"};
+    t->set_value(std::make_exception_ptr(e));
+    const auto result = t->get();
+    try {
+        std::rethrow_exception(result);
+    } catch (const std::runtime_error& re) {
+        REQUIRE(std::string(e.what()) == std::string(re.what()));
+        return;
+    }
+    throw std::runtime_error{"shouldn't get here"};
 }
 
 // Examples
