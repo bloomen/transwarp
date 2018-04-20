@@ -1726,7 +1726,7 @@ public:
         future_ = transwarp::detail::make_future_with_value<result_type>(value);
     };
 
-    // Assigns an exception to this value task
+    // Assigns an exception to this task
     void set_exception(std::exception_ptr exception) override {
         future_ = transwarp::detail::make_future_with_exception<result_type>(exception);
     }
@@ -1761,7 +1761,7 @@ public:
     // No-op because a value task never runs and doesn't have parents
     void cancel_all(bool) noexcept override {}
 
-    // Returns an empty graph because a value doesn't have parents
+    // Returns an empty graph because a value task doesn't have parents
     std::vector<transwarp::edge> get_graph() const override {
         return {};
     }
