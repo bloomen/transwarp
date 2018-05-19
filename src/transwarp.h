@@ -80,9 +80,16 @@ struct wait_any_type : std::integral_constant<transwarp::task_type, transwarp::t
 constexpr transwarp::wait_any_type wait_any{};
 
 
+// Determines in which order tasks are scheduled in the graph
+enum class schedule_type {
+    depth,   // Scheduling according to a depth-first search
+    breadth, // Scheduling according to a breadth-first search
+};
+
+
 namespace detail {
 
-struct visit;
+struct visit_depth;
 struct unvisit;
 struct final_visitor;
 struct schedule_visitor;
@@ -257,10 +264,18 @@ public:
     virtual void remove_custom_data() = 0;
     virtual void remove_custom_data_all() = 0;
     virtual const std::shared_ptr<transwarp::node>& get_node() const noexcept = 0;
-    virtual void schedule(bool reset=true) = 0;
-    virtual void schedule(transwarp::executor& executor, bool reset=true) = 0;
-    virtual void schedule_all(bool reset_all=true) = 0;
-    virtual void schedule_all(transwarp::executor& executor, bool reset_all=true) = 0;
+    virtual void schedule() = 0;
+    virtual void schedule(transwarp::executor& executor) = 0;
+    virtual void schedule(bool reset) = 0;
+    virtual void schedule(transwarp::executor& executor, bool reset) = 0;
+    virtual void schedule_all() = 0;
+    virtual void schedule_all(transwarp::executor& executor) = 0;
+    virtual void schedule_all(bool reset_all) = 0;
+    virtual void schedule_all(transwarp::executor& executor, bool reset_all) = 0;
+    virtual void schedule_all(transwarp::schedule_type type) = 0;
+    virtual void schedule_all(transwarp::executor& executor, transwarp::schedule_type type) = 0;
+    virtual void schedule_all(transwarp::schedule_type type, bool reset_all) = 0;
+    virtual void schedule_all(transwarp::executor& executor, transwarp::schedule_type type, bool reset_all) = 0;
     virtual void set_exception(std::exception_ptr exception) = 0;
     virtual bool was_scheduled() const noexcept = 0;
     virtual void wait() const = 0;
@@ -275,12 +290,12 @@ protected:
     virtual void schedule_impl(bool reset, transwarp::executor* executor=nullptr) = 0;
 
 private:
-    friend struct transwarp::detail::visit;
+    friend struct transwarp::detail::visit_depth;
     friend struct transwarp::detail::unvisit;
     friend struct transwarp::detail::final_visitor;
     friend struct transwarp::detail::schedule_visitor;
 
-    virtual void visit(const std::function<void(itask&)>& visitor) = 0;
+    virtual void visit_depth(const std::function<void(itask&)>& visitor) = 0;
     virtual void unvisit() noexcept = 0;
     virtual void set_node_id(std::size_t id) noexcept = 0;
 };
@@ -888,12 +903,12 @@ struct remove_custom_data_visitor {
 };
 
 // Visits the given task using the visitor given in the constructor
-struct visit {
-    explicit visit(const std::function<void(transwarp::itask&)>& visitor) noexcept
+struct visit_depth {
+    explicit visit_depth(const std::function<void(transwarp::itask&)>& visitor) noexcept
     : visitor_(visitor) {}
 
     void operator()(transwarp::itask& task) const {
-        task.visit(visitor_);
+        task.visit_depth(visitor_);
     }
 
     const std::function<void(transwarp::itask&)>& visitor_;
@@ -1006,7 +1021,7 @@ inline std::shared_future<void> make_ready_future() {
 template<typename ResultType>
 std::shared_future<ResultType> make_future_with_exception(std::exception_ptr exception) {
     if (!exception) {
-        throw transwarp::transwarp_error{"invalid exception pointer"};
+        throw transwarp::transwarp_error("invalid exception pointer");
     }
     std::promise<ResultType> promise;
     promise.set_exception(exception);
@@ -1099,7 +1114,7 @@ public:
     void set_executor_all(std::shared_ptr<transwarp::executor> executor) override {
         ensure_task_not_running();
         transwarp::detail::set_executor_visitor visitor(std::move(executor));
-        visit(visitor);
+        visit_depth(visitor);
         unvisit();
     }
 
@@ -1114,7 +1129,7 @@ public:
     void remove_executor_all() override {
         ensure_task_not_running();
         transwarp::detail::remove_executor_visitor visitor;
-        visit(visitor);
+        visit_depth(visitor);
         unvisit();
     }
 
@@ -1130,7 +1145,7 @@ public:
     void set_priority_all(std::size_t priority) override {
         ensure_task_not_running();
         transwarp::detail::set_priority_visitor visitor(priority);
-        visit(visitor);
+        visit_depth(visitor);
         unvisit();
     }
 
@@ -1144,7 +1159,7 @@ public:
     void reset_priority_all() override {
         ensure_task_not_running();
         transwarp::detail::reset_priority_visitor visitor;
-        visit(visitor);
+        visit_depth(visitor);
         unvisit();
     }
 
@@ -1163,7 +1178,7 @@ public:
     void set_custom_data_all(std::shared_ptr<void> custom_data) override {
         ensure_task_not_running();
         transwarp::detail::set_custom_data_visitor visitor(std::move(custom_data));
-        visit(visitor);
+        visit_depth(visitor);
         unvisit();
     }
 
@@ -1177,7 +1192,7 @@ public:
     void remove_custom_data_all() override {
         ensure_task_not_running();
         transwarp::detail::remove_custom_data_visitor visitor;
-        visit(visitor);
+        visit_depth(visitor);
         unvisit();
     }
 
@@ -1193,38 +1208,104 @@ public:
 
     // Schedules this task for execution on the caller thread.
     // The task-specific executor gets precedence if it exists.
+    // This overload will reset the underlying future.
+    void schedule() override {
+        ensure_task_not_running();
+        this->schedule_impl(true);
+    }
+
+    // Schedules this task for execution on the caller thread.
+    // The task-specific executor gets precedence if it exists.
     // reset denotes whether schedule should reset the underlying
     // future and schedule even if the future is already valid.
-    void schedule(bool reset=true) override {
+    void schedule(bool reset) override {
         ensure_task_not_running();
         this->schedule_impl(reset);
     }
 
     // Schedules this task for execution using the provided executor.
     // The task-specific executor gets precedence if it exists.
+    // This overload will reset the underlying future.
+    void schedule(transwarp::executor& executor) override {
+        ensure_task_not_running();
+        this->schedule_impl(true, &executor);
+    }
+
+    // Schedules this task for execution using the provided executor.
+    // The task-specific executor gets precedence if it exists.
     // reset denotes whether schedule should reset the underlying
     // future and schedule even if the future is already valid.
-    void schedule(transwarp::executor& executor, bool reset=true) override {
+    void schedule(transwarp::executor& executor, bool reset) override {
         ensure_task_not_running();
         this->schedule_impl(reset, &executor);
     }
 
     // Schedules all tasks in the graph for execution on the caller thread.
     // The task-specific executors get precedence if they exist.
+    // This overload will reset the underlying futures.
+    void schedule_all() override {
+        ensure_task_not_running();
+        schedule_all_impl(true, transwarp::schedule_type::depth);
+    }
+
+    // Schedules all tasks in the graph for execution using the provided executor.
+    // The task-specific executors get precedence if they exist.
+    // This overload will reset the underlying futures.
+    void schedule_all(transwarp::executor& executor) override {
+        ensure_task_not_running();
+        schedule_all_impl(true, transwarp::schedule_type::depth, &executor);
+    }
+
+    // Schedules all tasks in the graph for execution on the caller thread.
+    // The task-specific executors get precedence if they exist.
     // reset_all denotes whether schedule_all should reset the underlying
     // futures and schedule even if the futures are already present.
-    void schedule_all(bool reset_all=true) override {
+    void schedule_all(bool reset_all) override {
         ensure_task_not_running();
-        schedule_all_impl(reset_all);
+        schedule_all_impl(reset_all, transwarp::schedule_type::depth);
     }
 
     // Schedules all tasks in the graph for execution using the provided executor.
     // The task-specific executors get precedence if they exist.
     // reset_all denotes whether schedule_all should reset the underlying
     // futures and schedule even if the futures are already present.
-    void schedule_all(transwarp::executor& executor, bool reset_all=true) override {
+    void schedule_all(transwarp::executor& executor, bool reset_all) override {
         ensure_task_not_running();
-        schedule_all_impl(reset_all, &executor);
+        schedule_all_impl(reset_all, transwarp::schedule_type::depth, &executor);
+    }
+
+    // Schedules all tasks in the graph for execution on the caller thread.
+    // The task-specific executors get precedence if they exist.
+    // This overload will reset the underlying futures.
+    void schedule_all(transwarp::schedule_type type) override {
+        ensure_task_not_running();
+        schedule_all_impl(true, type);
+    }
+
+    // Schedules all tasks in the graph for execution using the provided executor.
+    // The task-specific executors get precedence if they exist.
+    // This overload will reset the underlying futures.
+    void schedule_all(transwarp::executor& executor, transwarp::schedule_type type) override {
+        ensure_task_not_running();
+        schedule_all_impl(true, type, &executor);
+    }
+
+    // Schedules all tasks in the graph for execution on the caller thread.
+    // The task-specific executors get precedence if they exist.
+    // reset_all denotes whether schedule_all should reset the underlying
+    // futures and schedule even if the futures are already present.
+    void schedule_all(transwarp::schedule_type type, bool reset_all) override {
+        ensure_task_not_running();
+        schedule_all_impl(reset_all, type);
+    }
+
+    // Schedules all tasks in the graph for execution using the provided executor.
+    // The task-specific executors get precedence if they exist.
+    // reset_all denotes whether schedule_all should reset the underlying
+    // futures and schedule even if the futures are already present.
+    void schedule_all(transwarp::executor& executor, transwarp::schedule_type type, bool reset_all) override {
+        ensure_task_not_running();
+        schedule_all_impl(reset_all, type, &executor);
     }
 
     // Assigns an exception to this task. Scheduling will have no effect after an exception
@@ -1266,7 +1347,7 @@ public:
     void reset_all() override {
         ensure_task_not_running();
         transwarp::detail::reset_visitor visitor;
-        visit(visitor);
+        visit_depth(visitor);
         unvisit();
     }
 
@@ -1284,7 +1365,7 @@ public:
     // Passing false is equivalent to resume.
     void cancel_all(bool enabled) noexcept override {
         transwarp::detail::cancel_visitor visitor(enabled);
-        visit(visitor);
+        visit_depth(visitor);
         unvisit();
     }
 
@@ -1294,7 +1375,7 @@ public:
     std::vector<transwarp::edge> get_graph() const override {
         std::vector<transwarp::edge> graph;
         transwarp::detail::graph_visitor visitor(graph);
-        const_cast<task_impl_base*>(this)->visit(visitor);
+        const_cast<task_impl_base*>(this)->visit_depth(visitor);
         const_cast<task_impl_base*>(this)->unvisit();
         return graph;
     }
@@ -1313,7 +1394,7 @@ protected:
         transwarp::detail::assign_node_if(functor_, node_);
         transwarp::detail::call_with_each(transwarp::detail::parent_visitor(node_), parents_);
         transwarp::detail::final_visitor visitor;
-        visit(visitor);
+        visit_depth(visitor);
         unvisit();
     }
 
@@ -1370,21 +1451,35 @@ private:
     // The task-specific executors get precedence if they exist.
     // Runs tasks on the same thread as the caller if neither the global
     // nor a task-specific executor is found.
-    void schedule_all_impl(bool reset_all, transwarp::executor* executor=nullptr) {
+    void schedule_all_impl(bool reset_all, transwarp::schedule_type type, transwarp::executor* executor=nullptr) {
         if (!node_->is_canceled()) {
             transwarp::detail::schedule_visitor visitor(reset_all, executor);
-            visit(visitor);
+            switch (type) {
+            case transwarp::schedule_type::depth:
+                visit_depth(visitor);
+                break;
+            case transwarp::schedule_type::breadth:
+                visit_breadth(visitor);
+                break;
+            default:
+                throw transwarp::transwarp_error("No such schedule type");
+            }
             unvisit();
         }
     }
 
     // Visits each task in a depth-first traversal.
-    void visit(const std::function<void(transwarp::itask&)>& visitor) override {
+    void visit_depth(const std::function<void(transwarp::itask&)>& visitor) override {
         if (!visited_) {
-            transwarp::detail::call_with_each(transwarp::detail::visit(visitor), parents_);
+            transwarp::detail::call_with_each(transwarp::detail::visit_depth(visitor), parents_);
             visitor(*this);
             visited_ = true;
         }
+    }
+
+    // Visits each task in a breadth-first traversal.
+    void visit_breadth(const std::function<void(transwarp::itask&)>&) {
+        // TODO: implement!
     }
 
     // Traverses through all tasks and marks them as not visited.
@@ -1705,16 +1800,40 @@ public:
     }
 
     // No-op because a value task never runs
+    void schedule() override {}
+
+    // No-op because a value task never runs
+    void schedule(transwarp::executor&) override {}
+
+    // No-op because a value task never runs
     void schedule(bool) override {}
 
     // No-op because a value task never runs
     void schedule(transwarp::executor&, bool) override {}
 
     // No-op because a value task never runs and doesn't have parents
+    void schedule_all() override {}
+
+    // No-op because a value task never runs and doesn't have parents
+    void schedule_all(transwarp::executor&) override {}
+
+    // No-op because a value task never runs and doesn't have parents
     void schedule_all(bool) override {}
 
     // No-op because a value task never runs and doesn't have parents
     void schedule_all(transwarp::executor&, bool) override {}
+
+    // No-op because a value task never runs and doesn't have parents
+    void schedule_all(transwarp::schedule_type) override {}
+
+    // No-op because a value task never runs and doesn't have parents
+    void schedule_all(transwarp::executor&, transwarp::schedule_type) override {}
+
+    // No-op because a value task never runs and doesn't have parents
+    void schedule_all(transwarp::schedule_type, bool) override {}
+
+    // No-op because a value task never runs and doesn't have parents
+    void schedule_all(transwarp::executor&, transwarp::schedule_type, bool) override {}
 
     // Assigns a value to this task
     void set_value(const typename transwarp::remove_refc<result_type>::type& value) override {
@@ -1787,7 +1906,7 @@ private:
     void schedule_impl(bool, transwarp::executor*) override {}
 
     // Visits this task
-    void visit(const std::function<void(transwarp::itask&)>& visitor) override {
+    void visit_depth(const std::function<void(transwarp::itask&)>& visitor) override {
         if (!visited_) {
             visitor(*this);
             visited_ = true;

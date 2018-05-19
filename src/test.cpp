@@ -23,7 +23,7 @@ std::shared_ptr<transwarp::node> generic_node() {
     return node;
 }
 
-void make_test_one_task(std::size_t threads) {
+void make_test_one_task(std::size_t threads, transwarp::schedule_type type) {
     const int value = 42;
     auto f1 = [value]{ return value; };
     std::shared_ptr<transwarp::executor> executor;
@@ -40,20 +40,30 @@ void make_test_one_task(std::size_t threads) {
     REQUIRE_FALSE(task->get_node()->get_name());
     const auto graph = task->get_graph();
     REQUIRE(0u == graph.size());
-    task->schedule_all(*executor);
+    task->schedule_all(*executor, type);
     auto future = task->get_future();
     REQUIRE(42 == future.get());
 }
 
-TEST_CASE("one_task") {
-    make_test_one_task(0);
-    make_test_one_task(1);
-    make_test_one_task(2);
-    make_test_one_task(3);
-    make_test_one_task(4);
+TEST_CASE("one_task_with_schedule_by_depth") {
+    auto type = transwarp::schedule_type::depth;
+    make_test_one_task(0, type);
+    make_test_one_task(1, type);
+    make_test_one_task(2, type);
+    make_test_one_task(3, type);
+    make_test_one_task(4, type);
 }
 
-void make_test_three_tasks(std::size_t threads) {
+TEST_CASE("one_task_with_schedule_by_breadth") {
+    auto type = transwarp::schedule_type::breadth;
+    make_test_one_task(0, type);
+    make_test_one_task(1, type);
+    make_test_one_task(2, type);
+    make_test_one_task(3, type);
+    make_test_one_task(4, type);
+}
+
+void make_test_three_tasks(std::size_t threads, transwarp::schedule_type type) {
     int value = 42;
 
     auto f1 = [&value]{ return value; };
@@ -95,7 +105,7 @@ void make_test_three_tasks(std::size_t threads) {
     REQUIRE_THROWS_AS(task2->is_ready(), transwarp::transwarp_error); // not scheduled yet
     REQUIRE_THROWS_AS(task3->is_ready(), transwarp::transwarp_error); // not scheduled yet
 
-    task3->schedule_all(*executor);
+    task3->schedule_all(*executor, type);
 
     REQUIRE(task1->was_scheduled());
     REQUIRE(task2->was_scheduled());
@@ -110,7 +120,7 @@ void make_test_three_tasks(std::size_t threads) {
 
     ++value;
 
-    task3->schedule_all(*executor);
+    task3->schedule_all(*executor, type);
     REQUIRE(91 == task3->get_future().get());
     REQUIRE(43 == task1->get_future().get());
 
@@ -133,15 +143,25 @@ void make_test_three_tasks(std::size_t threads) {
     REQUIRE(exp_dot_graph == dot_graph);
 }
 
-TEST_CASE("three_tasks") {
-    make_test_three_tasks(0);
-    make_test_three_tasks(1);
-    make_test_three_tasks(2);
-    make_test_three_tasks(3);
-    make_test_three_tasks(4);
+TEST_CASE("three_tasks_width_schedule_by_depth") {
+    auto type = transwarp::schedule_type::depth;
+    make_test_three_tasks(0, type);
+    make_test_three_tasks(1, type);
+    make_test_three_tasks(2, type);
+    make_test_three_tasks(3, type);
+    make_test_three_tasks(4, type);
 }
 
-void make_test_bunch_of_tasks(std::size_t threads) {
+TEST_CASE("three_tasks_width_schedule_by_breadth") {
+    auto type = transwarp::schedule_type::breadth;
+    make_test_three_tasks(0, type);
+    make_test_three_tasks(1, type);
+    make_test_three_tasks(2, type);
+    make_test_three_tasks(3, type);
+    make_test_three_tasks(4, type);
+}
+
+void make_test_bunch_of_tasks(std::size_t threads, transwarp::schedule_type type) {
     auto f0 = []{ return 42; };
     auto f1 = [](int a){ return 3 * a; };
     auto f2 = [](int a, int b){ return a + b; };
@@ -180,14 +200,14 @@ void make_test_bunch_of_tasks(std::size_t threads) {
     const auto task11_result = 11172;
     const auto exp_result = 42042;
 
-    task13->schedule_all(*executor);
+    task13->schedule_all(*executor, type);
     REQUIRE(exp_result == task13->get_future().get());
     REQUIRE(task0_result == task0->get_future().get());
     REQUIRE(task3_result == task3->get_future().get());
     REQUIRE(task11_result == task11->get_future().get());
 
     for (auto i=0; i<100; ++i) {
-        task13->schedule_all(*executor);
+        task13->schedule_all(*executor, type);
         REQUIRE(task0_result == task0->get_future().get());
         REQUIRE(task3_result == task3->get_future().get());
         REQUIRE(task11_result == task11->get_future().get());
@@ -195,12 +215,22 @@ void make_test_bunch_of_tasks(std::size_t threads) {
     }
 }
 
-TEST_CASE("bunch_of_tasks") {
-    make_test_bunch_of_tasks(0);
-    make_test_bunch_of_tasks(1);
-    make_test_bunch_of_tasks(2);
-    make_test_bunch_of_tasks(3);
-    make_test_bunch_of_tasks(4);
+TEST_CASE("bunch_of_tasks_with_schedule_by_depth") {
+    auto type = transwarp::schedule_type::depth;
+    make_test_bunch_of_tasks(0, type);
+    make_test_bunch_of_tasks(1, type);
+    make_test_bunch_of_tasks(2, type);
+    make_test_bunch_of_tasks(3, type);
+    make_test_bunch_of_tasks(4, type);
+}
+
+TEST_CASE("bunch_of_tasks_with_schedule_by_breadth") {
+    auto type = transwarp::schedule_type::breadth;
+    make_test_bunch_of_tasks(0, type);
+    make_test_bunch_of_tasks(1, type);
+    make_test_bunch_of_tasks(2, type);
+    make_test_bunch_of_tasks(3, type);
+    make_test_bunch_of_tasks(4, type);
 }
 
 TEST_CASE("transwarp_error") {
