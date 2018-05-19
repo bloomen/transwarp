@@ -117,6 +117,11 @@ public:
         return id_;
     }
 
+    // The task level
+    std::size_t get_level() const noexcept {
+        return level_;
+    }
+
     // The task type
     transwarp::task_type get_type() const noexcept {
         return type_;
@@ -156,6 +161,7 @@ private:
     friend struct transwarp::detail::node_manip;
 
     std::size_t id_ = 0;
+    std::size_t level_ = 0;
     transwarp::task_type type_ = transwarp::task_type::root;
     std::shared_ptr<std::string> name_;
     std::shared_ptr<std::string> executor_;
@@ -175,7 +181,7 @@ inline std::string to_string(const transwarp::node& node, const std::string& sep
     }
     s += transwarp::to_string(node.get_type());
     s += " id=" + std::to_string(node.get_id());
-    s += " par=" + std::to_string(node.get_parents().size());
+    s += " lev=" + std::to_string(node.get_level());
     const auto& exec = node.get_executor();
     if (exec) {
         s += seperator + "<" + *exec + ">";
@@ -428,6 +434,14 @@ namespace detail {
 // Node manipulation
 struct node_manip {
 
+    static void set_id(transwarp::node& node, std::size_t id) noexcept {
+        node.id_ = id;
+    }
+
+    static void set_level(transwarp::node& node, std::size_t level) noexcept {
+        node.level_ = level;
+    }
+
     static void set_type(transwarp::node& node, transwarp::task_type type) noexcept {
         node.type_ = type;
     }
@@ -436,20 +450,16 @@ struct node_manip {
         node.name_ = name;
     }
 
-    static void set_id(transwarp::node& node, std::size_t id) noexcept {
-        node.id_ = id;
-    }
-
-    static void add_parent(transwarp::node& node, std::shared_ptr<transwarp::node> parent) {
-        node.parents_.push_back(std::move(parent));
-    }
-
     static void set_executor(transwarp::node& node, std::shared_ptr<std::string> executor) noexcept {
         if (executor) {
             node.executor_ = std::move(executor);
         } else {
             node.executor_.reset();
         }
+    }
+
+    static void add_parent(transwarp::node& node, std::shared_ptr<transwarp::node> parent) {
+        node.parents_.push_back(std::move(parent));
     }
 
     static void set_priority(transwarp::node& node, std::size_t priority) noexcept {
@@ -769,13 +779,17 @@ std::tuple<std::shared_future<ParentResults>...> get_futures(const std::tuple<st
     return result;
 }
 
-// Sets parents of the node
+// Sets parents and level of the node
 struct parent_visitor {
     explicit parent_visitor(std::shared_ptr<transwarp::node>& node) noexcept
     : node_(node) {}
 
     void operator()(const transwarp::itask& task) const {
         transwarp::detail::node_manip::add_parent(*node_, task.get_node());
+        if (node_->get_level() <= task.get_node()->get_level()) {
+            // A child's level is always larger than any of its parents' level
+            transwarp::detail::node_manip::set_level(*node_, task.get_node()->get_level() + 1);
+        }
     }
 
     std::shared_ptr<transwarp::node>& node_;
@@ -900,6 +914,18 @@ struct remove_custom_data_visitor {
     void operator()(transwarp::itask& task) const noexcept {
         task.remove_custom_data();
     }
+};
+
+// Pushes the given task into the vector of tasks
+struct push_task_visitor {
+    explicit push_task_visitor(std::vector<transwarp::itask*>& tasks)
+    : tasks_(tasks) {}
+
+    void operator()(transwarp::itask& task) {
+        tasks_.push_back(&task);
+    }
+
+    std::vector<transwarp::itask*>& tasks_;
 };
 
 // Visits the given task using the visitor given in the constructor
@@ -1245,7 +1271,7 @@ public:
     // This overload will reset the underlying futures.
     void schedule_all() override {
         ensure_task_not_running();
-        schedule_all_impl(true, transwarp::schedule_type::depth);
+        schedule_all_impl(true, transwarp::schedule_type::breadth);
     }
 
     // Schedules all tasks in the graph for execution using the provided executor.
@@ -1253,7 +1279,7 @@ public:
     // This overload will reset the underlying futures.
     void schedule_all(transwarp::executor& executor) override {
         ensure_task_not_running();
-        schedule_all_impl(true, transwarp::schedule_type::depth, &executor);
+        schedule_all_impl(true, transwarp::schedule_type::breadth, &executor);
     }
 
     // Schedules all tasks in the graph for execution on the caller thread.
@@ -1262,7 +1288,7 @@ public:
     // futures and schedule even if the futures are already present.
     void schedule_all(bool reset_all) override {
         ensure_task_not_running();
-        schedule_all_impl(reset_all, transwarp::schedule_type::depth);
+        schedule_all_impl(reset_all, transwarp::schedule_type::breadth);
     }
 
     // Schedules all tasks in the graph for execution using the provided executor.
@@ -1271,7 +1297,7 @@ public:
     // futures and schedule even if the futures are already present.
     void schedule_all(transwarp::executor& executor, bool reset_all) override {
         ensure_task_not_running();
-        schedule_all_impl(reset_all, transwarp::schedule_type::depth, &executor);
+        schedule_all_impl(reset_all, transwarp::schedule_type::breadth, &executor);
     }
 
     // Schedules all tasks in the graph for execution on the caller thread.
@@ -1478,8 +1504,24 @@ private:
     }
 
     // Visits each task in a breadth-first traversal.
-    void visit_breadth(const std::function<void(transwarp::itask&)>&) {
-        // TODO: implement!
+    template<typename Visitor>
+    void visit_breadth(Visitor& visitor) {
+        if (breadth_tasks_.empty()) {
+            breadth_tasks_.reserve(node_->get_id() + 1);
+            visit_depth(transwarp::detail::push_task_visitor(breadth_tasks_));
+            unvisit();
+            auto compare = [](const transwarp::itask* const l, const transwarp::itask* const r) {
+                const auto l_level = l->get_node()->get_level();
+                const auto l_id = l->get_node()->get_id();
+                const auto r_level = r->get_node()->get_level();
+                const auto r_id = r->get_node()->get_id();
+                return std::tie(l_level, l_id) < std::tie(r_level, r_id);
+            };
+            std::sort(breadth_tasks_.begin(), breadth_tasks_.end(), compare);
+        }
+        for (auto task : breadth_tasks_) {
+            visitor(*task);
+        }
     }
 
     // Traverses through all tasks and marks them as not visited.
@@ -1495,6 +1537,7 @@ private:
     std::tuple<std::shared_ptr<transwarp::task<ParentResults>>...> parents_;
     bool visited_ = false;
     std::shared_ptr<transwarp::executor> executor_;
+    std::vector<transwarp::itask*> breadth_tasks_;
 };
 
 

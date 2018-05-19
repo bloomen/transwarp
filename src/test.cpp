@@ -7,7 +7,7 @@
 #include "../examples/benchmark_statistical.h"
 #include "../examples/single_thread_lock_free.h"
 #include <array>
-
+#include <fstream>
 
 using transwarp::make_task;
 using transwarp::make_value_task;
@@ -127,17 +127,18 @@ void make_test_three_tasks(std::size_t threads, transwarp::schedule_type type) {
     const auto graph = task3->get_graph();
     REQUIRE(3u == graph.size());
     const auto dot_graph = transwarp::to_string(graph);
+    std::ofstream{"test.dot"} << dot_graph;
 
     const std::string exp_dot_graph = "digraph {\n"
 "\"<t1>\nroot "
-"id=0 par=0\" -> \"<t2>\nconsume "
-"id=1 par=1\n<transwarp::sequential>\"\n"
+"id=0 lev=0\" -> \"<t2>\nconsume "
+"id=1 lev=1\n<transwarp::sequential>\"\n"
 "\"<t1>\nroot "
-"id=0 par=0\" -> \"<t3>\nconsume "
-"id=2 par=2\"\n"
+"id=0 lev=0\" -> \"<t3>\nconsume "
+"id=2 lev=2\"\n"
 "\"<t2>\nconsume "
-"id=1 par=1\n<transwarp::sequential>\" -> \"<t3>\nconsume "
-"id=2 par=2\"\n"
+"id=1 lev=1\n<transwarp::sequential>\" -> \"<t3>\nconsume "
+"id=2 lev=2\"\n"
 "}";
 
     REQUIRE(exp_dot_graph == dot_graph);
@@ -281,6 +282,7 @@ TEST_CASE("make_dot_graph_with_three_nodes") {
     transwarp::detail::node_manip::set_type(*node1, transwarp::task_type::consume);
     transwarp::detail::node_manip::set_name(*node1, std::make_shared<std::string>("node1"));
     transwarp::detail::node_manip::set_id(*node1, 0);
+    transwarp::detail::node_manip::set_level(*node1, 1);
     transwarp::detail::node_manip::add_parent(*node1, node2);
     transwarp::detail::node_manip::add_parent(*node1, node3);
     std::vector<transwarp::edge> graph;
@@ -289,11 +291,11 @@ TEST_CASE("make_dot_graph_with_three_nodes") {
     const auto dot_graph = transwarp::to_string(graph);
     const std::string exp_dot_graph = "digraph {\n"
 "\"<node2>\nconsume "
-"id=1 par=0\" -> \"<node1>\nconsume "
-"id=0 par=2\"\n"
+"id=1 lev=0\" -> \"<node1>\nconsume "
+"id=0 lev=1\"\n"
 "\"<node3>\nwait "
-"id=2 par=0\n<exec>\" -> \"<node1>\nconsume "
-"id=0 par=2\"\n"
+"id=2 lev=0\n<exec>\" -> \"<node1>\nconsume "
+"id=0 lev=1\"\n"
 "}";
 
     REQUIRE(exp_dot_graph == dot_graph);
