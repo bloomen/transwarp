@@ -1482,15 +1482,14 @@ private:
             transwarp::detail::schedule_visitor visitor(reset_all, executor);
             switch (type) {
             case transwarp::schedule_type::depth:
-                visit_depth(visitor);
+                visit_depth_all(visitor);
                 break;
             case transwarp::schedule_type::breadth:
-                visit_breadth(visitor);
+                visit_breadth_all(visitor);
                 break;
             default:
                 throw transwarp::transwarp_error("No such schedule type");
             }
-            unvisit();
         }
     }
 
@@ -1503,9 +1502,22 @@ private:
         }
     }
 
-    // Visits each task in a breadth-first traversal.
+    // Visits all tasks in a depth-first traversal.
     template<typename Visitor>
-    void visit_breadth(Visitor& visitor) {
+    void visit_depth_all(Visitor& visitor) {
+        if (depth_tasks_.empty()) {
+            depth_tasks_.reserve(node_->get_id() + 1);
+            visit_depth(transwarp::detail::push_task_visitor(depth_tasks_));
+            unvisit();
+        }
+        for (auto task : depth_tasks_) {
+            visitor(*task);
+        }
+    }
+
+    // Visits all tasks in a breadth-first traversal.
+    template<typename Visitor>
+    void visit_breadth_all(Visitor& visitor) {
         if (breadth_tasks_.empty()) {
             breadth_tasks_.reserve(node_->get_id() + 1);
             visit_depth(transwarp::detail::push_task_visitor(breadth_tasks_));
@@ -1537,6 +1549,7 @@ private:
     std::tuple<std::shared_ptr<transwarp::task<ParentResults>>...> parents_;
     bool visited_ = false;
     std::shared_ptr<transwarp::executor> executor_;
+    std::vector<transwarp::itask*> depth_tasks_;
     std::vector<transwarp::itask*> breadth_tasks_;
 };
 
