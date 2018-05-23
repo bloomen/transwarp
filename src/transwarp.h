@@ -1408,7 +1408,7 @@ public:
 
 protected:
 
-    template<typename F>
+    template<typename F, typename = typename std::enable_if<std::is_same<Functor, typename std::decay<F>::type>::value>::type>
     // cppcheck-suppress passedByValue
     task_impl_base(bool has_name, std::string name, F&& functor, std::shared_ptr<transwarp::task<ParentResults>>... parents)
     : node_(std::make_shared<transwarp::node>()),
@@ -1589,14 +1589,14 @@ public:
 
 protected:
 
-    template<typename F>
+    template<typename F, typename = typename std::enable_if<std::is_same<Functor, typename std::decay<F>::type>::value>::type>
     // cppcheck-suppress passedByValue
     // cppcheck-suppress uninitMemberVar
     task_impl_proxy(std::string name, F&& functor, std::shared_ptr<transwarp::task<ParentResults>>... parents)
     : transwarp::detail::task_impl_base<result_type, task_type, Functor, ParentResults...>(true, std::move(name), std::forward<F>(functor), std::move(parents)...)
     {}
 
-    template<typename F>
+    template<typename F, typename = typename std::enable_if<std::is_same<Functor, typename std::decay<F>::type>::value>::type>
     // cppcheck-suppress uninitMemberVar
     explicit task_impl_proxy(F&& functor, std::shared_ptr<transwarp::task<ParentResults>>... parents)
     : transwarp::detail::task_impl_base<result_type, task_type, Functor, ParentResults...>(false, "", std::forward<F>(functor), std::move(parents)...)
@@ -1642,14 +1642,14 @@ public:
 
 protected:
 
-    template<typename F>
+    template<typename F, typename = typename std::enable_if<std::is_same<Functor, typename std::decay<F>::type>::value>::type>
     // cppcheck-suppress passedByValue
     // cppcheck-suppress uninitMemberVar
     task_impl_proxy(std::string name, F&& functor, std::shared_ptr<transwarp::task<ParentResults>>... parents)
     : transwarp::detail::task_impl_base<result_type, task_type, Functor, ParentResults...>(true, std::move(name), std::forward<F>(functor), std::move(parents)...)
     {}
 
-    template<typename F>
+    template<typename F, typename = typename std::enable_if<std::is_same<Functor, typename std::decay<F>::type>::value>::type>
     // cppcheck-suppress uninitMemberVar
     explicit task_impl_proxy(F&& functor, std::shared_ptr<transwarp::task<ParentResults>>... parents)
     : transwarp::detail::task_impl_base<result_type, task_type, Functor, ParentResults...>(false, "", std::forward<F>(functor), std::move(parents)...)
@@ -1697,14 +1697,14 @@ public:
 
 protected:
 
-    template<typename F>
+    template<typename F, typename = typename std::enable_if<std::is_same<Functor, typename std::decay<F>::type>::value>::type>
     // cppcheck-suppress passedByValue
     // cppcheck-suppress uninitMemberVar
     task_impl_proxy(std::string name, F&& functor, std::shared_ptr<transwarp::task<ParentResults>>... parents)
     : transwarp::detail::task_impl_base<result_type, task_type, Functor, ParentResults...>(true, std::move(name), std::forward<F>(functor), std::move(parents)...)
     {}
 
-    template<typename F>
+    template<typename F, typename = typename std::enable_if<std::is_same<Functor, typename std::decay<F>::type>::value>::type>
     // cppcheck-suppress uninitMemberVar
     explicit task_impl_proxy(F&& functor, std::shared_ptr<transwarp::task<ParentResults>>... parents)
     : transwarp::detail::task_impl_base<result_type, task_type, Functor, ParentResults...>(false, "", std::forward<F>(functor), std::move(parents)...)
@@ -1729,7 +1729,7 @@ public:
 
     // A task is defined by name, functor, and parent tasks. name is optional, see overload
     // Note: A task must be created using shared_ptr (because of shared_from_this)
-    template<typename F>
+    template<typename F, typename = typename std::enable_if<std::is_same<Functor, typename std::decay<F>::type>::value>::type>
     // cppcheck-suppress passedByValue
     // cppcheck-suppress uninitMemberVar
     task_impl(std::string name, F&& functor, std::shared_ptr<transwarp::task<ParentResults>>... parents)
@@ -1738,7 +1738,7 @@ public:
 
     // This overload is for omitting the task name
     // Note: A task must be created using shared_ptr (because of shared_from_this)
-    template<typename F>
+    template<typename F, typename = typename std::enable_if<std::is_same<Functor, typename std::decay<F>::type>::value>::type>
     // cppcheck-suppress uninitMemberVar
     explicit task_impl(F&& functor, std::shared_ptr<transwarp::task<ParentResults>>... parents)
     : transwarp::detail::task_impl_proxy<result_type, task_type, Functor, ParentResults...>(std::forward<F>(functor), std::move(parents)...)
@@ -1764,7 +1764,7 @@ public:
     using result_type = ResultType;
 
     // A value task is defined by name and value. name is optional, see overload
-    template<typename T>
+    template<typename T, typename = typename std::enable_if<std::is_same<result_type, typename std::decay<T>::type>::value>::type>
     // cppcheck-suppress passedByValue
     // cppcheck-suppress uninitMemberVar
     value_task(std::string name, T&& value)
@@ -1772,7 +1772,7 @@ public:
     {}
 
     // This overload is for omitting the task name
-    template<typename T>
+    template<typename T, typename = typename std::enable_if<std::is_same<result_type, typename std::decay<T>::type>::value>::type>
     // cppcheck-suppress uninitMemberVar
     explicit value_task(T&& value)
     : value_task(false, "", std::forward<T>(value))
@@ -1943,7 +1943,7 @@ public:
 
 private:
 
-    template<typename T>
+    template<typename T, typename = typename std::enable_if<std::is_same<result_type, typename std::decay<T>::type>::value>::type>
     // cppcheck-suppress passedByValue
     value_task(bool has_name, std::string name, T&& value)
     : node_(std::make_shared<transwarp::node>()),
