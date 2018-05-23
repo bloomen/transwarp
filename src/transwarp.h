@@ -82,8 +82,8 @@ constexpr transwarp::wait_any_type wait_any{};
 
 // Determines in which order tasks are scheduled in the graph
 enum class schedule_type {
+    breadth, // Scheduling according to a breadth-first search (default)
     depth,   // Scheduling according to a depth-first search
-    breadth, // Scheduling according to a breadth-first search
 };
 
 
