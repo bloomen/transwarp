@@ -584,8 +584,8 @@ Result run_task(std::size_t node_id, const Task& task, Args&&... args) {
 inline void wait_for_all() {}
 
 // Waits for all futures to finish
-template<typename Future, typename... Futures>
-void wait_for_all(const Future& future, const Futures& ...futures) {
+template<typename Future, typename... ParentResults>
+void wait_for_all(const Future& future, const std::shared_future<ParentResults>& ...futures) {
     future.wait();
     transwarp::detail::wait_for_all(futures...);
 }
@@ -596,8 +596,8 @@ FutureResult wait_for_any_impl() {
     return {};
 }
 
-template<typename FutureResult, typename Future, typename... Futures>
-FutureResult wait_for_any_impl(const Future& future, const Futures& ...futures) {
+template<typename FutureResult, typename Future, typename... ParentResults>
+FutureResult wait_for_any_impl(const Future& future, const std::shared_future<ParentResults>& ...futures) {
     const auto status = future.wait_for(std::chrono::microseconds(1));
     if (status == std::future_status::ready) {
         return future;
@@ -606,8 +606,8 @@ FutureResult wait_for_any_impl(const Future& future, const Futures& ...futures) 
 }
 
 // Waits for the first future to finish
-template<typename FutureResult, typename... Futures>
-FutureResult wait_for_any(const Futures& ...futures) {
+template<typename FutureResult, typename... ParentResults>
+FutureResult wait_for_any(const std::shared_future<ParentResults>& ...futures) {
     for (;;) {
         auto future = transwarp::detail::wait_for_any_impl<FutureResult>(futures...);
         if (future.valid()) {
@@ -619,8 +619,8 @@ FutureResult wait_for_any(const Futures& ...futures) {
 
 template<typename TaskType, bool done, int total, int... n>
 struct call_with_futures_impl {
-    template<typename Result, typename Task, typename Tuple>
-    static Result work(std::size_t node_id, const Task& task, const Tuple& futures) {
+    template<typename Result, typename Task, typename... ParentResults>
+    static Result work(std::size_t node_id, const Task& task, const std::tuple<std::shared_future<ParentResults>...>& futures) {
         return call_with_futures_impl<TaskType, total == 1 + static_cast<int>(sizeof...(n)), total, n..., static_cast<int>(sizeof...(n))>::template
                 work<Result>(node_id, task, futures);
     }
@@ -628,16 +628,16 @@ struct call_with_futures_impl {
 
 template<int total, int... n>
 struct call_with_futures_impl<transwarp::root_type, true, total, n...> {
-    template<typename Result, typename Task, typename Tuple>
-    static Result work(std::size_t node_id, const Task& task, const Tuple&) {
+    template<typename Result, typename Task, typename... ParentResults>
+    static Result work(std::size_t node_id, const Task& task, const std::tuple<std::shared_future<ParentResults>...>&) {
         return transwarp::detail::run_task<Result>(node_id, task);
     }
 };
 
 template<int total, int... n>
 struct call_with_futures_impl<transwarp::accept_type, true, total, n...> {
-    template<typename Result, typename Task, typename Tuple>
-    static Result work(std::size_t node_id, const Task& task, const Tuple& futures) {
+    template<typename Result, typename Task, typename... ParentResults>
+    static Result work(std::size_t node_id, const Task& task, const std::tuple<std::shared_future<ParentResults>...>& futures) {
         transwarp::detail::wait_for_all(std::get<n>(futures)...);
         return transwarp::detail::run_task<Result>(node_id, task, std::get<n>(futures)...);
     }
@@ -645,8 +645,8 @@ struct call_with_futures_impl<transwarp::accept_type, true, total, n...> {
 
 template<int total, int... n>
 struct call_with_futures_impl<transwarp::accept_any_type, true, total, n...> {
-    template<typename Result, typename Task, typename Tuple>
-    static Result work(std::size_t node_id, const Task& task, const Tuple& futures) {
+    template<typename Result, typename Task, typename... ParentResults>
+    static Result work(std::size_t node_id, const Task& task, const std::tuple<std::shared_future<ParentResults>...>& futures) {
         using future_t = typename std::remove_reference<decltype(std::get<0>(futures))>::type; // use first type as reference
         auto future = transwarp::detail::wait_for_any<future_t>(std::get<n>(futures)...);
         return transwarp::detail::run_task<Result>(node_id, task, future);
@@ -655,8 +655,8 @@ struct call_with_futures_impl<transwarp::accept_any_type, true, total, n...> {
 
 template<int total, int... n>
 struct call_with_futures_impl<transwarp::consume_type, true, total, n...> {
-    template<typename Result, typename Task, typename Tuple>
-    static Result work(std::size_t node_id, const Task& task, const Tuple& futures) {
+    template<typename Result, typename Task, typename... ParentResults>
+    static Result work(std::size_t node_id, const Task& task, const std::tuple<std::shared_future<ParentResults>...>& futures) {
         transwarp::detail::wait_for_all(std::get<n>(futures)...);
         return transwarp::detail::run_task<Result>(node_id, task, std::get<n>(futures).get()...);
     }
@@ -664,8 +664,8 @@ struct call_with_futures_impl<transwarp::consume_type, true, total, n...> {
 
 template<int total, int... n>
 struct call_with_futures_impl<transwarp::consume_any_type, true, total, n...> {
-    template<typename Result, typename Task, typename Tuple>
-    static Result work(std::size_t node_id, const Task& task, const Tuple& futures) {
+    template<typename Result, typename Task, typename... ParentResults>
+    static Result work(std::size_t node_id, const Task& task, const std::tuple<std::shared_future<ParentResults>...>& futures) {
         using future_t = typename std::remove_reference<decltype(std::get<0>(futures))>::type; // use first type as reference
         auto future = transwarp::detail::wait_for_any<future_t>(std::get<n>(futures)...);
         return transwarp::detail::run_task<Result>(node_id, task, future.get());
@@ -674,8 +674,8 @@ struct call_with_futures_impl<transwarp::consume_any_type, true, total, n...> {
 
 template<int total, int... n>
 struct call_with_futures_impl<transwarp::wait_type, true, total, n...> {
-    template<typename Result, typename Task, typename Tuple>
-    static Result work(std::size_t node_id, const Task& task, const Tuple& futures) {
+    template<typename Result, typename Task, typename... ParentResults>
+    static Result work(std::size_t node_id, const Task& task, const std::tuple<std::shared_future<ParentResults>...>& futures) {
         transwarp::detail::wait_for_all(std::get<n>(futures)...);
         get_all(std::get<n>(futures)...); // ensures that exceptions are propagated
         return transwarp::detail::run_task<Result>(node_id, task);
@@ -690,8 +690,8 @@ struct call_with_futures_impl<transwarp::wait_type, true, total, n...> {
 
 template<int total, int... n>
 struct call_with_futures_impl<transwarp::wait_any_type, true, total, n...> {
-    template<typename Result, typename Task, typename Tuple>
-    static Result work(std::size_t node_id, const Task& task, const Tuple& futures) {
+    template<typename Result, typename Task, typename... ParentResults>
+    static Result work(std::size_t node_id, const Task& task, const std::tuple<std::shared_future<ParentResults>...>& futures) {
         while (!wait(std::get<n>(futures)...));
         return transwarp::detail::run_task<Result>(node_id, task);
     }
@@ -712,9 +712,9 @@ struct call_with_futures_impl<transwarp::wait_any_type, true, total, n...> {
 // Calls the functor of the given task with the results from the futures.
 // Throws transwarp::task_canceled if the task is canceled.
 // Throws transwarp::task_destroyed in case the task was destroyed prematurely.
-template<typename TaskType, typename Result, typename Task, typename Tuple>
-Result call_with_futures(std::size_t node_id, const Task& task, const Tuple& futures) {
-    constexpr std::size_t n = std::tuple_size<Tuple>::value;
+template<typename TaskType, typename Result, typename Task, typename... ParentResults>
+Result call_with_futures(std::size_t node_id, const Task& task, const std::tuple<std::shared_future<ParentResults>...>& futures) {
+    constexpr std::size_t n = std::tuple_size<std::tuple<std::shared_future<ParentResults>...>>::value;
     return transwarp::detail::call_with_futures_impl<TaskType, 0 == n, static_cast<int>(n)>::template
             work<Result>(node_id, task, futures);
 }
@@ -736,11 +736,11 @@ struct index_range {
     using type = typename transwarp::detail::construct_range<e, b>::type;
 };
 
-template<typename Functor, typename Tuple>
-void call_with_each_index(transwarp::detail::indices<>, const Functor&, const Tuple&) {}
+template<typename Functor, typename... ParentResults>
+void call_with_each_index(transwarp::detail::indices<>, const Functor&, const std::tuple<std::shared_ptr<transwarp::task<ParentResults>>...>&) {}
 
-template<std::size_t i, std::size_t... j, typename Functor, typename Tuple>
-void call_with_each_index(transwarp::detail::indices<i, j...>, const Functor& f, const Tuple& t) {
+template<std::size_t i, std::size_t... j, typename Functor, typename... ParentResults>
+void call_with_each_index(transwarp::detail::indices<i, j...>, const Functor& f, const std::tuple<std::shared_ptr<transwarp::task<ParentResults>>...>& t) {
     auto ptr = std::get<i>(t);
     if (!ptr) {
         throw transwarp::transwarp_error("Not a valid pointer to a task");
@@ -751,9 +751,9 @@ void call_with_each_index(transwarp::detail::indices<i, j...>, const Functor& f,
 
 // Calls the functor with every element in the tuple. Expects the tuple to contain
 // task pointers only and dereferences each element before passing it into the functor
-template<typename Functor, typename Tuple>
-void call_with_each(const Functor& f, const Tuple& t) {
-    constexpr std::size_t n = std::tuple_size<Tuple>::value;
+template<typename Functor, typename... ParentResults>
+void call_with_each(const Functor& f, const std::tuple<std::shared_ptr<transwarp::task<ParentResults>>...>& t) {
+    constexpr std::size_t n = std::tuple_size<std::tuple<std::shared_ptr<transwarp::task<ParentResults>>...>>::value;
     using index_t = typename transwarp::detail::index_range<0, n>::type;
     transwarp::detail::call_with_each_index(index_t(), f, t);
 }
@@ -787,7 +787,7 @@ struct parent_visitor {
     void operator()(const transwarp::itask& task) const {
         transwarp::detail::node_manip::add_parent(*node_, task.get_node());
         if (node_->get_level() <= task.get_node()->get_level()) {
-            // A child's level is always larger than any of its parents' level
+            // A child's level is always larger than any of its parents' levels
             transwarp::detail::node_manip::set_level(*node_, task.get_node()->get_level() + 1);
         }
     }
@@ -1408,7 +1408,7 @@ public:
 
 protected:
 
-    template<typename F, typename = typename std::enable_if<std::is_same<Functor, typename std::decay<F>::type>::value>::type>
+    template<typename F>
     // cppcheck-suppress passedByValue
     task_impl_base(bool has_name, std::string name, F&& functor, std::shared_ptr<transwarp::task<ParentResults>>... parents)
     : node_(std::make_shared<transwarp::node>()),
@@ -1460,7 +1460,8 @@ private:
             std::weak_ptr<task_impl_base> self = this->shared_from_this();
             auto futures = transwarp::detail::get_futures(parents_);
             auto pack_task = std::make_shared<std::packaged_task<result_type()>>(
-                    std::bind(&transwarp::detail::call_with_futures<task_type, result_type, decltype(self), decltype(futures)>,
+                    std::bind(&transwarp::detail::call_with_futures<
+                              task_type, result_type, std::weak_ptr<task_impl_base>, ParentResults...>,
                               node_->get_id(), std::move(self), std::move(futures)));
             future_ = pack_task->get_future();
             if (executor_) {
@@ -1589,14 +1590,14 @@ public:
 
 protected:
 
-    template<typename F, typename = typename std::enable_if<std::is_same<Functor, typename std::decay<F>::type>::value>::type>
+    template<typename F>
     // cppcheck-suppress passedByValue
     // cppcheck-suppress uninitMemberVar
     task_impl_proxy(std::string name, F&& functor, std::shared_ptr<transwarp::task<ParentResults>>... parents)
     : transwarp::detail::task_impl_base<result_type, task_type, Functor, ParentResults...>(true, std::move(name), std::forward<F>(functor), std::move(parents)...)
     {}
 
-    template<typename F, typename = typename std::enable_if<std::is_same<Functor, typename std::decay<F>::type>::value>::type>
+    template<typename F>
     // cppcheck-suppress uninitMemberVar
     explicit task_impl_proxy(F&& functor, std::shared_ptr<transwarp::task<ParentResults>>... parents)
     : transwarp::detail::task_impl_base<result_type, task_type, Functor, ParentResults...>(false, "", std::forward<F>(functor), std::move(parents)...)
@@ -1642,14 +1643,14 @@ public:
 
 protected:
 
-    template<typename F, typename = typename std::enable_if<std::is_same<Functor, typename std::decay<F>::type>::value>::type>
+    template<typename F>
     // cppcheck-suppress passedByValue
     // cppcheck-suppress uninitMemberVar
     task_impl_proxy(std::string name, F&& functor, std::shared_ptr<transwarp::task<ParentResults>>... parents)
     : transwarp::detail::task_impl_base<result_type, task_type, Functor, ParentResults...>(true, std::move(name), std::forward<F>(functor), std::move(parents)...)
     {}
 
-    template<typename F, typename = typename std::enable_if<std::is_same<Functor, typename std::decay<F>::type>::value>::type>
+    template<typename F>
     // cppcheck-suppress uninitMemberVar
     explicit task_impl_proxy(F&& functor, std::shared_ptr<transwarp::task<ParentResults>>... parents)
     : transwarp::detail::task_impl_base<result_type, task_type, Functor, ParentResults...>(false, "", std::forward<F>(functor), std::move(parents)...)
@@ -1697,14 +1698,14 @@ public:
 
 protected:
 
-    template<typename F, typename = typename std::enable_if<std::is_same<Functor, typename std::decay<F>::type>::value>::type>
+    template<typename F>
     // cppcheck-suppress passedByValue
     // cppcheck-suppress uninitMemberVar
     task_impl_proxy(std::string name, F&& functor, std::shared_ptr<transwarp::task<ParentResults>>... parents)
     : transwarp::detail::task_impl_base<result_type, task_type, Functor, ParentResults...>(true, std::move(name), std::forward<F>(functor), std::move(parents)...)
     {}
 
-    template<typename F, typename = typename std::enable_if<std::is_same<Functor, typename std::decay<F>::type>::value>::type>
+    template<typename F>
     // cppcheck-suppress uninitMemberVar
     explicit task_impl_proxy(F&& functor, std::shared_ptr<transwarp::task<ParentResults>>... parents)
     : transwarp::detail::task_impl_base<result_type, task_type, Functor, ParentResults...>(false, "", std::forward<F>(functor), std::move(parents)...)
@@ -1943,7 +1944,7 @@ public:
 
 private:
 
-    template<typename T, typename = typename std::enable_if<std::is_same<result_type, typename std::decay<T>::type>::value>::type>
+    template<typename T>
     // cppcheck-suppress passedByValue
     value_task(bool has_name, std::string name, T&& value)
     : node_(std::make_shared<transwarp::node>()),
