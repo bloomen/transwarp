@@ -1482,37 +1482,15 @@ private:
         if (!node_->is_canceled()) {
             transwarp::detail::schedule_visitor visitor(reset_all, executor);
             switch (type) {
-            case transwarp::schedule_type::depth:
-                visit_depth_all(visitor);
-                break;
             case transwarp::schedule_type::breadth:
                 visit_breadth_all(visitor);
+                break;
+            case transwarp::schedule_type::depth:
+                visit_depth_all(visitor);
                 break;
             default:
                 throw transwarp::transwarp_error("No such schedule type");
             }
-        }
-    }
-
-    // Visits each task in a depth-first traversal.
-    void visit_depth(const std::function<void(transwarp::itask&)>& visitor) override {
-        if (!visited_) {
-            transwarp::detail::call_with_each(transwarp::detail::visit_depth(visitor), parents_);
-            visitor(*this);
-            visited_ = true;
-        }
-    }
-
-    // Visits all tasks in a depth-first traversal.
-    template<typename Visitor>
-    void visit_depth_all(Visitor& visitor) {
-        if (depth_tasks_.empty()) {
-            depth_tasks_.reserve(node_->get_id() + 1);
-            visit_depth(transwarp::detail::push_task_visitor(depth_tasks_));
-            unvisit();
-        }
-        for (auto task : depth_tasks_) {
-            visitor(*task);
         }
     }
 
@@ -1534,6 +1512,28 @@ private:
         }
         for (auto task : breadth_tasks_) {
             visitor(*task);
+        }
+    }
+
+    // Visits all tasks in a depth-first traversal.
+    template<typename Visitor>
+    void visit_depth_all(Visitor& visitor) {
+        if (depth_tasks_.empty()) {
+            depth_tasks_.reserve(node_->get_id() + 1);
+            visit_depth(transwarp::detail::push_task_visitor(depth_tasks_));
+            unvisit();
+        }
+        for (auto task : depth_tasks_) {
+            visitor(*task);
+        }
+    }
+
+    // Visits each task in a depth-first traversal.
+    void visit_depth(const std::function<void(transwarp::itask&)>& visitor) override {
+        if (!visited_) {
+            transwarp::detail::call_with_each(transwarp::detail::visit_depth(visitor), parents_);
+            visitor(*this);
+            visited_ = true;
         }
     }
 
