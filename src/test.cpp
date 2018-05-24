@@ -1377,41 +1377,69 @@ TEST_CASE("add_remove_listener") {
     REQUIRE(1 == l2.use_count());
 }
 
-TEST_CASE("after_schedule_event") {
+TEST_CASE("scheduled_event") {
     auto t = make_task(transwarp::root, []{});
     auto l = std::make_shared<mock_listener>();
     t->add_listener(l);
     t->schedule();
-    REQUIRE(2 == l->events.size());
-    REQUIRE(transwarp::event_type::after_schedule == l->events[0]);
+    REQUIRE(3 == l->events.size());
+    REQUIRE(transwarp::event_type::scheduled == l->events[0]);
 }
 
 template<typename Functor>
-void test_after_finish_event(Functor functor) {
+void test_finished_event(Functor functor) {
     auto t = make_task(transwarp::root, functor);
     auto l = std::make_shared<mock_listener>();
     t->add_listener(l);
     t->schedule();
-    REQUIRE(2 == l->events.size());
-    REQUIRE(transwarp::event_type::after_finish == l->events[1]);
+    REQUIRE(3 == l->events.size());
+    REQUIRE(transwarp::event_type::finished == l->events[2]);
     l->events.clear();
     auto exec = std::make_shared<transwarp::sequential>();
     t->schedule(*exec);
-    REQUIRE(2 == l->events.size());
-    REQUIRE(transwarp::event_type::after_finish == l->events[1]);
+    REQUIRE(3 == l->events.size());
+    REQUIRE(transwarp::event_type::finished == l->events[2]);
     l->events.clear();
     t->set_executor(exec);
     t->schedule();
-    REQUIRE(2 == l->events.size());
-    REQUIRE(transwarp::event_type::after_finish == l->events[1]);
+    REQUIRE(3 == l->events.size());
+    REQUIRE(transwarp::event_type::finished == l->events[2]);
 }
 
-TEST_CASE("after_finish_event") {
-    test_after_finish_event([]{});
+TEST_CASE("finished_event") {
+    test_finished_event([]{});
 }
 
-TEST_CASE("after_finish_event_with_exception") {
-    test_after_finish_event([]{ throw std::bad_alloc{}; });
+TEST_CASE("finished_event_with_exception") {
+    test_finished_event([]{ throw std::bad_alloc{}; });
+}
+
+template<typename Functor>
+void test_started_event(Functor functor) {
+    auto t = make_task(transwarp::root, functor);
+    auto l = std::make_shared<mock_listener>();
+    t->add_listener(l);
+    t->schedule();
+    REQUIRE(3 == l->events.size());
+    REQUIRE(transwarp::event_type::started == l->events[1]);
+    l->events.clear();
+    auto exec = std::make_shared<transwarp::sequential>();
+    t->schedule(*exec);
+    REQUIRE(3 == l->events.size());
+    REQUIRE(transwarp::event_type::started == l->events[1]);
+    l->events.clear();
+    t->set_executor(exec);
+    t->schedule();
+    REQUIRE(3 == l->events.size());
+    REQUIRE(transwarp::event_type::started == l->events[1]);
+}
+
+TEST_CASE("started_event") {
+    test_started_event([]{});
+}
+
+TEST_CASE("started_event_with_exception") {
+    test_started_event([]{ throw std::bad_alloc{}; });
 }
 
 // Examples

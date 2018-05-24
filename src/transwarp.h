@@ -257,8 +257,9 @@ class itask;
 
 // An enum of events used with the listener pattern
 enum class event_type {
-    after_schedule, // after a task is scheduled, just before it is run
-    after_finish,   // after a task finishes
+    scheduled, // just after a task is scheduled
+    started,   // just before a task is run
+    finished,  // just after a task finishes
 };
 
 
@@ -1387,7 +1388,7 @@ public:
         if (!listener) {
             throw transwarp::transwarp_error("Not a valid pointer to listener");
         }
-        listeners_.push_back(listener);
+        listeners_.push_back(std::move(listener));
     }
 
     void remove_listener(const std::shared_ptr<transwarp::listener>& listener) override {
@@ -1496,26 +1497,28 @@ private:
                               task_type, result_type, std::weak_ptr<task_impl_base>, ParentResults...>,
                               node_->get_id(), std::move(self), std::move(futures)));
             future_ = pack_task->get_future();
-            raise_event(transwarp::event_type::after_schedule);
-            if (executor_) {
-                executor_->execute([pack_task,self] {
-                    (*pack_task)();
+            auto callable = [pack_task,self] {
+                {
                     auto t = self.lock();
                     if (t) {
-                        t->raise_event(transwarp::event_type::after_finish);
+                        t->raise_event(transwarp::event_type::started);
                     }
-                }, node_);
-            } else if (executor) {
-                executor->execute([pack_task,self] {
-                    (*pack_task)();
-                    auto t = self.lock();
-                    if (t) {
-                        t->raise_event(transwarp::event_type::after_finish);
-                    }
-                }, node_);
-            } else {
+                }
                 (*pack_task)();
-                raise_event(transwarp::event_type::after_finish);
+                {
+                    auto t = self.lock();
+                    if (t) {
+                        t->raise_event(transwarp::event_type::finished);
+                    }
+                }
+            };
+            raise_event(transwarp::event_type::scheduled);
+            if (executor_) {
+                executor_->execute(callable, node_);
+            } else if (executor) {
+                executor->execute(callable, node_);
+            } else {
+                callable();
             }
         }
     }
