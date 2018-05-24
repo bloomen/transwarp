@@ -1495,7 +1495,7 @@ private:
             auto pack_task = std::make_shared<std::packaged_task<result_type()>>(
                     std::bind(&transwarp::detail::call_with_futures<
                               task_type, result_type, std::weak_ptr<task_impl_base>, ParentResults...>,
-                              node_->get_id(), std::move(self), std::move(futures)));
+                              node_->get_id(), self, std::move(futures)));
             future_ = pack_task->get_future();
             auto callable = [pack_task,self] {
                 {
