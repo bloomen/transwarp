@@ -1355,6 +1355,65 @@ TEST_CASE("has_result_for_value_task") {
     REQUIRE(t->has_result());
 }
 
+struct mock_listener : transwarp::listener {
+    std::vector<transwarp::event_type> events;
+    void handle_event(transwarp::event_type event, const transwarp::itask&) override {
+        events.push_back(event);
+    }
+};
+
+TEST_CASE("add_remove_listener") {
+    auto t = make_task(transwarp::root, []{});
+    auto l1 = std::make_shared<mock_listener>();
+    auto l2 = std::make_shared<mock_listener>();
+    t->add_listener(l1);
+    t->add_listener(l1);
+    t->add_listener(l2);
+    REQUIRE(3 == l1.use_count());
+    REQUIRE(2 == l2.use_count());
+    t->remove_listener(l1);
+    REQUIRE(1 == l1.use_count());
+    t->remove_listener(l2);
+    REQUIRE(1 == l2.use_count());
+}
+
+TEST_CASE("after_schedule_event") {
+    auto t = make_task(transwarp::root, []{});
+    auto l = std::make_shared<mock_listener>();
+    t->add_listener(l);
+    t->schedule();
+    REQUIRE(2 == l->events.size());
+    REQUIRE(transwarp::event_type::after_schedule == l->events[0]);
+}
+
+template<typename Functor>
+void test_after_finish_event(Functor functor) {
+    auto t = make_task(transwarp::root, functor);
+    auto l = std::make_shared<mock_listener>();
+    t->add_listener(l);
+    t->schedule();
+    REQUIRE(2 == l->events.size());
+    REQUIRE(transwarp::event_type::after_finish == l->events[1]);
+    l->events.clear();
+    auto exec = std::make_shared<transwarp::sequential>();
+    t->schedule(*exec);
+    REQUIRE(2 == l->events.size());
+    REQUIRE(transwarp::event_type::after_finish == l->events[1]);
+    l->events.clear();
+    t->set_executor(exec);
+    t->schedule();
+    REQUIRE(2 == l->events.size());
+    REQUIRE(transwarp::event_type::after_finish == l->events[1]);
+}
+
+TEST_CASE("after_finish_event") {
+    test_after_finish_event([]{});
+}
+
+TEST_CASE("after_finish_event_with_exception") {
+    test_after_finish_event([]{ throw std::bad_alloc{}; });
+}
+
 // Examples
 
 TEST_CASE("example__basic_with_three_tasks") {

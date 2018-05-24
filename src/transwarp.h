@@ -252,6 +252,25 @@ public:
 };
 
 
+class itask;
+
+
+// An enum of events used with the listener pattern
+enum class event_type {
+    after_schedule, // after a task is scheduled, just before it is run
+    after_finish,   // after a task finishes
+};
+
+
+// The listener interface
+class listener {
+public:
+    virtual ~listener() = default;
+
+    virtual void handle_event(transwarp::event_type event, const transwarp::itask& task) = 0;
+};
+
+
 // An interface for the task class
 class itask {
 public:
@@ -287,6 +306,8 @@ public:
     virtual void wait() const = 0;
     virtual bool is_ready() const = 0;
     virtual bool has_result() const = 0;
+    virtual void add_listener(std::shared_ptr<transwarp::listener> listener) = 0;
+    virtual void remove_listener(const std::shared_ptr<transwarp::listener>& listener) = 0;
     virtual void reset() = 0;
     virtual void reset_all() = 0;
     virtual void cancel(bool enabled) noexcept = 0;
@@ -1368,6 +1389,20 @@ public:
         return was_scheduled() && is_ready();
     }
 
+    void add_listener(std::shared_ptr<transwarp::listener> listener) override {
+        if (!listener) {
+            throw transwarp::transwarp_error("Not a valid pointer to listener");
+        }
+        listeners_.push_back(listener);
+    }
+
+    void remove_listener(const std::shared_ptr<transwarp::listener>& listener) override {
+        if (!listener) {
+            throw transwarp::transwarp_error("Not a valid pointer to listener");
+        }
+        listeners_.erase(std::remove(listeners_.begin(), listeners_.end(), listener), listeners_.end());
+    }
+
     // Resets the future of this task
     void reset() override {
         ensure_task_not_running();
@@ -1470,12 +1505,26 @@ private:
                               task_type, result_type, std::weak_ptr<task_impl_base>, ParentResults...>,
                               node_->get_id(), std::move(self), std::move(futures)));
             future_ = pack_task->get_future();
+            raise_event(transwarp::event_type::after_schedule);
             if (executor_) {
-                executor_->execute([pack_task] { (*pack_task)(); }, node_);
+                executor_->execute([pack_task,self] {
+                    (*pack_task)();
+                    auto t = self.lock();
+                    if (t) {
+                        t->raise_event(transwarp::event_type::after_finish);
+                    }
+                }, node_);
             } else if (executor) {
-                executor->execute([pack_task] { (*pack_task)(); }, node_);
+                executor->execute([pack_task,self] {
+                    (*pack_task)();
+                    auto t = self.lock();
+                    if (t) {
+                        t->raise_event(transwarp::event_type::after_finish);
+                    }
+                }, node_);
             } else {
                 (*pack_task)();
+                raise_event(transwarp::event_type::after_finish);
             }
         }
     }
@@ -1551,11 +1600,19 @@ private:
         }
     }
 
+    // Raises the given event to all listeners
+    void raise_event(transwarp::event_type type) {
+        for (auto& listener : listeners_) {
+            listener->handle_event(type, *this);
+        }
+    }
+
     std::shared_ptr<transwarp::node> node_;
     Functor functor_;
     std::tuple<std::shared_ptr<transwarp::task<ParentResults>>...> parents_;
     bool visited_ = false;
     std::shared_ptr<transwarp::executor> executor_;
+    std::vector<std::shared_ptr<transwarp::listener>> listeners_;
     std::vector<transwarp::itask*> depth_tasks_;
     std::vector<transwarp::itask*> breadth_tasks_;
 };
@@ -1930,6 +1987,12 @@ public:
     bool has_result() const noexcept override {
         return true;
     }
+
+    // No-op because a value task doesn't raise events
+    void add_listener(std::shared_ptr<transwarp::listener>) override {}
+
+    // No-op because a value task doesn't raise events
+    void remove_listener(const std::shared_ptr<transwarp::listener>&) override {}
 
     // Returns the result of this task
     typename transwarp::result_info<result_type>::type get() const override {
