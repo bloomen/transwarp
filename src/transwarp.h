@@ -1162,8 +1162,7 @@ public:
     void set_executor_all(std::shared_ptr<transwarp::executor> executor) override {
         ensure_task_not_running();
         transwarp::detail::set_executor_visitor visitor(std::move(executor));
-        visit_depth(visitor);
-        unvisit();
+        visit_depth_all(visitor);
     }
 
     // Removes the executor from this task
@@ -1177,8 +1176,7 @@ public:
     void remove_executor_all() override {
         ensure_task_not_running();
         transwarp::detail::remove_executor_visitor visitor;
-        visit_depth(visitor);
-        unvisit();
+        visit_depth_all(visitor);
     }
 
     // Sets a task priority (defaults to 0). transwarp will not directly use this.
@@ -1193,8 +1191,7 @@ public:
     void set_priority_all(std::size_t priority) override {
         ensure_task_not_running();
         transwarp::detail::set_priority_visitor visitor(priority);
-        visit_depth(visitor);
-        unvisit();
+        visit_depth_all(visitor);
     }
 
     // Resets the task priority to 0
@@ -1207,8 +1204,7 @@ public:
     void reset_priority_all() override {
         ensure_task_not_running();
         transwarp::detail::reset_priority_visitor visitor;
-        visit_depth(visitor);
-        unvisit();
+        visit_depth_all(visitor);
     }
 
     // Assigns custom data to this task. transwarp will not directly use this.
@@ -1226,8 +1222,7 @@ public:
     void set_custom_data_all(std::shared_ptr<void> custom_data) override {
         ensure_task_not_running();
         transwarp::detail::set_custom_data_visitor visitor(std::move(custom_data));
-        visit_depth(visitor);
-        unvisit();
+        visit_depth_all(visitor);
     }
 
     // Removes custom data from this task
@@ -1240,8 +1235,7 @@ public:
     void remove_custom_data_all() override {
         ensure_task_not_running();
         transwarp::detail::remove_custom_data_visitor visitor;
-        visit_depth(visitor);
-        unvisit();
+        visit_depth_all(visitor);
     }
 
     // Returns the future associated to the underlying execution
@@ -1414,8 +1408,7 @@ public:
     void reset_all() override {
         ensure_task_not_running();
         transwarp::detail::reset_visitor visitor;
-        visit_depth(visitor);
-        unvisit();
+        visit_depth_all(visitor);
     }
 
     // If enabled then this task is canceled which will
@@ -1432,8 +1425,7 @@ public:
     // Passing false is equivalent to resume.
     void cancel_all(bool enabled) noexcept override {
         transwarp::detail::cancel_visitor visitor(enabled);
-        visit_depth(visitor);
-        unvisit();
+        visit_depth_all(visitor);
     }
 
     // Returns the graph of the task structure. This is mainly for visualizing
@@ -1442,8 +1434,7 @@ public:
     std::vector<transwarp::edge> get_graph() const override {
         std::vector<transwarp::edge> graph;
         transwarp::detail::graph_visitor visitor(graph);
-        const_cast<task_impl_base*>(this)->visit_depth(visitor);
-        const_cast<task_impl_base*>(this)->unvisit();
+        const_cast<task_impl_base*>(this)->visit_depth_all(visitor);
         return graph;
     }
 
