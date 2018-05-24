@@ -1343,6 +1343,18 @@ TEST_CASE("task_pass_exception_to_set_value") {
     throw std::runtime_error{"shouldn't get here"};
 }
 
+TEST_CASE("has_result") {
+    auto t = make_task(transwarp::root, []{});
+    REQUIRE(!t->has_result());
+    t->schedule();
+    REQUIRE(t->has_result());
+}
+
+TEST_CASE("has_result_for_value_task") {
+    auto t = make_value_task(42);
+    REQUIRE(t->has_result());
+}
+
 // Examples
 
 TEST_CASE("example__basic_with_three_tasks") {

@@ -286,6 +286,7 @@ public:
     virtual bool was_scheduled() const noexcept = 0;
     virtual void wait() const = 0;
     virtual bool is_ready() const = 0;
+    virtual bool has_result() const = 0;
     virtual void reset() = 0;
     virtual void reset_all() = 0;
     virtual void cancel(bool enabled) noexcept = 0;
@@ -1362,6 +1363,11 @@ public:
         return future_.wait_for(std::chrono::seconds(0)) == std::future_status::ready;
     }
 
+    // Returns whether this task contains a result
+    bool has_result() const noexcept override {
+        return was_scheduled() && is_ready();
+    }
+
     // Resets the future of this task
     void reset() override {
         ensure_task_not_running();
@@ -1920,6 +1926,11 @@ public:
         return true;
     }
 
+    // Returns true because a value task always contains a result
+    bool has_result() const noexcept override {
+        return true;
+    }
+
     // Returns the result of this task
     typename transwarp::result_info<result_type>::type get() const override {
         return future_.get();
@@ -1972,9 +1983,7 @@ private:
 
     // Marks this task as not visited
     void unvisit() noexcept override {
-        if (visited_) {
-            visited_ = false;
-        }
+        visited_ = false;
     }
 
     std::shared_ptr<transwarp::node> node_;
