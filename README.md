@@ -1,6 +1,6 @@
 # transwarp 
 
-**Version 1.3.0**
+**Version 1.4.0**
 
 <a href="https://raw.githubusercontent.com/bloomen/transwarp/master/src/transwarp.h" download="transwarp.h">Download as single header from here</a>
 
@@ -104,7 +104,7 @@ The resulting graph of this example looks like this:
 
 Every bubble represents a task and every arrow an edge between two tasks. 
 The first line within a bubble is the task name. The second line denotes the task
-type followed by the task id and the number of parents. 
+type followed by the task id and the task level in the graph.
 
 ## API doc
 
@@ -327,8 +327,6 @@ which computes the Fibonacci series in a parallel fashion. The
 corresponding code in transwarp would look like this:
 
 ```cpp
-tw::parallel executor{4};
-
 int Fib(int n) {
     if ( n < 2 ) {
         return n;
@@ -337,7 +335,7 @@ int Fib(int n) {
         auto t1 = tw::make_task(tw::root, [&]{ x = Fib(n-1); });
         auto t2 = tw::make_task(tw::root, [&]{ y = Fib(n-2); });
         auto t3 = tw::make_task(tw::wait, []{}, t1, t2);
-        t3->schedule_all(executor);
+        t3->schedule_all();
         t3->wait();
         return x+y;
     }
@@ -345,7 +343,7 @@ int Fib(int n) {
 ```
 
 Note that for any real-world application the graph of tasks should be
-created upfront and not on the fly.
+created upfront and not on the fly. This is just a silly toy example.
 
 TBB supports both automatic and fine-grained task scheduling. Creating
 an acyclic graph of tasks appears to be somewhat cumbersome and is not
