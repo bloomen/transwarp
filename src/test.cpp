@@ -1358,7 +1358,7 @@ TEST_CASE("has_result_for_value_task") {
 
 struct mock_listener : transwarp::listener {
     std::vector<transwarp::event_type> events;
-    void handle_event(transwarp::event_type event, const transwarp::itask&) override {
+    void handle_event(transwarp::event_type event, const std::shared_ptr<transwarp::node>&) override {
         events.push_back(event);
     }
 };

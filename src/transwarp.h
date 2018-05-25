@@ -252,9 +252,6 @@ public:
 };
 
 
-class itask;
-
-
 // An enum of task events used with the listener pattern
 enum class event_type {
     scheduled, // just after a task is scheduled
@@ -268,7 +265,8 @@ class listener {
 public:
     virtual ~listener() = default;
 
-    virtual void handle_event(transwarp::event_type event, const transwarp::itask& task) = 0;
+    // This may be called from arbitrary threads
+    virtual void handle_event(transwarp::event_type event, const std::shared_ptr<transwarp::node>& node) = 0;
 };
 
 
@@ -1500,18 +1498,12 @@ private:
                               node_->get_id(), self, std::move(futures)));
             future_ = pack_task->get_future();
             auto callable = [pack_task,self] {
-                {
-                    auto t = self.lock();
-                    if (t) {
-                        t->raise_event(transwarp::event_type::started);
-                    }
+                if (auto t = self.lock()) {
+                    t->raise_event(transwarp::event_type::started);
                 }
                 (*pack_task)();
-                {
-                    auto t = self.lock();
-                    if (t) {
-                        t->raise_event(transwarp::event_type::finished);
-                    }
+                if (auto t = self.lock()) {
+                    t->raise_event(transwarp::event_type::finished);
                 }
             };
             raise_event(transwarp::event_type::scheduled);
@@ -1597,9 +1589,9 @@ private:
     }
 
     // Raises the given event to all listeners
-    void raise_event(transwarp::event_type type) {
-        for (auto& listener : listeners_) {
-            listener->handle_event(type, *this);
+    void raise_event(transwarp::event_type type) const {
+        for (const auto& listener : listeners_) {
+            listener->handle_event(type, this->get_node());
         }
     }
 

@@ -21,8 +21,24 @@ data_t transform(data_t data) {
 }
 
 double mean(data_t data) {
-    return std::accumulate(data->begin(), data->end(), 0.) / static_cast<double>( data->size() );
+    return std::accumulate(data->begin(), data->end(), 0.) / static_cast<double>(data->size());
 }
+
+class listener : public tw::listener {
+public:
+    explicit listener(std::ostream& os)
+    : os_(os) {}
+
+    // Note: this is called on the thread the task is run on for the finished event
+    void handle_event(tw::event_type event, const std::shared_ptr<tw::node>& node) {
+        if (event == tw::event_type::finished) {
+            os_ << "task finished: " << tw::to_string(*node, " ") << std::endl;
+        }
+    }
+
+private:
+    std::ostream& os_;
+};
 
 std::shared_ptr<tw::task<double>> build_graph(std::shared_ptr<tw::task<data_t>> input) {
     auto c0 = tw::make_task(tw::consume, transform, input);
@@ -54,6 +70,7 @@ std::shared_ptr<tw::task<double>> build_graph(std::shared_ptr<tw::task<data_t>> 
 namespace examples {
 
 // This example demonstrates the scheduling of an extra wide graph.
+// It also shows how the listener interface can be used to handle task events.
 // Increase iterations and size and observe your CPU load.
 // In this example, new data cannot be scheduled until the last result
 // was retrieved. However, this can be changed to use a pool of graphs
@@ -66,6 +83,7 @@ void wide_graph(std::ostream& os, std::size_t iterations, std::size_t size) {
 
     // Build graph and return the final task
     auto final = build_graph(input);
+    final->add_listener(std::make_shared<listener>(os));
 
     // Output the graph for visualization
     const auto graph = final->get_graph();
