@@ -290,6 +290,8 @@ public:
     virtual void remove_custom_data() = 0;
     virtual void remove_custom_data_all() = 0;
     virtual const std::shared_ptr<transwarp::node>& get_node() const noexcept = 0;
+    virtual void add_listener(std::shared_ptr<transwarp::listener> listener) = 0;
+    virtual void remove_listener(const std::shared_ptr<transwarp::listener>& listener) = 0;
     virtual void schedule() = 0;
     virtual void schedule(transwarp::executor& executor) = 0;
     virtual void schedule(bool reset) = 0;
@@ -307,8 +309,6 @@ public:
     virtual void wait() const = 0;
     virtual bool is_ready() const = 0;
     virtual bool has_result() const = 0;
-    virtual void add_listener(std::shared_ptr<transwarp::listener> listener) = 0;
-    virtual void remove_listener(const std::shared_ptr<transwarp::listener>& listener) = 0;
     virtual void reset() = 0;
     virtual void reset_all() = 0;
     virtual void cancel(bool enabled) noexcept = 0;
@@ -1249,6 +1249,22 @@ public:
         return node_;
     }
 
+    // Adds a new listener
+    void add_listener(std::shared_ptr<transwarp::listener> listener) override {
+        if (!listener) {
+            throw transwarp::transwarp_error("Not a valid pointer to listener");
+        }
+        listeners_.push_back(std::move(listener));
+    }
+
+    // Removes a listener
+    void remove_listener(const std::shared_ptr<transwarp::listener>& listener) override {
+        if (!listener) {
+            throw transwarp::transwarp_error("Not a valid pointer to listener");
+        }
+        listeners_.erase(std::remove(listeners_.begin(), listeners_.end(), listener), listeners_.end());
+    }
+
     // Schedules this task for execution on the caller thread.
     // The task-specific executor gets precedence if it exists.
     // This overload will reset the underlying future.
@@ -1382,20 +1398,6 @@ public:
     // Returns whether this task contains a result
     bool has_result() const noexcept override {
         return was_scheduled() && is_ready();
-    }
-
-    void add_listener(std::shared_ptr<transwarp::listener> listener) override {
-        if (!listener) {
-            throw transwarp::transwarp_error("Not a valid pointer to listener");
-        }
-        listeners_.push_back(std::move(listener));
-    }
-
-    void remove_listener(const std::shared_ptr<transwarp::listener>& listener) override {
-        if (!listener) {
-            throw transwarp::transwarp_error("Not a valid pointer to listener");
-        }
-        listeners_.erase(std::remove(listeners_.begin(), listeners_.end(), listener), listeners_.end());
     }
 
     // Resets the future of this task
@@ -1913,6 +1915,12 @@ public:
         return node_;
     }
 
+    // No-op because a value task doesn't raise events
+    void add_listener(std::shared_ptr<transwarp::listener>) override {}
+
+    // No-op because a value task doesn't raise events
+    void remove_listener(const std::shared_ptr<transwarp::listener>&) override {}
+
     // No-op because a value task never runs
     void schedule() override {}
 
@@ -1981,12 +1989,6 @@ public:
     bool has_result() const noexcept override {
         return true;
     }
-
-    // No-op because a value task doesn't raise events
-    void add_listener(std::shared_ptr<transwarp::listener>) override {}
-
-    // No-op because a value task doesn't raise events
-    void remove_listener(const std::shared_ptr<transwarp::listener>&) override {}
 
     // Returns the result of this task
     typename transwarp::result_info<result_type>::type get() const override {
