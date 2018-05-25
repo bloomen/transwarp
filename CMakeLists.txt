@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 2.8)
 project(transwarp)
 enable_testing()
  
+include_directories(examples)
+ 
 set(SOURCES 
 	src/transwarp.h 
 	src/test.cpp 
