@@ -6,7 +6,7 @@
 #include "../examples/benchmark_simple.h"
 #include "../examples/benchmark_statistical.h"
 #include "../examples/single_thread_lock_free.h"
-#include "../examples/wide_graph.h"
+#include "../examples/wide_graph_with_listener.h"
 #include <array>
 #include <fstream>
 
@@ -1481,8 +1481,8 @@ TEST_CASE("example__single_thread_lock_free") {
     REQUIRE(os.str().size() > 0u);
 }
 
-TEST_CASE("example__wide_graph") {
+TEST_CASE("example__wide_graph_with_listener") {
     std::ostringstream os;
-    examples::wide_graph(os, 3, 1000);
+    examples::wide_graph_with_listener(os, 3, 1000);
     REQUIRE(os.str().size() > 0u);
 }

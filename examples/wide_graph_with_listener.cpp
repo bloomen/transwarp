@@ -1,4 +1,4 @@
-#include "wide_graph.h"
+#include "wide_graph_with_listener.h"
 #include "../src/transwarp.h"
 #include <iostream>
 #include <fstream>
@@ -75,7 +75,7 @@ namespace examples {
 // In this example, new data cannot be scheduled until the last result
 // was retrieved. However, this can be changed to use a pool of graphs
 // to process every data input as soon as possible.
-void wide_graph(std::ostream& os, std::size_t iterations, std::size_t size) {
+void wide_graph_with_listener(std::ostream& os, std::size_t iterations, std::size_t size) {
     tw::parallel exec{8}; // thread pool with 8 threads
 
     // The data input task at the root of the graph
@@ -87,7 +87,7 @@ void wide_graph(std::ostream& os, std::size_t iterations, std::size_t size) {
 
     // Output the graph for visualization
     const auto graph = final->get_graph();
-    std::ofstream("wide_graph.dot") << tw::to_string(graph);
+    std::ofstream("wide_graph_with_listener.dot") << tw::to_string(graph);
 
     // This is to generate random data
     std::uniform_int_distribution<std::size_t> dist(size, size * 10);
@@ -105,7 +105,7 @@ void wide_graph(std::ostream& os, std::size_t iterations, std::size_t size) {
 
 #ifndef UNITTEST
 int main() {
-    std::cout << "Running example: wide_graph ..." << std::endl;
-    examples::wide_graph(std::cout);
+    std::cout << "Running example: wide_graph_with_listener ..." << std::endl;
+    examples::wide_graph_with_listener(std::cout);
 }
 #endif
