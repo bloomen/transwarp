@@ -255,11 +255,11 @@ public:
 class itask;
 
 
-// An enum of events used with the listener pattern
+// An enum of task events used with the listener pattern
 enum class event_type {
     scheduled, // just after a task is scheduled
     started,   // just before a task is run
-    finished,  // just after a task finishes
+    finished,  // just after a task has finished
 };
 
 
