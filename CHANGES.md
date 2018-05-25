@@ -1,3 +1,11 @@
+1.4.0
+
+- added a schedule type enum and made 'breadth' the default
+- added a listener interface to handle task events
+- added a new example that demonstrates scheduling a wide graph
+- improved the performance of scheduling a graph
+- fixed up documentation
+
 1.3.0
 
 - added new task types: accept and accept_any
