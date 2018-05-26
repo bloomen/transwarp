@@ -41,22 +41,14 @@ private:
 };
 
 std::shared_ptr<tw::task<double>> build_graph(std::shared_ptr<tw::task<data_t>> input) {
-    auto c0 = tw::make_task(tw::consume, transform, input);
-    auto c1 = tw::make_task(tw::consume, transform, input);
-    auto c2 = tw::make_task(tw::consume, transform, input);
-    auto c3 = tw::make_task(tw::consume, transform, input);
-    auto c4 = tw::make_task(tw::consume, transform, input);
-    auto c5 = tw::make_task(tw::consume, transform, input);
-    auto c6 = tw::make_task(tw::consume, transform, input);
-    auto c7 = tw::make_task(tw::consume, transform, input);
-    auto d0 = tw::make_task(tw::consume, transform, c0);
-    auto d1 = tw::make_task(tw::consume, transform, c1);
-    auto d2 = tw::make_task(tw::consume, transform, c2);
-    auto d3 = tw::make_task(tw::consume, transform, c3);
-    auto d4 = tw::make_task(tw::consume, transform, c4);
-    auto d5 = tw::make_task(tw::consume, transform, c5);
-    auto d6 = tw::make_task(tw::consume, transform, c6);
-    auto d7 = tw::make_task(tw::consume, transform, c7);
+    auto d0 = tw::make_task(tw::consume, transform, input)->then(tw::consume, transform);
+    auto d1 = tw::make_task(tw::consume, transform, input)->then(tw::consume, transform);
+    auto d2 = tw::make_task(tw::consume, transform, input)->then(tw::consume, transform);
+    auto d3 = tw::make_task(tw::consume, transform, input)->then(tw::consume, transform);
+    auto d4 = tw::make_task(tw::consume, transform, input)->then(tw::consume, transform);
+    auto d5 = tw::make_task(tw::consume, transform, input)->then(tw::consume, transform);
+    auto d6 = tw::make_task(tw::consume, transform, input)->then(tw::consume, transform);
+    auto d7 = tw::make_task(tw::consume, transform, input)->then(tw::consume, transform);
     auto final = tw::make_task(tw::consume,
         [](data_t d0, data_t d1, data_t d2, data_t d3, data_t d4, data_t d5, data_t d6, data_t d7) {
             return (mean(d0) + mean(d1) + mean(d2) + mean(d3) + mean(d4) + mean(d5) + mean(d6) + mean(d7)) / 8.;

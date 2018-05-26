@@ -1443,6 +1443,38 @@ TEST_CASE("started_event_with_exception") {
     test_started_event([]{ throw std::bad_alloc{}; });
 }
 
+TEST_CASE("task_next") {
+    auto t1 = make_task(transwarp::root, []{ return 42; });
+    auto t2 = t1->then(transwarp::consume, [](int x){ return x + 1; });
+    t2->schedule_all();
+    REQUIRE(43 == t2->get());
+}
+
+TEST_CASE("task_next_with_name") {
+    const std::string name = "task";
+    auto t1 = make_value_task(42);
+    auto t2 = t1->then(transwarp::consume, name, [](int x){ return x + 1; });
+    t2->schedule_all();
+    REQUIRE(43 == t2->get());
+    REQUIRE(name == *t2->get_node()->get_name());
+}
+
+TEST_CASE("value_task_next") {
+    auto t1 = make_task(transwarp::root, []{ return 42; });
+    auto t2 = t1->then(transwarp::consume, [](int x){ return x + 1; });
+    t2->schedule_all();
+    REQUIRE(43 == t2->get());
+}
+
+TEST_CASE("value_task_next_with_name") {
+    const std::string name = "task";
+    auto t1 = make_value_task(42);
+    auto t2 = t1->then(transwarp::consume, name, [](int x){ return x + 1; });
+    t2->schedule_all();
+    REQUIRE(43 == t2->get());
+    REQUIRE(name == *t2->get_node()->get_name());
+}
+
 // Examples
 
 TEST_CASE("example__basic_with_three_tasks") {

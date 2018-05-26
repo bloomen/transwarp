@@ -1801,6 +1801,20 @@ public:
     : transwarp::detail::task_impl_proxy<result_type, task_type, Functor, ParentResults...>(std::forward<F>(functor), std::move(parents)...)
     {}
 
+    /// Creates a continuation to this task
+    template<typename TaskType_, typename Functor_>
+    auto then(TaskType_, std::string name, Functor_&& functor) const
+        -> decltype(std::make_shared<transwarp::task_impl<TaskType_, typename std::decay<Functor_>::type, result_type>>(std::move(name), std::forward<Functor_>(functor), std::dynamic_pointer_cast<transwarp::task<result_type>>(const_cast<task_impl*>(this)->shared_from_this()))) {
+        return std::make_shared<transwarp::task_impl<TaskType_, typename std::decay<Functor_>::type, result_type>>(std::move(name), std::forward<Functor_>(functor), std::dynamic_pointer_cast<transwarp::task<result_type>>(const_cast<task_impl*>(this)->shared_from_this()));
+    }
+
+    /// Creates a continuation to this task. Overload for omitting for task name
+    template<typename TaskType_, typename Functor_>
+    auto then(TaskType_, Functor_&& functor) const
+        -> decltype(std::make_shared<transwarp::task_impl<TaskType_, typename std::decay<Functor_>::type, result_type>>(std::forward<Functor_>(functor), std::dynamic_pointer_cast<transwarp::task<result_type>>(const_cast<task_impl*>(this)->shared_from_this()))) {
+        return std::make_shared<transwarp::task_impl<TaskType_, typename std::decay<Functor_>::type, result_type>>(std::forward<Functor_>(functor), std::dynamic_pointer_cast<transwarp::task<result_type>>(const_cast<task_impl*>(this)->shared_from_this()));
+    }
+
     // delete copy/move semantics
     task_impl(const task_impl&) = delete;
     task_impl& operator=(const task_impl&) = delete;
@@ -1812,7 +1826,8 @@ public:
 /// A value task that stores a single value and doesn't require scheduling.
 /// Value tasks should be created using the make_value_task factory functions.
 template<typename ResultType>
-class value_task : public transwarp::task<ResultType> {
+class value_task : public transwarp::task<ResultType>,
+                   public std::enable_shared_from_this<value_task<ResultType>> {
 public:
     /// The task type
     using task_type = transwarp::root_type;
@@ -1821,6 +1836,7 @@ public:
     using result_type = ResultType;
 
     /// A value task is defined by name and value. name is optional, see overload
+    /// Note: A value task must be created using shared_ptr (because of shared_from_this)
     template<typename T, typename = typename std::enable_if<std::is_same<result_type, typename std::decay<T>::type>::value>::type>
     // cppcheck-suppress passedByValue
     // cppcheck-suppress uninitMemberVar
@@ -1829,6 +1845,7 @@ public:
     {}
 
     /// This overload is for omitting the task name
+    /// Note: A value task must be created using shared_ptr (because of shared_from_this)
     template<typename T, typename = typename std::enable_if<std::is_same<result_type, typename std::decay<T>::type>::value>::type>
     // cppcheck-suppress uninitMemberVar
     explicit value_task(T&& value)
@@ -1842,6 +1859,20 @@ public:
     value_task& operator=(const value_task&) = delete;
     value_task(value_task&&) = delete;
     value_task& operator=(value_task&&) = delete;
+
+    /// Creates a continuation to this task
+    template<typename TaskType_, typename Functor_>
+    auto then(TaskType_, std::string name, Functor_&& functor) const
+        -> decltype(std::make_shared<transwarp::task_impl<TaskType_, typename std::decay<Functor_>::type, result_type>>(std::move(name), std::forward<Functor_>(functor), std::dynamic_pointer_cast<transwarp::task<result_type>>(const_cast<value_task*>(this)->shared_from_this()))) {
+        return std::make_shared<transwarp::task_impl<TaskType_, typename std::decay<Functor_>::type, result_type>>(std::move(name), std::forward<Functor_>(functor), std::dynamic_pointer_cast<transwarp::task<result_type>>(const_cast<value_task*>(this)->shared_from_this()));
+    }
+
+    /// Creates a continuation to this task. Overload for omitting for task name
+    template<typename TaskType_, typename Functor_>
+    auto then(TaskType_, Functor_&& functor) const
+        -> decltype(std::make_shared<transwarp::task_impl<TaskType_, typename std::decay<Functor_>::type, result_type>>(std::forward<Functor_>(functor), std::dynamic_pointer_cast<transwarp::task<result_type>>(const_cast<value_task*>(this)->shared_from_this()))) {
+        return std::make_shared<transwarp::task_impl<TaskType_, typename std::decay<Functor_>::type, result_type>>(std::forward<Functor_>(functor), std::dynamic_pointer_cast<transwarp::task<result_type>>(const_cast<value_task*>(this)->shared_from_this()));
+    }
 
     /// No-op because a value task never runs
     void set_executor(std::shared_ptr<transwarp::executor>) override {}
