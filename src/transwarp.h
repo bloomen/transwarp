@@ -1611,10 +1611,7 @@ private:
 };
 
 
-/// A task for non-void result type.
-/// A task representing a piece of work given by functor and parent tasks.
-/// By connecting tasks a directed acyclic graph is built.
-/// Tasks should be created using the make_task factory functions.
+/// A task proxy for non-void result type.
 template<typename ResultType, typename TaskType, typename Functor, typename... ParentResults>
 class task_impl_proxy : public transwarp::detail::task_impl_base<ResultType, TaskType, Functor, ParentResults...> {
 public:
@@ -1671,9 +1668,6 @@ private:
 };
 
 /// A task for non-void, non-const reference result type.
-/// A task representing a piece of work given by functor and parent tasks.
-/// By connecting tasks a directed acyclic graph is built.
-/// Tasks should be created using the make_task factory functions.
 template<typename ResultType, typename TaskType, typename Functor, typename... ParentResults>
 class task_impl_proxy<ResultType&, TaskType, Functor, ParentResults...> : public transwarp::detail::task_impl_base<ResultType&, TaskType, Functor, ParentResults...> {
 public:
@@ -1724,9 +1718,6 @@ private:
 };
 
 /// A task for void result type.
-/// A task representing a piece of work given by functor and parent tasks.
-/// By connecting tasks a directed acyclic graph is built.
-/// Tasks should be created using the make_task factory functions.
 template<typename TaskType, typename Functor, typename... ParentResults>
 class task_impl_proxy<void, TaskType, Functor, ParentResults...> : public transwarp::detail::task_impl_base<void, TaskType, Functor, ParentResults...> {
 public:
