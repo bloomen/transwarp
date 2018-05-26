@@ -4,7 +4,7 @@
 - added a listener interface to handle task events
 - added a new example that demonstrates scheduling a wide graph
 - improved the performance of scheduling a graph
-- fixed up documentation
+- fixed up documentation, added doxygen doc
 
 1.3.0
 
