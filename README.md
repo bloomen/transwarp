@@ -4,6 +4,8 @@
 
 <a href="https://raw.githubusercontent.com/bloomen/transwarp/master/src/transwarp.h" download="transwarp.h">Download as single header from here</a>
 
+<a href="https://bloomen.github.io/transwarp">Doxygen documentation</a>
+
 [![Gitter](https://badges.gitter.im/bloomen/transwarp.svg)](https://gitter.im/bloomen/transwarp)
 
 transwarp is a header-only C++ library for task concurrency. It
