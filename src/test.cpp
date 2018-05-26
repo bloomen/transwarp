@@ -1384,7 +1384,7 @@ TEST_CASE("scheduled_event") {
     t->add_listener(l);
     t->schedule();
     REQUIRE(3 == l->events.size());
-    REQUIRE(transwarp::event_type::scheduled == l->events[0]);
+    REQUIRE(transwarp::event_type::before_scheduled == l->events[0]);
 }
 
 template<typename Functor>
@@ -1394,17 +1394,17 @@ void test_finished_event(Functor functor) {
     t->add_listener(l);
     t->schedule();
     REQUIRE(3 == l->events.size());
-    REQUIRE(transwarp::event_type::finished == l->events[2]);
+    REQUIRE(transwarp::event_type::before_finished == l->events[2]);
     l->events.clear();
     auto exec = std::make_shared<transwarp::sequential>();
     t->schedule(*exec);
     REQUIRE(3 == l->events.size());
-    REQUIRE(transwarp::event_type::finished == l->events[2]);
+    REQUIRE(transwarp::event_type::before_finished == l->events[2]);
     l->events.clear();
     t->set_executor(exec);
     t->schedule();
     REQUIRE(3 == l->events.size());
-    REQUIRE(transwarp::event_type::finished == l->events[2]);
+    REQUIRE(transwarp::event_type::before_finished == l->events[2]);
 }
 
 TEST_CASE("finished_event") {
@@ -1422,17 +1422,17 @@ void test_started_event(Functor functor) {
     t->add_listener(l);
     t->schedule();
     REQUIRE(3 == l->events.size());
-    REQUIRE(transwarp::event_type::started == l->events[1]);
+    REQUIRE(transwarp::event_type::after_started == l->events[1]);
     l->events.clear();
     auto exec = std::make_shared<transwarp::sequential>();
     t->schedule(*exec);
     REQUIRE(3 == l->events.size());
-    REQUIRE(transwarp::event_type::started == l->events[1]);
+    REQUIRE(transwarp::event_type::after_started == l->events[1]);
     l->events.clear();
     t->set_executor(exec);
     t->schedule();
     REQUIRE(3 == l->events.size());
-    REQUIRE(transwarp::event_type::started == l->events[1]);
+    REQUIRE(transwarp::event_type::after_started == l->events[1]);
 }
 
 TEST_CASE("started_event") {

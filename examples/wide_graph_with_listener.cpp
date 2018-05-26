@@ -3,7 +3,7 @@
 #include <iostream>
 #include <fstream>
 #include <random>
-#include <algorithm>
+#include <numeric>
 namespace tw = transwarp;
 
 namespace {
@@ -29,9 +29,9 @@ public:
     explicit listener(std::ostream& os)
     : os_(os) {}
 
-    // Note: this is called on the thread the task is run on for the finished event
+    // Note: this is called on the thread the task is run on for the before_finished event
     void handle_event(tw::event_type event, const std::shared_ptr<tw::node>& node) {
-        if (event == tw::event_type::finished) {
+        if (event == tw::event_type::before_finished) {
             os_ << "task finished: " << tw::to_string(*node, " ") << std::endl;
         }
     }
@@ -59,7 +59,7 @@ std::shared_ptr<tw::task<double>> build_graph(std::shared_ptr<tw::task<data_t>> 
     auto d7 = tw::make_task(tw::consume, transform, c7);
     auto final = tw::make_task(tw::consume,
         [](data_t d0, data_t d1, data_t d2, data_t d3, data_t d4, data_t d5, data_t d6, data_t d7) {
-            return (mean(d0) + mean(d1) + mean(d2) + mean(d3) + mean(d4) + mean(d5) + mean(d6) + mean(d7)) / 8;
+            return (mean(d0) + mean(d1) + mean(d2) + mean(d3) + mean(d4) + mean(d5) + mean(d6) + mean(d7)) / 8.;
         }, d0, d1, d2, d3, d4, d5, d6, d7);
     return final;
 }

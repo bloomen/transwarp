@@ -254,9 +254,9 @@ public:
 
 // An enum of task events used with the listener pattern
 enum class event_type {
-    scheduled, // just after a task is scheduled
-    started,   // just before a task is run
-    finished,  // just after a task has finished
+    before_scheduled, // just before a task is scheduled (handle_event called on thread of caller to schedule())
+    after_started,    // just after a task has started running (handle_event called on thread that task is run on)
+    before_finished,  // just before a task finishes running (handle_event called on thread that task is run on)
 };
 
 
@@ -1496,17 +1496,17 @@ private:
                     std::bind(&transwarp::detail::call_with_futures<
                               task_type, result_type, std::weak_ptr<task_impl_base>, ParentResults...>,
                               node_->get_id(), self, std::move(futures)));
+            raise_event(transwarp::event_type::before_scheduled);
             future_ = pack_task->get_future();
             auto callable = [pack_task,self] {
-                if (auto t = self.lock()) {
-                    t->raise_event(transwarp::event_type::started);
+                if (const auto t = self.lock()) {
+                    t->raise_event(transwarp::event_type::after_started);
                 }
                 (*pack_task)();
-                if (auto t = self.lock()) {
-                    t->raise_event(transwarp::event_type::finished);
+                if (const auto t = self.lock()) {
+                    t->raise_event(transwarp::event_type::before_finished);
                 }
             };
-            raise_event(transwarp::event_type::scheduled);
             if (executor_) {
                 executor_->execute(callable, node_);
             } else if (executor) {
