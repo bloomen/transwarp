@@ -1,6 +1,6 @@
 /// @mainpage transwarp is a header-only C++ library for task concurrency
 /// @details https://github.com/bloomen/transwarp
-/// @version 1.4.0
+/// @version 1.5.0-dev
 /// @author Christian Blume
 /// @date 2018
 /// @copyright MIT http:///www.opensource.org/licenses/mit-license.php
@@ -80,13 +80,6 @@ constexpr transwarp::wait_type wait{}; ///< The wait task tag
 /// The wait_any type. Used for tag dispatch
 struct wait_any_type : std::integral_constant<transwarp::task_type, transwarp::task_type::wait_any> {};
 constexpr transwarp::wait_any_type wait_any{}; ///< The wait_any task tag
-
-
-/// Determines in which order tasks are scheduled in the graph
-enum class schedule_type {
-    breadth, ///< Scheduling according to a breadth-first search (default)
-    depth,   ///< Scheduling according to a depth-first search
-};
 
 
 /// Detail namespace for internal functionality only
@@ -240,7 +233,7 @@ inline std::string to_string(const std::vector<transwarp::edge>& graph, const st
 }
 
 
-/// The executor interface
+/// The executor interface used to perform custom task execution
 class executor {
 public:
     virtual ~executor() = default;
@@ -251,6 +244,7 @@ public:
     /// Is supposed to run a task which is wrapped by the functor. The functor only
     /// captures a shared_ptr and can hence be copied at low cost. node represents
     /// the task that the functor belongs to.
+    /// This function is only ever called on the thread of the caller to schedule()
     virtual void execute(const std::function<void()>& functor, const std::shared_ptr<transwarp::node>& node) = 0;
 };
 
@@ -260,16 +254,24 @@ enum class event_type {
     before_scheduled, ///< just before a task is scheduled (handle_event called on thread of caller to schedule())
     after_started,    ///< just after a task has started running (handle_event called on thread that task is run on)
     before_finished,  ///< just before a task finishes running (handle_event called on thread that task is run on)
+    count,
 };
 
 
-/// The listener interface
+/// The listener interface to listen to events raised by tasks
 class listener {
 public:
     virtual ~listener() = default;
 
-    /// This may be called from arbitrary threads
+    /// This may be called from arbitrary threads depending on the event type (see transwarp::event_type)
     virtual void handle_event(transwarp::event_type event, const std::shared_ptr<transwarp::node>& node) = 0;
+};
+
+
+/// Determines in which order tasks are scheduled in the graph
+enum class schedule_type {
+    breadth, ///< Scheduling according to a breadth-first search (default)
+    depth,   ///< Scheduling according to a depth-first search
 };
 
 
@@ -292,7 +294,11 @@ public:
     virtual void remove_custom_data_all() = 0;
     virtual const std::shared_ptr<transwarp::node>& get_node() const noexcept = 0;
     virtual void add_listener(std::shared_ptr<transwarp::listener> listener) = 0;
+    virtual void add_listener(transwarp::event_type event, std::shared_ptr<transwarp::listener> listener) = 0;
     virtual void remove_listener(const std::shared_ptr<transwarp::listener>& listener) = 0;
+    virtual void remove_listener(transwarp::event_type event, const std::shared_ptr<transwarp::listener>& listener) = 0;
+    virtual void remove_listeners(transwarp::event_type event) = 0;
+    virtual void remove_listeners() = 0;
     virtual void schedule() = 0;
     virtual void schedule(transwarp::executor& executor) = 0;
     virtual void schedule(bool reset) = 0;
@@ -1252,20 +1258,51 @@ public:
         return node_;
     }
 
-    /// Adds a new listener
+    /// Adds a new listener for all event types
     void add_listener(std::shared_ptr<transwarp::listener> listener) override {
-        if (!listener) {
-            throw transwarp::transwarp_error("Not a valid pointer to listener");
+        ensure_task_not_running();
+        check_listener(listener);
+        for (auto& l : listeners_) {
+            l.push_back(listener);
         }
-        listeners_.push_back(std::move(listener));
     }
 
-    /// Removes a listener
+    /// Adds a new listener for the given event type only
+    void add_listener(transwarp::event_type event, std::shared_ptr<transwarp::listener> listener) override {
+        ensure_task_not_running();
+        check_listener(listener);
+        listeners_[static_cast<std::size_t>(event)].push_back(std::move(listener));
+    }
+
+    /// Removes the listener for all event types
     void remove_listener(const std::shared_ptr<transwarp::listener>& listener) override {
-        if (!listener) {
-            throw transwarp::transwarp_error("Not a valid pointer to listener");
+        ensure_task_not_running();
+        check_listener(listener);
+        for (auto& l : listeners_) {
+            l.erase(std::remove(l.begin(), l.end(), listener), l.end());
         }
-        listeners_.erase(std::remove(listeners_.begin(), listeners_.end(), listener), listeners_.end());
+    }
+
+    /// Removes the listener for the given event type only
+    void remove_listener(transwarp::event_type event, const std::shared_ptr<transwarp::listener>& listener) override {
+        ensure_task_not_running();
+        check_listener(listener);
+        auto& l = listeners_[static_cast<std::size_t>(event)];
+        l.erase(std::remove(l.begin(), l.end(), listener), l.end());
+    }
+
+    /// Removes all listeners for the given event type
+    void remove_listeners(transwarp::event_type event) override {
+        ensure_task_not_running();
+        listeners_[static_cast<std::size_t>(event)].clear();
+    }
+
+    /// Removes all listeners
+    void remove_listeners() override {
+        ensure_task_not_running();
+        for (auto& l : listeners_) {
+            l.clear();
+        }
     }
 
     /// Schedules this task for execution on the caller thread.
@@ -1451,7 +1488,8 @@ protected:
     task_impl_base(bool has_name, std::string name, F&& functor, std::shared_ptr<transwarp::task<ParentResults>>... parents)
     : node_(std::make_shared<transwarp::node>()),
       functor_(std::forward<F>(functor)),
-      parents_(std::make_tuple(std::move(parents)...))
+      parents_(std::make_tuple(std::move(parents)...)),
+      listeners_(static_cast<std::size_t>(transwarp::event_type::count))
     {
         transwarp::detail::node_manip::set_type(*node_, task_type::value);
         transwarp::detail::node_manip::set_name(*node_, (has_name ? std::make_shared<std::string>(std::move(name)) : nullptr));
@@ -1594,9 +1632,15 @@ private:
     }
 
     /// Raises the given event to all listeners
-    void raise_event(transwarp::event_type type) const {
-        for (const auto& listener : listeners_) {
-            listener->handle_event(type, this->get_node());
+    void raise_event(transwarp::event_type event) const {
+        for (const auto& listener : listeners_[static_cast<std::size_t>(event)]) {
+            listener->handle_event(event, get_node());
+        }
+    }
+
+    void check_listener(const std::shared_ptr<transwarp::listener>& listener) const {
+        if (!listener) {
+            throw transwarp::transwarp_error("Not a valid pointer to listener");
         }
     }
 
@@ -1605,7 +1649,7 @@ private:
     std::tuple<std::shared_ptr<transwarp::task<ParentResults>>...> parents_;
     bool visited_ = false;
     std::shared_ptr<transwarp::executor> executor_;
-    std::vector<std::shared_ptr<transwarp::listener>> listeners_;
+    std::vector<std::vector<std::shared_ptr<transwarp::listener>>> listeners_;
     std::vector<transwarp::itask*> depth_tasks_;
     std::vector<transwarp::itask*> breadth_tasks_;
 };
@@ -1938,7 +1982,19 @@ public:
     void add_listener(std::shared_ptr<transwarp::listener>) override {}
 
     /// No-op because a value task doesn't raise events
+    void add_listener(transwarp::event_type, std::shared_ptr<transwarp::listener>) override {}
+
+    /// No-op because a value task doesn't raise events
     void remove_listener(const std::shared_ptr<transwarp::listener>&) override {}
+
+    /// No-op because a value task doesn't raise events
+    void remove_listener(transwarp::event_type, const std::shared_ptr<transwarp::listener>&) override {}
+
+    /// No-op because a value task doesn't raise events
+    void remove_listeners(transwarp::event_type) override {}
+
+    /// No-op because a value task doesn't raise events
+    void remove_listeners() override {}
 
     /// No-op because a value task never runs
     void schedule() override {}

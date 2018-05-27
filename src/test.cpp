@@ -1356,6 +1356,8 @@ TEST_CASE("has_result_for_value_task") {
     REQUIRE(t->has_result());
 }
 
+constexpr int n_events = static_cast<int>(transwarp::event_type::count);
+
 struct mock_listener : transwarp::listener {
     std::vector<transwarp::event_type> events;
     void handle_event(transwarp::event_type event, const std::shared_ptr<transwarp::node>&) override {
@@ -1370,8 +1372,10 @@ TEST_CASE("add_remove_listener") {
     t->add_listener(l1);
     t->add_listener(l1);
     t->add_listener(l2);
-    REQUIRE(3 == l1.use_count());
-    REQUIRE(2 == l2.use_count());
+    REQUIRE(1 + 2*n_events == l1.use_count());
+    REQUIRE(1 + n_events == l2.use_count());
+    t->remove_listener(l1);
+    REQUIRE(1 == l1.use_count());
     t->remove_listener(l1);
     REQUIRE(1 == l1.use_count());
     t->remove_listener(l2);
@@ -1383,7 +1387,7 @@ TEST_CASE("scheduled_event") {
     auto l = std::make_shared<mock_listener>();
     t->add_listener(l);
     t->schedule();
-    REQUIRE(3 == l->events.size());
+    REQUIRE(n_events == l->events.size());
     REQUIRE(transwarp::event_type::before_scheduled == l->events[0]);
 }
 
@@ -1393,17 +1397,17 @@ void test_finished_event(Functor functor) {
     auto l = std::make_shared<mock_listener>();
     t->add_listener(l);
     t->schedule();
-    REQUIRE(3 == l->events.size());
+    REQUIRE(n_events == l->events.size());
     REQUIRE(transwarp::event_type::before_finished == l->events[2]);
     l->events.clear();
     auto exec = std::make_shared<transwarp::sequential>();
     t->schedule(*exec);
-    REQUIRE(3 == l->events.size());
+    REQUIRE(n_events == l->events.size());
     REQUIRE(transwarp::event_type::before_finished == l->events[2]);
     l->events.clear();
     t->set_executor(exec);
     t->schedule();
-    REQUIRE(3 == l->events.size());
+    REQUIRE(n_events == l->events.size());
     REQUIRE(transwarp::event_type::before_finished == l->events[2]);
 }
 
@@ -1415,23 +1419,69 @@ TEST_CASE("finished_event_with_exception") {
     test_finished_event([]{ throw std::bad_alloc{}; });
 }
 
+TEST_CASE("add_listener_with_event") {
+    auto t = make_task(transwarp::root, []{});
+    auto l = std::make_shared<mock_listener>();
+    t->add_listener(transwarp::event_type::before_scheduled, l);
+    t->schedule();
+    REQUIRE(1 == l->events.size());
+    REQUIRE(transwarp::event_type::before_scheduled == l->events[0]);
+}
+
+TEST_CASE("remove_listener_with_event") {
+    auto t = make_task(transwarp::root, []{});
+    auto l = std::make_shared<mock_listener>();
+    t->add_listener(l);
+    REQUIRE(1 + n_events == l.use_count());
+    t->remove_listener(transwarp::event_type::before_scheduled, l);
+    REQUIRE(n_events == l.use_count());
+    t->schedule();
+    REQUIRE(n_events - 1 == l->events.size());
+    REQUIRE(transwarp::event_type::after_started == l->events[0]);
+    REQUIRE(transwarp::event_type::before_finished == l->events[1]);
+}
+
+TEST_CASE("remove_listeners_with_event") {
+    auto t = make_task(transwarp::root, []{});
+    auto l = std::make_shared<mock_listener>();
+    t->add_listener(l);
+    REQUIRE(1 + n_events == l.use_count());
+    t->remove_listeners(transwarp::event_type::before_scheduled);
+    REQUIRE(n_events == l.use_count());
+    t->schedule();
+    REQUIRE(n_events - 1 == l->events.size());
+    REQUIRE(transwarp::event_type::after_started == l->events[0]);
+    REQUIRE(transwarp::event_type::before_finished == l->events[1]);
+}
+
+TEST_CASE("remove_listeners") {
+    auto t = make_task(transwarp::root, []{});
+    auto l = std::make_shared<mock_listener>();
+    t->add_listener(l);
+    REQUIRE(n_events + 1 == l.use_count());
+    t->remove_listeners();
+    REQUIRE(1 == l.use_count());
+    t->schedule();
+    REQUIRE(0 == l->events.size());
+}
+
 template<typename Functor>
 void test_started_event(Functor functor) {
     auto t = make_task(transwarp::root, functor);
     auto l = std::make_shared<mock_listener>();
     t->add_listener(l);
     t->schedule();
-    REQUIRE(3 == l->events.size());
+    REQUIRE(n_events == l->events.size());
     REQUIRE(transwarp::event_type::after_started == l->events[1]);
     l->events.clear();
     auto exec = std::make_shared<transwarp::sequential>();
     t->schedule(*exec);
-    REQUIRE(3 == l->events.size());
+    REQUIRE(n_events == l->events.size());
     REQUIRE(transwarp::event_type::after_started == l->events[1]);
     l->events.clear();
     t->set_executor(exec);
     t->schedule();
-    REQUIRE(3 == l->events.size());
+    REQUIRE(n_events == l->events.size());
     REQUIRE(transwarp::event_type::after_started == l->events[1]);
 }
 
