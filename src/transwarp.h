@@ -678,7 +678,7 @@ template<int total, int... n>
 struct call_with_futures_impl<transwarp::accept_any_type, true, total, n...> {
     template<typename Result, typename Task, typename... ParentResults>
     static Result work(std::size_t node_id, const Task& task, const std::tuple<std::shared_future<ParentResults>...>& futures) {
-        using future_t = typename std::remove_reference<decltype(std::get<0>(futures))>::type; /// use first type as reference
+        using future_t = typename std::remove_reference<decltype(std::get<0>(futures))>::type; // use first type as reference
         auto future = transwarp::detail::wait_for_any<future_t>(std::get<n>(futures)...);
         return transwarp::detail::run_task<Result>(node_id, task, future);
     }
@@ -1623,7 +1623,7 @@ private:
         }
     }
 
-    /// Traverses through all tasks and marks them as not visited.
+    /// Traverses through each task and marks them as not visited.
     void unvisit() noexcept override {
         if (visited_) {
             visited_ = false;
@@ -1638,6 +1638,7 @@ private:
         }
     }
 
+    /// Check for non-null listener pointer
     void check_listener(const std::shared_ptr<transwarp::listener>& listener) const {
         if (!listener) {
             throw transwarp::transwarp_error("Not a valid pointer to listener");
