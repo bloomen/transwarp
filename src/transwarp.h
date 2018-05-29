@@ -339,8 +339,8 @@ private:
 
 /// Removes reference and const from a type
 template<typename T>
-struct remove_refc {
-    using type = typename std::remove_reference<typename std::remove_const<T>::type>::type;
+struct remove_cref {
+    using type = typename std::remove_const<typename std::remove_reference<T>::type>::type;
 };
 
 
@@ -359,8 +359,8 @@ public:
 
     virtual ~task() = default;
 
-    virtual void set_value(const typename transwarp::remove_refc<result_type>::type& value) = 0;
-    virtual void set_value(typename transwarp::remove_refc<result_type>::type&& value) = 0;
+    virtual void set_value(const typename transwarp::remove_cref<result_type>::type& value) = 0;
+    virtual void set_value(typename transwarp::remove_cref<result_type>::type&& value) = 0;
     virtual const std::shared_future<result_type>& get_future() const noexcept = 0;
     virtual typename transwarp::result_info<result_type>::type get() const = 0;
 };
@@ -373,7 +373,7 @@ public:
 
     virtual ~task() = default;
 
-    virtual void set_value(typename transwarp::remove_refc<result_type>::type& value) = 0;
+    virtual void set_value(typename transwarp::remove_cref<result_type>::type& value) = 0;
     virtual const std::shared_future<result_type>& get_future() const noexcept = 0;
     virtual typename transwarp::result_info<result_type>::type get() const = 0;
 };
@@ -1668,13 +1668,13 @@ public:
 
     /// Assigns a value to this task. Scheduling will have no effect after a value
     /// has been set. Calling reset() will remove the value and re-enable scheduling.
-    void set_value(const typename transwarp::remove_refc<result_type>::type& value) override {
+    void set_value(const typename transwarp::remove_cref<result_type>::type& value) override {
         set_value_impl(value);
     }
 
     /// Assigns a value to this task. Scheduling will have no effect after a value
     /// has been set. Calling reset() will remove the value and re-enable scheduling.
-    void set_value(typename transwarp::remove_refc<result_type>::type&& value) override {
+    void set_value(typename transwarp::remove_cref<result_type>::type&& value) override {
         set_value_impl(value);
     }
 
@@ -1724,7 +1724,7 @@ public:
 
     /// Assigns a value to this task. Scheduling will have no effect after a value
     /// has been set. Calling reset() will remove the value and re-enable scheduling.
-    void set_value(typename transwarp::remove_refc<result_type>::type& value) override {
+    void set_value(typename transwarp::remove_cref<result_type>::type& value) override {
         set_value_impl(value);
     }
 
@@ -2034,12 +2034,12 @@ public:
     void schedule_all(transwarp::executor&, transwarp::schedule_type, bool) override {}
 
     /// Assigns a value to this task
-    void set_value(const typename transwarp::remove_refc<result_type>::type& value) override {
+    void set_value(const typename transwarp::remove_cref<result_type>::type& value) override {
         future_ = transwarp::detail::make_future_with_value<result_type>(value);
     }
 
     /// Assigns a value to this task
-    void set_value(typename transwarp::remove_refc<result_type>::type&& value) override {
+    void set_value(typename transwarp::remove_cref<result_type>::type&& value) override {
         future_ = transwarp::detail::make_future_with_value<result_type>(value);
     };
 
