@@ -114,7 +114,7 @@ This is a brief API doc of transwarp. In the following we will use `tw` as a nam
 
 ### Creating tasks
 
-transwarp supports five different task types:
+transwarp supports seven different task types:
 ```cpp
 root,        // The task has no parents
 accept,      // The task's functor accepts all parent futures
@@ -134,7 +134,8 @@ Note that `functor` in this case has to accept two arguments that match the
 result types of the parent tasks.
 
 Tasks can be freely chained together using the different task types. 
-The only restriction is that tasks without parents have to be labeled as `root` tasks. 
+The only restriction is that tasks without parents have to be either labeled as `root` tasks
+or defined as value tasks. 
 
 The `accept` and `accept_any` types give you the greatest flexibility but require your
 functor to take `std::shared_future<T>` types. The `consume` and `consume_any` task types, however, require your functor to take the direct result types of the parent tasks. 
