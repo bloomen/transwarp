@@ -252,8 +252,8 @@ public:
 /// An enum of task events used with the listener pattern
 enum class event_type {
     before_scheduled, ///< just before a task is scheduled (handle_event called on thread of caller to schedule())
-    after_started,    ///< just after a task has started running (handle_event called on thread that task is run on)
-    before_finished,  ///< just before a task finishes running (handle_event called on thread that task is run on)
+    before_started,   ///< just before a task starts running (handle_event called on thread that task is run on)
+    after_finished,   ///< just after a task has finished running (handle_event called on thread that task is run on)
     count,
 };
 
@@ -1543,11 +1543,11 @@ private:
             future_ = pack_task->get_future();
             auto callable = [pack_task,self] {
                 if (const auto t = self.lock()) {
-                    t->raise_event(transwarp::event_type::after_started);
+                    t->raise_event(transwarp::event_type::before_started);
                 }
                 (*pack_task)();
                 if (const auto t = self.lock()) {
-                    t->raise_event(transwarp::event_type::before_finished);
+                    t->raise_event(transwarp::event_type::after_finished);
                 }
             };
             if (executor_) {

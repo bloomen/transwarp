@@ -31,7 +31,7 @@ public:
 
     // Note: this is called on the thread the task is run on for the before_finished event
     void handle_event(tw::event_type event, const std::shared_ptr<tw::node>& node) {
-        if (event == tw::event_type::before_finished) {
+        if (event == tw::event_type::after_finished) {
             os_ << "task finished: " << tw::to_string(*node, " ") << std::endl;
         }
     }
