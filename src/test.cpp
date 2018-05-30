@@ -245,7 +245,7 @@ TEST_CASE("transwarp_error") {
 }
 
 TEST_CASE("task_canceled") {
-    const std::string msg = "task canceled: node";
+    const std::string msg = "Task canceled: node";
     try {
         throw transwarp::task_canceled("node");
     } catch (const transwarp::transwarp_error& e) {
@@ -254,9 +254,27 @@ TEST_CASE("task_canceled") {
 }
 
 TEST_CASE("task_destroyed") {
-    const std::string msg = "task destroyed: node";
+    const std::string msg = "Task destroyed: node";
     try {
         throw transwarp::task_destroyed("node");
+    } catch (const transwarp::transwarp_error& e) {
+        REQUIRE(msg == e.what());
+    }
+}
+
+TEST_CASE("invalid_parameter") {
+    const std::string msg = "Invalid parameter: param";
+    try {
+        throw transwarp::invalid_parameter("param");
+    } catch (const transwarp::transwarp_error& e) {
+        REQUIRE(msg == e.what());
+    }
+}
+
+TEST_CASE("control_error") {
+    const std::string msg = "Control error: msg";
+    try {
+        throw transwarp::control_error("msg");
     } catch (const transwarp::transwarp_error& e) {
         REQUIRE(msg == e.what());
     }
@@ -478,7 +496,7 @@ TEST_CASE("invalid_parent_task") {
 }
 
 TEST_CASE("parallel_with_zero_threads") {
-    REQUIRE_THROWS_AS(transwarp::parallel{0}, transwarp::thread_pool_error);
+    REQUIRE_THROWS_AS(transwarp::parallel{0}, transwarp::invalid_parameter);
 }
 
 TEST_CASE("schedule_single_task") {

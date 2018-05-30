@@ -1,26 +1,25 @@
 /// @mainpage transwarp is a header-only C++ library for task concurrency
 /// @details https://github.com/bloomen/transwarp
-/// @version 1.5.0-dev
+/// @version 1.5.0
 /// @author Christian Blume
 /// @date 2018
 /// @copyright MIT http:///www.opensource.org/licenses/mit-license.php
 #pragma once
-#include <future>
-#include <type_traits>
-#include <memory>
-#include <tuple>
-#include <string>
-#include <cstddef>
-#include <vector>
-#include <functional>
-#include <thread>
-#include <mutex>
 #include <algorithm>
-#include <queue>
-#include <stdexcept>
 #include <atomic>
 #include <chrono>
-#include <exception>
+#include <cstddef>
+#include <functional>
+#include <future>
+#include <memory>
+#include <mutex>
+#include <queue>
+#include <stdexcept>
+#include <string>
+#include <thread>
+#include <tuple>
+#include <type_traits>
+#include <vector>
 
 
 /// The transwarp namespace
@@ -38,6 +37,52 @@ enum class task_type {
     wait_any,    ///< The task's functor takes no arguments but waits for the first parent to finish
 };
 
+
+/// Base class for exceptions
+class transwarp_error : public std::runtime_error {
+public:
+    explicit transwarp_error(const std::string& message)
+    : std::runtime_error(message)
+    {}
+};
+
+
+/// Exception thrown when a task is canceled
+class task_canceled : public transwarp::transwarp_error {
+public:
+    explicit task_canceled(const std::string& node_repr)
+    : transwarp::transwarp_error("Task canceled: " + node_repr)
+    {}
+};
+
+
+/// Exception thrown when a task was destroyed prematurely
+class task_destroyed : public transwarp::transwarp_error {
+public:
+    explicit task_destroyed(const std::string& node_repr)
+    : transwarp::transwarp_error("Task destroyed: " + node_repr)
+    {}
+};
+
+
+/// Exception thrown when an invalid parameter was passed to a function
+class invalid_parameter : public transwarp::transwarp_error {
+public:
+    explicit invalid_parameter(const std::string& parameter)
+    : transwarp::transwarp_error("Invalid parameter: " + parameter)
+    {}
+};
+
+
+/// Exception thrown when a task is used in unintended ways
+class control_error : public transwarp::transwarp_error {
+public:
+    explicit control_error(const std::string& message)
+    : transwarp::transwarp_error("Control error: " + message)
+    {}
+};
+
+
 /// String conversion for the task_type enumeration
 inline std::string to_string(const transwarp::task_type& type) {
     switch (type) {
@@ -48,7 +93,7 @@ inline std::string to_string(const transwarp::task_type& type) {
     case transwarp::task_type::consume_any: return "consume_any";
     case transwarp::task_type::wait: return "wait";
     case transwarp::task_type::wait_any: return "wait_any";
-    default: return "unknown";
+    default: throw transwarp::invalid_parameter("task type");
     }
 }
 
@@ -249,7 +294,7 @@ public:
 };
 
 
-/// An enum of task events used with the listener pattern
+/// The task events that can be subscribed to using the below listener interface
 enum class event_type {
     before_scheduled, ///< just before a task is scheduled (handle_event called on thread of caller to schedule())
     before_started,   ///< just before a task starts running (handle_event called on thread that task is run on)
@@ -392,42 +437,6 @@ public:
 };
 
 
-/// Base class for exceptions
-class transwarp_error : public std::runtime_error {
-public:
-    explicit transwarp_error(const std::string& message)
-    : std::runtime_error(message)
-    {}
-};
-
-
-/// Exception thrown when a task is canceled
-class task_canceled : public transwarp::transwarp_error {
-public:
-    explicit task_canceled(const std::string& node_repr)
-    : transwarp::transwarp_error("task canceled: " + node_repr)
-    {}
-};
-
-
-/// Exception thrown when a task was destroyed prematurely
-class task_destroyed : public transwarp::transwarp_error {
-public:
-    explicit task_destroyed(const std::string& node_repr)
-    : transwarp::transwarp_error("task destroyed: " + node_repr)
-    {}
-};
-
-
-/// An exception for errors in the thread_pool class
-class thread_pool_error : public transwarp::transwarp_error {
-public:
-    explicit thread_pool_error(const std::string& message)
-    : transwarp::transwarp_error(message)
-    {}
-};
-
-
 /// A base class for a user-defined functor that needs access to the node associated
 /// to the task or a cancel point to stop a task while it's running
 class functor {
@@ -520,7 +529,7 @@ public:
     : done_(false)
     {
         if (n_threads == 0) {
-            throw transwarp::thread_pool_error("number of threads must be larger than zero");
+            throw transwarp::invalid_parameter("number of threads");
         }
         const auto n_target = threads_.size() + n_threads;
         while (threads_.size() < n_target) {
@@ -774,7 +783,7 @@ template<std::size_t i, std::size_t... j, typename Functor, typename... ParentRe
 void call_with_each_index(transwarp::detail::indices<i, j...>, const Functor& f, const std::tuple<std::shared_ptr<transwarp::task<ParentResults>>...>& t) {
     auto ptr = std::get<i>(t);
     if (!ptr) {
-        throw transwarp::transwarp_error("Not a valid pointer to a task");
+        throw transwarp::invalid_parameter("task pointer");
     }
     f(*ptr);
     transwarp::detail::call_with_each_index(transwarp::detail::indices<j...>(), f, t);
@@ -1078,7 +1087,7 @@ inline std::shared_future<void> make_ready_future() {
 template<typename ResultType>
 std::shared_future<ResultType> make_future_with_exception(std::exception_ptr exception) {
     if (!exception) {
-        throw transwarp::transwarp_error("invalid exception pointer");
+        throw transwarp::invalid_parameter("exception pointer");
     }
     std::promise<ResultType> promise;
     promise.set_exception(exception);
@@ -1161,7 +1170,7 @@ public:
     void set_executor(std::shared_ptr<transwarp::executor> executor) override {
         ensure_task_not_running();
         if (!executor) {
-            throw transwarp::transwarp_error("Not a valid pointer to executor");
+            throw transwarp::invalid_parameter("executor pointer");
         }
         executor_ = std::move(executor);
         transwarp::detail::node_manip::set_executor(*node_, std::make_shared<std::string>(executor_->get_name()));
@@ -1222,7 +1231,7 @@ public:
     void set_custom_data(std::shared_ptr<void> custom_data) override {
         ensure_task_not_running();
         if (!custom_data) {
-            throw transwarp::transwarp_error("Not a valid pointer to custom data");
+            throw transwarp::invalid_parameter("custom data pointer");
         }
         transwarp::detail::node_manip::set_custom_data(*node_, std::move(custom_data));
     }
@@ -1422,14 +1431,14 @@ public:
     }
 
     /// Waits for the task to complete. Should only be called if was_scheduled()
-    /// is true, throws transwarp::transwarp_error otherwise
+    /// is true, throws transwarp::control_error otherwise
     void wait() const override {
         ensure_task_was_scheduled();
         future_.wait();
     }
 
     /// Returns whether the task has finished processing. Should only be called
-    /// if was_scheduled() is true, throws transwarp::transwarp_error otherwise
+    /// if was_scheduled() is true, throws transwarp::control_error otherwise
     bool is_ready() const override {
         ensure_task_was_scheduled();
         return future_.wait_for(std::chrono::seconds(0)) == std::future_status::ready;
@@ -1500,17 +1509,17 @@ protected:
         unvisit();
     }
 
-    /// Checks if the task is currently running and throws transwarp::transwarp_error if it is
+    /// Checks if the task is currently running and throws transwarp::control_error if it is
     void ensure_task_not_running() const {
         if (future_.valid() && future_.wait_for(std::chrono::seconds(0)) != std::future_status::ready) {
-            throw transwarp::transwarp_error("the task is currently running: " + std::to_string(node_->get_id()));
+            throw transwarp::control_error("task currently running: " + std::to_string(node_->get_id()));
         }
     }
 
-    /// Checks if the task was scheduled and throws transwarp::transwarp_error if it's not
+    /// Checks if the task was scheduled and throws transwarp::control_error if it's not
     void ensure_task_was_scheduled() const {
         if (!future_.valid()) {
-            throw transwarp::transwarp_error("the task was not scheduled: " + std::to_string(node_->get_id()));
+            throw transwarp::control_error("task was not scheduled: " + std::to_string(node_->get_id()));
         }
     }
 
@@ -1575,7 +1584,7 @@ private:
                 visit_depth_all(visitor);
                 break;
             default:
-                throw transwarp::transwarp_error("No such schedule type");
+                throw transwarp::invalid_parameter("schedule type");
             }
         }
     }
@@ -1641,7 +1650,7 @@ private:
     /// Check for non-null listener pointer
     void check_listener(const std::shared_ptr<transwarp::listener>& listener) const {
         if (!listener) {
-            throw transwarp::transwarp_error("Not a valid pointer to listener");
+            throw transwarp::invalid_parameter("listener pointer");
         }
     }
 
@@ -1680,7 +1689,7 @@ public:
 
     /// Returns the result of this task. Throws any exceptions that the underlying
     /// functor throws. Should only be called if was_scheduled() is true,
-    /// throws transwarp::transwarp_error otherwise
+    /// throws transwarp::control_error otherwise
     typename transwarp::result_info<result_type>::type get() const override {
         this->ensure_task_was_scheduled();
         return this->future_.get();
@@ -1730,7 +1739,7 @@ public:
 
     /// Returns the result of this task. Throws any exceptions that the underlying
     /// functor throws. Should only be called if was_scheduled() is true,
-    /// throws transwarp::transwarp_error otherwise
+    /// throws transwarp::control_error otherwise
     typename transwarp::result_info<result_type>::type get() const override {
         this->ensure_task_was_scheduled();
         return this->future_.get();
@@ -1782,7 +1791,7 @@ public:
 
     /// Blocks until the task finishes. Throws any exceptions that the underlying
     /// functor throws. Should only be called if was_scheduled() is true,
-    /// throws transwarp::transwarp_error otherwise
+    /// throws transwarp::control_error otherwise
     void get() const override {
         this->ensure_task_was_scheduled();
         this->future_.get();
@@ -1948,7 +1957,7 @@ public:
     /// This is only useful if something else is using this custom data
     void set_custom_data(std::shared_ptr<void> custom_data) override {
         if (!custom_data) {
-            throw transwarp::transwarp_error("Not a valid pointer to custom data");
+            throw transwarp::invalid_parameter("custom data pointer");
         }
         transwarp::detail::node_manip::set_custom_data(*node_, std::move(custom_data));
     }
