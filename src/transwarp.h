@@ -384,7 +384,7 @@ private:
 
 /// Removes reference and const from a type
 template<typename T>
-struct remove_cref {
+struct decay {
     using type = typename std::remove_const<typename std::remove_reference<T>::type>::type;
 };
 
@@ -404,8 +404,8 @@ public:
 
     virtual ~task() = default;
 
-    virtual void set_value(const typename transwarp::remove_cref<result_type>::type& value) = 0;
-    virtual void set_value(typename transwarp::remove_cref<result_type>::type&& value) = 0;
+    virtual void set_value(const typename transwarp::decay<result_type>::type& value) = 0;
+    virtual void set_value(typename transwarp::decay<result_type>::type&& value) = 0;
     virtual const std::shared_future<result_type>& get_future() const noexcept = 0;
     virtual typename transwarp::result_info<result_type>::type get() const = 0;
 };
@@ -418,7 +418,7 @@ public:
 
     virtual ~task() = default;
 
-    virtual void set_value(typename transwarp::remove_cref<result_type>::type& value) = 0;
+    virtual void set_value(typename transwarp::decay<result_type>::type& value) = 0;
     virtual const std::shared_future<result_type>& get_future() const noexcept = 0;
     virtual typename transwarp::result_info<result_type>::type get() const = 0;
 };
@@ -1677,13 +1677,13 @@ public:
 
     /// Assigns a value to this task. Scheduling will have no effect after a value
     /// has been set. Calling reset() will remove the value and re-enable scheduling.
-    void set_value(const typename transwarp::remove_cref<result_type>::type& value) override {
+    void set_value(const typename transwarp::decay<result_type>::type& value) override {
         set_value_impl(value);
     }
 
     /// Assigns a value to this task. Scheduling will have no effect after a value
     /// has been set. Calling reset() will remove the value and re-enable scheduling.
-    void set_value(typename transwarp::remove_cref<result_type>::type&& value) override {
+    void set_value(typename transwarp::decay<result_type>::type&& value) override {
         set_value_impl(value);
     }
 
@@ -1733,7 +1733,7 @@ public:
 
     /// Assigns a value to this task. Scheduling will have no effect after a value
     /// has been set. Calling reset() will remove the value and re-enable scheduling.
-    void set_value(typename transwarp::remove_cref<result_type>::type& value) override {
+    void set_value(typename transwarp::decay<result_type>::type& value) override {
         set_value_impl(value);
     }
 
@@ -1882,7 +1882,7 @@ public:
 
     /// A value task is defined by name and value. name is optional, see overload
     /// Note: A value task must be created using shared_ptr (because of shared_from_this)
-    template<typename T, typename = typename std::enable_if<std::is_same<result_type, typename std::decay<T>::type>::value>::type>
+    template<typename T, typename = typename std::enable_if<std::is_same<result_type, typename transwarp::decay<T>::type>::value>::type>
     // cppcheck-suppress passedByValue
     // cppcheck-suppress uninitMemberVar
     value_task(std::string name, T&& value)
@@ -1891,7 +1891,7 @@ public:
 
     /// This overload is for omitting the task name
     /// Note: A value task must be created using shared_ptr (because of shared_from_this)
-    template<typename T, typename = typename std::enable_if<std::is_same<result_type, typename std::decay<T>::type>::value>::type>
+    template<typename T, typename = typename std::enable_if<std::is_same<result_type, typename transwarp::decay<T>::type>::value>::type>
     // cppcheck-suppress uninitMemberVar
     explicit value_task(T&& value)
     : value_task(false, "", std::forward<T>(value))
@@ -2043,12 +2043,12 @@ public:
     void schedule_all(transwarp::executor&, transwarp::schedule_type, bool) override {}
 
     /// Assigns a value to this task
-    void set_value(const typename transwarp::remove_cref<result_type>::type& value) override {
+    void set_value(const typename transwarp::decay<result_type>::type& value) override {
         future_ = transwarp::detail::make_future_with_value<result_type>(value);
     }
 
     /// Assigns a value to this task
-    void set_value(typename transwarp::remove_cref<result_type>::type&& value) override {
+    void set_value(typename transwarp::decay<result_type>::type&& value) override {
         future_ = transwarp::detail::make_future_with_value<result_type>(value);
     };
 
@@ -2154,15 +2154,15 @@ auto make_task(TaskType, Functor&& functor, std::shared_ptr<Parents>... parents)
 /// A factory function to create a new value task
 template<typename Value>
 auto make_value_task(std::string name, Value&& value)
-    -> decltype(std::make_shared<transwarp::value_task<typename std::decay<Value>::type>>(std::move(name), std::forward<Value>(value))) {
-    return std::make_shared<transwarp::value_task<typename std::decay<Value>::type>>(std::move(name), std::forward<Value>(value));
+    -> decltype(std::make_shared<transwarp::value_task<typename transwarp::decay<Value>::type>>(std::move(name), std::forward<Value>(value))) {
+    return std::make_shared<transwarp::value_task<typename transwarp::decay<Value>::type>>(std::move(name), std::forward<Value>(value));
 }
 
 /// A factory function to create a new value task. Overload for omitting the task name
 template<typename Value>
 auto make_value_task(Value&& value)
-    -> decltype(std::make_shared<transwarp::value_task<typename std::decay<Value>::type>>(std::forward<Value>(value))) {
-    return std::make_shared<transwarp::value_task<typename std::decay<Value>::type>>(std::forward<Value>(value));
+    -> decltype(std::make_shared<transwarp::value_task<typename transwarp::decay<Value>::type>>(std::forward<Value>(value))) {
+    return std::make_shared<transwarp::value_task<typename transwarp::decay<Value>::type>>(std::forward<Value>(value));
 }
 
 

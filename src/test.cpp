@@ -1543,6 +1543,17 @@ TEST_CASE("value_task_next_with_name") {
     REQUIRE(name == *t2->get_node()->get_name());
 }
 
+TEST_CASE("value_task_with_volatile_int") {
+    volatile int x = 42;
+    auto t = make_value_task(x);
+    REQUIRE(x == t->get());
+    t->set_value(43);
+    REQUIRE(43 == t->get());
+    x *= 2;
+    t->set_value(x);
+    REQUIRE(x == t->get());
+}
+
 // Examples
 
 TEST_CASE("example__basic_with_three_tasks") {
