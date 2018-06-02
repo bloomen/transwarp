@@ -4,7 +4,9 @@ enable_testing()
  
 include_directories(examples)
  
-set(SOURCES 
+find_package(Threads)
+
+add_executable(transwarp_test
 	src/transwarp.h 
 	src/test.cpp 
 	examples/basic_with_three_tasks.cpp  
@@ -14,15 +16,35 @@ set(SOURCES
 	examples/benchmark_statistical.cpp
 	examples/wide_graph_with_listener.cpp)
 
-find_package(Threads)
+add_executable(basic_with_three_tasks 
+	src/transwarp.h 
+	examples/basic_with_three_tasks.h
+	examples/basic_with_three_tasks.cpp)
 
-add_executable(transwarp_test ${SOURCES})
-add_executable(basic_with_three_tasks src/transwarp.h examples/basic_with_three_tasks.cpp)
-add_executable(single_thread_lock_free src/transwarp.h examples/single_thread_lock_free.cpp)
-add_executable(benchmark_simple src/transwarp.h examples/benchmark_simple.cpp)
-add_executable(statistical_key_facts src/transwarp.h examples/statistical_key_facts.cpp)
-add_executable(benchmark_statistical src/transwarp.h examples/benchmark_statistical.cpp)
-add_executable(wide_graph_with_listener src/transwarp.h examples/wide_graph_with_listener.cpp)
+add_executable(single_thread_lock_free 
+	src/transwarp.h 
+	examples/single_thread_lock_free.h
+	examples/single_thread_lock_free.cpp)
+
+add_executable(benchmark_simple 
+	src/transwarp.h 
+	examples/benchmark_simple.h
+	examples/benchmark_simple.cpp)
+
+add_executable(statistical_key_facts 
+	src/transwarp.h 
+	examples/statistical_key_facts.h
+	examples/statistical_key_facts.cpp)
+
+add_executable(benchmark_statistical 
+	src/transwarp.h 
+	examples/benchmark_statistical.h
+	examples/benchmark_statistical.cpp)
+
+add_executable(wide_graph_with_listener 
+	src/transwarp.h 
+	examples/wide_graph_with_listener.h
+	examples/wide_graph_with_listener.cpp)
 
 target_compile_definitions(transwarp_test PRIVATE UNITTEST)
 
