@@ -9,12 +9,14 @@ namespace tw = transwarp;
 namespace {
 
 std::mt19937 gen{1};
+std::mutex mutex; // protect the generator
 
 using data_t = std::shared_ptr<std::vector<double>>;
 
 data_t transform(data_t data) {
     std::uniform_real_distribution<double> dist(0.5, 1.5);
     for (auto& v : *data) {
+        std::lock_guard<std::mutex> lock{mutex};
         v *= dist(gen);
     }
     return data;
