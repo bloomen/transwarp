@@ -1,7 +1,7 @@
 1.5.0
 
 - added a 'then()' method to chain tasks when a child only has one parent
-- extended the task interface with more useful functions to add/remove listeners
+- added more useful functions to add/remove listeners
 - corrected the naming of the events
 - ensured that a value task can store volatile types
 
