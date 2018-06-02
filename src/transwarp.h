@@ -1280,7 +1280,7 @@ public:
     void add_listener(transwarp::event_type event, std::shared_ptr<transwarp::listener> listener) override {
         ensure_task_not_running();
         check_listener(listener);
-        listeners_[static_cast<std::size_t>(event)].push_back(std::move(listener));
+        listeners_[get_event_index(event)].push_back(std::move(listener));
     }
 
     /// Removes the listener for all event types
@@ -1296,14 +1296,14 @@ public:
     void remove_listener(transwarp::event_type event, const std::shared_ptr<transwarp::listener>& listener) override {
         ensure_task_not_running();
         check_listener(listener);
-        auto& l = listeners_[static_cast<std::size_t>(event)];
+        auto& l = listeners_[get_event_index(event)];
         l.erase(std::remove(l.begin(), l.end(), listener), l.end());
     }
 
     /// Removes all listeners for the given event type
     void remove_listeners(transwarp::event_type event) override {
         ensure_task_not_running();
-        listeners_[static_cast<std::size_t>(event)].clear();
+        listeners_[get_event_index(event)].clear();
     }
 
     /// Removes all listeners
@@ -1638,6 +1638,15 @@ private:
             visited_ = false;
             transwarp::detail::call_with_each(transwarp::detail::unvisit(), parents_);
         }
+    }
+
+    /// Returns the index for a given event type
+    std::size_t get_event_index(transwarp::event_type event) const {
+        const auto index = static_cast<std::size_t>(event);
+        if (index >= static_cast<std::size_t>(transwarp::event_type::count)) {
+            throw transwarp::invalid_parameter("event type");
+        }
+        return index;
     }
 
     /// Raises the given event to all listeners
