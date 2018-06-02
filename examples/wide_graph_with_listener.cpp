@@ -29,7 +29,7 @@ double mean(data_t data) {
 class listener : public tw::listener {
 public:
 
-    // Note: this is called on the thread the task is run on for the before_finished event
+    // Note: this is called on the thread the task is run on for the after_finished event
     void handle_event(tw::event_type event, const std::shared_ptr<tw::node>&) {
         if (event == tw::event_type::after_finished) {
             // task has finished
