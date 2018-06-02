@@ -14,5 +14,6 @@ var searchData=
   ['construct_5frange_3c_20end_2c_20idx_2b1_2c_20i_2e_2e_2e_2c_20idx_20_3e',['construct_range&lt; end, idx+1, i..., idx &gt;',['../structtranswarp_1_1detail_1_1construct__range.html',1,'transwarp::detail']]],
   ['construct_5frange_3c_20end_2c_20idx_2c_20i_2e_2e_2e_3e',['construct_range&lt; end, idx, i...&gt;',['../structtranswarp_1_1detail_1_1construct__range_3_01end_00_01idx_00_01i_8_8_8_4.html',1,'transwarp::detail']]],
   ['consume_5fany_5ftype',['consume_any_type',['../structtranswarp_1_1consume__any__type.html',1,'transwarp']]],
-  ['consume_5ftype',['consume_type',['../structtranswarp_1_1consume__type.html',1,'transwarp']]]
+  ['consume_5ftype',['consume_type',['../structtranswarp_1_1consume__type.html',1,'transwarp']]],
+  ['control_5ferror',['control_error',['../classtranswarp_1_1control__error.html',1,'transwarp']]]
 ];
