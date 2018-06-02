@@ -26,18 +26,14 @@ double mean(data_t data) {
 
 class listener : public tw::listener {
 public:
-    explicit listener(std::ostream& os)
-    : os_(os) {}
 
     // Note: this is called on the thread the task is run on for the before_finished event
-    void handle_event(tw::event_type event, const std::shared_ptr<tw::node>& node) {
+    void handle_event(tw::event_type event, const std::shared_ptr<tw::node>&) {
         if (event == tw::event_type::after_finished) {
-            os_ << "task finished: " << tw::to_string(*node, " ") << std::endl;
+            // task has finished
         }
     }
 
-private:
-    std::ostream& os_;
 };
 
 std::shared_ptr<tw::task<double>> build_graph(std::shared_ptr<tw::task<data_t>> input) {
@@ -75,7 +71,7 @@ void wide_graph_with_listener(std::ostream& os, std::size_t iterations, std::siz
 
     // Build graph and return the final task
     auto final = build_graph(input);
-    final->add_listener(std::make_shared<listener>(os));
+    final->add_listener(std::make_shared<listener>());
 
     // Output the graph for visualization
     const auto graph = final->get_graph();
