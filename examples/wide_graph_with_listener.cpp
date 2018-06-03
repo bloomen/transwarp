@@ -39,18 +39,18 @@ public:
 };
 
 std::shared_ptr<tw::task<double>> build_graph(std::shared_ptr<tw::task<data_t>> input) {
-    auto d0 = tw::make_task(tw::consume, transform, input)->then(tw::consume, transform);
-    auto d1 = tw::make_task(tw::consume, transform, input)->then(tw::consume, transform);
-    auto d2 = tw::make_task(tw::consume, transform, input)->then(tw::consume, transform);
-    auto d3 = tw::make_task(tw::consume, transform, input)->then(tw::consume, transform);
-    auto d4 = tw::make_task(tw::consume, transform, input)->then(tw::consume, transform);
-    auto d5 = tw::make_task(tw::consume, transform, input)->then(tw::consume, transform);
-    auto d6 = tw::make_task(tw::consume, transform, input)->then(tw::consume, transform);
-    auto d7 = tw::make_task(tw::consume, transform, input)->then(tw::consume, transform);
-    auto final = tw::make_task(tw::consume,
-        [](data_t d0, data_t d1, data_t d2, data_t d3, data_t d4, data_t d5, data_t d6, data_t d7) {
-            return (mean(d0) + mean(d1) + mean(d2) + mean(d3) + mean(d4) + mean(d5) + mean(d6) + mean(d7)) / 8.;
-        }, d0, d1, d2, d3, d4, d5, d6, d7);
+    std::vector<std::shared_ptr<tw::task<data_t>>> parents;
+    for (int i=0; i<8; ++i) {
+        auto t = tw::make_task(tw::consume, transform, input)->then(tw::consume, transform);
+        parents.emplace_back(t);
+    }
+    auto final = tw::make_task(tw::consume, [](const std::vector<data_t>& parents) {
+                                                double res = 0;
+                                                for (const auto p : parents) {
+                                                    res += mean(p);
+                                                }
+                                                return res;
+                                            }, parents);
     return final;
 }
 
