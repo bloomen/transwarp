@@ -49,7 +49,7 @@ std::shared_ptr<tw::task<double>> build_graph(std::shared_ptr<tw::task<data_t>> 
                                                 for (const auto p : parents) {
                                                     res += mean(p);
                                                 }
-                                                return res;
+                                                return res / parents.size();
                                             }, parents);
     return final;
 }
