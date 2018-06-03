@@ -1668,6 +1668,9 @@ protected:
       parents_(std::move(parents)),
       listeners_(static_cast<std::size_t>(transwarp::event_type::count))
     {
+        if (parents_.empty()) {
+            throw transwarp::invalid_parameter("parents are empty");
+        }
         init(has_name, std::move(name));
     }
 
