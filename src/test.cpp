@@ -15,7 +15,6 @@ using transwarp::make_value_task;
 
 using nodes_t = std::vector<std::shared_ptr<transwarp::node>>;
 
-
 std::shared_ptr<transwarp::node> generic_node() {
     auto node = std::make_shared<transwarp::node>();
     transwarp::detail::node_manip::set_type(*node, transwarp::task_type::consume);
@@ -1552,6 +1551,17 @@ TEST_CASE("value_task_with_volatile_int") {
     x *= 2;
     t->set_value(x);
     REQUIRE(x == t->get());
+}
+
+TEST_CASE("when_with_vector") {
+    auto t1 = make_value_task(42);
+    auto t2 = make_value_task(13);
+    const std::vector<std::shared_ptr<transwarp::task<int>>> vec = {t1, t2};
+    auto t = transwarp::when([](std::vector<std::shared_future<int>> parents) {
+        REQUIRE(2 == parents.size());
+        return parents[0].get() + parents[1].get();
+    }, vec);
+    REQUIRE(55 == t->get());
 }
 
 // Examples
