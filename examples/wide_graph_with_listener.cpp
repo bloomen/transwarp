@@ -63,7 +63,7 @@ namespace examples {
 // It also shows how the listener interface can be used to handle task events.
 // Increase iterations and size and observe your CPU load.
 // In this example, new data cannot be scheduled until the last result
-// was retrieved. However, this can be changed to use a pool of graphs
+// was retrieved. However, this could be changed to use a pool of graphs
 // to process every data input as soon as possible.
 void wide_graph_with_listener(std::ostream& os, std::size_t iterations, std::size_t size) {
     tw::parallel exec{8}; // thread pool with 8 threads
@@ -73,6 +73,8 @@ void wide_graph_with_listener(std::ostream& os, std::size_t iterations, std::siz
 
     // Build graph and return the final task
     auto final = build_graph(input);
+
+    // Add a listener to the final task
     final->add_listener(std::make_shared<listener>());
 
     // Output the graph for visualization
