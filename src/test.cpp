@@ -1553,15 +1553,212 @@ TEST_CASE("value_task_with_volatile_int") {
     REQUIRE(x == t->get());
 }
 
-TEST_CASE("when_with_vector") {
+TEST_CASE("make_task_accept_with_vector") {
     auto t1 = make_value_task(42);
     auto t2 = make_value_task(13);
     const std::vector<std::shared_ptr<transwarp::task<int>>> vec = {t1, t2};
-    auto t = transwarp::when([](std::vector<std::shared_future<int>> parents) {
+    auto t = transwarp::make_task(transwarp::accept,
+    [](std::vector<std::shared_future<int>> parents) {
         REQUIRE(2 == parents.size());
         return parents[0].get() + parents[1].get();
     }, vec);
+    t->schedule();
     REQUIRE(55 == t->get());
+}
+
+TEST_CASE("make_task_accept_with_vector_and_name") {
+    auto t1 = make_value_task(42);
+    auto t2 = make_value_task(13);
+    const std::vector<std::shared_ptr<transwarp::task<int>>> vec = {t1, t2};
+    auto t = transwarp::make_task(transwarp::accept, "task",
+    [](std::vector<std::shared_future<int>> parents) {
+        REQUIRE(2 == parents.size());
+        return parents[0].get() + parents[1].get();
+    }, vec);
+    t->schedule();
+    REQUIRE("task" == *t->get_node()->get_name());
+    REQUIRE(55 == t->get());
+}
+
+TEST_CASE("make_task_accept_any_with_vector") {
+    auto t1 = make_value_task(42);
+    auto t2 = make_value_task(13);
+    const std::vector<std::shared_ptr<transwarp::task<int>>> vec = {t1, t2};
+    auto t = transwarp::make_task(transwarp::accept_any,
+    [](std::shared_future<int> parent) {
+        return parent.get();
+    }, vec);
+    t->schedule();
+    REQUIRE((t->get() == 42 || t->get() == 13));
+}
+
+TEST_CASE("make_task_accept_any_with_vector_and_name") {
+    auto t1 = make_value_task(42);
+    auto t2 = make_value_task(13);
+    const std::vector<std::shared_ptr<transwarp::task<int>>> vec = {t1, t2};
+    auto t = transwarp::make_task(transwarp::accept_any, "task",
+    [](std::shared_future<int> parent) {
+        return parent.get();
+    }, vec);
+    t->schedule();
+    REQUIRE("task" == *t->get_node()->get_name());
+    REQUIRE((t->get() == 42 || t->get() == 13));
+}
+
+TEST_CASE("make_task_consume_with_vector") {
+    auto t1 = make_value_task(42);
+    auto t2 = make_value_task(13);
+    const std::vector<std::shared_ptr<transwarp::task<int>>> vec = {t1, t2};
+    auto t = transwarp::make_task(transwarp::consume,
+    [](std::vector<int> parents) {
+        REQUIRE(2 == parents.size());
+        return parents[0] + parents[1];
+    }, vec);
+    t->schedule();
+    REQUIRE(55 == t->get());
+}
+
+TEST_CASE("make_task_consume_with_vector_and_name") {
+    auto t1 = make_value_task(42);
+    auto t2 = make_value_task(13);
+    const std::vector<std::shared_ptr<transwarp::task<int>>> vec = {t1, t2};
+    auto t = transwarp::make_task(transwarp::consume, "task",
+    [](std::vector<int> parents) {
+        REQUIRE(2 == parents.size());
+        return parents[0] + parents[1];
+    }, vec);
+    t->schedule();
+    REQUIRE("task" == *t->get_node()->get_name());
+    REQUIRE(55 == t->get());
+}
+
+TEST_CASE("make_task_consume_with_vector_and_void_result") {
+    auto t1 = make_value_task(42);
+    auto t2 = make_value_task(13);
+    const std::vector<std::shared_ptr<transwarp::task<int>>> vec = {t1, t2};
+    auto t = transwarp::make_task(transwarp::consume,
+    [](std::vector<int> parents) {
+        REQUIRE(2 == parents.size());
+    }, vec);
+    t->schedule();
+    REQUIRE(t->has_result());
+}
+
+TEST_CASE("make_task_consume_with_vector_and_name_and_void_result") {
+    auto t1 = make_value_task(42);
+    auto t2 = make_value_task(13);
+    const std::vector<std::shared_ptr<transwarp::task<int>>> vec = {t1, t2};
+    auto t = transwarp::make_task(transwarp::consume, "task",
+    [](std::vector<int> parents) {
+        REQUIRE(2 == parents.size());
+    }, vec);
+    t->schedule();
+    REQUIRE("task" == *t->get_node()->get_name());
+    REQUIRE(t->has_result());
+}
+
+TEST_CASE("make_task_consume_with_vector_and_ref_result") {
+    int res = 10;
+    auto t1 = make_value_task(42);
+    auto t2 = make_value_task(13);
+    const std::vector<std::shared_ptr<transwarp::task<int>>> vec = {t1, t2};
+    auto t = transwarp::make_task(transwarp::consume,
+    [&res](std::vector<int> parents) -> int& {
+        REQUIRE(2 == parents.size());
+        return res;
+    }, vec);
+    t->schedule();
+    REQUIRE(res == t->get());
+}
+
+TEST_CASE("make_task_consume_with_vector_and_name_and_ref_result") {
+    int res = 10;
+    auto t1 = make_value_task(42);
+    auto t2 = make_value_task(13);
+    const std::vector<std::shared_ptr<transwarp::task<int>>> vec = {t1, t2};
+    auto t = transwarp::make_task(transwarp::consume, "task",
+    [&res](std::vector<int> parents) -> int& {
+        REQUIRE(2 == parents.size());
+        return res;
+    }, vec);
+    t->schedule();
+    REQUIRE("task" == *t->get_node()->get_name());
+    REQUIRE(res == t->get());
+}
+
+TEST_CASE("make_task_consume_any_with_vector") {
+    auto t1 = make_value_task(42);
+    auto t2 = make_value_task(13);
+    const std::vector<std::shared_ptr<transwarp::task<int>>> vec = {t1, t2};
+    auto t = transwarp::make_task(transwarp::consume_any,
+    [](int parent) {
+        return parent;
+    }, vec);
+    t->schedule();
+    REQUIRE((t->get() == 42 || t->get() == 13));
+}
+
+TEST_CASE("make_task_consume_any_with_vector_and_name") {
+    auto t1 = make_value_task(42);
+    auto t2 = make_value_task(13);
+    const std::vector<std::shared_ptr<transwarp::task<int>>> vec = {t1, t2};
+    auto t = transwarp::make_task(transwarp::consume_any, "task",
+    [](int parent) {
+        return parent;
+    }, vec);
+    t->schedule();
+    REQUIRE("task" == *t->get_node()->get_name());
+    REQUIRE((t->get() == 42 || t->get() == 13));
+}
+
+TEST_CASE("make_task_wait_with_vector") {
+    auto t1 = make_value_task(42);
+    auto t2 = make_value_task(13);
+    const std::vector<std::shared_ptr<transwarp::task<int>>> vec = {t1, t2};
+    auto t = transwarp::make_task(transwarp::wait,
+    []() {
+        return 1;
+    }, vec);
+    t->schedule();
+    REQUIRE(1 == t->get());
+}
+
+TEST_CASE("make_task_wait_with_vector_and_name") {
+    auto t1 = make_value_task(42);
+    auto t2 = make_value_task(13);
+    const std::vector<std::shared_ptr<transwarp::task<int>>> vec = {t1, t2};
+    auto t = transwarp::make_task(transwarp::wait, "task",
+    []() {
+        return 1;
+    }, vec);
+    t->schedule();
+    REQUIRE("task" == *t->get_node()->get_name());
+    REQUIRE(1 == t->get());
+}
+
+TEST_CASE("make_task_wait_any_with_vector") {
+    auto t1 = make_value_task(42);
+    auto t2 = make_value_task(13);
+    const std::vector<std::shared_ptr<transwarp::task<int>>> vec = {t1, t2};
+    auto t = transwarp::make_task(transwarp::wait_any,
+    []() {
+        return 1;
+    }, vec);
+    t->schedule();
+    REQUIRE(1 == t->get());
+}
+
+TEST_CASE("make_task_wait_any_with_vector_and_name") {
+    auto t1 = make_value_task(42);
+    auto t2 = make_value_task(13);
+    const std::vector<std::shared_ptr<transwarp::task<int>>> vec = {t1, t2};
+    auto t = transwarp::make_task(transwarp::wait_any, "task",
+    []() {
+        return 1;
+    }, vec);
+    t->schedule();
+    REQUIRE("task" == *t->get_node()->get_name());
+    REQUIRE(1 == t->get());
 }
 
 // Examples
