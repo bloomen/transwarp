@@ -1843,6 +1843,11 @@ TEST_CASE("make_task_wait_any_with_vector_and_name") {
     REQUIRE(1 == t->get());
 }
 
+TEST_CASE("make_task_with_empty_vector_parents") {
+    const std::vector<std::shared_ptr<tw::task<int>>> vec = {};
+    REQUIRE_THROWS_AS(tw::make_task(tw::wait, []{}, vec), tw::invalid_parameter);
+}
+
 // Examples
 
 TEST_CASE("example__basic_with_three_tasks") {
