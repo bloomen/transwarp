@@ -673,21 +673,21 @@ struct non_move_functor {
     }
 };
 
-TEST_CASE("tw::make_task_with_non_copy_functor") {
+TEST_CASE("make_task_with_non_copy_functor") {
     non_copy_functor functor;
     auto task = tw::make_task(tw::root, std::move(functor));
     task->schedule();
     REQUIRE(42 == task->get_future().get());
 }
 
-TEST_CASE("tw::make_task_with_non_move_functor") {
+TEST_CASE("make_task_with_non_move_functor") {
     non_move_functor functor;
     auto task = tw::make_task(tw::root, functor);
     task->schedule();
     REQUIRE(43 == task->get_future().get());
 }
 
-TEST_CASE("tw::make_task_std_function") {
+TEST_CASE("make_task_std_function") {
     std::function<int()> functor = [] { return 44; };
     auto task = tw::make_task(tw::root, functor);
     task->schedule();
@@ -698,7 +698,7 @@ int myfunc() {
     return 45;
 }
 
-TEST_CASE("tw::make_task_raw_function") {
+TEST_CASE("make_task_raw_function") {
     auto task = tw::make_task(tw::root, myfunc);
     task->schedule();
     REQUIRE(45 == task->get_future().get());
@@ -837,6 +837,23 @@ TEST_CASE("consume_any") {
     cont = true;
 }
 
+TEST_CASE("consume_any_with_vector_parents") {
+    std::atomic_bool cont(false);
+    auto task1 = tw::make_task(tw::root, [&cont] {
+        while (!cont);
+        return 42;
+    });
+    auto task2 = tw::make_task(tw::root, [] {
+        return 43;
+    });
+    std::vector<std::shared_ptr<tw::task<int>>> parents = {task1, task2};
+    auto task3 = tw::make_task(tw::consume_any, [](int x) { return x; }, parents);
+    tw::parallel exec{2};
+    task3->schedule_all(exec);
+    REQUIRE(43 == task3->get_future().get());
+    cont = true;
+}
+
 TEST_CASE("wait_any") {
     int result = 0;
     std::atomic_bool cont(false);
@@ -855,6 +872,25 @@ TEST_CASE("wait_any") {
     cont = true;
 }
 
+TEST_CASE("wait_any_with_vector_parents") {
+    int result = 0;
+    std::atomic_bool cont(false);
+    auto task1 = tw::make_task(tw::root, [&cont, &result] {
+        while (!cont);
+        result = 42;
+    });
+    auto task2 = tw::make_task(tw::root, [&result] {
+        result = 43;
+    });
+    std::vector<std::shared_ptr<tw::task<void>>> parents = {task1, task2};
+    auto task3 = tw::make_task(tw::wait_any, [] {}, parents);
+    tw::parallel exec{2};
+    task3->schedule_all(exec);
+    task3->get_future().wait();
+    REQUIRE(43 == result);
+    cont = true;
+}
+
 TEST_CASE("wait") {
     int result1 = 0;
     int result2 = 0;
@@ -865,6 +901,24 @@ TEST_CASE("wait") {
         result2 = 43;
     });
     auto task3 = tw::make_task(tw::wait, [] {}, task1, task2);
+    tw::parallel exec{2};
+    task3->schedule_all(exec);
+    task3->get_future().wait();
+    REQUIRE(42 == result1);
+    REQUIRE(43 == result2);
+}
+
+TEST_CASE("wait_with_vector_parents") {
+    int result1 = 0;
+    int result2 = 0;
+    auto task1 = tw::make_task(tw::root, [&result1] {
+        result1 = 42;
+    });
+    auto task2 = tw::make_task(tw::root, [&result2] {
+        result2 = 43;
+    });
+    std::vector<std::shared_ptr<tw::task<void>>> parents = {task1, task2};
+    auto task3 = tw::make_task(tw::wait, [] {}, parents);
     tw::parallel exec{2};
     task3->schedule_all(exec);
     task3->get_future().wait();
@@ -915,7 +969,7 @@ TEST_CASE("future_throws_task_destroyed") {
     REQUIRE_THROWS_AS(future.get(), tw::task_destroyed);
 }
 
-TEST_CASE("tw::make_task_from_base_task") {
+TEST_CASE("make_task_from_base_task") {
     std::shared_ptr<tw::task<int>> t1 = tw::make_task(tw::root, []{ return 42; });
     auto t2 = tw::make_task(tw::consume, [](int x){ return x; }, t1);
     t2->schedule_all();
@@ -1080,6 +1134,18 @@ TEST_CASE("accept_with_two_parents") {
     REQUIRE(55.3 == t3->get());
 }
 
+TEST_CASE("accept_with_two_vector_parents") {
+    auto t1 = tw::make_task(tw::root, []{ return 42; });
+    auto t2 = tw::make_task(tw::root, []{ return 13; });
+    std::vector<std::shared_ptr<tw::task<int>>> parents = {t1, t2};
+    auto t3 = tw::make_task(tw::accept, [](std::vector<std::shared_future<int>> p) {
+        REQUIRE(2 == p.size());
+        return p[0].get() + p[1].get();
+    }, parents);
+    t3->schedule_all();
+    REQUIRE(55 == t3->get());
+}
+
 TEST_CASE("accept_any_with_one_parent") {
     auto t1 = tw::make_task(tw::root, []{ return 42; });
     auto t2 = tw::make_task(tw::accept_any, [](std::shared_future<int> p1) { return p1.get(); }, t1);
@@ -1097,6 +1163,23 @@ TEST_CASE("accept_any_with_two_parents") {
         return 43;
     });
     auto t3 = tw::make_task(tw::accept_any, [](std::shared_future<int> x) { return x.get(); }, t1, t2);
+    tw::parallel exec{2};
+    t3->schedule_all(exec);
+    REQUIRE(43 == t3->get_future().get());
+    cont = true;
+}
+
+TEST_CASE("accept_any_with_two_vector_parents") {
+    std::atomic_bool cont(false);
+    auto t1 = tw::make_task(tw::root, [&cont] {
+        while (!cont);
+        return 42;
+    });
+    auto t2 = tw::make_task(tw::root, [] {
+        return 43;
+    });
+    std::vector<std::shared_ptr<tw::task<int>>> parents = {t1, t2};
+    auto t3 = tw::make_task(tw::accept_any, [](std::shared_future<int> x) { return x.get(); }, parents);
     tw::parallel exec{2};
     t3->schedule_all(exec);
     REQUIRE(43 == t3->get_future().get());
@@ -1552,7 +1635,7 @@ TEST_CASE("value_task_with_volatile_int") {
     REQUIRE(x == t->get());
 }
 
-TEST_CASE("tw::make_task_accept_with_vector") {
+TEST_CASE("make_task_accept_with_vector") {
     auto t1 = tw::make_value_task(42);
     auto t2 = tw::make_value_task(13);
     const std::vector<std::shared_ptr<tw::task<int>>> vec = {t1, t2};
@@ -1565,7 +1648,7 @@ TEST_CASE("tw::make_task_accept_with_vector") {
     REQUIRE(55 == t->get());
 }
 
-TEST_CASE("tw::make_task_accept_with_vector_and_name") {
+TEST_CASE("make_task_accept_with_vector_and_name") {
     auto t1 = tw::make_value_task(42);
     auto t2 = tw::make_value_task(13);
     const std::vector<std::shared_ptr<tw::task<int>>> vec = {t1, t2};
@@ -1579,7 +1662,7 @@ TEST_CASE("tw::make_task_accept_with_vector_and_name") {
     REQUIRE(55 == t->get());
 }
 
-TEST_CASE("tw::make_task_accept_any_with_vector") {
+TEST_CASE("make_task_accept_any_with_vector") {
     auto t1 = tw::make_value_task(42);
     auto t2 = tw::make_value_task(13);
     const std::vector<std::shared_ptr<tw::task<int>>> vec = {t1, t2};
@@ -1591,7 +1674,7 @@ TEST_CASE("tw::make_task_accept_any_with_vector") {
     REQUIRE((t->get() == 42 || t->get() == 13));
 }
 
-TEST_CASE("tw::make_task_accept_any_with_vector_and_name") {
+TEST_CASE("make_task_accept_any_with_vector_and_name") {
     auto t1 = tw::make_value_task(42);
     auto t2 = tw::make_value_task(13);
     const std::vector<std::shared_ptr<tw::task<int>>> vec = {t1, t2};
@@ -1604,7 +1687,7 @@ TEST_CASE("tw::make_task_accept_any_with_vector_and_name") {
     REQUIRE((t->get() == 42 || t->get() == 13));
 }
 
-TEST_CASE("tw::make_task_consume_with_vector") {
+TEST_CASE("make_task_consume_with_vector") {
     auto t1 = tw::make_value_task(42);
     auto t2 = tw::make_value_task(13);
     const std::vector<std::shared_ptr<tw::task<int>>> vec = {t1, t2};
@@ -1617,7 +1700,7 @@ TEST_CASE("tw::make_task_consume_with_vector") {
     REQUIRE(55 == t->get());
 }
 
-TEST_CASE("tw::make_task_consume_with_vector_and_name") {
+TEST_CASE("make_task_consume_with_vector_and_name") {
     auto t1 = tw::make_value_task(42);
     auto t2 = tw::make_value_task(13);
     const std::vector<std::shared_ptr<tw::task<int>>> vec = {t1, t2};
@@ -1631,7 +1714,7 @@ TEST_CASE("tw::make_task_consume_with_vector_and_name") {
     REQUIRE(55 == t->get());
 }
 
-TEST_CASE("tw::make_task_consume_with_vector_and_void_result") {
+TEST_CASE("make_task_consume_with_vector_and_void_result") {
     auto t1 = tw::make_value_task(42);
     auto t2 = tw::make_value_task(13);
     const std::vector<std::shared_ptr<tw::task<int>>> vec = {t1, t2};
@@ -1643,7 +1726,7 @@ TEST_CASE("tw::make_task_consume_with_vector_and_void_result") {
     REQUIRE(t->has_result());
 }
 
-TEST_CASE("tw::make_task_consume_with_vector_and_name_and_void_result") {
+TEST_CASE("make_task_consume_with_vector_and_name_and_void_result") {
     auto t1 = tw::make_value_task(42);
     auto t2 = tw::make_value_task(13);
     const std::vector<std::shared_ptr<tw::task<int>>> vec = {t1, t2};
@@ -1656,7 +1739,7 @@ TEST_CASE("tw::make_task_consume_with_vector_and_name_and_void_result") {
     REQUIRE(t->has_result());
 }
 
-TEST_CASE("tw::make_task_consume_with_vector_and_ref_result") {
+TEST_CASE("make_task_consume_with_vector_and_ref_result") {
     int res = 10;
     auto t1 = tw::make_value_task(42);
     auto t2 = tw::make_value_task(13);
@@ -1670,7 +1753,7 @@ TEST_CASE("tw::make_task_consume_with_vector_and_ref_result") {
     REQUIRE(res == t->get());
 }
 
-TEST_CASE("tw::make_task_consume_with_vector_and_name_and_ref_result") {
+TEST_CASE("make_task_consume_with_vector_and_name_and_ref_result") {
     int res = 10;
     auto t1 = tw::make_value_task(42);
     auto t2 = tw::make_value_task(13);
@@ -1685,7 +1768,7 @@ TEST_CASE("tw::make_task_consume_with_vector_and_name_and_ref_result") {
     REQUIRE(res == t->get());
 }
 
-TEST_CASE("tw::make_task_consume_any_with_vector") {
+TEST_CASE("make_task_consume_any_with_vector") {
     auto t1 = tw::make_value_task(42);
     auto t2 = tw::make_value_task(13);
     const std::vector<std::shared_ptr<tw::task<int>>> vec = {t1, t2};
@@ -1697,7 +1780,7 @@ TEST_CASE("tw::make_task_consume_any_with_vector") {
     REQUIRE((t->get() == 42 || t->get() == 13));
 }
 
-TEST_CASE("tw::make_task_consume_any_with_vector_and_name") {
+TEST_CASE("make_task_consume_any_with_vector_and_name") {
     auto t1 = tw::make_value_task(42);
     auto t2 = tw::make_value_task(13);
     const std::vector<std::shared_ptr<tw::task<int>>> vec = {t1, t2};
@@ -1710,7 +1793,7 @@ TEST_CASE("tw::make_task_consume_any_with_vector_and_name") {
     REQUIRE((t->get() == 42 || t->get() == 13));
 }
 
-TEST_CASE("tw::make_task_wait_with_vector") {
+TEST_CASE("make_task_wait_with_vector") {
     auto t1 = tw::make_value_task(42);
     auto t2 = tw::make_value_task(13);
     const std::vector<std::shared_ptr<tw::task<int>>> vec = {t1, t2};
@@ -1722,7 +1805,7 @@ TEST_CASE("tw::make_task_wait_with_vector") {
     REQUIRE(1 == t->get());
 }
 
-TEST_CASE("tw::make_task_wait_with_vector_and_name") {
+TEST_CASE("make_task_wait_with_vector_and_name") {
     auto t1 = tw::make_value_task(42);
     auto t2 = tw::make_value_task(13);
     const std::vector<std::shared_ptr<tw::task<int>>> vec = {t1, t2};
@@ -1735,7 +1818,7 @@ TEST_CASE("tw::make_task_wait_with_vector_and_name") {
     REQUIRE(1 == t->get());
 }
 
-TEST_CASE("tw::make_task_wait_any_with_vector") {
+TEST_CASE("make_task_wait_any_with_vector") {
     auto t1 = tw::make_value_task(42);
     auto t2 = tw::make_value_task(13);
     const std::vector<std::shared_ptr<tw::task<int>>> vec = {t1, t2};
@@ -1747,7 +1830,7 @@ TEST_CASE("tw::make_task_wait_any_with_vector") {
     REQUIRE(1 == t->get());
 }
 
-TEST_CASE("tw::make_task_wait_any_with_vector_and_name") {
+TEST_CASE("make_task_wait_any_with_vector_and_name") {
     auto t1 = tw::make_value_task(42);
     auto t2 = tw::make_value_task(13);
     const std::vector<std::shared_ptr<tw::task<int>>> vec = {t1, t2};
