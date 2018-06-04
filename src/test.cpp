@@ -420,7 +420,7 @@ TEST_CASE("cancel_with_schedule_all_called_after") {
     task2->cancel_all(true);
     tw::sequential executor;
     task2->schedule_all(executor);
-    REQUIRE_FALSE(task2->get_future().valid());
+    REQUIRE(task2->get_future().valid());
 }
 
 TEST_CASE("itask") {
@@ -835,6 +835,7 @@ TEST_CASE("consume_any") {
     task3->schedule_all(exec);
     REQUIRE(43 == task3->get_future().get());
     cont = true;
+    REQUIRE(task1->get_node()->is_canceled());
 }
 
 TEST_CASE("consume_any_with_vector_parents") {
@@ -852,6 +853,7 @@ TEST_CASE("consume_any_with_vector_parents") {
     task3->schedule_all(exec);
     REQUIRE(43 == task3->get_future().get());
     cont = true;
+    REQUIRE(task1->get_node()->is_canceled());
 }
 
 TEST_CASE("wait_any") {
@@ -870,6 +872,7 @@ TEST_CASE("wait_any") {
     task3->get_future().wait();
     REQUIRE(43 == result);
     cont = true;
+    REQUIRE(task1->get_node()->is_canceled());
 }
 
 TEST_CASE("wait_any_with_vector_parents") {
@@ -889,6 +892,7 @@ TEST_CASE("wait_any_with_vector_parents") {
     task3->get_future().wait();
     REQUIRE(43 == result);
     cont = true;
+    REQUIRE(task1->get_node()->is_canceled());
 }
 
 TEST_CASE("wait") {
@@ -1167,6 +1171,7 @@ TEST_CASE("accept_any_with_two_parents") {
     t3->schedule_all(exec);
     REQUIRE(43 == t3->get_future().get());
     cont = true;
+    REQUIRE(t1->get_node()->is_canceled());
 }
 
 TEST_CASE("accept_any_with_two_vector_parents") {
@@ -1184,6 +1189,7 @@ TEST_CASE("accept_any_with_two_vector_parents") {
     t3->schedule_all(exec);
     REQUIRE(43 == t3->get_future().get());
     cont = true;
+    REQUIRE(t1->get_node()->is_canceled());
 }
 
 TEST_CASE("value_task") {
