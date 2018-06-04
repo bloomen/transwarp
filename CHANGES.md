@@ -1,3 +1,7 @@
+1.6.0
+
+- added support for parents specified as a std::vector of tasks
+
 1.5.0
 
 - added a 'then()' method to chain tasks when a child only has one parent

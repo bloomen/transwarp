@@ -4,7 +4,7 @@ thisdir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 if [ -z "$CXX" ];then
     echo "Compiler: default"
 else
-    echo "Compiler: "$CXX     
+    echo "Compiler: "$CXX
 fi
 
 $thisdir/cppcheck.sh
@@ -34,7 +34,7 @@ for mode in $modes; do
     ctest --verbose
     run_many_times
     $thisdir/valgrind.sh $dir/transwarp_test --use-colour no
-    cd $thisdir    
+    cd $thisdir
     rm -rf $dir
 done
 
