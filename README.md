@@ -38,7 +38,7 @@ Tested with GCC, Clang, and Visual Studio.
      * [Scheduling tasks](#scheduling-tasks)
      * [Executors](#executors)
      * [Canceling tasks](#canceling-tasks)
-     * [Event system] (#event-system)
+     * [Event system](#event-system)
   * [Feedback](#feedback)
 
 ## Build status
@@ -146,17 +146,25 @@ value or throw an exception then a value task can be used:
 auto task = tw::make_value_task(42);  
 ```
 A call to `task->get()` will now always return 42. Note that a value or exception
-can also be explicitely assigned to regular tasks by calling the `set_value`
+can also be explicitely assigned to regular task by calling the `set_value`
 or `set_exception` functions. Value or exception will persist for as long as
 the task hasn't been reset by a call to `reset()`.
 
 As shown above, parents can be enumerated as arguments to `make_task` but
-can also be collected into a `std::vector` and then be passed to `make_task`, e.g.:
+can also be collected into a `std::vector` and then passed to `make_task`, e.g.:
 ```cpp
 std::vector<std::shared_ptr<tw::task<int>>> parents = {parent1, parent2};
 auto task = tw::make_task(tw::wait, []{}, parents);
 ```
 This will simply wait for both parents to finish before running the given functor.
+
+Generally, tasks are created using `make_task` which allows for any number 
+of parents. However, it is common use case for a child to only have one parent.
+For this, `next` can be directly called on the parent object to create a _continutaion_:
+```cpp
+auto child = tw::make_task(tw::root, []{ return 42; })->next(tw::consume, functor);
+```
+`child` is now a single-parent task whose functor accepts an integer.
 
 ### Scheduling tasks
 
@@ -254,8 +262,8 @@ you can denote well defined points where the functor will exit when the associat
 
 As mentioned above, tasks can be explicitly canceled on client request. In addition,
 all tasks considered abandoned by `accept_any`, `consume_any`, or `wait_any`
-operations are also canceled in ordered to terminate them as soon as their results
-become unnecessary. 
+operations are also canceled in order to terminate them as soon as their computations
+become superfluous. 
 
 ### Event system
 
