@@ -36,14 +36,9 @@ Tested with GCC, Clang, and Visual Studio.
   * [API doc](#api-doc)
      * [Creating tasks](#creating-tasks)
      * [Scheduling tasks](#scheduling-tasks)
-     * [More on executors](#more-on-executors)
-  * [Comparison to other libraries](#comparison-to-other-libraries)
-     * [Standard library](#standard-library)
-     * [Boost](#boost)
-     * [HPX](#hpx)
-     * [TBB](#tbb)
-     * [Stlab](#stlab)
-     * [Conclusions](#conclusions)
+     * [Executors](#executors)
+     * [Canceling tasks](#canceling-tasks)
+     * [Event system] (#event-system)
   * [Feedback](#feedback)
 
 ## Build status
@@ -110,7 +105,11 @@ type followed by the task id and the task level in the graph.
 
 ## API doc
 
-This is a brief API doc of transwarp. In the following we will use `tw` as a namespace alias for `transwarp`.
+This is a brief API doc of transwarp. 
+For more details check out the <a href="https://bloomen.github.io/transwarp">doxygen documentation</a>
+and the <a href="https://github.com/bloomen/transwarp/tree/master/examples">transwarp examples</a>.
+
+In the following we will use `tw` as a namespace alias for `transwarp`.
 
 ### Creating tasks
 
@@ -138,14 +137,26 @@ The only restriction is that tasks without parents have to be either labeled as 
 or defined as value tasks. 
 
 The `accept` and `accept_any` types give you the greatest flexibility but require your
-functor to take `std::shared_future<T>` types. The `consume` and `consume_any` task types, however, require your functor to take the direct result types of the parent tasks. 
+functor to take `std::shared_future<T>` types. The `consume` and `consume_any` task types, however, 
+require your functor to take the direct result types of the parent tasks. 
 
 If you have a task that doesn't require a functor and should only ever return a given
 value or throw an exception then a value task can be used:
 ```cpp
 auto task = tw::make_value_task(42);  
 ```
-A call to `task->get()` will now always return 42.
+A call to `task->get()` will now always return 42. Note that a value or exception
+can also be explicitely assigned to regular tasks by calling the `set_value`
+or `set_exception` functions. Value or exception will persist for as long as
+the task hasn't been reset by a call to `reset()`.
+
+As shown above, parents can be enumerated as arguments to `make_task` but
+can also be collected into a `std::vector` and then be passed to `make_task`, e.g.:
+```cpp
+std::vector<std::shared_ptr<tw::task<int>>> parents = {parent1, parent2};
+auto task = tw::make_task(tw::wait, []{}, parents);
+```
+This will simply wait for both parents to finish before running the given functor.
 
 ### Scheduling tasks
 
@@ -182,13 +193,7 @@ task->schedule_all(executor);
 ```
 which will run those tasks in parallel that do not depend on each other.
 
-A task can be canceled by calling `task->cancel(true)` which will, by default, 
-only affect tasks that are not currently running yet. However, if you create a functor
-that inherits from `transwarp::functor` you get access to the `transwarp_cancel_point` 
-function. This function can be used to denote well defined points where the functor
-will exit when the associated task is canceled. 
-
-### More on executors
+### Executors
 
 We have seen that we can pass executors to `schedule()` and `schedule_all()`.
 Additionally, they can be assigned to a task directly:
@@ -215,207 +220,68 @@ public:
 where `functor` denotes the function to be run and `node` an object that holds 
 meta-data of the current task.
 
-## Comparison to other libraries
+### Canceling tasks
 
-This comparison should serve as nothing more than a quick overview of
-a few portable, open-source libraries for task parallelism in C++.  By
-no means is this an exhaustive summary of the features those libraries
-provide.
-
-### Standard library
-
-**C++11/14/17**
-
-These language standards only provide a basic way of dealing with
-tasks. The simplest way to launch an asynchronous task is through:
+A task can be canceled by calling `task->cancel(true)` which will, by default, 
+only affect tasks that are not currently running yet. However, if you create a functor
+that inherits from `transwarp::functor` you can terminate tasks while they're
+running. `transwarp::functor` looks like this:
 ```cpp
-auto future = std::async(std::launch::async, functor, param1, param2);
-```
-which will run the given `functor` with `param1` and `param2` on a
-separate thread and return a `std::future` object. There are other
-primitives such as `std::promise` and `std::packaged_task` that assist
-with constructing asynchronous tasks. The latter is used internally by
-transwarp to schedule functions.
 
-Unfortunately, there is no way to chain futures together to create a
-graph of dependent operations. There is also no way of _easily_
-scheduling these operations on certain, user-defined threads. The
-standard library does, however, provide all the tools to build a
-framework, such as a transwarp, which implements these features.
+class functor {
+public:
+    virtual ~functor() = default;
 
-**C++20 and beyond**
-
-There are proposals through the [concurrency
-ts](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2015/p0159r0.html)
-to extend `std::future` and `std::shared_future` to support
-_continuations_, e.g.
-
-```cpp
-std::future<int> f1 = std::async([]() { return 123; });
-std::future<std::string> f2 = f1.then([](std::future<int> f) { return std::to_string(f.get()); });
-```
-
-In addition, there is talk about adding support for `when_all` and
-`when_any`. These features combined would make it possible to create a
-dependency graph much like the one in transwarp. Future continuations
-will, however, not support a re-scheduling of tasks in the graph but
-rather serve as one-shot operations. Also, there seems to be currently
-no efforts towards custom executors.
-
-The above example in transwarp would look something like this:
-
-```cpp
-tw::parallel executor{4};
-auto t1 = tw::make_value_task(123);
-auto t2 = tw::make_task(tw::consume, [](int x) { return std::to_string(x); }, t1);
-t2->schedule_all(executor);
-```
-
-### Boost
-
-Boost supports
-[continuations](http://www.boost.org/doc/libs/1_65_1/doc/html/thread/synchronization.html#thread.synchronization.futures.then)
-much like the ones proposed in the above concurrency ts. In addition,
-boost supports custom executors that can be passed into overloaded
-versions of `future::then` and `async`. The custom executor is
-expected to implement a `submit` method accepting a `function<void()>`
-which then runs the given function, possibly asynchronously. Hence,
-this is quite similar to what transwarp does.
-
-A difference to point out is that transwarp uses `std::shared_future`
-to implement transfer between tasks which may be more expensive in
-certain situations compared to `std::future`. Note that a call to
-`get()` on a future will either return a reference or a moved result
-while the same call on a shared future will either provide a reference
-or a copy but never move.
-
-Boost also supports a form of scheduling of tasks. This allows users
-to schedule tasks when certain events take place, such as reaching a
-certain time. In transwarp, tasks are scheduled by calling `schedule`
-or `schedule_all` on the task object.
-
-### HPX
-
-HPX implements all of the features proposed in the concurrency ts and
-currently available in boost regarding continuations. It also supports
-custom executors and goes slightly beyond what boost has to
-offer. This [blog
-post](http://stellar-group.org/2015/07/hpx-and-cpp-futures/) has a
-nice summary.
-
-Neither Boost nor HPX seem to support task graphs for multiple
-invocations.
-
-### TBB
-
-TBB implements its own version of [task-based
-programming](https://www.threadingbuildingblocks.org/tutorial-intel-tbb-task-based-programming), for instance
-
-```cpp
-int Fib(int n) {
-    if ( n < 2 ) {
-        return n;
-    } else {
-        int x, y;
-        tbb::task_group g;
-        g.run([&]{ x = Fib(n-1); }); // spawn a task
-        g.run([&]{ y = Fib(n-2); }); // spawn another task
-        g.wait();                // wait for both tasks to complete
-        return x+y;
+protected:
+    /// The node associated to the task
+    const std::shared_ptr<transwarp::node>& transwarp_node() const noexcept {
+        return transwarp_node_;
     }
-}
-```
 
-which computes the Fibonacci series in a parallel fashion. The
-corresponding code in transwarp would look like this:
-
-```cpp
-int Fib(int n) {
-    if ( n < 2 ) {
-        return n;
-    } else {
-        int x, y;
-        auto t1 = tw::make_task(tw::root, [&]{ x = Fib(n-1); });
-        auto t2 = tw::make_task(tw::root, [&]{ y = Fib(n-2); });
-        auto t3 = tw::make_task(tw::wait, []{}, t1, t2);
-        t3->schedule_all();
-        t3->wait();
-        return x+y;
+    /// If the associated task is canceled then this will throw transwarp::task_canceled
+    /// which will stop the task while it's running
+    void transwarp_cancel_point() const {
+        if (transwarp_node_->is_canceled()) {
+            throw transwarp::task_canceled(std::to_string(transwarp_node_->get_id()));
+        }
     }
+private:
+	...
+};
+```
+By placing calls to `transwarp_cancel_point()` in strategic places of your functor
+you can denote well defined points where the functor will exit when the associated task is canceled.
+
+As mentioned above, tasks can be explicitly canceled on client request. In addition,
+all tasks considered abandoned by `accept_any`, `consume_any`, or `wait_any`
+operations are also canceled in ordered to terminate them as soon as their results
+become unnecessary. 
+
+### Event system
+
+Transwarp provides an event system that allows you to subscribe to all or specific
+events of a task, such as, before started or after finished events. The task events
+are enumerated in the `event_type` enum:
+```cpp
+enum class event_type {
+    before_scheduled, // just before a task is scheduled
+    before_started,   // just before a task starts running
+    after_finished,   // just after a task has finished running
 }
 ```
-
-Note that for any real-world application the graph of tasks should be
-created upfront and not on the fly. This is just a silly toy example.
-
-TBB supports both automatic and fine-grained task scheduling. Creating
-an acyclic graph of tasks appears to be somewhat cumbersome and is not
-nearly as straightforward as in transwarp. This
-[post](https://software.intel.com/en-us/node/506110) shows an example
-of such a graph. Simple continuations suffer from the same usability
-problem, though, it is possible to use them.
-
-### Stlab
-
-[Stlab](http://stlab.cc/libraries/concurrency/index.html) appears to
-be the library in the list that's the closest to what transwarp is
-trying to achieve. It supports future continuations in multiple
-directions (essentially a graph) and also canceling futures. Stlab
-splits its implementation into futures for single-shot graphs and
-channels for multiple invocations. A simple example using channels:
-
+Listeners are created by sub-classing from the `listener` interface:
 ```cpp
-stlab::sender<int> send;
-stlab::receiver<int> receive;
+class listener {
+public:
+    virtual ~listener() = default;
 
-std::tie(send, receive) = stlab::channel<int>(stlab::default_executor);
-
-std::atomic_int v{0};
-
-auto result = receive 
-    | stlab::executor{ stlab::immediate_executor } & [](int x) { return x * 2; }
-    | [&v](int x) { v = x; };
-
-receive.set_ready();
-
-send(1);
-
-// Waiting just for illustrational purpose
-while (v == 0) {
-    this_thread::sleep_for(chrono::milliseconds(1));
-}
+    /// This may be called from arbitrary threads depending on the event type
+    virtual void handle_event(tw::event_type event, const std::shared_ptr<tw::node>& node) = 0;
+};
 ```
-
-This will take the input provided via `send`, multiply it by two, and
-then assign `v` the result. The corresponding code in transwarp would
-look like this:
-
-```cpp
-auto t1 = tw::make_value_task(0);
-auto t2 = tw::make_task(tw::consume, [](int x) { return x * 2; }, t1);
-
-t1->set_value(1);
-t2->schedule_all();
-
-int v = t2->get();
-```
-
-### Conclusions
-
-As can be seen from the comparison, transwarp shares many similarities
-to existing libraries. The notion of chaining dependent, possibly
-asynchronous operations and scheduling them using custom executors is a
-common use case. To summarize:
-
-Use transwarp if:
-* you want to model your dependent operations in a task graph
-* you construct the task graph upfront and invoke it multiple times
-* you possibly now or later want to run some tasks on different threads
-* you want a header-only task library that is easy to use and has no dependencies
-
-Don't use transwarp if:
-* you construct the task graph on the fly for one-shot operations (use futures instead)
-* significant chunks of memory are copied when invoking dependent tasks (transwarp uses shared_futures to communicate results between tasks)
+A listener can then be passed to the `add_listener` functions of a task
+to add a new listener or to the `remove_listener` functions to remove
+an existing listener.
 
 ## Feedback
 
