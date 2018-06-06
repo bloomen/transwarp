@@ -285,19 +285,14 @@ public:
 
 protected:
     /// The node associated to the task
-    const std::shared_ptr<transwarp::node>& transwarp_node() const noexcept {
-        return transwarp_node_;
-    }
+    const std::shared_ptr<transwarp::node>& transwarp_node() const noexcept;
 
     /// If the associated task is canceled then this will throw transwarp::task_canceled
     /// which will stop the task while it's running
-    void transwarp_cancel_point() const {
-        if (transwarp_node_->is_canceled()) {
-            throw transwarp::task_canceled(std::to_string(transwarp_node_->get_id()));
-        }
-    }
+    void transwarp_cancel_point() const;
+
 private:
-	...
+    ...
 };
 ```
 By placing calls to `transwarp_cancel_point()` in strategic places of your functor
