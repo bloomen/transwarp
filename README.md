@@ -285,7 +285,7 @@ public:
 
 protected:
     /// The node associated to the task
-    const std::shared_ptr<transwarp::node>& transwarp_node() const noexcept;
+    const std::shared_ptr<tw::node>& transwarp_node() const noexcept;
 
     /// If the associated task is canceled then this will throw transwarp::task_canceled
     /// which will stop the task while it's running
