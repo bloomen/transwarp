@@ -62,7 +62,7 @@ while using 4 threads.
 
 namespace tw = transwarp;
 
-double add_em_up(double x, int y) {
+double adder(double x, int y) {
     return x + y;
 }
 
@@ -71,7 +71,7 @@ int main() {
     // building the task graph
     auto task1 = tw::make_value_task("something", 13.3);
     auto task2 = tw::make_value_task("something else", 42);
-    auto task3 = tw::make_task(tw::consume, "adder", add_em_up, task1, task2);
+    auto task3 = tw::make_task(tw::consume, "adder", adder, task1, task2);
 
     // creating a dot-style graph for visualization
     const auto graph = task3->get_graph();
@@ -129,38 +129,81 @@ a `consume` task simply do this:
 auto task = tw::make_task(tw::consume, functor, parent1, parent2);
 ```
 where `functor` denotes some callable and `parent1/2` the parent tasks. 
-Note that `functor` in this case has to accept two arguments that match the 
-result types of the parent tasks.
 
-Tasks can be freely chained together using the different task types. 
-The only restriction is that tasks without parents have to be either labeled as `root` tasks
-or defined as value tasks. 
+The functor as passed to `make_task` needs to fulfill certain requirements based
+on the task type and the given parents:
 
-The `accept` and `accept_any` types give you the greatest flexibility but require your
-functor to take `std::shared_future<T>` types. The `consume` and `consume_any` task types, however, 
-require your functor to take the direct result types of the parent tasks. 
-
-If you have a task that doesn't require a functor and should only ever return a given
-value or throw an exception then a value task can be used:
+`root`: A task at the root (top) of the graph. This task gets executed first.
+A functor to a `root` task cannot have any parameters since this task does not
+have parent tasks, e.g.:
+```cpp
+auto task = tw::make_task(tw::root, []{ return 42; });
+```
+Another way of defining a`root` task is a _value task_ which can be created as:
 ```cpp
 auto task = tw::make_value_task(42);  
 ```
-A call to `task->get()` will now always return 42. Note that a value or exception
-can also be explicitely assigned to regular task by calling the `set_value`
-or `set_exception` functions. Value or exception will persist for as long as
-the task hasn't been reset by a call to `reset()`.
+A value task doesn't require scheduling and always returns the same value or exception.
 
-As shown above, parents can be enumerated as arguments to `make_task` but
-can also be collected into a `std::vector` and then passed to `make_task`, e.g.:
+`accept`: This task is required to have at least one parent. It _accepts_
+the resulting parent futures as they are without unwrapping. Hence, the child
+can decide how to proceed since a call to `get()` can potentially throw an
+exception. Here's an example:
 ```cpp
-std::vector<std::shared_ptr<tw::task<int>>> parents = {parent1, parent2};
-auto task = tw::make_task(tw::wait, []{}, parents);
+auto task = tw::make_task(tw::accept, [](std::shared_future<int> f1, 
+										 std::shared_future<int> f2) {
+										 	return f1.get() + f2.get();
+										 }, parent1, parent2);
+``` 
+
+`accept_any`: This task is required to have at least one parent but its
+functor takes exactly one future, namely the future of the parent that
+first finishes. All other parents are abandoned and canceled. Here's an example:
+```cpp
+auto task = tw::make_task(tw::accept_any, [](std::shared_future<int> f1) { 
+										 		return f1.get();
+		                                     }, parent1, parent2);
+``` 
+Note that canceling only works for already running tasks when the functor is 
+sub-classed from `transwarp::functor`.
+
+`consume`: This task follows the same rules as `accept` with the difference
+that the resulting parent futures are unwrapped (have `get()` called on them).
+The results are then passed to the child, hence, consumed by the child task.
+The child task will not be invoked if any parent throws an exception.
+For example:
+```cpp
+auto task = tw::make_task(tw::consume, [](int x, int y) { 
+									 		 return x + y;
+		                                  }, parent1, parent2);
 ```
-This will simply wait for both parents to finish before running the given functor.
+
+`consume_any`: This tasks follows the same rules as `accept_any` with the difference
+that the resulting parent futures are unwrapped (have `get()` called on them).
+For example:
+```cpp
+auto task = tw::make_task(tw::consume_any, [](int x) { 
+										 		return x;
+		                                     }, parent1, parent2);
+``` 
+
+`wait`: This task's functor does not take any parameters but the task
+must have at least one parent. It simply waits for completion of all parents
+while unwrapping futures before calling the child's functor. For example:
+```cpp
+auto task = tw::make_task(tw::wait, []{ return 42; }, parent1, parent2);
+``` 
+
+`wait_any`: This task works similar to the `wait` task but calls its functor
+as soon as the first parent completes. It abandons and cancels are remaining
+parent tasks. For example:
+```cpp
+auto task = tw::make_task(tw::wait_any, []{ return 42; }, parent1, parent2);
+``` 
 
 Generally, tasks are created using `make_task` which allows for any number 
-of parents. However, it is common use case for a child to only have one parent.
-For this, `next` can be directly called on the parent object to create a _continutaion_:
+of parents. However, it is a common use case for a child to only have one parent.
+For this, `next()` can be directly called on the parent object to create a _continutaion_:
 ```cpp
 auto child = tw::make_task(tw::root, []{ return 42; })->next(tw::consume, functor);
 ```

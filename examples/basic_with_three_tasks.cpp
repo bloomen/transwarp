@@ -7,7 +7,7 @@ namespace tw = transwarp;
 
 namespace examples {
 
-double add_em_up(double x, int y) {
+double adder(double x, int y) {
     return x + y;
 }
 
@@ -19,7 +19,7 @@ void basic_with_three_tasks(std::ostream& os) {
     // building the task graph
     auto task1 = tw::make_value_task("something", 13.3);
     auto task2 = tw::make_value_task("something else", 42);
-    auto task3 = tw::make_task(tw::consume, "adder", add_em_up, task1, task2);
+    auto task3 = tw::make_task(tw::consume, "adder", adder, task1, task2);
 
     // creating a dot-style graph for visualization
     const auto graph = task3->get_graph();
