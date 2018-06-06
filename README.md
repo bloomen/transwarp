@@ -178,7 +178,7 @@ auto task = tw::make_task(tw::consume, [](int x, int y) {
                                           }, parent1, parent2);
 ```
 
-`consume_any`: This tasks follows the same rules as `accept_any` with the difference
+`consume_any`: This task follows the same rules as `accept_any` with the difference
 that the resulting parent futures are unwrapped (have `get()` called on them).
 For example:
 ```cpp
@@ -195,7 +195,7 @@ auto task = tw::make_task(tw::wait, []{ return 42; }, parent1, parent2);
 ``` 
 
 `wait_any`: This task works similar to the `wait` task but calls its functor
-as soon as the first parent completes. It abandons and cancels are remaining
+as soon as the first parent completes. It abandons and cancels all remaining
 parent tasks. For example:
 ```cpp
 auto task = tw::make_task(tw::wait_any, []{ return 42; }, parent1, parent2);
@@ -203,7 +203,7 @@ auto task = tw::make_task(tw::wait_any, []{ return 42; }, parent1, parent2);
 
 Generally, tasks are created using `make_task` which allows for any number 
 of parents. However, it is a common use case for a child to only have one parent.
-For this, `next()` can be directly called on the parent object to create a _continutaion_:
+For this, `next()` can be directly called on the parent object to create a _continuation_:
 ```cpp
 auto child = tw::make_task(tw::root, []{ return 42; })->next(tw::consume, functor);
 ```
