@@ -299,6 +299,7 @@ enum class event_type {
     before_scheduled, ///< just before a task is scheduled (handle_event called on thread of caller to schedule())
     before_started,   ///< just before a task starts running (handle_event called on thread that task is run on)
     after_finished,   ///< just after a task has finished running (handle_event called on thread that task is run on)
+    after_canceled,   ///< just after a task is canceled (handle_event called on thread that task is run on)
     count,
 };
 
@@ -650,6 +651,7 @@ Result run_task(std::size_t node_id, const Task& task, Args&&... args) {
     if (t->node_->is_canceled()) {
         throw transwarp::task_canceled(std::to_string(node_id));
     }
+    t->raise_event(transwarp::event_type::before_started);
     return t->functor_(std::forward<Args>(args)...);
 }
 
@@ -1292,8 +1294,15 @@ struct callable {
     const typename transwarp::decay<Task>::type task;
     const typename transwarp::decay<Parents>::type parents;
 
-    ResultType operator()() const {
-        return transwarp::detail::call<TaskType, ResultType>(node_id, task, parents);
+    ResultType operator()() {
+        try {
+            return transwarp::detail::call<TaskType, ResultType>(node_id, task, parents);
+        } catch (const transwarp::task_canceled&) {
+            if (const auto t = task.lock()) {
+                t->raise_event(transwarp::event_type::after_canceled);
+            }
+            throw;
+        }
     }
 };
 
@@ -1749,6 +1758,9 @@ protected:
 
 private:
 
+    template<typename Y, typename R, typename T, typename P>
+    friend struct callable;
+
     template<typename R, typename T, typename... A>
     friend R transwarp::detail::run_task(std::size_t, const T&, A&&...);
 
@@ -1772,9 +1784,6 @@ private:
             raise_event(transwarp::event_type::before_scheduled);
             future_ = pack_task->get_future();
             auto callable = [pack_task,self] {
-                if (const auto t = self.lock()) {
-                    t->raise_event(transwarp::event_type::before_started);
-                }
                 (*pack_task)();
                 if (const auto t = self.lock()) {
                     t->raise_event(transwarp::event_type::after_finished);
