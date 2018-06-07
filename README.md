@@ -133,7 +133,7 @@ where `functor` denotes some callable and `parent1/2` the parent tasks.
 The functor as passed to `make_task` needs to fulfill certain requirements based
 on the task type and the given parents:
 
-`root`: A task at the root (top) of the graph. This task gets executed first.
+**root**: A task at the root (top) of the graph. This task gets executed first.
 A functor to a `root` task cannot have any parameters since this task does not
 have parent tasks, e.g.:
 ```cpp
@@ -145,7 +145,7 @@ auto task = tw::make_value_task(42);
 ```
 A value task doesn't require scheduling and always returns the same value or exception.
 
-`accept`: This task is required to have at least one parent. It _accepts_
+**accept**: This task is required to have at least one parent. It _accepts_
 the resulting parent futures as they are without unwrapping. Hence, the child
 can decide how to proceed since a call to `get()` can potentially throw an
 exception. Here's an example:
@@ -156,7 +156,7 @@ auto task = tw::make_task(tw::accept, [](std::shared_future<int> f1,
                                          }, parent1, parent2);
 ```
 
-`accept_any`: This task is required to have at least one parent but its
+**accept_any**: This task is required to have at least one parent but its
 functor takes exactly one future, namely the future of the parent that
 first finishes. All other parents are abandoned and canceled. Here's an example:
 ```cpp
@@ -167,7 +167,7 @@ auto task = tw::make_task(tw::accept_any, [](std::shared_future<int> f1) {
 Note that canceling only works for already running tasks when the functor is 
 sub-classed from `transwarp::functor`.
 
-`consume`: This task follows the same rules as `accept` with the difference
+**consume**: This task follows the same rules as `accept` with the difference
 that the resulting parent futures are unwrapped (have `get()` called on them).
 The results are then passed to the child, hence, consumed by the child task.
 The child task will not be invoked if any parent throws an exception.
@@ -178,7 +178,7 @@ auto task = tw::make_task(tw::consume, [](int x, int y) {
                                           }, parent1, parent2);
 ```
 
-`consume_any`: This task follows the same rules as `accept_any` with the difference
+**consume_any**: This task follows the same rules as `accept_any` with the difference
 that the resulting parent futures are unwrapped (have `get()` called on them).
 For example:
 ```cpp
@@ -187,14 +187,14 @@ auto task = tw::make_task(tw::consume_any, [](int x) {
                                               }, parent1, parent2);
 ``` 
 
-`wait`: This task's functor does not take any parameters but the task
+**wait**: This task's functor does not take any parameters but the task
 must have at least one parent. It simply waits for completion of all parents
 while unwrapping futures before calling the child's functor. For example:
 ```cpp
 auto task = tw::make_task(tw::wait, []{ return 42; }, parent1, parent2);
 ``` 
 
-`wait_any`: This task works similar to the `wait` task but calls its functor
+**wait_any**: This task works similar to the `wait` task but calls its functor
 as soon as the first parent completes. It abandons and cancels all remaining
 parent tasks. For example:
 ```cpp
@@ -263,7 +263,11 @@ behavior when scheduling tasks. The interface looks like this:
 class executor {
 public:
     virtual ~executor() = default;
+    
+    // The name of the executor
     virtual std::string get_name() const = 0;
+    
+    // Only ever called on the thread of the caller to schedule()
     virtual void execute(const std::function<void()>& functor, const std::shared_ptr<tw::node>& node) = 0;
 };
 
@@ -284,11 +288,11 @@ public:
     virtual ~functor() = default;
 
 protected:
-    /// The node associated to the task
+    // The node associated to the task
     const std::shared_ptr<tw::node>& transwarp_node() const noexcept;
 
-    /// If the associated task is canceled then this will throw transwarp::task_canceled
-    /// which will stop the task while it's running
+    // If the associated task is canceled then this will throw transwarp::task_canceled
+    // which will stop the task while it's running
     void transwarp_cancel_point() const;
 
 private:
@@ -321,7 +325,7 @@ class listener {
 public:
     virtual ~listener() = default;
 
-    /// This may be called from arbitrary threads depending on the event type
+    // This may be called from arbitrary threads depending on the event type
     virtual void handle_event(tw::event_type event, const std::shared_ptr<tw::node>& node) = 0;
 };
 ```
