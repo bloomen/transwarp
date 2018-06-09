@@ -9,7 +9,7 @@ namespace tw = transwarp;
 namespace {
 
 std::mt19937 gen{1};
-std::mutex mutex; // protect the generator
+std::mutex mutex; // to protect the generator
 
 using data_t = std::shared_ptr<std::vector<double>>;
 
@@ -20,6 +20,16 @@ data_t transform(data_t data) {
         v *= dist(gen);
     }
     return data;
+}
+
+data_t copy_transform(data_t data) {
+    std::uniform_real_distribution<double> dist(0.5, 1.5);
+    auto copy = std::make_shared<std::vector<double>>(*data);
+    for (auto& v : *copy) {
+        std::lock_guard<std::mutex> lock{mutex};
+        v *= dist(gen);
+    }
+    return copy;
 }
 
 double mean(data_t data) {
@@ -41,7 +51,7 @@ public:
 std::shared_ptr<tw::task<double>> build_graph(std::shared_ptr<tw::task<data_t>> input) {
     std::vector<std::shared_ptr<tw::task<data_t>>> parents;
     for (int i=0; i<8; ++i) {
-        auto t = tw::make_task(tw::consume, transform, input)->then(tw::consume, transform);
+        auto t = tw::make_task(tw::consume, copy_transform, input)->then(tw::consume, transform);
         parents.emplace_back(t);
     }
     auto final = tw::make_task(tw::consume, [](const std::vector<data_t>& parents) {
@@ -87,7 +97,7 @@ void wide_graph_with_listener(std::ostream& os, std::size_t iterations, std::siz
     for (std::size_t i=0; i<iterations; ++i) {
         auto data = std::make_shared<std::vector<double>>(dist(gen), 1);
         input->set_value(data); // New data arrive
-        final->schedule_all(exec); // Schedule the graph immediately after data arrived
+        final->schedule_all(exec); // Schedule the graph after data arrived
         os << final->get() << std::endl; // Print result
     }
 }
