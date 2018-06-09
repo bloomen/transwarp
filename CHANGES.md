@@ -2,6 +2,7 @@
 
 - added support for parents provided as a std::vector of tasks
 - ensured that abandoned tasks are canceled
+- added new events: before_invoked and after_canceled
 - fixed bug where tasks were still canceled after reset
 
 1.5.0
