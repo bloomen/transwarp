@@ -98,7 +98,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 </div><!--header-->
 <div class="contents">
 
-<p>The base task class that contains the functionality that can be used with all result types (void and non-void) which is almost everything.  
+<p>The base task class that contains the functionality that can be used with all result types (void and non-void).  
  <a href="classtranswarp_1_1detail_1_1task__impl__base.html#details">More...</a></p>
 
 <p><code>#include &lt;<a class="el" href="transwarp_8h_source.html">transwarp.h</a>&gt;</code></p>
@@ -262,7 +262,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
 <tr class="separator:a9882968d394a7bc4dc99c009c0046f2a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5a4a7473e054df4a30e9cfa8afb75cae"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a5a4a7473e054df4a30e9cfa8afb75cae"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1detail_1_1task__impl__base.html#a5a4a7473e054df4a30e9cfa8afb75cae">set_exception</a> (std::exception_ptr exception) override</td></tr>
-<tr class="memdesc:a5a4a7473e054df4a30e9cfa8afb75cae"><td class="mdescLeft">&#160;</td><td class="mdescRight">Assigns an exception to this task. Scheduling will have no effect after an exception has been set. Calling <a class="el" href="classtranswarp_1_1detail_1_1task__impl__base.html#ae9395346d257ac48c5dc807681bc0859" title="Resets the future of this task. ">reset()</a> will remove the exception and re-enable scheduling. <br/></td></tr>
+<tr class="memdesc:a5a4a7473e054df4a30e9cfa8afb75cae"><td class="mdescLeft">&#160;</td><td class="mdescRight">Assigns an exception to this task. Scheduling will have no effect after an exception has been set. Calling <a class="el" href="classtranswarp_1_1detail_1_1task__impl__base.html#ae9395346d257ac48c5dc807681bc0859" title="Resets this task. ">reset()</a> will remove the exception and re-enable scheduling. <br/></td></tr>
 <tr class="separator:a5a4a7473e054df4a30e9cfa8afb75cae"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a55c8ea68e33b2d4512c47897adf2159d"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a55c8ea68e33b2d4512c47897adf2159d"></a>
 bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1detail_1_1task__impl__base.html#a55c8ea68e33b2d4512c47897adf2159d">was_scheduled</a> () const noexceptoverride</td></tr>
@@ -282,19 +282,19 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
 <tr class="separator:ac352cbb81a05f85c16ee5dac3c5ae9dc"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae9395346d257ac48c5dc807681bc0859"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae9395346d257ac48c5dc807681bc0859"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1detail_1_1task__impl__base.html#ae9395346d257ac48c5dc807681bc0859">reset</a> () override</td></tr>
-<tr class="memdesc:ae9395346d257ac48c5dc807681bc0859"><td class="mdescLeft">&#160;</td><td class="mdescRight">Resets the future of this task. <br/></td></tr>
+<tr class="memdesc:ae9395346d257ac48c5dc807681bc0859"><td class="mdescLeft">&#160;</td><td class="mdescRight">Resets this task. <br/></td></tr>
 <tr class="separator:ae9395346d257ac48c5dc807681bc0859"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:afc2bb4a5017de5ddd00425fd51ae5d14"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="afc2bb4a5017de5ddd00425fd51ae5d14"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1detail_1_1task__impl__base.html#afc2bb4a5017de5ddd00425fd51ae5d14">reset_all</a> () override</td></tr>
-<tr class="memdesc:afc2bb4a5017de5ddd00425fd51ae5d14"><td class="mdescLeft">&#160;</td><td class="mdescRight">Resets the futures of all tasks in the graph. <br/></td></tr>
+<tr class="memdesc:afc2bb4a5017de5ddd00425fd51ae5d14"><td class="mdescLeft">&#160;</td><td class="mdescRight">Resets all tasks in the graph. <br/></td></tr>
 <tr class="separator:afc2bb4a5017de5ddd00425fd51ae5d14"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a97901db218f0f9006e0cbaf1a7c4e0c1"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a97901db218f0f9006e0cbaf1a7c4e0c1"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1detail_1_1task__impl__base.html#a97901db218f0f9006e0cbaf1a7c4e0c1">cancel</a> (bool enabled) noexceptoverride</td></tr>
-<tr class="memdesc:a97901db218f0f9006e0cbaf1a7c4e0c1"><td class="mdescLeft">&#160;</td><td class="mdescRight">If enabled then this task is canceled which will throw <a class="el" href="classtranswarp_1_1task__canceled.html" title="Exception thrown when a task is canceled. ">transwarp::task_canceled</a> when retrieving the task result. As long as cancel is enabled new computations cannot be scheduled. Passing false is equivalent to resume. <br/></td></tr>
+<tr class="memdesc:a97901db218f0f9006e0cbaf1a7c4e0c1"><td class="mdescLeft">&#160;</td><td class="mdescRight">If enabled then this task is canceled which will throw <a class="el" href="classtranswarp_1_1task__canceled.html" title="Exception thrown when a task is canceled. ">transwarp::task_canceled</a> when retrieving the task result. Passing false is equivalent to resume. <br/></td></tr>
 <tr class="separator:a97901db218f0f9006e0cbaf1a7c4e0c1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af567fa162e353f127c778ef57e64def2"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af567fa162e353f127c778ef57e64def2"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1detail_1_1task__impl__base.html#af567fa162e353f127c778ef57e64def2">cancel_all</a> (bool enabled) noexceptoverride</td></tr>
-<tr class="memdesc:af567fa162e353f127c778ef57e64def2"><td class="mdescLeft">&#160;</td><td class="mdescRight">If enabled then all pending tasks in the graph are canceled which will throw <a class="el" href="classtranswarp_1_1task__canceled.html" title="Exception thrown when a task is canceled. ">transwarp::task_canceled</a> when retrieving the task result. As long as cancel is enabled new computations cannot be scheduled. Passing false is equivalent to resume. <br/></td></tr>
+<tr class="memdesc:af567fa162e353f127c778ef57e64def2"><td class="mdescLeft">&#160;</td><td class="mdescRight">If enabled then all pending tasks in the graph are canceled which will throw <a class="el" href="classtranswarp_1_1task__canceled.html" title="Exception thrown when a task is canceled. ">transwarp::task_canceled</a> when retrieving the task result. Passing false is equivalent to resume. <br/></td></tr>
 <tr class="separator:af567fa162e353f127c778ef57e64def2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:abcb8a71a999a7ce016361966e97a5932"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="abcb8a71a999a7ce016361966e97a5932"></a>
 std::vector&lt; <a class="el" href="classtranswarp_1_1edge.html">transwarp::edge</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1detail_1_1task__impl__base.html#abcb8a71a999a7ce016361966e97a5932">get_graph</a> () const override</td></tr>
@@ -316,8 +316,15 @@ virtual <a class="el" href="structtranswarp_1_1result__info.html">transwarp::res
 Protected Member Functions</h2></td></tr>
 <tr class="memitem:a321229925adbd7a12a6fe7d98f2e971d"><td class="memTemplParams" colspan="2"><a class="anchor" id="a321229925adbd7a12a6fe7d98f2e971d"></a>
 template&lt;typename F &gt; </td></tr>
-<tr class="memitem:a321229925adbd7a12a6fe7d98f2e971d"><td class="memTemplItemLeft" align="right" valign="top">&#160;</td><td class="memTemplItemRight" valign="bottom"><b>task_impl_base</b> (bool has_name, std::string name, F &amp;&amp;<a class="el" href="classtranswarp_1_1functor.html">functor</a>, std::shared_ptr&lt; <a class="el" href="classtranswarp_1_1task.html">transwarp::task</a>&lt; ParentResults &gt;&gt;...parents)</td></tr>
+<tr class="memitem:a321229925adbd7a12a6fe7d98f2e971d"><td class="memTemplItemLeft" align="right" valign="top">&#160;</td><td class="memTemplItemRight" valign="bottom"><b>task_impl_base</b> (bool has_name, std::string name, F &amp;&amp;<a class="el" href="classtranswarp_1_1functor.html">functor</a>, std::shared_ptr&lt; <a class="el" href="classtranswarp_1_1task.html">transwarp::task</a>&lt; ParentResults &gt;&gt;...<a class="el" href="structtranswarp_1_1detail_1_1parents.html">parents</a>)</td></tr>
 <tr class="separator:a321229925adbd7a12a6fe7d98f2e971d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a419ff2905c1433f94598e7ecb2e84926"><td class="memTemplParams" colspan="2"><a class="anchor" id="a419ff2905c1433f94598e7ecb2e84926"></a>
+template&lt;typename F , typename P &gt; </td></tr>
+<tr class="memitem:a419ff2905c1433f94598e7ecb2e84926"><td class="memTemplItemLeft" align="right" valign="top">&#160;</td><td class="memTemplItemRight" valign="bottom"><b>task_impl_base</b> (bool has_name, std::string name, F &amp;&amp;<a class="el" href="classtranswarp_1_1functor.html">functor</a>, std::vector&lt; std::shared_ptr&lt; <a class="el" href="classtranswarp_1_1task.html">transwarp::task</a>&lt; P &gt;&gt;&gt; <a class="el" href="structtranswarp_1_1detail_1_1parents.html">parents</a>)</td></tr>
+<tr class="separator:a419ff2905c1433f94598e7ecb2e84926"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae08cfa8dd47f1548c4e838a6c7612861"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae08cfa8dd47f1548c4e838a6c7612861"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>init</b> (bool has_name, std::string name)</td></tr>
+<tr class="separator:ae08cfa8dd47f1548c4e838a6c7612861"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:afbace0d9636143558055de0889c5b7bb"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="afbace0d9636143558055de0889c5b7bb"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1detail_1_1task__impl__base.html#afbace0d9636143558055de0889c5b7bb">ensure_task_not_running</a> () const </td></tr>
 <tr class="memdesc:afbace0d9636143558055de0889c5b7bb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Checks if the task is currently running and throws <a class="el" href="classtranswarp_1_1control__error.html" title="Exception thrown when a task is used in unintended ways. ">transwarp::control_error</a> if it is. <br/></td></tr>
@@ -338,6 +345,10 @@ std::shared_future&lt; <a class="el" href="classtranswarp_1_1detail_1_1task__imp
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="friends"></a>
 Friends</h2></td></tr>
+<tr class="memitem:a4edd69da322edbc76a7b3263d7ea56d6"><td class="memTemplParams" colspan="2"><a class="anchor" id="a4edd69da322edbc76a7b3263d7ea56d6"></a>
+template&lt;typename Y , typename R , typename T , typename P &gt; </td></tr>
+<tr class="memitem:a4edd69da322edbc76a7b3263d7ea56d6"><td class="memTemplItemLeft" align="right" valign="top">struct&#160;</td><td class="memTemplItemRight" valign="bottom"><b>transwarp::detail::runner</b></td></tr>
+<tr class="separator:a4edd69da322edbc76a7b3263d7ea56d6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9e7185ea38d5e7d779a6e1c8fa4e0a2d"><td class="memTemplParams" colspan="2"><a class="anchor" id="a9e7185ea38d5e7d779a6e1c8fa4e0a2d"></a>
 template&lt;typename R , typename T , typename... A&gt; </td></tr>
 <tr class="memitem:a9e7185ea38d5e7d779a6e1c8fa4e0a2d"><td class="memTemplItemLeft" align="right" valign="top">R&#160;</td><td class="memTemplItemRight" valign="bottom"><b>transwarp::detail::run_task</b> (std::size_t, const T &amp;, A &amp;&amp;...)</td></tr>
@@ -347,7 +358,7 @@ template&lt;typename R , typename T , typename... A&gt; </td></tr>
 <div class="textblock"><h3>template&lt;typename ResultType, typename TaskType, typename Functor, typename... ParentResults&gt;<br/>
 class transwarp::detail::task_impl_base&lt; ResultType, TaskType, Functor, ParentResults &gt;</h3>
 
-<p>The base task class that contains the functionality that can be used with all result types (void and non-void) which is almost everything. </p>
+<p>The base task class that contains the functionality that can be used with all result types (void and non-void). </p>
 </div><hr/>The documentation for this class was generated from the following file:<ul>
 <li>src/<a class="el" href="transwarp_8h_source.html">transwarp.h</a></li>
 </ul>

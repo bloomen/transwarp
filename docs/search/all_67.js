@@ -5,7 +5,7 @@ var searchData=
   ['get_5fcustom_5fdata',['get_custom_data',['../classtranswarp_1_1node.html#abcc6e3e5753060281a8572b13a9e31bd',1,'transwarp::node']]],
   ['get_5fexecutor',['get_executor',['../classtranswarp_1_1node.html#ac38786be6599c5e7309caa30f3849299',1,'transwarp::node']]],
   ['get_5ffuture',['get_future',['../classtranswarp_1_1detail_1_1task__impl__base.html#a49a50578673bdc8e6455d938679f31f6',1,'transwarp::detail::task_impl_base::get_future()'],['../classtranswarp_1_1value__task.html#a732539b69055e45ca6b23baa3c2a73f7',1,'transwarp::value_task::get_future()']]],
-  ['get_5ffutures',['get_futures',['../namespacetranswarp_1_1detail.html#a98c959b597dd31da852bbca08811f873',1,'transwarp::detail']]],
+  ['get_5ffutures',['get_futures',['../namespacetranswarp_1_1detail.html#a98c959b597dd31da852bbca08811f873',1,'transwarp::detail::get_futures(const std::tuple&lt; std::shared_ptr&lt; transwarp::task&lt; ParentResults &gt;&gt;...&gt; &amp;input)'],['../namespacetranswarp_1_1detail.html#a99579e02887cf0ae4f04848e1fd333bf',1,'transwarp::detail::get_futures(const std::vector&lt; std::shared_ptr&lt; transwarp::task&lt; ParentResultType &gt;&gt;&gt; &amp;input)']]],
   ['get_5fgraph',['get_graph',['../classtranswarp_1_1detail_1_1task__impl__base.html#abcb8a71a999a7ce016361966e97a5932',1,'transwarp::detail::task_impl_base::get_graph()'],['../classtranswarp_1_1value__task.html#a19a76bfcd9eaf785804e0e95e725b7d9',1,'transwarp::value_task::get_graph()']]],
   ['get_5fid',['get_id',['../classtranswarp_1_1node.html#a0b55851e27504d10e470e76b739dc141',1,'transwarp::node']]],
   ['get_5flevel',['get_level',['../classtranswarp_1_1node.html#a68a7f5dde0317d04397fad57dcccd38e',1,'transwarp::node']]],

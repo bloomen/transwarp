@@ -199,10 +199,15 @@ Enumerations</h2></td></tr>
  }</td></tr>
 <tr class="memdesc:a10f2b2567332cf9514d4c366c1cc5a5e"><td class="mdescLeft">&#160;</td><td class="mdescRight">The possible task types.  <a href="namespacetranswarp.html#a10f2b2567332cf9514d4c366c1cc5a5e">More...</a><br/></td></tr>
 <tr class="separator:a10f2b2567332cf9514d4c366c1cc5a5e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a857009a6efbb2f34495ee81664a376dc"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacetranswarp.html#a857009a6efbb2f34495ee81664a376dc">event_type</a> { <a class="el" href="namespacetranswarp.html#a857009a6efbb2f34495ee81664a376dca35417532b100ce11672f583cf5d378bd">event_type::before_scheduled</a>, 
+<tr class="memitem:a857009a6efbb2f34495ee81664a376dc"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacetranswarp.html#a857009a6efbb2f34495ee81664a376dc">event_type</a> { <br/>
+&#160;&#160;<a class="el" href="namespacetranswarp.html#a857009a6efbb2f34495ee81664a376dca35417532b100ce11672f583cf5d378bd">event_type::before_scheduled</a>, 
 <a class="el" href="namespacetranswarp.html#a857009a6efbb2f34495ee81664a376dcad6e19f65753e84a061a28f9f305fe39b">event_type::before_started</a>, 
+<a class="el" href="namespacetranswarp.html#a857009a6efbb2f34495ee81664a376dcaeecb3099ae4ef4be6fc0008dacf35a2d">event_type::before_invoked</a>, 
 <a class="el" href="namespacetranswarp.html#a857009a6efbb2f34495ee81664a376dcac24f2a90b2418a40ec4eaf0c7e49a537">event_type::after_finished</a>, 
+<br/>
+&#160;&#160;<a class="el" href="namespacetranswarp.html#a857009a6efbb2f34495ee81664a376dcaf6627ef1a493e0fdc9965eefcf89a425">event_type::after_canceled</a>, 
 <b>count</b>
+<br/>
  }</td></tr>
 <tr class="memdesc:a857009a6efbb2f34495ee81664a376dc"><td class="mdescLeft">&#160;</td><td class="mdescRight">The task events that can be subscribed to using the below listener interface.  <a href="namespacetranswarp.html#a857009a6efbb2f34495ee81664a376dc">More...</a><br/></td></tr>
 <tr class="separator:a857009a6efbb2f34495ee81664a376dc"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -240,6 +245,16 @@ template&lt;typename TaskType , typename Functor , typename... Parents&gt; </td>
 <tr class="memitem:ab86a2a573277a7af6b03217a70661ab3"><td class="memTemplItemLeft" align="right" valign="top">auto&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacetranswarp.html#ab86a2a573277a7af6b03217a70661ab3">make_task</a> (TaskType, Functor &amp;&amp;<a class="el" href="classtranswarp_1_1functor.html">functor</a>, std::shared_ptr&lt; Parents &gt;...parents) -&gt; decltype(std::make_shared&lt; <a class="el" href="classtranswarp_1_1task__impl.html">transwarp::task_impl</a>&lt; TaskType, typename std::decay&lt; Functor &gt;::type, typename Parents::result_type...&gt;&gt;(std::forward&lt; Functor &gt;(<a class="el" href="classtranswarp_1_1functor.html">functor</a>), std::move(parents)...))</td></tr>
 <tr class="memdesc:ab86a2a573277a7af6b03217a70661ab3"><td class="mdescLeft">&#160;</td><td class="mdescRight">A factory function to create a new task. Overload for omitting the task name. <br/></td></tr>
 <tr class="separator:ab86a2a573277a7af6b03217a70661ab3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afe24b5daba60bbd5ebe535e3a75586d5"><td class="memTemplParams" colspan="2"><a class="anchor" id="afe24b5daba60bbd5ebe535e3a75586d5"></a>
+template&lt;typename TaskType , typename Functor , typename ParentType &gt; </td></tr>
+<tr class="memitem:afe24b5daba60bbd5ebe535e3a75586d5"><td class="memTemplItemLeft" align="right" valign="top">auto&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacetranswarp.html#afe24b5daba60bbd5ebe535e3a75586d5">make_task</a> (TaskType, std::string name, Functor &amp;&amp;<a class="el" href="classtranswarp_1_1functor.html">functor</a>, std::vector&lt; ParentType &gt; parents) -&gt; decltype(std::make_shared&lt; <a class="el" href="classtranswarp_1_1task__impl.html">transwarp::task_impl</a>&lt; TaskType, typename std::decay&lt; Functor &gt;::type, decltype(parents)&gt;&gt;(std::move(name), std::forward&lt; Functor &gt;(<a class="el" href="classtranswarp_1_1functor.html">functor</a>), std::move(parents)))</td></tr>
+<tr class="memdesc:afe24b5daba60bbd5ebe535e3a75586d5"><td class="mdescLeft">&#160;</td><td class="mdescRight">A factory function to create a new task with vector parents. <br/></td></tr>
+<tr class="separator:afe24b5daba60bbd5ebe535e3a75586d5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad3bd8b3d354d792e0185684944ed0432"><td class="memTemplParams" colspan="2"><a class="anchor" id="ad3bd8b3d354d792e0185684944ed0432"></a>
+template&lt;typename TaskType , typename Functor , typename ParentType &gt; </td></tr>
+<tr class="memitem:ad3bd8b3d354d792e0185684944ed0432"><td class="memTemplItemLeft" align="right" valign="top">auto&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacetranswarp.html#ad3bd8b3d354d792e0185684944ed0432">make_task</a> (TaskType, Functor &amp;&amp;<a class="el" href="classtranswarp_1_1functor.html">functor</a>, std::vector&lt; ParentType &gt; parents) -&gt; decltype(std::make_shared&lt; <a class="el" href="classtranswarp_1_1task__impl.html">transwarp::task_impl</a>&lt; TaskType, typename std::decay&lt; Functor &gt;::type, decltype(parents)&gt;&gt;(std::forward&lt; Functor &gt;(<a class="el" href="classtranswarp_1_1functor.html">functor</a>), std::move(parents)))</td></tr>
+<tr class="memdesc:ad3bd8b3d354d792e0185684944ed0432"><td class="mdescLeft">&#160;</td><td class="mdescRight">A factory function to create a new task with vector parents. Overload for omitting the task name. <br/></td></tr>
+<tr class="separator:ad3bd8b3d354d792e0185684944ed0432"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a11ad8eafd0d38b86dada737ec1aa014d"><td class="memTemplParams" colspan="2"><a class="anchor" id="a11ad8eafd0d38b86dada737ec1aa014d"></a>
 template&lt;typename Value &gt; </td></tr>
 <tr class="memitem:a11ad8eafd0d38b86dada737ec1aa014d"><td class="memTemplItemLeft" align="right" valign="top">auto&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacetranswarp.html#a11ad8eafd0d38b86dada737ec1aa014d">make_value_task</a> (std::string name, Value &amp;&amp;value) -&gt; decltype(std::make_shared&lt; <a class="el" href="classtranswarp_1_1value__task.html">transwarp::value_task</a>&lt; typename <a class="el" href="structtranswarp_1_1decay.html">transwarp::decay</a>&lt; Value &gt;::type &gt;&gt;(std::move(name), std::forward&lt; Value &gt;(value)))</td></tr>
@@ -313,8 +328,14 @@ constexpr <a class="el" href="structtranswarp_1_1wait__any__type.html">transwarp
 <tr><td class="fieldname"><em><a class="anchor" id="a857009a6efbb2f34495ee81664a376dcad6e19f65753e84a061a28f9f305fe39b"></a>before_started</em>&nbsp;</td><td class="fielddoc">
 <p>just before a task starts running (handle_event called on thread that task is run on) </p>
 </td></tr>
+<tr><td class="fieldname"><em><a class="anchor" id="a857009a6efbb2f34495ee81664a376dcaeecb3099ae4ef4be6fc0008dacf35a2d"></a>before_invoked</em>&nbsp;</td><td class="fielddoc">
+<p>just before a task's functor is invoked (handle_event called on thread that task is run on) </p>
+</td></tr>
 <tr><td class="fieldname"><em><a class="anchor" id="a857009a6efbb2f34495ee81664a376dcac24f2a90b2418a40ec4eaf0c7e49a537"></a>after_finished</em>&nbsp;</td><td class="fielddoc">
 <p>just after a task has finished running (handle_event called on thread that task is run on) </p>
+</td></tr>
+<tr><td class="fieldname"><em><a class="anchor" id="a857009a6efbb2f34495ee81664a376dcaf6627ef1a493e0fdc9965eefcf89a425"></a>after_canceled</em>&nbsp;</td><td class="fielddoc">
+<p>just after a task was canceled (handle_event called on thread that task is run on) </p>
 </td></tr>
 </table>
 
