@@ -298,6 +298,7 @@ public:
 enum class event_type {
     before_scheduled, ///< just before a task is scheduled (handle_event called on thread of caller to schedule())
     before_started,   ///< just before a task starts running (handle_event called on thread that task is run on)
+    before_invoked,   ///< just before a task's functor is invoked (handle_event called on thread that task is run on)
     after_finished,   ///< just after a task has finished running (handle_event called on thread that task is run on)
     after_canceled,   ///< just after a task was canceled (handle_event called on thread that task is run on)
     count,
@@ -652,7 +653,7 @@ Result run_task(std::size_t node_id, const Task& task, Args&&... args) {
     if (t->node_->is_canceled()) {
         throw transwarp::task_canceled(std::to_string(node_id));
     }
-    t->raise_event(transwarp::event_type::before_started);
+    t->raise_event(transwarp::event_type::before_invoked);
     return t->functor_(std::forward<Args>(args)...);
 }
 
@@ -1293,7 +1294,7 @@ struct parents<std::vector<std::shared_ptr<transwarp::task<ParentResultType>>>> 
 
 /// A callable to run a task given its parents
 template<typename TaskType, typename ResultType, typename Task, typename Parents>
-struct callable {
+struct runner {
 
     const std::size_t node_id;
     const typename transwarp::decay<Task>::type task;
@@ -1764,7 +1765,7 @@ protected:
 private:
 
     template<typename Y, typename R, typename T, typename P>
-    friend struct transwarp::detail::callable;
+    friend struct transwarp::detail::runner;
 
     template<typename R, typename T, typename... A>
     friend R transwarp::detail::run_task(std::size_t, const T&, A&&...);
@@ -1785,10 +1786,13 @@ private:
             }
             std::weak_ptr<task_impl_base> self = this->shared_from_this();
             auto pack_task = std::make_shared<std::packaged_task<result_type()>>(
-                    transwarp::detail::callable<task_type, result_type, decltype(self), decltype(parents_)>{node_->get_id(), self, parents_});
+                    transwarp::detail::runner<task_type, result_type, decltype(self), decltype(parents_)>{node_->get_id(), self, parents_});
             raise_event(transwarp::event_type::before_scheduled);
             future_ = pack_task->get_future();
             auto callable = [pack_task,self] {
+                if (const auto t = self.lock()) {
+                    t->raise_event(transwarp::event_type::before_started);
+                }
                 (*pack_task)();
                 if (const auto t = self.lock()) {
                     t->raise_event(transwarp::event_type::after_finished);
