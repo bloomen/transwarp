@@ -68,29 +68,29 @@ double adder(double x, int y) {
 
 int main() {
 
-    // building the task graph
+    // Building the task graph
     auto task1 = tw::make_value_task("something", 13.3);
     auto task2 = tw::make_value_task("something else", 42);
     auto task3 = tw::make_task(tw::consume, "adder", adder, task1, task2);
 
-    // creating a dot-style graph for visualization
+    // Creating a dot-style graph for visualization
     const auto graph = task3->get_graph();
     std::ofstream("basic_with_three_tasks.dot") << tw::to_string(graph);
 
     // schedule() can now be called as much as desired. The task graph
     // only has to be built once
 
-    // parallel execution with 4 threads for independent tasks
+    // Parallel execution with 4 threads for independent tasks
     tw::parallel executor{4};
 
-    task3->schedule_all(executor);  // schedules all tasks for execution
+    task3->schedule_all(executor);  // Schedules all tasks for execution
     std::cout << "result = " << task3->get() << std::endl;  // result = 55.3
 
-    // modifying data input
+    // Modifying data input
     task1->set_value(15.8);
     task2->set_value(43);
 
-    task3->schedule_all(executor);  // re-schedules all tasks for execution
+    task3->schedule_all(executor);  // Re-schedules all tasks for execution
     std::cout << "result = " << task3->get() << std::endl;  // result = 58.8
 }
 ```
@@ -220,7 +220,7 @@ which, if nothing else is specified, will run the task on the current thread.
 However, using the built-in `parallel` executor the task can be pushed into a 
 thread pool and executed asynchronously:
 ```cpp
-tw::parallel executor{4};  // thread pool with 4 threads
+tw::parallel executor{4};  // Thread pool with 4 threads
 auto task = tw::make_task(tw::root, functor);
 task->schedule(executor);
 ```
@@ -235,7 +235,7 @@ to compute all tasks in the right order with a single call:
 auto parent1 = tw::make_task(tw::root, foo);  // foo is a functor
 auto parent2 = tw::make_task(tw::root, bar);  // bar is a functor
 auto task = tw::make_task(tw::consume, functor, parent1, parent2);
-task->schedule_all();  // schedules all parents and itself
+task->schedule_all();  // Schedules all parents and itself
 ```
 which can also be scheduled using an executor, for instance:
 ```cpp
@@ -325,11 +325,11 @@ events of a task, such as, before started or after finished events. The task eve
 are enumerated in the `event_type` enum:
 ```cpp
 enum class event_type {
-    before_scheduled, ///< just before a task is scheduled
-    before_started,   ///< just before a task starts running
-    before_invoked,   ///< just before a task's functor is invoked
-    after_finished,   ///< just after a task has finished running
-    after_canceled,   ///< just after a task was canceled
+    before_scheduled, // Just before a task is scheduled
+    before_started,   // Just before a task starts running
+    before_invoked,   // Just before a task's functor is invoked
+    after_finished,   // Just after a task has finished running
+    after_canceled,   // Just after a task was canceled
 }
 ```
 Listeners are created by sub-classing from the `listener` interface:

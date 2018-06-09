@@ -294,13 +294,13 @@ public:
 };
 
 
-/// The task events that can be subscribed to using the below listener interface
+/// The task events that can be subscribed to using the listener interface
 enum class event_type {
-    before_scheduled, ///< just before a task is scheduled (handle_event called on thread of caller to schedule())
-    before_started,   ///< just before a task starts running (handle_event called on thread that task is run on)
-    before_invoked,   ///< just before a task's functor is invoked (handle_event called on thread that task is run on)
-    after_finished,   ///< just after a task has finished running (handle_event called on thread that task is run on)
-    after_canceled,   ///< just after a task was canceled (handle_event called on thread that task is run on)
+    before_scheduled, ///< Just before a task is scheduled (handle_event called on thread of caller to schedule())
+    before_started,   ///< Just before a task starts running (handle_event called on thread that task is run on)
+    before_invoked,   ///< Just before a task's functor is invoked (handle_event called on thread that task is run on)
+    after_finished,   ///< Just after a task has finished running (handle_event called on thread that task is run on)
+    after_canceled,   ///< Just after a task was canceled (handle_event called on thread that task is run on)
     count,
 };
 
@@ -792,7 +792,7 @@ template<int total, int... n>
 struct call_impl<transwarp::accept_any_type, true, total, n...> {
     template<typename Result, typename Task, typename... ParentResults>
     static Result work(std::size_t node_id, const Task& task, const std::tuple<std::shared_ptr<transwarp::task<ParentResults>>...>& parents) {
-        using parent_t = typename std::remove_reference<decltype(std::get<0>(parents))>::type; // use first type as reference
+        using parent_t = typename std::remove_reference<decltype(std::get<0>(parents))>::type; // Use first type as reference
         auto parent = transwarp::detail::wait_for_any<parent_t>(std::get<n>(parents)...);
         transwarp::detail::cancel_all_but_one(parent, std::get<n>(parents)...);
         return transwarp::detail::run_task<Result>(node_id, task, parent->get_future());
@@ -836,7 +836,7 @@ template<int total, int... n>
 struct call_impl<transwarp::consume_any_type, true, total, n...> {
     template<typename Result, typename Task, typename... ParentResults>
     static Result work(std::size_t node_id, const Task& task, const std::tuple<std::shared_ptr<transwarp::task<ParentResults>>...>& parents) {
-        using parent_t = typename std::remove_reference<decltype(std::get<0>(parents))>::type; /// use first type as reference
+        using parent_t = typename std::remove_reference<decltype(std::get<0>(parents))>::type; /// Use first type as reference
         auto parent = transwarp::detail::wait_for_any<parent_t>(std::get<n>(parents)...);
         transwarp::detail::cancel_all_but_one(parent, std::get<n>(parents)...);
         return transwarp::detail::run_task<Result>(node_id, task, parent->get_future().get());
@@ -858,7 +858,7 @@ struct call_impl<transwarp::wait_type, true, total, n...> {
     template<typename Result, typename Task, typename... ParentResults>
     static Result work(std::size_t node_id, const Task& task, const std::tuple<std::shared_ptr<transwarp::task<ParentResults>>...>& parents) {
         transwarp::detail::wait_for_all(std::get<n>(parents)...);
-        get_all(std::get<n>(parents)...); // ensures that exceptions are propagated
+        get_all(std::get<n>(parents)...); // Ensures that exceptions are propagated
         return transwarp::detail::run_task<Result>(node_id, task);
     }
     template<typename T, typename... Args>
@@ -875,7 +875,7 @@ struct call_impl_vector<transwarp::wait_type> {
     static Result work(std::size_t node_id, const Task& task, const std::vector<std::shared_ptr<transwarp::task<ParentResultType>>>& parents) {
         transwarp::detail::wait_for_all(parents);
         for (const auto& parent : parents) {
-            parent->get_future().get(); // ensures that exceptions are propagated
+            parent->get_future().get(); // Ensures that exceptions are propagated
         }
         return transwarp::detail::run_task<Result>(node_id, task);
     }
@@ -885,10 +885,10 @@ template<int total, int... n>
 struct call_impl<transwarp::wait_any_type, true, total, n...> {
     template<typename Result, typename Task, typename... ParentResults>
     static Result work(std::size_t node_id, const Task& task, const std::tuple<std::shared_ptr<transwarp::task<ParentResults>>...>& parents) {
-        using parent_t = typename std::remove_reference<decltype(std::get<0>(parents))>::type; // use first type as reference
+        using parent_t = typename std::remove_reference<decltype(std::get<0>(parents))>::type; // Use first type as reference
         auto parent = transwarp::detail::wait_for_any<parent_t>(std::get<n>(parents)...);
         transwarp::detail::cancel_all_but_one(parent, std::get<n>(parents)...);
-        parent->get_future().get(); // ensures that exceptions are propagated
+        parent->get_future().get(); // Ensures that exceptions are propagated
         return transwarp::detail::run_task<Result>(node_id, task);
     }
 };
@@ -899,7 +899,7 @@ struct call_impl_vector<transwarp::wait_any_type> {
     static Result work(std::size_t node_id, const Task& task, const std::vector<std::shared_ptr<transwarp::task<ParentResultType>>>& parents) {
         auto parent = transwarp::detail::wait_for_any(parents);
         transwarp::detail::cancel_all_but_one(parent, parents);
-        parent->get_future().get(); // ensures that exceptions are propagated
+        parent->get_future().get(); // Ensures that exceptions are propagated
         return transwarp::detail::run_task<Result>(node_id, task);
     }
 };
@@ -1175,7 +1175,7 @@ struct result<transwarp::accept_type, Functor, std::vector<std::shared_ptr<trans
 template<typename Functor, typename... ParentResults>
 struct result<transwarp::accept_any_type, Functor, ParentResults...> {
     static_assert(sizeof...(ParentResults) > 0, "An accept_any task must have at least one parent");
-    using arg_t = typename std::tuple_element<0, std::tuple<ParentResults...>>::type; /// using first type as reference
+    using arg_t = typename std::tuple_element<0, std::tuple<ParentResults...>>::type; // Using first type as reference
     using type = decltype(std::declval<Functor>()(std::declval<std::shared_future<arg_t>>()));
 };
 
@@ -1198,7 +1198,7 @@ struct result<transwarp::consume_type, Functor, std::vector<std::shared_ptr<tran
 template<typename Functor, typename... ParentResults>
 struct result<transwarp::consume_any_type, Functor, ParentResults...> {
     static_assert(sizeof...(ParentResults) > 0, "A consume_any task must have at least one parent");
-    using arg_t = typename std::tuple_element<0, std::tuple<ParentResults...>>::type; /// using first type as reference
+    using arg_t = typename std::tuple_element<0, std::tuple<ParentResults...>>::type; // Using first type as reference
     using type = decltype(std::declval<Functor>()(std::declval<arg_t>()));
 };
 
