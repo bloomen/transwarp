@@ -1,6 +1,6 @@
 /// @mainpage transwarp is a header-only C++ library for task concurrency
 /// @details https://github.com/bloomen/transwarp
-/// @version 1.6.0-dev
+/// @version 1.6.0
 /// @author Christian Blume
 /// @date 2018
 /// @copyright MIT http://www.opensource.org/licenses/mit-license.php
@@ -287,7 +287,7 @@ public:
     virtual std::string get_name() const = 0;
 
     /// Is supposed to run a task which is wrapped by the functor. The functor only
-    /// captures a shared_ptr and can hence be copied at low cost. node represents
+    /// captures two smart pointers and can hence be copied at low cost. node represents
     /// the task that the functor belongs to.
     /// This function is only ever called on the thread of the caller to schedule()
     virtual void execute(const std::function<void()>& functor, const std::shared_ptr<transwarp::node>& node) = 0;
@@ -299,7 +299,7 @@ enum class event_type {
     before_scheduled, ///< just before a task is scheduled (handle_event called on thread of caller to schedule())
     before_started,   ///< just before a task starts running (handle_event called on thread that task is run on)
     after_finished,   ///< just after a task has finished running (handle_event called on thread that task is run on)
-    after_canceled,   ///< just after a task is canceled (handle_event called on thread that task is run on)
+    after_canceled,   ///< just after a task was canceled (handle_event called on thread that task is run on)
     count,
 };
 
@@ -642,6 +642,7 @@ std::vector<std::shared_future<ParentResultType>> get_futures(const std::vector<
 }
 
 
+/// Runs the task with the given arguments, hence, invoking the task's functor
 template<typename Result, typename Task, typename... Args>
 Result run_task(std::size_t node_id, const Task& task, Args&&... args) {
     auto t = task.lock();
@@ -1276,17 +1277,21 @@ std::shared_future<ResultType> make_future_with_exception(std::exception_ptr exc
     return promise.get_future();
 }
 
+
+/// Determines the type of the parents
 template<typename... ParentResults>
 struct parents {
     using type = std::tuple<std::shared_ptr<transwarp::task<ParentResults>>...>;
 };
 
+/// Determines the type of the parents. Specialization for vector parents
 template<typename ParentResultType>
 struct parents<std::vector<std::shared_ptr<transwarp::task<ParentResultType>>>> {
     using type = std::vector<std::shared_ptr<transwarp::task<ParentResultType>>>;
 };
 
 
+/// A callable to run a task given its parents
 template<typename TaskType, typename ResultType, typename Task, typename Parents>
 struct callable {
 
@@ -1367,7 +1372,7 @@ private:
 namespace detail {
 
 /// The base task class that contains the functionality that can be used
-/// with all result types (void and non-void) which is almost everything.
+/// with all result types (void and non-void).
 template<typename ResultType, typename TaskType, typename Functor, typename... ParentResults>
 class task_impl_base : public transwarp::task<ResultType>,
                        public std::enable_shared_from_this<task_impl_base<ResultType, TaskType, Functor, ParentResults...>> {
@@ -1759,7 +1764,7 @@ protected:
 private:
 
     template<typename Y, typename R, typename T, typename P>
-    friend struct callable;
+    friend struct transwarp::detail::callable;
 
     template<typename R, typename T, typename... A>
     friend R transwarp::detail::run_task(std::size_t, const T&, A&&...);
