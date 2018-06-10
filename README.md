@@ -207,7 +207,7 @@ For this, `next()` can be directly called on the parent object to create a _cont
 ```cpp
 auto child = tw::make_task(tw::root, []{ return 42; })->next(tw::consume, functor);
 ```
-`child` is now a single-parent task whose functor accepts an integer.
+`child` is now a single-parent task whose functor consumes an integer.
 
 ### Scheduling tasks
 
