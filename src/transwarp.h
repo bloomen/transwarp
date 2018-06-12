@@ -398,7 +398,7 @@ struct result {
 };
 
 
-/// The task class (non-void result type)
+/// The task class
 template<typename ResultType>
 class task : public transwarp::itask {
 public:
@@ -412,7 +412,7 @@ public:
     virtual typename transwarp::result<result_type>::type get() const = 0;
 };
 
-/// The task class (non-void, non-const reference result type)
+/// The task class (reference result type)
 template<typename ResultType>
 class task<ResultType&> : public transwarp::itask {
 public:
@@ -646,7 +646,7 @@ std::vector<std::shared_future<ParentResultType>> get_futures(const std::vector<
 /// Runs the task with the given arguments, hence, invoking the task's functor
 template<typename Result, typename Task, typename... Args>
 Result run_task(std::size_t node_id, const Task& task, Args&&... args) {
-    auto t = task.lock();
+    const auto t = task.lock();
     if (!t) {
         throw transwarp::task_destroyed(std::to_string(node_id));
     }
@@ -1911,7 +1911,7 @@ private:
 };
 
 
-/// A task proxy for non-void result type.
+/// A task proxy
 template<typename ResultType, typename TaskType, typename Functor, typename... ParentResults>
 class task_impl_proxy : public transwarp::detail::task_impl_base<ResultType, TaskType, Functor, ParentResults...> {
 public:
@@ -1980,7 +1980,7 @@ private:
 
 };
 
-/// A task for non-void, non-const reference result type.
+/// A task proxy for reference result type.
 template<typename ResultType, typename TaskType, typename Functor, typename... ParentResults>
 class task_impl_proxy<ResultType&, TaskType, Functor, ParentResults...> : public transwarp::detail::task_impl_base<ResultType&, TaskType, Functor, ParentResults...> {
 public:
@@ -2043,7 +2043,7 @@ private:
 
 };
 
-/// A task for void result type.
+/// A task proxy for void result type.
 template<typename TaskType, typename Functor, typename... ParentResults>
 class task_impl_proxy<void, TaskType, Functor, ParentResults...> : public transwarp::detail::task_impl_base<void, TaskType, Functor, ParentResults...> {
 public:
