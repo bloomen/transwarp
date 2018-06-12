@@ -1,6 +1,6 @@
 /// @mainpage transwarp is a header-only C++ library for task concurrency
 /// @details https://github.com/bloomen/transwarp
-/// @version 1.6.0
+/// @version 1.7.0-dev
 /// @author Christian Blume
 /// @date 2018
 /// @copyright MIT http://www.opensource.org/licenses/mit-license.php
@@ -393,7 +393,7 @@ struct decay {
 
 /// Returns the result type of a std::shared_future<T>
 template<typename T>
-struct result_info {
+struct result {
     using type = typename std::result_of<decltype(&std::shared_future<T>::get)(std::shared_future<T>)>::type;
 };
 
@@ -409,7 +409,7 @@ public:
     virtual void set_value(const typename transwarp::decay<result_type>::type& value) = 0;
     virtual void set_value(typename transwarp::decay<result_type>::type&& value) = 0;
     virtual const std::shared_future<result_type>& get_future() const noexcept = 0;
-    virtual typename transwarp::result_info<result_type>::type get() const = 0;
+    virtual typename transwarp::result<result_type>::type get() const = 0;
 };
 
 /// The task class (non-void, non-const reference result type)
@@ -422,7 +422,7 @@ public:
 
     virtual void set_value(typename transwarp::decay<result_type>::type& value) = 0;
     virtual const std::shared_future<result_type>& get_future() const noexcept = 0;
-    virtual typename transwarp::result_info<result_type>::type get() const = 0;
+    virtual typename transwarp::result<result_type>::type get() const = 0;
 };
 
 /// The task class (void result type)
@@ -1144,7 +1144,7 @@ struct unvisit {
 
 /// Determines the result type of the Functor dispatching on the task type
 template<typename TaskType, typename Functor, typename... ParentResults>
-struct result {
+struct functor_result {
     static_assert(std::is_same<TaskType, transwarp::root_type>::value ||
                   std::is_same<TaskType, transwarp::accept_type>::value ||
                   std::is_same<TaskType, transwarp::accept_any_type>::value ||
@@ -1156,76 +1156,76 @@ struct result {
 };
 
 template<typename Functor, typename... ParentResults>
-struct result<transwarp::root_type, Functor, ParentResults...> {
+struct functor_result<transwarp::root_type, Functor, ParentResults...> {
     static_assert(sizeof...(ParentResults) == 0, "A root task cannot have parent tasks");
     using type = decltype(std::declval<Functor>()());
 };
 
 template<typename Functor, typename... ParentResults>
-struct result<transwarp::accept_type, Functor, ParentResults...> {
+struct functor_result<transwarp::accept_type, Functor, ParentResults...> {
     static_assert(sizeof...(ParentResults) > 0, "An accept task must have at least one parent");
     using type = decltype(std::declval<Functor>()(std::declval<std::shared_future<ParentResults>>()...));
 };
 
 template<typename Functor, typename ParentResultType>
-struct result<transwarp::accept_type, Functor, std::vector<std::shared_ptr<transwarp::task<ParentResultType>>>> {
+struct functor_result<transwarp::accept_type, Functor, std::vector<std::shared_ptr<transwarp::task<ParentResultType>>>> {
     using type = decltype(std::declval<Functor>()(std::declval<std::vector<std::shared_future<ParentResultType>>>()));
 };
 
 template<typename Functor, typename... ParentResults>
-struct result<transwarp::accept_any_type, Functor, ParentResults...> {
+struct functor_result<transwarp::accept_any_type, Functor, ParentResults...> {
     static_assert(sizeof...(ParentResults) > 0, "An accept_any task must have at least one parent");
     using arg_t = typename std::tuple_element<0, std::tuple<ParentResults...>>::type; // Using first type as reference
     using type = decltype(std::declval<Functor>()(std::declval<std::shared_future<arg_t>>()));
 };
 
 template<typename Functor, typename ParentResultType>
-struct result<transwarp::accept_any_type, Functor, std::vector<std::shared_ptr<transwarp::task<ParentResultType>>>> {
+struct functor_result<transwarp::accept_any_type, Functor, std::vector<std::shared_ptr<transwarp::task<ParentResultType>>>> {
     using type = decltype(std::declval<Functor>()(std::declval<std::shared_future<ParentResultType>>()));
 };
 
 template<typename Functor, typename... ParentResults>
-struct result<transwarp::consume_type, Functor, ParentResults...> {
+struct functor_result<transwarp::consume_type, Functor, ParentResults...> {
     static_assert(sizeof...(ParentResults) > 0, "A consume task must have at least one parent");
     using type = decltype(std::declval<Functor>()(std::declval<ParentResults>()...));
 };
 
 template<typename Functor, typename ParentResultType>
-struct result<transwarp::consume_type, Functor, std::vector<std::shared_ptr<transwarp::task<ParentResultType>>>> {
+struct functor_result<transwarp::consume_type, Functor, std::vector<std::shared_ptr<transwarp::task<ParentResultType>>>> {
     using type = decltype(std::declval<Functor>()(std::declval<std::vector<ParentResultType>>()));
 };
 
 template<typename Functor, typename... ParentResults>
-struct result<transwarp::consume_any_type, Functor, ParentResults...> {
+struct functor_result<transwarp::consume_any_type, Functor, ParentResults...> {
     static_assert(sizeof...(ParentResults) > 0, "A consume_any task must have at least one parent");
     using arg_t = typename std::tuple_element<0, std::tuple<ParentResults...>>::type; // Using first type as reference
     using type = decltype(std::declval<Functor>()(std::declval<arg_t>()));
 };
 
 template<typename Functor, typename ParentResultType>
-struct result<transwarp::consume_any_type, Functor, std::vector<std::shared_ptr<transwarp::task<ParentResultType>>>> {
+struct functor_result<transwarp::consume_any_type, Functor, std::vector<std::shared_ptr<transwarp::task<ParentResultType>>>> {
     using type = decltype(std::declval<Functor>()(std::declval<ParentResultType>()));
 };
 
 template<typename Functor, typename... ParentResults>
-struct result<transwarp::wait_type, Functor, ParentResults...> {
+struct functor_result<transwarp::wait_type, Functor, ParentResults...> {
     static_assert(sizeof...(ParentResults) > 0, "A wait task must have at least one parent");
     using type = decltype(std::declval<Functor>()());
 };
 
 template<typename Functor, typename ParentResultType>
-struct result<transwarp::wait_type, Functor, std::vector<std::shared_ptr<transwarp::task<ParentResultType>>>> {
+struct functor_result<transwarp::wait_type, Functor, std::vector<std::shared_ptr<transwarp::task<ParentResultType>>>> {
     using type = decltype(std::declval<Functor>()());
 };
 
 template<typename Functor, typename... ParentResults>
-struct result<transwarp::wait_any_type, Functor, ParentResults...> {
+struct functor_result<transwarp::wait_any_type, Functor, ParentResults...> {
     static_assert(sizeof...(ParentResults) > 0, "A wait_any task must have at least one parent");
     using type = decltype(std::declval<Functor>()());
 };
 
 template<typename Functor, typename ParentResultType>
-struct result<transwarp::wait_any_type, Functor, std::vector<std::shared_ptr<transwarp::task<ParentResultType>>>> {
+struct functor_result<transwarp::wait_any_type, Functor, std::vector<std::shared_ptr<transwarp::task<ParentResultType>>>> {
     using type = decltype(std::declval<Functor>()());
 };
 
@@ -1936,7 +1936,7 @@ public:
     /// Returns the result of this task. Throws any exceptions that the underlying
     /// functor throws. Should only be called if was_scheduled() is true,
     /// throws transwarp::control_error otherwise
-    typename transwarp::result_info<result_type>::type get() const override {
+    typename transwarp::result<result_type>::type get() const override {
         this->ensure_task_was_scheduled();
         return this->future_.get();
     }
@@ -1999,7 +1999,7 @@ public:
     /// Returns the result of this task. Throws any exceptions that the underlying
     /// functor throws. Should only be called if was_scheduled() is true,
     /// throws transwarp::control_error otherwise
-    typename transwarp::result_info<result_type>::type get() const override {
+    typename transwarp::result<result_type>::type get() const override {
         this->ensure_task_was_scheduled();
         return this->future_.get();
     }
@@ -2106,13 +2106,13 @@ protected:
 /// By connecting tasks a directed acyclic graph is built.
 /// Tasks should be created using the make_task factory functions.
 template<typename TaskType, typename Functor, typename... ParentResults>
-class task_impl : public transwarp::detail::task_impl_proxy<typename transwarp::detail::result<TaskType, Functor, ParentResults...>::type, TaskType, Functor, ParentResults...> {
+class task_impl : public transwarp::detail::task_impl_proxy<typename transwarp::detail::functor_result<TaskType, Functor, ParentResults...>::type, TaskType, Functor, ParentResults...> {
 public:
     /// The task type
     using task_type = TaskType;
 
     /// The result type of this task
-    using result_type = typename transwarp::detail::result<TaskType, Functor, ParentResults...>::type;
+    using result_type = typename transwarp::detail::functor_result<TaskType, Functor, ParentResults...>::type;
 
     /// A task is defined by name, functor, and parent tasks. name is optional, see overload
     /// Note: A task must be created using shared_ptr (because of shared_from_this)
@@ -2377,7 +2377,7 @@ public:
     }
 
     /// Returns the result of this task
-    typename transwarp::result_info<result_type>::type get() const override {
+    typename transwarp::result<result_type>::type get() const override {
         return future_.get();
     }
 
