@@ -283,12 +283,12 @@ class executor {
 public:
     virtual ~executor() = default;
 
-    /// Is supposed to return the name of the executor
+    /// Returns the name of the executor
     virtual std::string get_name() const = 0;
 
-    /// Is supposed to run a task which is wrapped by the functor. The functor only
-    /// captures two smart pointers and can hence be copied at low cost. node represents
-    /// the task that the functor belongs to.
+    /// Runs a task which is wrapped by the given functor. The functor only
+    /// captures two smart pointers and can hence be copied at low cost.
+    /// node represents the task that the functor belongs to.
     /// This function is only ever called on the thread of the caller to schedule()
     virtual void execute(const std::function<void()>& functor, const std::shared_ptr<transwarp::node>& node) = 0;
 };
@@ -2147,6 +2147,12 @@ public:
     : transwarp::detail::task_impl_proxy<result_type, task_type, Functor, ParentResults...>(std::forward<F>(functor), std::move(parents))
     {}
 
+    // delete copy/move semantics
+    task_impl(const task_impl&) = delete;
+    task_impl& operator=(const task_impl&) = delete;
+    task_impl(task_impl&&) = delete;
+    task_impl& operator=(task_impl&&) = delete;
+
     /// Creates a continuation to this task
     template<typename TaskType_, typename Functor_>
     auto then(TaskType_, std::string name, Functor_&& functor) const
@@ -2161,11 +2167,6 @@ public:
         return std::make_shared<transwarp::task_impl<TaskType_, typename std::decay<Functor_>::type, result_type>>(std::forward<Functor_>(functor), std::dynamic_pointer_cast<transwarp::task<result_type>>(const_cast<task_impl*>(this)->shared_from_this()));
     }
 
-    // delete copy/move semantics
-    task_impl(const task_impl&) = delete;
-    task_impl& operator=(const task_impl&) = delete;
-    task_impl(task_impl&&) = delete;
-    task_impl& operator=(task_impl&&) = delete;
 };
 
 
@@ -2197,8 +2198,6 @@ public:
     explicit value_task(T&& value)
     : value_task(false, "", std::forward<T>(value))
     {}
-
-    virtual ~value_task() = default;
 
     // delete copy/move semantics
     value_task(const value_task&) = delete;
