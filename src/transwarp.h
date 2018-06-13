@@ -1889,7 +1889,7 @@ private:
     /// Raises the given event to all listeners
     void raise_event(transwarp::event_type event) const {
         for (const auto& listener : listeners_[static_cast<std::size_t>(event)]) {
-            listener->handle_event(event, get_node());
+            listener->handle_event(event, node_);
         }
     }
 
