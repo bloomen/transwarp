@@ -6,6 +6,7 @@
 /// @copyright MIT http://www.opensource.org/licenses/mit-license.php
 #pragma once
 #include <algorithm>
+#include <array>
 #include <atomic>
 #include <chrono>
 #include <cstddef>
@@ -1715,8 +1716,7 @@ protected:
     task_impl_base(bool has_name, std::string name, F&& functor, std::shared_ptr<transwarp::task<ParentResults>>... parents)
     : node_(std::make_shared<transwarp::node>()),
       functor_(std::forward<F>(functor)),
-      parents_(std::make_tuple(std::move(parents)...)),
-      listeners_(static_cast<std::size_t>(transwarp::event_type::count))
+      parents_(std::make_tuple(std::move(parents)...))
     {
         init(has_name, std::move(name));
     }
@@ -1726,8 +1726,7 @@ protected:
     task_impl_base(bool has_name, std::string name, F&& functor, std::vector<std::shared_ptr<transwarp::task<P>>> parents)
     : node_(std::make_shared<transwarp::node>()),
       functor_(std::forward<F>(functor)),
-      parents_(std::move(parents)),
-      listeners_(static_cast<std::size_t>(transwarp::event_type::count))
+      parents_(std::move(parents))
     {
         if (parents_.empty()) {
             throw transwarp::invalid_parameter("parents are empty");
@@ -1905,7 +1904,7 @@ private:
     typename transwarp::detail::parents<ParentResults...>::type parents_;
     bool visited_ = false;
     std::shared_ptr<transwarp::executor> executor_;
-    std::vector<std::vector<std::shared_ptr<transwarp::listener>>> listeners_;
+    std::array<std::vector<std::shared_ptr<transwarp::listener>>, static_cast<std::size_t>(transwarp::event_type::count)> listeners_;
     std::vector<transwarp::itask*> depth_tasks_;
     std::vector<transwarp::itask*> breadth_tasks_;
 };
