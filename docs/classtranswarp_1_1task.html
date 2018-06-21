@@ -95,7 +95,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 </div><!--header-->
 <div class="contents">
 
-<p>The task class (non-void result type)  
+<p>The task class.  
  <a href="classtranswarp_1_1task.html#details">More...</a></p>
 
 <p><code>#include &lt;<a class="el" href="transwarp_8h_source.html">transwarp.h</a>&gt;</code></p>
@@ -109,7 +109,7 @@ Inheritance diagram for transwarp::task&lt; ResultType &gt;:</div>
 <area href="classtranswarp_1_1detail_1_1task__impl__base.html" alt="transwarp::detail::task_impl_base&lt; ResultType, TaskType, Functor, ParentResults...&gt;" shape="rect" coords="0,112,490,136"/>
 <area href="classtranswarp_1_1detail_1_1task__impl__base.html" title="The base task class that contains the functionality that can be used with all result types (void and ..." alt="transwarp::detail::task_impl_base&lt; ResultType, TaskType, Functor, ParentResults &gt;" shape="rect" coords="500,112,990,136"/>
 <area href="classtranswarp_1_1value__task.html" title="A value task that stores a single value and doesn&#39;t require scheduling. Value tasks should be created..." alt="transwarp::value_task&lt; ResultType &gt;" shape="rect" coords="1000,112,1490,136"/>
-<area href="classtranswarp_1_1detail_1_1task__impl__proxy.html" title="A task proxy for non-void result type. " alt="transwarp::detail::task_impl_proxy&lt; ResultType, TaskType, Functor, ParentResults &gt;" shape="rect" coords="0,168,490,192"/>
+<area href="classtranswarp_1_1detail_1_1task__impl__proxy.html" title="A task proxy. " alt="transwarp::detail::task_impl_proxy&lt; ResultType, TaskType, Functor, ParentResults &gt;" shape="rect" coords="0,168,490,192"/>
 </map>
  </div></div>
 <table class="memberdecls">
@@ -132,10 +132,10 @@ virtual const <br class="typebreak"/>
 std::shared_future<br class="typebreak"/>
 &lt; result_type &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>get_future</b> () const noexcept=0</td></tr>
 <tr class="separator:a6cb4b7b9cd19244c71e699df335ac1d7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:acc636c07d48374ec4dbd55ca77fc0150"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="acc636c07d48374ec4dbd55ca77fc0150"></a>
-virtual <a class="el" href="structtranswarp_1_1result__info.html">transwarp::result_info</a><br class="typebreak"/>
+<tr class="memitem:ad847b42714be666d1eb468e9e2a076a4"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad847b42714be666d1eb468e9e2a076a4"></a>
+virtual <a class="el" href="structtranswarp_1_1result.html">transwarp::result</a><br class="typebreak"/>
 &lt; result_type &gt;::type&#160;</td><td class="memItemRight" valign="bottom"><b>get</b> () const =0</td></tr>
-<tr class="separator:acc636c07d48374ec4dbd55ca77fc0150"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="separator:ad847b42714be666d1eb468e9e2a076a4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header pub_methods_classtranswarp_1_1itask"><td colspan="2" onclick="javascript:toggleInherit('pub_methods_classtranswarp_1_1itask')"><img src="closed.png" alt="-"/>&#160;Public Member Functions inherited from <a class="el" href="classtranswarp_1_1itask.html">transwarp::itask</a></td></tr>
 <tr class="memitem:a8dfced2859982a802a36cbd062402b77 inherit pub_methods_classtranswarp_1_1itask"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a8dfced2859982a802a36cbd062402b77"></a>
 virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>set_executor</b> (std::shared_ptr&lt; <a class="el" href="classtranswarp_1_1executor.html">transwarp::executor</a> &gt; <a class="el" href="classtranswarp_1_1executor.html">executor</a>)=0</td></tr>
@@ -274,7 +274,7 @@ virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>schedule_impl
 <div class="textblock"><h3>template&lt;typename ResultType&gt;<br/>
 class transwarp::task&lt; ResultType &gt;</h3>
 
-<p>The task class (non-void result type) </p>
+<p>The task class. </p>
 </div><hr/>The documentation for this class was generated from the following file:<ul>
 <li>src/<a class="el" href="transwarp_8h_source.html">transwarp.h</a></li>
 </ul>

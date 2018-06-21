@@ -156,14 +156,14 @@ Classes</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structtranswarp_1_1decay.html">decay</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Removes reference and const from a type.  <a href="structtranswarp_1_1decay.html#details">More...</a><br/></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structtranswarp_1_1result__info.html">result_info</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the result type of a std::shared_future&lt;T&gt;  <a href="structtranswarp_1_1result__info.html#details">More...</a><br/></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structtranswarp_1_1result.html">result</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the result type of a std::shared_future&lt;T&gt;  <a href="structtranswarp_1_1result.html#details">More...</a><br/></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1task.html">task</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">The task class (non-void result type)  <a href="classtranswarp_1_1task.html#details">More...</a><br/></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">The task class.  <a href="classtranswarp_1_1task.html#details">More...</a><br/></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1task_3_01ResultType_01_6_01_4.html">task&lt; ResultType &amp; &gt;</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">The task class (non-void, non-const reference result type)  <a href="classtranswarp_1_1task_3_01ResultType_01_6_01_4.html#details">More...</a><br/></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">The task class (reference result type)  <a href="classtranswarp_1_1task_3_01ResultType_01_6_01_4.html#details">More...</a><br/></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1task_3_01void_01_4.html">task&lt; void &gt;</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">The task class (void result type)  <a href="classtranswarp_1_1task_3_01void_01_4.html#details">More...</a><br/></td></tr>
@@ -209,7 +209,7 @@ Enumerations</h2></td></tr>
 <b>count</b>
 <br/>
  }</td></tr>
-<tr class="memdesc:a857009a6efbb2f34495ee81664a376dc"><td class="mdescLeft">&#160;</td><td class="mdescRight">The task events that can be subscribed to using the below listener interface.  <a href="namespacetranswarp.html#a857009a6efbb2f34495ee81664a376dc">More...</a><br/></td></tr>
+<tr class="memdesc:a857009a6efbb2f34495ee81664a376dc"><td class="mdescLeft">&#160;</td><td class="mdescRight">The task events that can be subscribed to using the listener interface.  <a href="namespacetranswarp.html#a857009a6efbb2f34495ee81664a376dc">More...</a><br/></td></tr>
 <tr class="separator:a857009a6efbb2f34495ee81664a376dc"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a72b57651394684c228105a54fa0932f3"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacetranswarp.html#a72b57651394684c228105a54fa0932f3">schedule_type</a> { <a class="el" href="namespacetranswarp.html#a72b57651394684c228105a54fa0932f3aa068d8104d5fed0396574ab35ccabb97">schedule_type::breadth</a>, 
 <a class="el" href="namespacetranswarp.html#a72b57651394684c228105a54fa0932f3a12a055bf01a31369fe81ac35d85c7bc1">schedule_type::depth</a>
@@ -320,22 +320,22 @@ constexpr <a class="el" href="structtranswarp_1_1wait__any__type.html">transwarp
 </table>
 </div><div class="memdoc">
 
-<p>The task events that can be subscribed to using the below listener interface. </p>
+<p>The task events that can be subscribed to using the listener interface. </p>
 <table class="fieldtable">
 <tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><em><a class="anchor" id="a857009a6efbb2f34495ee81664a376dca35417532b100ce11672f583cf5d378bd"></a>before_scheduled</em>&nbsp;</td><td class="fielddoc">
-<p>just before a task is scheduled (handle_event called on thread of caller to schedule()) </p>
+<p>Just before a task is scheduled (handle_event called on thread of caller to schedule()) </p>
 </td></tr>
 <tr><td class="fieldname"><em><a class="anchor" id="a857009a6efbb2f34495ee81664a376dcad6e19f65753e84a061a28f9f305fe39b"></a>before_started</em>&nbsp;</td><td class="fielddoc">
-<p>just before a task starts running (handle_event called on thread that task is run on) </p>
+<p>Just before a task starts running (handle_event called on thread that task is run on) </p>
 </td></tr>
 <tr><td class="fieldname"><em><a class="anchor" id="a857009a6efbb2f34495ee81664a376dcaeecb3099ae4ef4be6fc0008dacf35a2d"></a>before_invoked</em>&nbsp;</td><td class="fielddoc">
-<p>just before a task's functor is invoked (handle_event called on thread that task is run on) </p>
+<p>Just before a task's functor is invoked (handle_event called on thread that task is run on) </p>
 </td></tr>
 <tr><td class="fieldname"><em><a class="anchor" id="a857009a6efbb2f34495ee81664a376dcac24f2a90b2418a40ec4eaf0c7e49a537"></a>after_finished</em>&nbsp;</td><td class="fielddoc">
-<p>just after a task has finished running (handle_event called on thread that task is run on) </p>
+<p>Just after a task has finished running (handle_event called on thread that task is run on) </p>
 </td></tr>
 <tr><td class="fieldname"><em><a class="anchor" id="a857009a6efbb2f34495ee81664a376dcaf6627ef1a493e0fdc9965eefcf89a425"></a>after_canceled</em>&nbsp;</td><td class="fielddoc">
-<p>just after a task was canceled (handle_event called on thread that task is run on) </p>
+<p>Just after a task was canceled (handle_event called on thread that task is run on) </p>
 </td></tr>
 </table>
 
