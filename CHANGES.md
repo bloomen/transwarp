@@ -1,3 +1,8 @@
+1.6.1
+
+- various code and performance improvements
+- improved documentation
+
 1.6.0
 
 - added support for parents provided as a std::vector of tasks
