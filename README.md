@@ -40,6 +40,7 @@ Tested with GCC, Clang, and Visual Studio.
      * [Canceling tasks](#canceling-tasks)
      * [Event system](#event-system)
   * [Feedback](#feedback)
+  * [Contributors](#contributors)
 
 ## Build status
 
