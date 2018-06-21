@@ -361,5 +361,5 @@ please submit a pull request and keep in mind that:
 
 ## Contributors
 
-- Christian Blume (`chr.blume@gmail.com`)
-- Guan Wang (`ggwangguan@gmail.com`)
+- [Christian Blume](https://github.com/bloomen) (`chr.blume@gmail.com`)
+- [Guan Wang](https://github.com/guancodes) (`ggwangguan@gmail.com`)
