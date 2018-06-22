@@ -6,7 +6,6 @@
 /// @copyright MIT http://www.opensource.org/licenses/mit-license.php
 #pragma once
 #include <algorithm>
-#include <array>
 #include <atomic>
 #include <chrono>
 #include <cstddef>
@@ -976,18 +975,18 @@ void call_with_each(const Functor& f, const std::vector<std::shared_ptr<transwar
 
 /// Sets parents and level of the node
 struct parent_visitor {
-    explicit parent_visitor(std::shared_ptr<transwarp::node>& node) noexcept
+    explicit parent_visitor(transwarp::node& node) noexcept
     : node_(node) {}
 
     void operator()(const transwarp::itask& task) const {
-        transwarp::detail::node_manip::add_parent(*node_, task.get_node());
-        if (node_->get_level() <= task.get_node()->get_level()) {
+        transwarp::detail::node_manip::add_parent(node_, task.get_node());
+        if (node_.get_level() <= task.get_node()->get_level()) {
             /// A child's level is always larger than any of its parents' levels
-            transwarp::detail::node_manip::set_level(*node_, task.get_node()->get_level() + 1);
+            transwarp::detail::node_manip::set_level(node_, task.get_node()->get_level() + 1);
         }
     }
 
-    std::shared_ptr<transwarp::node>& node_;
+    transwarp::node& node_;
 };
 
 /// Applies final bookkeeping to the task
@@ -1738,7 +1737,7 @@ protected:
         transwarp::detail::node_manip::set_type(*node_, task_type::value);
         transwarp::detail::node_manip::set_name(*node_, (has_name ? std::make_shared<std::string>(std::move(name)) : nullptr));
         transwarp::detail::assign_node_if(functor_, node_);
-        transwarp::detail::call_with_each(transwarp::detail::parent_visitor(node_), parents_);
+        transwarp::detail::call_with_each(transwarp::detail::parent_visitor(*node_), parents_);
         transwarp::detail::final_visitor visitor;
         visit_depth(visitor);
         unvisit();
@@ -1904,7 +1903,7 @@ private:
     typename transwarp::detail::parents<ParentResults...>::type parents_;
     bool visited_ = false;
     std::shared_ptr<transwarp::executor> executor_;
-    std::array<std::vector<std::shared_ptr<transwarp::listener>>, static_cast<std::size_t>(transwarp::event_type::count)> listeners_;
+    std::vector<std::shared_ptr<transwarp::listener>> listeners_[static_cast<std::size_t>(transwarp::event_type::count)];
     std::vector<transwarp::itask*> depth_tasks_;
     std::vector<transwarp::itask*> breadth_tasks_;
 };
@@ -1923,13 +1922,17 @@ public:
     /// Assigns a value to this task. Scheduling will have no effect after a value
     /// has been set. Calling reset() will remove the value and re-enable scheduling.
     void set_value(const typename transwarp::decay<result_type>::type& value) override {
-        set_value_impl(value);
+        this->ensure_task_not_running();
+        this->future_ = transwarp::detail::make_future_with_value<result_type>(value);
+        this->schedule_mode_ = false;
     }
 
     /// Assigns a value to this task. Scheduling will have no effect after a value
     /// has been set. Calling reset() will remove the value and re-enable scheduling.
     void set_value(typename transwarp::decay<result_type>::type&& value) override {
-        set_value_impl(value);
+        this->ensure_task_not_running();
+        this->future_ = transwarp::detail::make_future_with_value<result_type>(std::move(value));
+        this->schedule_mode_ = false;
     }
 
     /// Returns the result of this task. Throws any exceptions that the underlying
@@ -1967,15 +1970,6 @@ protected:
     task_impl_proxy(F&& functor, std::vector<std::shared_ptr<transwarp::task<P>>> parents)
     : transwarp::detail::task_impl_base<result_type, task_type, Functor, ParentResults...>(false, "", std::forward<F>(functor), std::move(parents))
     {}
-
-private:
-
-    template<typename T>
-    void set_value_impl(T&& value) {
-        this->ensure_task_not_running();
-        this->future_ = transwarp::detail::make_future_with_value<result_type>(std::forward<T>(value));
-        this->schedule_mode_ = false;
-    }
 
 };
 
@@ -1992,7 +1986,9 @@ public:
     /// Assigns a value to this task. Scheduling will have no effect after a value
     /// has been set. Calling reset() will remove the value and re-enable scheduling.
     void set_value(typename transwarp::decay<result_type>::type& value) override {
-        set_value_impl(value);
+        this->ensure_task_not_running();
+        this->future_ = transwarp::detail::make_future_with_value<result_type>(value);
+        this->schedule_mode_ = false;
     }
 
     /// Returns the result of this task. Throws any exceptions that the underlying
@@ -2030,15 +2026,6 @@ protected:
     task_impl_proxy(F&& functor, std::vector<std::shared_ptr<transwarp::task<P>>> parents)
     : transwarp::detail::task_impl_base<result_type, task_type, Functor, ParentResults...>(false, "", std::forward<F>(functor), std::move(parents))
     {}
-
-private:
-
-    template<typename T>
-    void set_value_impl(T&& value) {
-        this->ensure_task_not_running();
-        this->future_ = transwarp::detail::make_future_with_value<result_type>(std::forward<T>(value));
-        this->schedule_mode_ = false;
-    }
 
 };
 
@@ -2348,7 +2335,7 @@ public:
 
     /// Assigns a value to this task
     void set_value(typename transwarp::decay<result_type>::type&& value) override {
-        future_ = transwarp::detail::make_future_with_value<result_type>(value);
+        future_ = transwarp::detail::make_future_with_value<result_type>(std::move(value));
     };
 
     /// Assigns an exception to this task
