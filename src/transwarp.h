@@ -1292,24 +1292,69 @@ struct parents<std::vector<std::shared_ptr<transwarp::task<ParentResultType>>>> 
 };
 
 
+template<typename ResultType, typename TaskType>
+class base_runner {
+protected:
+
+    template<typename Task, typename Parents>
+    void call(std::size_t node_id,
+              const std::weak_ptr<Task>& task,
+              const Parents& parents) {
+        promise_.set_value(transwarp::detail::call<TaskType, ResultType>(node_id, task, parents));
+    }
+
+    std::promise<ResultType> promise_;
+};
+
+template<typename TaskType>
+class base_runner<void, TaskType> {
+protected:
+
+    template<typename Task, typename Parents>
+    void call(std::size_t node_id,
+              const std::weak_ptr<Task>& task,
+              const Parents& parents) {
+        transwarp::detail::call<TaskType, void>(node_id, task, parents);
+        promise_.set_value();
+    }
+
+    std::promise<void> promise_;
+};
+
 /// A callable to run a task given its parents
-template<typename TaskType, typename ResultType, typename Task, typename Parents>
-struct runner {
+template<typename ResultType, typename TaskType, typename Task, typename Parents>
+class runner : public transwarp::detail::base_runner<ResultType, TaskType> {
+public:
 
-    const std::size_t node_id;
-    const std::weak_ptr<Task> task;
-    const typename transwarp::decay<Parents>::type parents;
+    runner(std::size_t node_id,
+           const std::weak_ptr<Task>& task,
+           const typename transwarp::decay<Parents>::type& parents)
+    : node_id_(node_id),
+      task_(task),
+      parents_(parents)
+    {}
 
-    ResultType operator()() {
+    std::future<ResultType> get_future() {
+        return this->promise_.get_future();
+    }
+
+    void operator()() {
         try {
-            return transwarp::detail::call<TaskType, ResultType>(node_id, task, parents);
+            this->call(node_id_, task_, parents_);
         } catch (const transwarp::task_canceled&) {
-            if (const std::shared_ptr<Task> t = task.lock()) {
+            if (const std::shared_ptr<Task> t = task_.lock()) {
                 t->raise_event(transwarp::event_type::after_canceled);
             }
-            throw;
+            this->promise_.set_exception(std::current_exception());
+        } catch (...) {
+            this->promise_.set_exception(std::current_exception());
         }
     }
+
+private:
+    const std::size_t node_id_;
+    const std::weak_ptr<Task> task_;
+    const typename transwarp::decay<Parents>::type parents_;
 };
 
 
@@ -1783,15 +1828,14 @@ private:
                 transwarp::detail::node_manip::set_canceled(*node_, false);
             }
             std::weak_ptr<task_impl_base> self = this->shared_from_this();
-            std::shared_ptr<std::packaged_task<result_type()>> pack_task = std::make_shared<std::packaged_task<result_type()>>(
-                    transwarp::detail::runner<task_type, result_type, task_impl_base, decltype(parents_)>{node_->get_id(), self, parents_});
+            auto runner = std::make_shared<transwarp::detail::runner<result_type, task_type, task_impl_base, decltype(parents_)>>(node_->get_id(), self, parents_);
             raise_event(transwarp::event_type::before_scheduled);
-            future_ = pack_task->get_future();
-            auto callable = [pack_task,self] {
+            future_ = runner->get_future();
+            auto callable = [runner,self] {
                 if (const std::shared_ptr<task_impl_base> t = self.lock()) {
                     t->raise_event(transwarp::event_type::before_started);
                 }
-                (*pack_task)();
+                (*runner)();
                 if (const std::shared_ptr<task_impl_base> t = self.lock()) {
                     t->raise_event(transwarp::event_type::after_finished);
                 }
