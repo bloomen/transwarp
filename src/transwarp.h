@@ -1032,8 +1032,7 @@ struct schedule_visitor {
 /// Resets the given task
 struct reset_visitor {
 
-    template<typename Task>
-    void operator()(Task& task) const {
+    void operator()(transwarp::itask& task) const {
         task.reset();
     }
 };
