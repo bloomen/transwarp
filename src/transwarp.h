@@ -1437,7 +1437,7 @@ public:
             throw transwarp::invalid_parameter("executor pointer");
         }
         executor_ = std::move(executor);
-        transwarp::detail::node_manip::set_executor(*node_, std::make_shared<std::string>(executor_->get_name()));
+        transwarp::detail::node_manip::set_executor(*node_, std::shared_ptr<std::string>(new std::string(executor_->get_name())));
     }
 
     /// Assigns an executor to all tasks which takes precedence over
@@ -1758,7 +1758,7 @@ protected:
     template<typename F>
     // cppcheck-suppress passedByValue
     task_impl_base(bool has_name, std::string name, F&& functor, std::shared_ptr<transwarp::task<ParentResults>>... parents)
-    : node_(std::make_shared<transwarp::node>()),
+    : node_(new transwarp::node),
       functor_(std::forward<F>(functor)),
       parents_(std::make_tuple(std::move(parents)...))
     {
@@ -1768,7 +1768,7 @@ protected:
     template<typename F, typename P>
     // cppcheck-suppress passedByValue
     task_impl_base(bool has_name, std::string name, F&& functor, std::vector<std::shared_ptr<transwarp::task<P>>> parents)
-    : node_(std::make_shared<transwarp::node>()),
+    : node_(new transwarp::node),
       functor_(std::forward<F>(functor)),
       parents_(std::move(parents))
     {
@@ -1780,7 +1780,7 @@ protected:
 
     void init(bool has_name, std::string name) {
         transwarp::detail::node_manip::set_type(*node_, task_type::value);
-        transwarp::detail::node_manip::set_name(*node_, (has_name ? std::make_shared<std::string>(std::move(name)) : nullptr));
+        transwarp::detail::node_manip::set_name(*node_, (has_name ? std::shared_ptr<std::string>(new std::string(std::move(name))) : nullptr));
         transwarp::detail::assign_node_if(functor_, node_);
         transwarp::detail::call_with_each(transwarp::detail::parent_visitor(*node_), parents_);
         transwarp::detail::final_visitor visitor;
@@ -1828,7 +1828,8 @@ private:
                 transwarp::detail::node_manip::set_canceled(*node_, false);
             }
             std::weak_ptr<task_impl_base> self = this->shared_from_this();
-            auto runner = std::make_shared<transwarp::detail::runner<result_type, task_type, task_impl_base, decltype(parents_)>>(node_->get_id(), self, parents_);
+            using runner_t = transwarp::detail::runner<result_type, task_type, task_impl_base, decltype(parents_)>;
+            std::shared_ptr<runner_t> runner = std::shared_ptr<runner_t>(new runner_t(node_->get_id(), self, parents_));
             raise_event(transwarp::event_type::before_scheduled);
             future_ = runner->get_future();
             auto callable = [runner,self] {
@@ -2135,14 +2136,16 @@ public:
     template<typename TaskType_, typename Functor_>
     std::shared_ptr<transwarp::task_impl<TaskType_, typename std::decay<Functor_>::type, result_type>>
     then(TaskType_, std::string name, Functor_&& functor) const {
-        return std::make_shared<transwarp::task_impl<TaskType_, typename std::decay<Functor_>::type, result_type>>(true, std::move(name), std::forward<Functor_>(functor), std::dynamic_pointer_cast<transwarp::task<result_type>>(const_cast<task_impl*>(this)->shared_from_this()));
+        using task_t = transwarp::task_impl<TaskType_, typename std::decay<Functor_>::type, result_type>;
+        return std::shared_ptr<task_t>(new task_t(true, std::move(name), std::forward<Functor_>(functor), std::dynamic_pointer_cast<transwarp::task<result_type>>(const_cast<task_impl*>(this)->shared_from_this())));
     }
 
     /// Creates a continuation to this task. Overload for omitting for task name
     template<typename TaskType_, typename Functor_>
     std::shared_ptr<transwarp::task_impl<TaskType_, typename std::decay<Functor_>::type, result_type>>
     then(TaskType_, Functor_&& functor) const {
-        return std::make_shared<transwarp::task_impl<TaskType_, typename std::decay<Functor_>::type, result_type>>(false, "", std::forward<Functor_>(functor), std::dynamic_pointer_cast<transwarp::task<result_type>>(const_cast<task_impl*>(this)->shared_from_this()));
+        using task_t = transwarp::task_impl<TaskType_, typename std::decay<Functor_>::type, result_type>;
+        return std::shared_ptr<task_t>(new task_t(false, "", std::forward<Functor_>(functor), std::dynamic_pointer_cast<transwarp::task<result_type>>(const_cast<task_impl*>(this)->shared_from_this())));
     }
 
 };
@@ -2166,11 +2169,11 @@ public:
     // cppcheck-suppress passedByValue
     // cppcheck-suppress uninitMemberVar
     value_task(bool has_name, std::string name, T&& value)
-    : node_(std::make_shared<transwarp::node>()),
+    : node_(new transwarp::node),
       future_(transwarp::detail::make_future_with_value<result_type>(std::forward<T>(value)))
     {
         transwarp::detail::node_manip::set_type(*node_, task_type::value);
-        transwarp::detail::node_manip::set_name(*node_, (has_name ? std::make_shared<std::string>(std::move(name)) : nullptr));
+        transwarp::detail::node_manip::set_name(*node_, (has_name ? std::shared_ptr<std::string>(new std::string(std::move(name))) : nullptr));
     }
 
     // delete copy/move semantics
@@ -2183,14 +2186,16 @@ public:
     template<typename TaskType_, typename Functor_>
     std::shared_ptr<transwarp::task_impl<TaskType_, typename std::decay<Functor_>::type, result_type>>
     then(TaskType_, std::string name, Functor_&& functor) const {
-        return std::make_shared<transwarp::task_impl<TaskType_, typename std::decay<Functor_>::type, result_type>>(true, std::move(name), std::forward<Functor_>(functor), std::dynamic_pointer_cast<transwarp::task<result_type>>(const_cast<value_task*>(this)->shared_from_this()));
+        using task_t = transwarp::task_impl<TaskType_, typename std::decay<Functor_>::type, result_type>;
+        return std::shared_ptr<task_t>(new task_t(true, std::move(name), std::forward<Functor_>(functor), std::dynamic_pointer_cast<transwarp::task<result_type>>(const_cast<value_task*>(this)->shared_from_this())));
     }
 
     /// Creates a continuation to this task. Overload for omitting the task name
     template<typename TaskType_, typename Functor_>
     std::shared_ptr<transwarp::task_impl<TaskType_, typename std::decay<Functor_>::type, result_type>>
     then(TaskType_, Functor_&& functor) const {
-        return std::make_shared<transwarp::task_impl<TaskType_, typename std::decay<Functor_>::type, result_type>>(false, "", std::forward<Functor_>(functor), std::dynamic_pointer_cast<transwarp::task<result_type>>(const_cast<value_task*>(this)->shared_from_this()));
+        using task_t = transwarp::task_impl<TaskType_, typename std::decay<Functor_>::type, result_type>;
+        return std::shared_ptr<task_t>(new task_t(false, "", std::forward<Functor_>(functor), std::dynamic_pointer_cast<transwarp::task<result_type>>(const_cast<value_task*>(this)->shared_from_this())));
     }
 
     /// No-op because a value task never runs
@@ -2404,14 +2409,16 @@ private:
 template<typename TaskType, typename Functor, typename... Parents>
 std::shared_ptr<transwarp::task_impl<TaskType, typename std::decay<Functor>::type, typename Parents::result_type...>>
 make_task(TaskType, std::string name, Functor&& functor, std::shared_ptr<Parents>... parents) {
-    return std::make_shared<transwarp::task_impl<TaskType, typename std::decay<Functor>::type, typename Parents::result_type...>>(true, std::move(name), std::forward<Functor>(functor), std::move(parents)...);
+    using task_t = transwarp::task_impl<TaskType, typename std::decay<Functor>::type, typename Parents::result_type...>;
+    return std::shared_ptr<task_t>(new task_t(true, std::move(name), std::forward<Functor>(functor), std::move(parents)...));
 }
 
 /// A factory function to create a new task. Overload for omitting the task name
 template<typename TaskType, typename Functor, typename... Parents>
 std::shared_ptr<transwarp::task_impl<TaskType, typename std::decay<Functor>::type, typename Parents::result_type...>>
 make_task(TaskType, Functor&& functor, std::shared_ptr<Parents>... parents) {
-    return std::make_shared<transwarp::task_impl<TaskType, typename std::decay<Functor>::type, typename Parents::result_type...>>(false, "", std::forward<Functor>(functor), std::move(parents)...);
+    using task_t = transwarp::task_impl<TaskType, typename std::decay<Functor>::type, typename Parents::result_type...>;
+    return std::shared_ptr<task_t>(new task_t(false, "", std::forward<Functor>(functor), std::move(parents)...));
 }
 
 
@@ -2419,14 +2426,16 @@ make_task(TaskType, Functor&& functor, std::shared_ptr<Parents>... parents) {
 template<typename TaskType, typename Functor, typename ParentType>
 std::shared_ptr<transwarp::task_impl<TaskType, typename std::decay<Functor>::type, std::vector<ParentType>>>
 make_task(TaskType, std::string name, Functor&& functor, std::vector<ParentType> parents) {
-    return std::make_shared<transwarp::task_impl<TaskType, typename std::decay<Functor>::type, std::vector<ParentType>>>(true, std::move(name), std::forward<Functor>(functor), std::move(parents));
+    using task_t = transwarp::task_impl<TaskType, typename std::decay<Functor>::type, std::vector<ParentType>>;
+    return std::shared_ptr<task_t>(new task_t(true, std::move(name), std::forward<Functor>(functor), std::move(parents)));
 }
 
 /// A factory function to create a new task with vector parents. Overload for omitting the task name
 template<typename TaskType, typename Functor, typename ParentType>
 std::shared_ptr<transwarp::task_impl<TaskType, typename std::decay<Functor>::type, std::vector<ParentType>>>
 make_task(TaskType, Functor&& functor, std::vector<ParentType> parents) {
-    return std::make_shared<transwarp::task_impl<TaskType, typename std::decay<Functor>::type, std::vector<ParentType>>>(false, "", std::forward<Functor>(functor), std::move(parents));
+    using task_t = transwarp::task_impl<TaskType, typename std::decay<Functor>::type, std::vector<ParentType>>;
+    return std::shared_ptr<task_t>(new task_t(false, "", std::forward<Functor>(functor), std::move(parents)));
 }
 
 
@@ -2434,14 +2443,16 @@ make_task(TaskType, Functor&& functor, std::vector<ParentType> parents) {
 template<typename Value>
 std::shared_ptr<transwarp::value_task<typename transwarp::decay<Value>::type>>
 make_value_task(std::string name, Value&& value) {
-    return std::make_shared<transwarp::value_task<typename transwarp::decay<Value>::type>>(true, std::move(name), std::forward<Value>(value));
+    using task_t = transwarp::value_task<typename transwarp::decay<Value>::type>;
+    return std::shared_ptr<task_t>(new task_t(true, std::move(name), std::forward<Value>(value)));
 }
 
 /// A factory function to create a new value task. Overload for omitting the task name
 template<typename Value>
 std::shared_ptr<transwarp::value_task<typename transwarp::decay<Value>::type>>
 make_value_task(Value&& value) {
-    return std::make_shared<transwarp::value_task<typename transwarp::decay<Value>::type>>(false, "", std::forward<Value>(value));
+    using task_t = transwarp::value_task<typename transwarp::decay<Value>::type>;
+    return std::shared_ptr<task_t>(new task_t(false, "", std::forward<Value>(value)));
 }
 
 
