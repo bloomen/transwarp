@@ -289,7 +289,8 @@ public:
     /// Runs a task which is wrapped by the given functor. The functor only
     /// captures two smart pointers and can hence be copied at low cost.
     /// node represents the task that the functor belongs to.
-    /// This function is only ever called on the thread of the caller to schedule()
+    /// This function is only ever called on the thread of the caller to schedule().
+    /// The implementer needs to ensure that this never throws exceptions
     virtual void execute(const std::function<void()>& functor, const std::shared_ptr<transwarp::node>& node) = 0;
 };
 
@@ -310,7 +311,8 @@ class listener {
 public:
     virtual ~listener() = default;
 
-    /// This may be called from arbitrary threads depending on the event type (see transwarp::event_type)
+    /// This may be called from arbitrary threads depending on the event type (see transwarp::event_type).
+    /// The implementer needs to ensure that this never throws exceptions
     virtual void handle_event(transwarp::event_type event, const std::shared_ptr<transwarp::node>& node) = 0;
 };
 
