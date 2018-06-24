@@ -1343,10 +1343,10 @@ public:
         try {
             this->call(node_id_, task_, parents_);
         } catch (const transwarp::task_canceled&) {
+            this->promise_.set_exception(std::current_exception());
             if (const std::shared_ptr<Task> t = task_.lock()) {
                 t->raise_event(transwarp::event_type::after_canceled);
             }
-            this->promise_.set_exception(std::current_exception());
         } catch (...) {
             this->promise_.set_exception(std::current_exception());
         }
