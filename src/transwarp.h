@@ -1808,8 +1808,8 @@ protected:
 
 private:
 
-    template<typename Y, typename R, typename T, typename P>
-    friend struct transwarp::detail::runner;
+    template<typename R, typename Y, typename T, typename P>
+    friend class transwarp::detail::runner;
 
     template<typename R, typename T, typename... A>
     friend R transwarp::detail::run_task(std::size_t, const std::weak_ptr<T>&, A&&...);
