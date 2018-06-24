@@ -1760,7 +1760,7 @@ protected:
     task_impl_base(bool has_name, std::string name, F&& functor, std::shared_ptr<transwarp::task<ParentResults>>... parents)
     : node_(new transwarp::node),
       functor_(std::forward<F>(functor)),
-      parents_(std::make_tuple(std::move(parents)...))
+      parents_(std::move(parents)...)
     {
         init(has_name, std::move(name));
     }
