@@ -287,7 +287,7 @@ public:
     virtual std::string get_name() const = 0;
 
     /// Runs a task which is wrapped by the given functor. The functor only
-    /// captures two smart pointers and can hence be copied at low cost.
+    /// captures one shared pointer and can hence be copied at low cost.
     /// node represents the task that the functor belongs to.
     /// This function is only ever called on the thread of the caller to schedule().
     /// The implementer needs to ensure that this never throws exceptions
@@ -1340,6 +1340,9 @@ public:
     }
 
     void operator()() {
+        if (const std::shared_ptr<Task> t = task_.lock()) {
+            t->raise_event(transwarp::event_type::before_started);
+        }
         try {
             this->call(node_id_, task_, parents_);
         } catch (const transwarp::task_canceled&) {
@@ -1349,6 +1352,9 @@ public:
             }
         } catch (...) {
             this->promise_.set_exception(std::current_exception());
+        }
+        if (const std::shared_ptr<Task> t = task_.lock()) {
+            t->raise_event(transwarp::event_type::after_finished);
         }
     }
 
@@ -1833,21 +1839,12 @@ private:
             std::shared_ptr<runner_t> runner = std::shared_ptr<runner_t>(new runner_t(node_->get_id(), self, parents_));
             raise_event(transwarp::event_type::before_scheduled);
             future_ = runner->get_future();
-            auto callable = [runner,self] {
-                if (const std::shared_ptr<task_impl_base> t = self.lock()) {
-                    t->raise_event(transwarp::event_type::before_started);
-                }
-                (*runner)();
-                if (const std::shared_ptr<task_impl_base> t = self.lock()) {
-                    t->raise_event(transwarp::event_type::after_finished);
-                }
-            };
             if (executor_) {
-                executor_->execute(callable, node_);
+                executor_->execute([runner]{ (*runner)(); }, node_);
             } else if (executor) {
-                executor->execute(callable, node_);
+                executor->execute([runner]{ (*runner)(); }, node_);
             } else {
-                callable();
+                (*runner)();
             }
         }
     }
