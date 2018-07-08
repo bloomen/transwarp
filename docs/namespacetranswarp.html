@@ -235,36 +235,60 @@ std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" hre
 std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacetranswarp.html#ad3278182c37dab03799f90c0dff12db0">to_string</a> (const std::vector&lt; <a class="el" href="classtranswarp_1_1edge.html">transwarp::edge</a> &gt; &amp;graph, const std::string &amp;separator=&quot;\n&quot;)</td></tr>
 <tr class="memdesc:ad3278182c37dab03799f90c0dff12db0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Creates a dot-style string from the given graph. <br/></td></tr>
 <tr class="separator:ad3278182c37dab03799f90c0dff12db0"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5cd1bb240135d04221bc6ba652862c6e"><td class="memTemplParams" colspan="2"><a class="anchor" id="a5cd1bb240135d04221bc6ba652862c6e"></a>
+<tr class="memitem:a32a6afe6820064b16f13ffacd98cfb9b"><td class="memTemplParams" colspan="2"><a class="anchor" id="a32a6afe6820064b16f13ffacd98cfb9b"></a>
 template&lt;typename TaskType , typename Functor , typename... Parents&gt; </td></tr>
-<tr class="memitem:a5cd1bb240135d04221bc6ba652862c6e"><td class="memTemplItemLeft" align="right" valign="top">auto&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacetranswarp.html#a5cd1bb240135d04221bc6ba652862c6e">make_task</a> (TaskType, std::string name, Functor &amp;&amp;<a class="el" href="classtranswarp_1_1functor.html">functor</a>, std::shared_ptr&lt; Parents &gt;...parents) -&gt; decltype(std::make_shared&lt; <a class="el" href="classtranswarp_1_1task__impl.html">transwarp::task_impl</a>&lt; TaskType, typename std::decay&lt; Functor &gt;::type, typename Parents::result_type...&gt;&gt;(std::move(name), std::forward&lt; Functor &gt;(<a class="el" href="classtranswarp_1_1functor.html">functor</a>), std::move(parents)...))</td></tr>
-<tr class="memdesc:a5cd1bb240135d04221bc6ba652862c6e"><td class="mdescLeft">&#160;</td><td class="mdescRight">A factory function to create a new task. <br/></td></tr>
-<tr class="separator:a5cd1bb240135d04221bc6ba652862c6e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab86a2a573277a7af6b03217a70661ab3"><td class="memTemplParams" colspan="2"><a class="anchor" id="ab86a2a573277a7af6b03217a70661ab3"></a>
+<tr class="memitem:a32a6afe6820064b16f13ffacd98cfb9b"><td class="memTemplItemLeft" align="right" valign="top">std::shared_ptr<br class="typebreak"/>
+&lt; <a class="el" href="classtranswarp_1_1task__impl.html">transwarp::task_impl</a><br class="typebreak"/>
+&lt; TaskType, typename <br class="typebreak"/>
+std::decay&lt; Functor &gt;::type, <br class="typebreak"/>
+typename <br class="typebreak"/>
+Parents::result_type...&gt; &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacetranswarp.html#a32a6afe6820064b16f13ffacd98cfb9b">make_task</a> (TaskType, std::string name, Functor &amp;&amp;<a class="el" href="classtranswarp_1_1functor.html">functor</a>, std::shared_ptr&lt; Parents &gt;...parents)</td></tr>
+<tr class="memdesc:a32a6afe6820064b16f13ffacd98cfb9b"><td class="mdescLeft">&#160;</td><td class="mdescRight">A factory function to create a new task. <br/></td></tr>
+<tr class="separator:a32a6afe6820064b16f13ffacd98cfb9b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af83292f8fed19c5d250c3c827c68e32e"><td class="memTemplParams" colspan="2"><a class="anchor" id="af83292f8fed19c5d250c3c827c68e32e"></a>
 template&lt;typename TaskType , typename Functor , typename... Parents&gt; </td></tr>
-<tr class="memitem:ab86a2a573277a7af6b03217a70661ab3"><td class="memTemplItemLeft" align="right" valign="top">auto&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacetranswarp.html#ab86a2a573277a7af6b03217a70661ab3">make_task</a> (TaskType, Functor &amp;&amp;<a class="el" href="classtranswarp_1_1functor.html">functor</a>, std::shared_ptr&lt; Parents &gt;...parents) -&gt; decltype(std::make_shared&lt; <a class="el" href="classtranswarp_1_1task__impl.html">transwarp::task_impl</a>&lt; TaskType, typename std::decay&lt; Functor &gt;::type, typename Parents::result_type...&gt;&gt;(std::forward&lt; Functor &gt;(<a class="el" href="classtranswarp_1_1functor.html">functor</a>), std::move(parents)...))</td></tr>
-<tr class="memdesc:ab86a2a573277a7af6b03217a70661ab3"><td class="mdescLeft">&#160;</td><td class="mdescRight">A factory function to create a new task. Overload for omitting the task name. <br/></td></tr>
-<tr class="separator:ab86a2a573277a7af6b03217a70661ab3"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:afe24b5daba60bbd5ebe535e3a75586d5"><td class="memTemplParams" colspan="2"><a class="anchor" id="afe24b5daba60bbd5ebe535e3a75586d5"></a>
+<tr class="memitem:af83292f8fed19c5d250c3c827c68e32e"><td class="memTemplItemLeft" align="right" valign="top">std::shared_ptr<br class="typebreak"/>
+&lt; <a class="el" href="classtranswarp_1_1task__impl.html">transwarp::task_impl</a><br class="typebreak"/>
+&lt; TaskType, typename <br class="typebreak"/>
+std::decay&lt; Functor &gt;::type, <br class="typebreak"/>
+typename <br class="typebreak"/>
+Parents::result_type...&gt; &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacetranswarp.html#af83292f8fed19c5d250c3c827c68e32e">make_task</a> (TaskType, Functor &amp;&amp;<a class="el" href="classtranswarp_1_1functor.html">functor</a>, std::shared_ptr&lt; Parents &gt;...parents)</td></tr>
+<tr class="memdesc:af83292f8fed19c5d250c3c827c68e32e"><td class="mdescLeft">&#160;</td><td class="mdescRight">A factory function to create a new task. Overload for omitting the task name. <br/></td></tr>
+<tr class="separator:af83292f8fed19c5d250c3c827c68e32e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a49469bcd49ae7fa7e2fc64e147a56c87"><td class="memTemplParams" colspan="2"><a class="anchor" id="a49469bcd49ae7fa7e2fc64e147a56c87"></a>
 template&lt;typename TaskType , typename Functor , typename ParentType &gt; </td></tr>
-<tr class="memitem:afe24b5daba60bbd5ebe535e3a75586d5"><td class="memTemplItemLeft" align="right" valign="top">auto&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacetranswarp.html#afe24b5daba60bbd5ebe535e3a75586d5">make_task</a> (TaskType, std::string name, Functor &amp;&amp;<a class="el" href="classtranswarp_1_1functor.html">functor</a>, std::vector&lt; ParentType &gt; parents) -&gt; decltype(std::make_shared&lt; <a class="el" href="classtranswarp_1_1task__impl.html">transwarp::task_impl</a>&lt; TaskType, typename std::decay&lt; Functor &gt;::type, decltype(parents)&gt;&gt;(std::move(name), std::forward&lt; Functor &gt;(<a class="el" href="classtranswarp_1_1functor.html">functor</a>), std::move(parents)))</td></tr>
-<tr class="memdesc:afe24b5daba60bbd5ebe535e3a75586d5"><td class="mdescLeft">&#160;</td><td class="mdescRight">A factory function to create a new task with vector parents. <br/></td></tr>
-<tr class="separator:afe24b5daba60bbd5ebe535e3a75586d5"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad3bd8b3d354d792e0185684944ed0432"><td class="memTemplParams" colspan="2"><a class="anchor" id="ad3bd8b3d354d792e0185684944ed0432"></a>
+<tr class="memitem:a49469bcd49ae7fa7e2fc64e147a56c87"><td class="memTemplItemLeft" align="right" valign="top">std::shared_ptr<br class="typebreak"/>
+&lt; <a class="el" href="classtranswarp_1_1task__impl.html">transwarp::task_impl</a><br class="typebreak"/>
+&lt; TaskType, typename <br class="typebreak"/>
+std::decay&lt; Functor &gt;::type, <br class="typebreak"/>
+std::vector&lt; ParentType &gt; &gt; &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacetranswarp.html#a49469bcd49ae7fa7e2fc64e147a56c87">make_task</a> (TaskType, std::string name, Functor &amp;&amp;<a class="el" href="classtranswarp_1_1functor.html">functor</a>, std::vector&lt; ParentType &gt; parents)</td></tr>
+<tr class="memdesc:a49469bcd49ae7fa7e2fc64e147a56c87"><td class="mdescLeft">&#160;</td><td class="mdescRight">A factory function to create a new task with vector parents. <br/></td></tr>
+<tr class="separator:a49469bcd49ae7fa7e2fc64e147a56c87"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aea1853d648566c11c0cc921ff5b7f22a"><td class="memTemplParams" colspan="2"><a class="anchor" id="aea1853d648566c11c0cc921ff5b7f22a"></a>
 template&lt;typename TaskType , typename Functor , typename ParentType &gt; </td></tr>
-<tr class="memitem:ad3bd8b3d354d792e0185684944ed0432"><td class="memTemplItemLeft" align="right" valign="top">auto&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacetranswarp.html#ad3bd8b3d354d792e0185684944ed0432">make_task</a> (TaskType, Functor &amp;&amp;<a class="el" href="classtranswarp_1_1functor.html">functor</a>, std::vector&lt; ParentType &gt; parents) -&gt; decltype(std::make_shared&lt; <a class="el" href="classtranswarp_1_1task__impl.html">transwarp::task_impl</a>&lt; TaskType, typename std::decay&lt; Functor &gt;::type, decltype(parents)&gt;&gt;(std::forward&lt; Functor &gt;(<a class="el" href="classtranswarp_1_1functor.html">functor</a>), std::move(parents)))</td></tr>
-<tr class="memdesc:ad3bd8b3d354d792e0185684944ed0432"><td class="mdescLeft">&#160;</td><td class="mdescRight">A factory function to create a new task with vector parents. Overload for omitting the task name. <br/></td></tr>
-<tr class="separator:ad3bd8b3d354d792e0185684944ed0432"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a11ad8eafd0d38b86dada737ec1aa014d"><td class="memTemplParams" colspan="2"><a class="anchor" id="a11ad8eafd0d38b86dada737ec1aa014d"></a>
+<tr class="memitem:aea1853d648566c11c0cc921ff5b7f22a"><td class="memTemplItemLeft" align="right" valign="top">std::shared_ptr<br class="typebreak"/>
+&lt; <a class="el" href="classtranswarp_1_1task__impl.html">transwarp::task_impl</a><br class="typebreak"/>
+&lt; TaskType, typename <br class="typebreak"/>
+std::decay&lt; Functor &gt;::type, <br class="typebreak"/>
+std::vector&lt; ParentType &gt; &gt; &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacetranswarp.html#aea1853d648566c11c0cc921ff5b7f22a">make_task</a> (TaskType, Functor &amp;&amp;<a class="el" href="classtranswarp_1_1functor.html">functor</a>, std::vector&lt; ParentType &gt; parents)</td></tr>
+<tr class="memdesc:aea1853d648566c11c0cc921ff5b7f22a"><td class="mdescLeft">&#160;</td><td class="mdescRight">A factory function to create a new task with vector parents. Overload for omitting the task name. <br/></td></tr>
+<tr class="separator:aea1853d648566c11c0cc921ff5b7f22a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0541ba8e4ba302b04e6e5e0059b8d8b4"><td class="memTemplParams" colspan="2"><a class="anchor" id="a0541ba8e4ba302b04e6e5e0059b8d8b4"></a>
 template&lt;typename Value &gt; </td></tr>
-<tr class="memitem:a11ad8eafd0d38b86dada737ec1aa014d"><td class="memTemplItemLeft" align="right" valign="top">auto&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacetranswarp.html#a11ad8eafd0d38b86dada737ec1aa014d">make_value_task</a> (std::string name, Value &amp;&amp;value) -&gt; decltype(std::make_shared&lt; <a class="el" href="classtranswarp_1_1value__task.html">transwarp::value_task</a>&lt; typename <a class="el" href="structtranswarp_1_1decay.html">transwarp::decay</a>&lt; Value &gt;::type &gt;&gt;(std::move(name), std::forward&lt; Value &gt;(value)))</td></tr>
-<tr class="memdesc:a11ad8eafd0d38b86dada737ec1aa014d"><td class="mdescLeft">&#160;</td><td class="mdescRight">A factory function to create a new value task. <br/></td></tr>
-<tr class="separator:a11ad8eafd0d38b86dada737ec1aa014d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0ec24e059e4b662593a0194df83e9b09"><td class="memTemplParams" colspan="2"><a class="anchor" id="a0ec24e059e4b662593a0194df83e9b09"></a>
+<tr class="memitem:a0541ba8e4ba302b04e6e5e0059b8d8b4"><td class="memTemplItemLeft" align="right" valign="top">std::shared_ptr<br class="typebreak"/>
+&lt; <a class="el" href="classtranswarp_1_1value__task.html">transwarp::value_task</a><br class="typebreak"/>
+&lt; typename <a class="el" href="structtranswarp_1_1decay.html">transwarp::decay</a><br class="typebreak"/>
+&lt; Value &gt;::type &gt; &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacetranswarp.html#a0541ba8e4ba302b04e6e5e0059b8d8b4">make_value_task</a> (std::string name, Value &amp;&amp;value)</td></tr>
+<tr class="memdesc:a0541ba8e4ba302b04e6e5e0059b8d8b4"><td class="mdescLeft">&#160;</td><td class="mdescRight">A factory function to create a new value task. <br/></td></tr>
+<tr class="separator:a0541ba8e4ba302b04e6e5e0059b8d8b4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2106367b822590bb04cdffab1dc68d2f"><td class="memTemplParams" colspan="2"><a class="anchor" id="a2106367b822590bb04cdffab1dc68d2f"></a>
 template&lt;typename Value &gt; </td></tr>
-<tr class="memitem:a0ec24e059e4b662593a0194df83e9b09"><td class="memTemplItemLeft" align="right" valign="top">auto&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacetranswarp.html#a0ec24e059e4b662593a0194df83e9b09">make_value_task</a> (Value &amp;&amp;value) -&gt; decltype(std::make_shared&lt; <a class="el" href="classtranswarp_1_1value__task.html">transwarp::value_task</a>&lt; typename <a class="el" href="structtranswarp_1_1decay.html">transwarp::decay</a>&lt; Value &gt;::type &gt;&gt;(std::forward&lt; Value &gt;(value)))</td></tr>
-<tr class="memdesc:a0ec24e059e4b662593a0194df83e9b09"><td class="mdescLeft">&#160;</td><td class="mdescRight">A factory function to create a new value task. Overload for omitting the task name. <br/></td></tr>
-<tr class="separator:a0ec24e059e4b662593a0194df83e9b09"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2106367b822590bb04cdffab1dc68d2f"><td class="memTemplItemLeft" align="right" valign="top">std::shared_ptr<br class="typebreak"/>
+&lt; <a class="el" href="classtranswarp_1_1value__task.html">transwarp::value_task</a><br class="typebreak"/>
+&lt; typename <a class="el" href="structtranswarp_1_1decay.html">transwarp::decay</a><br class="typebreak"/>
+&lt; Value &gt;::type &gt; &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacetranswarp.html#a2106367b822590bb04cdffab1dc68d2f">make_value_task</a> (Value &amp;&amp;value)</td></tr>
+<tr class="memdesc:a2106367b822590bb04cdffab1dc68d2f"><td class="mdescLeft">&#160;</td><td class="mdescRight">A factory function to create a new value task. Overload for omitting the task name. <br/></td></tr>
+<tr class="separator:a2106367b822590bb04cdffab1dc68d2f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="var-members"></a>
 Variables</h2></td></tr>

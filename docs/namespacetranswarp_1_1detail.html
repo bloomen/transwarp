@@ -235,8 +235,12 @@ Classes</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structtranswarp_1_1detail_1_1parents_3_01std_1_1vector_3_01std_1_1shared__ptr_3_01transwarp_1_1t74567500f3c19158fee0bfdd67fb530b.html">parents&lt; std::vector&lt; std::shared_ptr&lt; transwarp::task&lt; ParentResultType &gt; &gt; &gt; &gt;</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Determines the type of the parents. Specialization for vector parents.  <a href="structtranswarp_1_1detail_1_1parents_3_01std_1_1vector_3_01std_1_1shared__ptr_3_01transwarp_1_1t74567500f3c19158fee0bfdd67fb530b.html#details">More...</a><br/></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structtranswarp_1_1detail_1_1runner.html">runner</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">A callable to run a task given its parents.  <a href="structtranswarp_1_1detail_1_1runner.html#details">More...</a><br/></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1detail_1_1base__runner.html">base_runner</a></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1detail_1_1base__runner_3_01void_00_01TaskType_01_4.html">base_runner&lt; void, TaskType &gt;</a></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1detail_1_1runner.html">runner</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">A callable to run a task given its parents.  <a href="classtranswarp_1_1detail_1_1runner.html#details">More...</a><br/></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1detail_1_1task__impl__base.html">task_impl_base</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">The base task class that contains the functionality that can be used with all result types (void and non-void).  <a href="classtranswarp_1_1detail_1_1task__impl__base.html#details">More...</a><br/></td></tr>
@@ -266,11 +270,11 @@ template&lt;typename ParentResultType &gt; </td></tr>
 &lt; ParentResultType &gt; &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacetranswarp_1_1detail.html#a99579e02887cf0ae4f04848e1fd333bf">get_futures</a> (const std::vector&lt; std::shared_ptr&lt; <a class="el" href="classtranswarp_1_1task.html">transwarp::task</a>&lt; ParentResultType &gt;&gt;&gt; &amp;input)</td></tr>
 <tr class="memdesc:a99579e02887cf0ae4f04848e1fd333bf"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the futures from the given vector of tasks. <br/></td></tr>
 <tr class="separator:a99579e02887cf0ae4f04848e1fd333bf"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a176e84debcc4b8158a7c1d283bc73f79"><td class="memTemplParams" colspan="2"><a class="anchor" id="a176e84debcc4b8158a7c1d283bc73f79"></a>
+<tr class="memitem:afb86d4910b3e47af0dc8bf5a42f145ea"><td class="memTemplParams" colspan="2"><a class="anchor" id="afb86d4910b3e47af0dc8bf5a42f145ea"></a>
 template&lt;typename Result , typename Task , typename... Args&gt; </td></tr>
-<tr class="memitem:a176e84debcc4b8158a7c1d283bc73f79"><td class="memTemplItemLeft" align="right" valign="top">Result&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacetranswarp_1_1detail.html#a176e84debcc4b8158a7c1d283bc73f79">run_task</a> (std::size_t node_id, const Task &amp;<a class="el" href="classtranswarp_1_1task.html">task</a>, Args &amp;&amp;...args)</td></tr>
-<tr class="memdesc:a176e84debcc4b8158a7c1d283bc73f79"><td class="mdescLeft">&#160;</td><td class="mdescRight">Runs the task with the given arguments, hence, invoking the task's functor. <br/></td></tr>
-<tr class="separator:a176e84debcc4b8158a7c1d283bc73f79"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afb86d4910b3e47af0dc8bf5a42f145ea"><td class="memTemplItemLeft" align="right" valign="top">Result&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacetranswarp_1_1detail.html#afb86d4910b3e47af0dc8bf5a42f145ea">run_task</a> (std::size_t node_id, const std::weak_ptr&lt; Task &gt; &amp;<a class="el" href="classtranswarp_1_1task.html">task</a>, Args &amp;&amp;...args)</td></tr>
+<tr class="memdesc:afb86d4910b3e47af0dc8bf5a42f145ea"><td class="mdescLeft">&#160;</td><td class="mdescRight">Runs the task with the given arguments, hence, invoking the task's functor. <br/></td></tr>
+<tr class="separator:afb86d4910b3e47af0dc8bf5a42f145ea"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a169f0e61410088441f49aab9ec6bc350"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a169f0e61410088441f49aab9ec6bc350"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>wait_for_all</b> ()</td></tr>
 <tr class="separator:a169f0e61410088441f49aab9ec6bc350"><td class="memSeparator" colspan="2">&#160;</td></tr>

@@ -4,7 +4,7 @@
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.5"/>
-<title>transwarp: Member List</title>
+<title>transwarp: transwarp::detail::base_runner&lt; ResultType, TaskType &gt; Class Template Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -82,21 +82,45 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 
 <div id="nav-path" class="navpath">
   <ul>
-<li class="navelem"><a class="el" href="namespacetranswarp.html">transwarp</a></li><li class="navelem"><a class="el" href="namespacetranswarp_1_1detail.html">detail</a></li><li class="navelem"><a class="el" href="structtranswarp_1_1detail_1_1parent__visitor.html">parent_visitor</a></li>  </ul>
+<li class="navelem"><a class="el" href="namespacetranswarp.html">transwarp</a></li><li class="navelem"><a class="el" href="namespacetranswarp_1_1detail.html">detail</a></li><li class="navelem"><a class="el" href="classtranswarp_1_1detail_1_1base__runner.html">base_runner</a></li>  </ul>
 </div>
 </div><!-- top -->
 <div class="header">
+  <div class="summary">
+<a href="#pro-methods">Protected Member Functions</a> &#124;
+<a href="#pro-attribs">Protected Attributes</a> &#124;
+<a href="classtranswarp_1_1detail_1_1base__runner-members.html">List of all members</a>  </div>
   <div class="headertitle">
-<div class="title">transwarp::detail::parent_visitor Member List</div>  </div>
+<div class="title">transwarp::detail::base_runner&lt; ResultType, TaskType &gt; Class Template Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
-
-<p>This is the complete list of members for <a class="el" href="structtranswarp_1_1detail_1_1parent__visitor.html">transwarp::detail::parent_visitor</a>, including all inherited members.</p>
-<table class="directory">
-  <tr bgcolor="#f0f0f0" class="even"><td class="entry"><b>node_</b> (defined in <a class="el" href="structtranswarp_1_1detail_1_1parent__visitor.html">transwarp::detail::parent_visitor</a>)</td><td class="entry"><a class="el" href="structtranswarp_1_1detail_1_1parent__visitor.html">transwarp::detail::parent_visitor</a></td><td class="entry"></td></tr>
-  <tr><td class="entry"><a class="el" href="structtranswarp_1_1detail_1_1parent__visitor.html#a954691688aab78bdb8bec4dd2007586d">operator()</a>(const transwarp::itask &amp;task) const </td><td class="entry"><a class="el" href="structtranswarp_1_1detail_1_1parent__visitor.html">transwarp::detail::parent_visitor</a></td><td class="entry"><span class="mlabel">inline</span></td></tr>
-  <tr bgcolor="#f0f0f0" class="even"><td class="entry"><b>parent_visitor</b>(transwarp::node &amp;node) noexcept (defined in <a class="el" href="structtranswarp_1_1detail_1_1parent__visitor.html">transwarp::detail::parent_visitor</a>)</td><td class="entry"><a class="el" href="structtranswarp_1_1detail_1_1parent__visitor.html">transwarp::detail::parent_visitor</a></td><td class="entry"><span class="mlabel">inline</span><span class="mlabel">explicit</span></td></tr>
-</table></div><!-- contents -->
+<div class="dynheader">
+Inheritance diagram for transwarp::detail::base_runner&lt; ResultType, TaskType &gt;:</div>
+<div class="dyncontent">
+ <div class="center">
+  <img src="classtranswarp_1_1detail_1_1base__runner.png" usemap="#transwarp::detail::base_runner&lt; ResultType, TaskType &gt;_map" alt=""/>
+  <map id="transwarp::detail::base_runner&lt; ResultType, TaskType &gt;_map" name="transwarp::detail::base_runner&lt; ResultType, TaskType &gt;_map">
+<area href="classtranswarp_1_1detail_1_1runner.html" title="A callable to run a task given its parents. " alt="transwarp::detail::runner&lt; ResultType, TaskType, Task, Parents &gt;" shape="rect" coords="0,56,384,80"/>
+</map>
+ </div></div>
+<table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pro-methods"></a>
+Protected Member Functions</h2></td></tr>
+<tr class="memitem:a73dd49421c6c0ce83e084b67d8dbbf18"><td class="memTemplParams" colspan="2"><a class="anchor" id="a73dd49421c6c0ce83e084b67d8dbbf18"></a>
+template&lt;typename Task , typename Parents &gt; </td></tr>
+<tr class="memitem:a73dd49421c6c0ce83e084b67d8dbbf18"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>call</b> (std::size_t node_id, const std::weak_ptr&lt; Task &gt; &amp;<a class="el" href="classtranswarp_1_1task.html">task</a>, const Parents &amp;<a class="el" href="structtranswarp_1_1detail_1_1parents.html">parents</a>)</td></tr>
+<tr class="separator:a73dd49421c6c0ce83e084b67d8dbbf18"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pro-attribs"></a>
+Protected Attributes</h2></td></tr>
+<tr class="memitem:a43e0a856305bcf698a6f161ae2714f42"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a43e0a856305bcf698a6f161ae2714f42"></a>
+std::promise&lt; ResultType &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>promise_</b></td></tr>
+<tr class="separator:a43e0a856305bcf698a6f161ae2714f42"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table>
+<hr/>The documentation for this class was generated from the following file:<ul>
+<li>src/<a class="el" href="transwarp_8h_source.html">transwarp.h</a></li>
+</ul>
+</div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
 Generated by &#160;<a href="http://www.doxygen.org/index.html">

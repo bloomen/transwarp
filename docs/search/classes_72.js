@@ -6,5 +6,5 @@ var searchData=
   ['reset_5fvisitor',['reset_visitor',['../structtranswarp_1_1detail_1_1reset__visitor.html',1,'transwarp::detail']]],
   ['result',['result',['../structtranswarp_1_1result.html',1,'transwarp']]],
   ['root_5ftype',['root_type',['../structtranswarp_1_1root__type.html',1,'transwarp']]],
-  ['runner',['runner',['../structtranswarp_1_1detail_1_1runner.html',1,'transwarp::detail']]]
+  ['runner',['runner',['../classtranswarp_1_1detail_1_1runner.html',1,'transwarp::detail']]]
 ];

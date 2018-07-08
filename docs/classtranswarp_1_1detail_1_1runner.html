@@ -4,7 +4,7 @@
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.5"/>
-<title>transwarp: transwarp::listener Class Reference</title>
+<title>transwarp: transwarp::detail::runner&lt; ResultType, TaskType, Task, Parents &gt; Class Template Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -82,32 +82,61 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 
 <div id="nav-path" class="navpath">
   <ul>
-<li class="navelem"><a class="el" href="namespacetranswarp.html">transwarp</a></li><li class="navelem"><a class="el" href="classtranswarp_1_1listener.html">listener</a></li>  </ul>
+<li class="navelem"><a class="el" href="namespacetranswarp.html">transwarp</a></li><li class="navelem"><a class="el" href="namespacetranswarp_1_1detail.html">detail</a></li><li class="navelem"><a class="el" href="classtranswarp_1_1detail_1_1runner.html">runner</a></li>  </ul>
 </div>
 </div><!-- top -->
 <div class="header">
   <div class="summary">
 <a href="#pub-methods">Public Member Functions</a> &#124;
-<a href="classtranswarp_1_1listener-members.html">List of all members</a>  </div>
+<a href="classtranswarp_1_1detail_1_1runner-members.html">List of all members</a>  </div>
   <div class="headertitle">
-<div class="title">transwarp::listener Class Reference<span class="mlabels"><span class="mlabel">abstract</span></span></div>  </div>
+<div class="title">transwarp::detail::runner&lt; ResultType, TaskType, Task, Parents &gt; Class Template Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
 
-<p>The listener interface to listen to events raised by tasks.  
- <a href="classtranswarp_1_1listener.html#details">More...</a></p>
+<p>A callable to run a task given its parents.  
+ <a href="classtranswarp_1_1detail_1_1runner.html#details">More...</a></p>
 
 <p><code>#include &lt;<a class="el" href="transwarp_8h_source.html">transwarp.h</a>&gt;</code></p>
+<div class="dynheader">
+Inheritance diagram for transwarp::detail::runner&lt; ResultType, TaskType, Task, Parents &gt;:</div>
+<div class="dyncontent">
+ <div class="center">
+  <img src="classtranswarp_1_1detail_1_1runner.png" usemap="#transwarp::detail::runner&lt; ResultType, TaskType, Task, Parents &gt;_map" alt=""/>
+  <map id="transwarp::detail::runner&lt; ResultType, TaskType, Task, Parents &gt;_map" name="transwarp::detail::runner&lt; ResultType, TaskType, Task, Parents &gt;_map">
+<area href="classtranswarp_1_1detail_1_1base__runner.html" alt="transwarp::detail::base_runner&lt; ResultType, TaskType &gt;" shape="rect" coords="0,0,384,24"/>
+</map>
+ </div></div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a4f1a77e32a61ca58992f00ab0b9e9162"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a4f1a77e32a61ca58992f00ab0b9e9162"></a>
-virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1listener.html#a4f1a77e32a61ca58992f00ab0b9e9162">handle_event</a> (<a class="el" href="namespacetranswarp.html#a857009a6efbb2f34495ee81664a376dc">transwarp::event_type</a> event, const std::shared_ptr&lt; <a class="el" href="classtranswarp_1_1node.html">transwarp::node</a> &gt; &amp;<a class="el" href="classtranswarp_1_1node.html">node</a>)=0</td></tr>
-<tr class="memdesc:a4f1a77e32a61ca58992f00ab0b9e9162"><td class="mdescLeft">&#160;</td><td class="mdescRight">This may be called from arbitrary threads depending on the event type (see <a class="el" href="namespacetranswarp.html#a857009a6efbb2f34495ee81664a376dc" title="The task events that can be subscribed to using the listener interface. ">transwarp::event_type</a>). The implementer needs to ensure that this never throws exceptions. <br/></td></tr>
-<tr class="separator:a4f1a77e32a61ca58992f00ab0b9e9162"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3854c6353be7d2538f64ae44db537487"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a3854c6353be7d2538f64ae44db537487"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>runner</b> (std::size_t node_id, const std::weak_ptr&lt; Task &gt; &amp;<a class="el" href="classtranswarp_1_1task.html">task</a>, const typename <a class="el" href="structtranswarp_1_1decay.html">transwarp::decay</a>&lt; Parents &gt;::type &amp;<a class="el" href="structtranswarp_1_1detail_1_1parents.html">parents</a>)</td></tr>
+<tr class="separator:a3854c6353be7d2538f64ae44db537487"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7b52eab10a1e15e95371487b1c3117ed"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a7b52eab10a1e15e95371487b1c3117ed"></a>
+std::future&lt; ResultType &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>get_future</b> ()</td></tr>
+<tr class="separator:a7b52eab10a1e15e95371487b1c3117ed"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a02c9440fdac1364550c3a30d8369b295"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a02c9440fdac1364550c3a30d8369b295"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>operator()</b> ()</td></tr>
+<tr class="separator:a02c9440fdac1364550c3a30d8369b295"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="inherited"></a>
+Additional Inherited Members</h2></td></tr>
+<tr class="inherit_header pro_methods_classtranswarp_1_1detail_1_1base__runner"><td colspan="2" onclick="javascript:toggleInherit('pro_methods_classtranswarp_1_1detail_1_1base__runner')"><img src="closed.png" alt="-"/>&#160;Protected Member Functions inherited from <a class="el" href="classtranswarp_1_1detail_1_1base__runner.html">transwarp::detail::base_runner&lt; ResultType, TaskType &gt;</a></td></tr>
+<tr class="memitem:a73dd49421c6c0ce83e084b67d8dbbf18 inherit pro_methods_classtranswarp_1_1detail_1_1base__runner"><td class="memTemplParams" colspan="2"><a class="anchor" id="a73dd49421c6c0ce83e084b67d8dbbf18"></a>
+template&lt;typename Task , typename Parents &gt; </td></tr>
+<tr class="memitem:a73dd49421c6c0ce83e084b67d8dbbf18 inherit pro_methods_classtranswarp_1_1detail_1_1base__runner"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>call</b> (std::size_t node_id, const std::weak_ptr&lt; Task &gt; &amp;<a class="el" href="classtranswarp_1_1task.html">task</a>, const Parents &amp;<a class="el" href="structtranswarp_1_1detail_1_1parents.html">parents</a>)</td></tr>
+<tr class="separator:a73dd49421c6c0ce83e084b67d8dbbf18 inherit pro_methods_classtranswarp_1_1detail_1_1base__runner"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="inherit_header pro_attribs_classtranswarp_1_1detail_1_1base__runner"><td colspan="2" onclick="javascript:toggleInherit('pro_attribs_classtranswarp_1_1detail_1_1base__runner')"><img src="closed.png" alt="-"/>&#160;Protected Attributes inherited from <a class="el" href="classtranswarp_1_1detail_1_1base__runner.html">transwarp::detail::base_runner&lt; ResultType, TaskType &gt;</a></td></tr>
+<tr class="memitem:a43e0a856305bcf698a6f161ae2714f42 inherit pro_attribs_classtranswarp_1_1detail_1_1base__runner"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a43e0a856305bcf698a6f161ae2714f42"></a>
+std::promise&lt; ResultType &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>promise_</b></td></tr>
+<tr class="separator:a43e0a856305bcf698a6f161ae2714f42 inherit pro_attribs_classtranswarp_1_1detail_1_1base__runner"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p>The listener interface to listen to events raised by tasks. </p>
+<div class="textblock"><h3>template&lt;typename ResultType, typename TaskType, typename Task, typename Parents&gt;<br/>
+class transwarp::detail::runner&lt; ResultType, TaskType, Task, Parents &gt;</h3>
+
+<p>A callable to run a task given its parents. </p>
 </div><hr/>The documentation for this class was generated from the following file:<ul>
 <li>src/<a class="el" href="transwarp_8h_source.html">transwarp.h</a></li>
 </ul>
