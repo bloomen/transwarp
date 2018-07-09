@@ -1,3 +1,7 @@
+1.6.2
+
+- added an example demonstrating the use of a graph pool
+
 1.6.1
 
 - various code and performance improvements
