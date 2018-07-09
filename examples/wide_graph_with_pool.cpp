@@ -14,7 +14,7 @@ using data_t = std::shared_ptr<std::vector<double>>;
 
 data_t transform(data_t data) {
     std::uniform_real_distribution<double> dist(0.5, 1.5);
-    std::mt19937 gen{static_cast<std::size_t>((*data)[0] * 1000.)};
+    std::mt19937 gen{static_cast<unsigned int>((*data)[0] * 1000.)};
     for (auto& v : *data) {
         v *= dist(gen);
     }
@@ -24,7 +24,7 @@ data_t transform(data_t data) {
 data_t copy_transform(data_t data) {
     std::uniform_real_distribution<double> dist(0.5, 1.5);
     auto copy = std::make_shared<std::vector<double>>(*data);
-    std::mt19937 gen{static_cast<std::size_t>((*data)[0] * 1000.)};
+    std::mt19937 gen{static_cast<unsigned int>((*data)[0] * 1000.)};
     for (auto& v : *copy) {
         v *= dist(gen);
     }
@@ -46,7 +46,7 @@ std::shared_ptr<graph> make_graph() {
     auto input = tw::make_value_task(std::make_shared<std::vector<double>>());
     std::vector<std::shared_ptr<tw::task<data_t>>> parents;
     for (int i=0; i<8; ++i) {
-        auto t = tw::make_task(tw::consume, transform, input)->then(tw::consume, transform);
+        auto t = tw::make_task(tw::consume, copy_transform, input)->then(tw::consume, transform);
         parents.emplace_back(t);
     }
     auto final = tw::make_task(tw::consume, [](const std::vector<data_t>& parents) {
