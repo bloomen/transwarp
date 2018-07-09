@@ -14,7 +14,7 @@ add_executable(transwarp_test
 	examples/benchmark_simple.cpp
 	examples/statistical_key_facts.cpp
 	examples/benchmark_statistical.cpp
-	examples/wide_graph_with_listener.cpp)
+	examples/wide_graph_with_pool.cpp)
 
 add_executable(basic_with_three_tasks
 	src/transwarp.h
@@ -41,10 +41,10 @@ add_executable(benchmark_statistical
 	examples/benchmark_statistical.h
 	examples/benchmark_statistical.cpp)
 
-add_executable(wide_graph_with_listener
+add_executable(wide_graph_with_pool
 	src/transwarp.h
-	examples/wide_graph_with_listener.h
-	examples/wide_graph_with_listener.cpp)
+	examples/wide_graph_with_pool.h
+	examples/wide_graph_with_pool.cpp)
 
 target_compile_definitions(transwarp_test PRIVATE UNITTEST)
 
@@ -54,7 +54,7 @@ add_test(single_thread_lock_free single_thread_lock_free)
 add_test(benchmark_simple benchmark_simple)
 add_test(statistical_key_facts statistical_key_facts)
 add_test(benchmark_statistical benchmark_statistical)
-add_test(wide_graph_with_listener wide_graph_with_listener)
+add_test(wide_graph_with_pool wide_graph_with_pool)
 
 if (MSVC)
 	set(CMAKE_CXX_FLAGS "/W4 /bigobj /EHsc /wd4503 /wd4996 /wd4702")
@@ -69,5 +69,5 @@ else()
 	target_link_libraries(benchmark_simple ${CMAKE_THREAD_LIBS_INIT})
 	target_link_libraries(statistical_key_facts ${CMAKE_THREAD_LIBS_INIT})
 	target_link_libraries(benchmark_statistical ${CMAKE_THREAD_LIBS_INIT})
-	target_link_libraries(wide_graph_with_listener ${CMAKE_THREAD_LIBS_INIT})
+	target_link_libraries(wide_graph_with_pool ${CMAKE_THREAD_LIBS_INIT})
 endif()
