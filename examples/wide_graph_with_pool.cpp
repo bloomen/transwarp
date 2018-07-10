@@ -22,13 +22,8 @@ data_t transform(data_t data) {
 }
 
 data_t copy_transform(data_t data) {
-    std::uniform_real_distribution<double> dist(0.5, 1.5);
     auto copy = std::make_shared<std::vector<double>>(*data);
-    std::mt19937 gen{static_cast<unsigned int>((*data)[0] * 1000.)};
-    for (auto& v : *copy) {
-        v *= dist(gen);
-    }
-    return copy;
+    return transform(copy);
 }
 
 double mean(data_t data) {
