@@ -14,11 +14,13 @@
 #include <memory>
 #include <mutex>
 #include <queue>
+#include <stack>
 #include <stdexcept>
 #include <string>
 #include <thread>
 #include <tuple>
 #include <type_traits>
+#include <unordered_map>
 #include <vector>
 
 
@@ -2452,6 +2454,192 @@ make_value_task(Value&& value) {
     using task_t = transwarp::value_task<typename transwarp::decay<Value>::type>;
     return std::shared_ptr<task_t>(new task_t(false, "", std::forward<Value>(value)));
 }
+
+
+/// A graph interface. Currently only used to give access to the final task
+/// as needed by transwarp::graph_pool
+template<typename FinalResultType>
+class graph {
+public:
+    virtual ~graph() = default;
+
+    /// Returns the final task of the graph
+    virtual std::shared_ptr<transwarp::task<FinalResultType>> final_task() const = 0;
+};
+
+
+/// A graph pool that allows running multiple instances of the same graph in parallel
+template<typename FinalResultType>
+class graph_pool {
+public:
+
+    using graph_type = transwarp::graph<FinalResultType>;
+
+    /// Constructs a graph pool by passing a generator to create a new graph
+    /// and a minimum size of the pool. The minimum size is used as the initial
+    /// size of the pool
+    graph_pool(std::function<std::shared_ptr<graph_type>()> generator,
+               std::size_t minimum_size)
+    : generator_(std::move(generator)),
+      minimum_(minimum_size)
+    {
+        init();
+    }
+
+    /// Constructs a graph pool by passing a generator to create a new graph
+    /// and a minimum and maximum size of the pool. The minimum size is used as
+    /// the initial size of the pool
+    graph_pool(std::function<std::shared_ptr<graph_type>()> generator,
+               std::size_t minimum_size,
+               std::size_t maximum_size)
+    : generator_(std::move(generator)),
+      minimum_(minimum_size),
+      maximum_(maximum_size)
+    {
+        init();
+    }
+
+    // delete copy/move semantics
+    graph_pool(const graph_pool&) = delete;
+    graph_pool& operator=(const graph_pool&) = delete;
+    graph_pool(graph_pool&&) = delete;
+    graph_pool& operator=(graph_pool&&) = delete;
+
+    /// Returns the next idle graph.
+    /// If the stack of idle graphs is empty then it will attempt to double the
+    /// pool size. If that fails then it will return a nullptr.
+    /// On successful retrieval of an idle graph the function will mark
+    /// this graph as busy.
+    template<typename Graph>
+    std::shared_ptr<Graph> next_idle_graph() {
+        static_assert(std::is_base_of<graph_type, Graph>::value, "Graph must be a subclass of transwarp::graph");
+        std::shared_ptr<graph_type> g;
+        {
+            std::lock_guard<spinlock> lock_(spinlock_);
+            if (idle_.empty()) {
+                resize(size() * 2); // double pool size
+            }
+            if (idle_.empty()) {
+                return nullptr;
+            }
+            g = idle_.top(); idle_.pop();
+            busy_.emplace(g->final_task()->get_node(), g);
+        }
+        const auto& future = g->final_task()->get_future();
+        if (future.valid()) {
+            future.wait(); // will return immediately
+        }
+        return std::dynamic_pointer_cast<Graph>(g);
+    }
+
+    /// Returns the total size of the pool
+    std::size_t size() const {
+        return idle_.size() + busy_.size();
+    }
+
+    /// Returns the minimum size of the pool
+    std::size_t minimum_size() const {
+        return minimum_;
+    }
+
+    /// Returns the maximum size of the pool
+    std::size_t maximum_size() const {
+        return maximum_;
+    }
+
+    /// Returns the number of idle graphs in the pool
+    std::size_t idle_count() const {
+        return idle_.size();
+    }
+
+    /// Returns the number of busy graphs in the pool
+    std::size_t busy_count() const {
+        return busy_.size();
+    }
+
+    /// Resizes the graph to the given new size if possible
+    void resize(std::size_t new_size) {
+        if (new_size > size()) { // grow
+            const auto count = new_size - size();
+            for (std::size_t i=0; i<count; ++i) {
+                if (size() == maximum_) {
+                    break;
+                }
+                idle_.push(generate());
+            }
+        } else if (new_size < size()) { // shrink
+            const auto count = size() - new_size;
+            for (std::size_t i=0; i<count; ++i) {
+                if (size() == minimum_) {
+                    break;
+                }
+                idle_.pop();
+            }
+        }
+    }
+
+private:
+
+    class spinlock {
+    public:
+
+        void lock() noexcept {
+            while (locked_.test_and_set(std::memory_order_acquire));
+        }
+
+        void unlock() noexcept {
+            locked_.clear(std::memory_order_release);
+        }
+
+    private:
+        std::atomic_flag locked_ = ATOMIC_FLAG_INIT;
+    };
+
+    class finished_listener : public transwarp::listener {
+    public:
+
+        explicit
+        finished_listener(graph_pool<FinalResultType>& pool)
+        : pool_(pool)
+        {}
+
+        void handle_event(transwarp::event_type, const std::shared_ptr<transwarp::node>& node) override {
+            std::lock_guard<spinlock> lock_(pool_.spinlock_);
+            auto it = pool_.busy_.find(node);
+            pool_.idle_.push(it->second);
+            pool_.busy_.erase(it);
+        }
+
+    private:
+        graph_pool<FinalResultType>& pool_;
+    };
+
+    void init() {
+        if (minimum_ < 1) {
+            throw transwarp::invalid_parameter("minimum size must be at least 1");
+        }
+        if (minimum_ > maximum_) {
+            throw transwarp::invalid_parameter("minimum size larger than maximum size");
+        }
+        for (std::size_t i=0; i<minimum_; ++i) {
+            idle_.push(generate());
+        }
+    }
+
+    std::shared_ptr<graph_type> generate() {
+        auto graph = generator_();
+        graph->final_task()->add_listener(transwarp::event_type::after_finished, listener_);
+        return graph;
+    }
+
+    std::function<std::shared_ptr<graph_type>()> generator_;
+    std::size_t minimum_;
+    std::size_t maximum_ = std::numeric_limits<std::size_t>::max();
+    spinlock spinlock_; // protecting idle_ and busy_
+    std::stack<std::shared_ptr<graph_type>> idle_;
+    std::unordered_map<std::shared_ptr<transwarp::node>, std::shared_ptr<graph_type>> busy_;
+    std::shared_ptr<transwarp::listener> listener_{new finished_listener(*this)};
+};
 
 
 } // transwarp

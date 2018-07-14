@@ -1897,6 +1897,112 @@ TEST_CASE("make_task_with_empty_vector_parents") {
     REQUIRE_THROWS_AS(tw::make_task(tw::wait, []{}, vec), tw::invalid_parameter);
 }
 
+
+struct mock_graph : tw::graph<int> {
+    std::shared_ptr<tw::task<int>> task = tw::make_task(tw::root, []{ return 42; });
+    std::shared_ptr<tw::task<int>> final_task() const override {
+        return task;
+    }
+};
+
+std::shared_ptr<mock_graph> make_mock_graph() {
+    return std::make_shared<mock_graph>();
+}
+
+TEST_CASE("graph_pool_constructor") {
+    tw::graph_pool<int> pool(make_mock_graph, 3);
+    REQUIRE(3 == pool.size());
+    REQUIRE(3 == pool.idle_count());
+    REQUIRE(0 == pool.busy_count());
+    REQUIRE(3 == pool.minimum_size());
+    REQUIRE(std::numeric_limits<std::size_t>::max() == pool.maximum_size());
+}
+
+TEST_CASE("graph_pool_constructor_overload") {
+    tw::graph_pool<int> pool(make_mock_graph, 3, 5);
+    REQUIRE(3 == pool.size());
+    REQUIRE(3 == pool.idle_count());
+    REQUIRE(0 == pool.busy_count());
+    REQUIRE(3 == pool.minimum_size());
+    REQUIRE(5 == pool.maximum_size());
+}
+
+TEST_CASE("graph_pool_constructor_throws_for_invalid_minimum") {
+    auto lambda = []{ tw::graph_pool<int>{make_mock_graph, 0}; };
+    REQUIRE_THROWS_AS(lambda(), tw::invalid_parameter);
+}
+
+TEST_CASE("graph_pool_constructor_throws_for_invalid_minimum_maximum") {
+    auto lambda = []{ tw::graph_pool<int>{make_mock_graph, 3, 2}; };
+    REQUIRE_THROWS_AS(lambda(), tw::invalid_parameter);
+}
+
+TEST_CASE("graph_pool_next_idle_graph") {
+    tw::graph_pool<int> pool(make_mock_graph, 2);
+    REQUIRE(2 == pool.size());
+    auto g1 = pool.next_idle_graph<mock_graph>();
+    REQUIRE(g1);
+    REQUIRE(1 == pool.idle_count());
+    REQUIRE(1 == pool.busy_count());
+    auto g2 = pool.next_idle_graph<mock_graph>();
+    REQUIRE(g2);
+    REQUIRE(0 == pool.idle_count());
+    REQUIRE(2 == pool.busy_count());
+    auto g3 = pool.next_idle_graph<mock_graph>();
+    REQUIRE(g3);
+    REQUIRE(1 == pool.idle_count());
+    REQUIRE(3 == pool.busy_count());
+    REQUIRE(4 == pool.size());
+    auto g4 = pool.next_idle_graph<mock_graph>();
+    REQUIRE(g4);
+    REQUIRE(0 == pool.idle_count());
+    REQUIRE(4 == pool.busy_count());
+    REQUIRE(4 == pool.size());
+    g1->task->schedule();
+    g2->task->schedule();
+    g3->task->schedule();
+    g4->task->schedule();
+    auto g5 = pool.next_idle_graph<mock_graph>();
+    REQUIRE(g5);
+    REQUIRE(3 == pool.idle_count());
+    REQUIRE(1 == pool.busy_count());
+    REQUIRE(4 == pool.size());
+}
+
+TEST_CASE("graph_pool_next_idle_graph_with_nullptr") {
+    tw::graph_pool<int> pool(make_mock_graph, 1, 2);
+    REQUIRE(1 == pool.size());
+    auto g1 = pool.next_idle_graph<mock_graph>();
+    REQUIRE(g1);
+    REQUIRE(0 == pool.idle_count());
+    REQUIRE(1 == pool.busy_count());
+    auto g2 = pool.next_idle_graph<mock_graph>();
+    REQUIRE(g2);
+    REQUIRE(0 == pool.idle_count());
+    REQUIRE(2 == pool.busy_count());
+    auto g3 = pool.next_idle_graph<mock_graph>();
+    REQUIRE_FALSE(g3); // got a nullptr
+    REQUIRE(0 == pool.idle_count());
+    REQUIRE(2 == pool.busy_count());
+}
+
+TEST_CASE("graph_pool_resize") {
+    tw::graph_pool<int> pool(make_mock_graph, 2);
+    REQUIRE(2 == pool.size());
+    pool.resize(4);
+    REQUIRE(4 == pool.size());
+    pool.resize(1);
+    REQUIRE(2 == pool.size());
+}
+
+TEST_CASE("graph_pool_resize_with_max") {
+    tw::graph_pool<int> pool(make_mock_graph, 2, 5);
+    REQUIRE(2 == pool.size());
+    pool.resize(6);
+    REQUIRE(5 == pool.size());
+}
+
+
 // Examples
 
 TEST_CASE("example__basic_with_three_tasks") {
@@ -1940,3 +2046,4 @@ TEST_CASE("example__wide_graph_with_pool") {
     examples::wide_graph_with_pool(os, 3, 1000);
     REQUIRE(os.str().size() > 0u);
 }
+
