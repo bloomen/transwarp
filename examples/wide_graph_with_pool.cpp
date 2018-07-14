@@ -40,7 +40,7 @@ struct graph : tw::graph<double> {
       final(std::move(final))
     {}
 
-    std::shared_ptr<transwarp::task<double>> final_task() const override {
+    const std::shared_ptr<transwarp::task<double>>& final_task() const override {
         return final;
     }
 };
@@ -82,7 +82,7 @@ void wide_graph_with_pool(std::ostream& os, std::size_t iterations, std::size_t 
     std::uniform_int_distribution<std::size_t> dist(size, size * 10);
     std::mt19937 gen{1};
 
-    // Pool of graphs with 16 initial graphs
+    // Graph pool with 16 initial graphs
     tw::graph_pool<double> pool{make_graph, 16};
 
     std::vector<std::shared_future<double>> futures;

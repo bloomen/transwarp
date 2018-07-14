@@ -1900,7 +1900,7 @@ TEST_CASE("make_task_with_empty_vector_parents") {
 
 struct mock_graph : tw::graph<int> {
     std::shared_ptr<tw::task<int>> task = tw::make_task(tw::root, []{ return 42; });
-    std::shared_ptr<tw::task<int>> final_task() const override {
+    const std::shared_ptr<tw::task<int>>& final_task() const override {
         return task;
     }
 };

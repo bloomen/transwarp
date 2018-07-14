@@ -2456,15 +2456,14 @@ make_value_task(Value&& value) {
 }
 
 
-/// A graph interface. Currently only used to give access to the final task
-/// as needed by transwarp::graph_pool
+/// A graph interface giving access to the final task as needed by transwarp::graph_pool
 template<typename FinalResultType>
 class graph {
 public:
     virtual ~graph() = default;
 
     /// Returns the final task of the graph
-    virtual std::shared_ptr<transwarp::task<FinalResultType>> final_task() const = 0;
+    virtual const std::shared_ptr<transwarp::task<FinalResultType>>& final_task() const = 0;
 };
 
 
@@ -2507,9 +2506,8 @@ public:
 
     /// Returns the next idle graph.
     /// If the stack of idle graphs is empty then it will attempt to double the
-    /// pool size. If that fails then it will return a nullptr.
-    /// On successful retrieval of an idle graph the function will mark
-    /// this graph as busy.
+    /// pool size. If that fails then it will return a nullptr. On successful
+    /// retrieval of an idle graph the function will mark that graph as busy.
     template<typename Graph>
     std::shared_ptr<Graph> next_idle_graph() {
         static_assert(std::is_base_of<graph_type, Graph>::value, "Graph must be a subclass of transwarp::graph");
@@ -2557,7 +2555,7 @@ public:
         return busy_.size();
     }
 
-    /// Resizes the graph to the given new size if possible
+    /// Resizes the graph pool to the given new size if possible
     void resize(std::size_t new_size) {
         if (new_size > size()) { // grow
             const auto count = new_size - size();
