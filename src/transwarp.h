@@ -2460,6 +2460,7 @@ make_value_task(Value&& value) {
 template<typename FinalResultType>
 class graph {
 public:
+
     virtual ~graph() = default;
 
     /// Returns the final task of the graph
@@ -2513,9 +2514,9 @@ public:
         static_assert(std::is_base_of<graph_type, Graph>::value, "Graph must be a subclass of transwarp::graph");
         std::shared_ptr<graph_type> g;
         {
-            std::lock_guard<spinlock> lock_(spinlock_);
+            std::lock_guard<spinlock> lock(spinlock_);
             if (idle_.empty()) {
-                resize(size() * 2); // double pool size
+                resize_impl(size_impl() * 2); // double pool size
             }
             if (idle_.empty()) {
                 return nullptr;
@@ -2523,7 +2524,7 @@ public:
             g = idle_.top(); idle_.pop();
             busy_.emplace(g->final_task()->get_node(), g);
         }
-        const auto& future = g->final_task()->get_future();
+        const std::shared_future<FinalResultType>& future = g->final_task()->get_future();
         if (future.valid()) {
             future.wait(); // will return immediately
         }
@@ -2532,7 +2533,8 @@ public:
 
     /// Returns the total size of the pool
     std::size_t size() const {
-        return idle_.size() + busy_.size();
+        std::lock_guard<spinlock> lock(spinlock_);
+        return size_impl();
     }
 
     /// Returns the minimum size of the pool
@@ -2547,33 +2549,20 @@ public:
 
     /// Returns the number of idle graphs in the pool
     std::size_t idle_count() const {
+        std::lock_guard<spinlock> lock(spinlock_);
         return idle_.size();
     }
 
     /// Returns the number of busy graphs in the pool
     std::size_t busy_count() const {
+        std::lock_guard<spinlock> lock(spinlock_);
         return busy_.size();
     }
 
     /// Resizes the graph pool to the given new size if possible
     void resize(std::size_t new_size) {
-        if (new_size > size()) { // grow
-            const auto count = new_size - size();
-            for (std::size_t i=0; i<count; ++i) {
-                if (size() == maximum_) {
-                    break;
-                }
-                idle_.push(generate());
-            }
-        } else if (new_size < size()) { // shrink
-            const auto count = size() - new_size;
-            for (std::size_t i=0; i<count; ++i) {
-                if (size() == minimum_) {
-                    break;
-                }
-                idle_.pop();
-            }
-        }
+        std::lock_guard<spinlock> lock(spinlock_);
+        resize_impl(new_size);
     }
 
 private:
@@ -2625,15 +2614,39 @@ private:
     }
 
     std::shared_ptr<graph_type> generate() {
-        auto graph = generator_();
+        std::shared_ptr<graph_type> graph = generator_();
         graph->final_task()->add_listener(transwarp::event_type::after_finished, listener_);
         return graph;
+    }
+
+    std::size_t size_impl() const {
+        return idle_.size() + busy_.size();
+    }
+
+    void resize_impl(std::size_t new_size) {
+        if (new_size > size_impl()) { // grow
+            const std::size_t count = new_size - size_impl();
+            for (std::size_t i=0; i<count; ++i) {
+                if (size_impl() == maximum_) {
+                    break;
+                }
+                idle_.push(generate());
+            }
+        } else if (new_size < size_impl()) { // shrink
+            const std::size_t count = size_impl() - new_size;
+            for (std::size_t i=0; i<count; ++i) {
+                if (size_impl() == minimum_) {
+                    break;
+                }
+                idle_.pop();
+            }
+        }
     }
 
     std::function<std::shared_ptr<graph_type>()> generator_;
     std::size_t minimum_;
     std::size_t maximum_ = std::numeric_limits<std::size_t>::max();
-    spinlock spinlock_; // protecting idle_ and busy_
+    mutable spinlock spinlock_; // protecting idle_ and busy_
     std::stack<std::shared_ptr<graph_type>> idle_;
     std::unordered_map<std::shared_ptr<transwarp::node>, std::shared_ptr<graph_type>> busy_;
     std::shared_ptr<transwarp::listener> listener_{new finished_listener(*this)};
