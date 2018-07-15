@@ -1367,6 +1367,107 @@ private:
 };
 
 
+/// A simple circular buffer (FIFO).
+/// ValueType must support default construction. The buffer lets you push
+/// new values onto the back and pop old values off the front.
+template<typename ValueType>
+class circular_buffer {
+public:
+
+    static_assert(std::is_default_constructible<ValueType>::value, "ValueType must be default constructible");
+
+    using value_type = ValueType;
+
+    /// Constructs a circular buffer with a given fixed size
+    explicit
+    circular_buffer(std::size_t size)
+    : data_(size)
+    {
+        if (size < 1) {
+            throw transwarp::invalid_parameter("size");
+        }
+    }
+
+    // default copy/move semantics
+    circular_buffer(const circular_buffer&) = default;
+    circular_buffer& operator=(const circular_buffer&) = default;
+    circular_buffer(circular_buffer&&) = default;
+    circular_buffer& operator=(circular_buffer&&) = default;
+
+    /// Pushes a new value onto the end of the buffer. If that exceeds the size
+    /// of the buffer then the oldest value gets dropped (the one at the front).
+    template<typename T, typename = typename std::enable_if<std::is_same<typename std::decay<T>::type, value_type>::value>::type>
+    void push(T&& value) {
+        data_[end_] = std::forward<T>(value);
+        increment();
+    }
+
+    /// Returns the value at the front of the buffer (the oldest value).
+    /// This is undefined if the buffer is empty
+    const value_type& front() const {
+        return data_[front_];
+    }
+
+    /// Removes the value at the front of the buffer (the oldest value)
+    void pop() {
+        if (!empty()) {
+            data_[front_].~ValueType();
+            decrement();
+        }
+    }
+
+    /// Returns the size of the buffer
+    std::size_t size() const {
+        return data_.size();
+    }
+
+    /// Returns the number of populated values of the buffer. Its maximum value
+    /// equals the size of the buffer
+    std::size_t populated() const {
+        return populated_;
+    }
+
+    /// Returns whether the buffer is empty
+    bool empty() const {
+        return populated_ == 0;
+    }
+
+    /// Returns whether the buffer is full
+    bool full() const {
+        return populated_ == data_.size();
+    }
+
+private:
+
+    void increment_or_wrap(std::size_t& value) const {
+        if (value == data_.size() - 1) {
+            value = 0;
+        } else {
+            ++value;
+        }
+    }
+
+    void increment() {
+        increment_or_wrap(end_);
+        if (full()) {
+            increment_or_wrap(front_);
+        } else {
+            ++populated_;
+        }
+    }
+
+    void decrement() {
+        increment_or_wrap(front_);
+        --populated_;
+    }
+
+    std::size_t end_{};
+    std::size_t front_{};
+    std::size_t populated_{};
+    std::vector<value_type> data_;
+};
+
+
 } // detail
 
 
@@ -2476,17 +2577,6 @@ public:
     using graph_type = transwarp::graph<FinalResultType>;
 
     /// Constructs a graph pool by passing a generator to create a new graph
-    /// and a minimum size of the pool. The minimum size is used as the initial
-    /// size of the pool
-    graph_pool(std::function<std::shared_ptr<graph_type>()> generator,
-               std::size_t minimum_size)
-    : generator_(std::move(generator)),
-      minimum_(minimum_size)
-    {
-        init();
-    }
-
-    /// Constructs a graph pool by passing a generator to create a new graph
     /// and a minimum and maximum size of the pool. The minimum size is used as
     /// the initial size of the pool
     graph_pool(std::function<std::shared_ptr<graph_type>()> generator,
@@ -2496,7 +2586,15 @@ public:
       minimum_(minimum_size),
       maximum_(maximum_size)
     {
-        init();
+        if (minimum_ < 1) {
+            throw transwarp::invalid_parameter("minimum size");
+        }
+        if (minimum_ > maximum_) {
+            throw transwarp::invalid_parameter("minimum or maximum size");
+        }
+        for (std::size_t i=0; i<minimum_; ++i) {
+            idle_.push(generate());
+        }
     }
 
     // delete copy/move semantics
@@ -2512,18 +2610,25 @@ public:
     template<typename Graph>
     std::shared_ptr<Graph> next_idle_graph() {
         static_assert(std::is_base_of<graph_type, Graph>::value, "Graph must be a subclass of transwarp::graph");
-        std::shared_ptr<graph_type> g;
+        decltype(finished_) finished;
         {
             std::lock_guard<spinlock> lock(spinlock_);
-            if (idle_.empty()) {
-                resize_impl(size_impl() * 2); // double pool size
-            }
-            if (idle_.empty()) {
-                return nullptr;
-            }
-            g = idle_.top(); idle_.pop();
-            busy_.emplace(g->final_task()->get_node(), g);
+            std::swap(finished_, finished);
         }
+        while (!finished.empty()) {
+            const std::shared_ptr<transwarp::node>& node = finished.top(); finished.pop();
+            const auto it = busy_.find(node);
+            idle_.push(it->second);
+            busy_.erase(it);
+        }
+        if (idle_.empty()) {
+            resize_impl(size_impl(finished.size()) * 2, finished.size()); // double pool size
+        }
+        if (idle_.empty()) {
+            return nullptr;
+        }
+        std::shared_ptr<graph_type> g = idle_.top(); idle_.pop();
+        busy_.emplace(g->final_task()->get_node(), g);
         const std::shared_future<FinalResultType>& future = g->final_task()->get_future();
         if (future.valid()) {
             future.wait(); // will return immediately
@@ -2531,10 +2636,26 @@ public:
         return std::dynamic_pointer_cast<Graph>(g);
     }
 
-    /// Returns the total size of the pool
+    /// Just like next_idle_graph() but waits for a graph to become available.
+    /// The returned graph will always be a valid pointer
+    template<typename Graph>
+    std::shared_ptr<Graph> wait_for_next_idle_graph() {
+        for (;;) {
+            std::shared_ptr<Graph> g = next_idle_graph<Graph>();
+            if (g) {
+                return g;
+            }
+        }
+    }
+
+    /// Returns the current total size of the pool (sum of idle and busy graphs)
     std::size_t size() const {
-        std::lock_guard<spinlock> lock(spinlock_);
-        return size_impl();
+        std::size_t finished_size;
+        {
+            std::lock_guard<spinlock> lock(spinlock_);
+            finished_size = finished_.size();
+        }
+        return size_impl(finished_size);
     }
 
     /// Returns the minimum size of the pool
@@ -2549,20 +2670,27 @@ public:
 
     /// Returns the number of idle graphs in the pool
     std::size_t idle_count() const {
-        std::lock_guard<spinlock> lock(spinlock_);
         return idle_.size();
     }
 
     /// Returns the number of busy graphs in the pool
     std::size_t busy_count() const {
-        std::lock_guard<spinlock> lock(spinlock_);
-        return busy_.size();
+        std::size_t finished_size;
+        {
+            std::lock_guard<spinlock> lock(spinlock_);
+            finished_size = finished_.size();
+        }
+        return busy_.size() - finished_size;
     }
 
     /// Resizes the graph pool to the given new size if possible
     void resize(std::size_t new_size) {
-        std::lock_guard<spinlock> lock(spinlock_);
-        resize_impl(new_size);
+        std::size_t finished_size;
+        {
+            std::lock_guard<spinlock> lock(spinlock_);
+            finished_size = finished_.size();
+        }
+        resize_impl(new_size, finished_size);
     }
 
 private:
@@ -2590,28 +2718,15 @@ private:
         : pool_(pool)
         {}
 
+        // Called on a potentially high-priority thread
         void handle_event(transwarp::event_type, const std::shared_ptr<transwarp::node>& node) override {
             std::lock_guard<spinlock> lock_(pool_.spinlock_);
-            auto it = pool_.busy_.find(node);
-            pool_.idle_.push(it->second);
-            pool_.busy_.erase(it);
+            pool_.finished_.push(node);
         }
 
     private:
         graph_pool<FinalResultType>& pool_;
     };
-
-    void init() {
-        if (minimum_ < 1) {
-            throw transwarp::invalid_parameter("minimum size must be at least 1");
-        }
-        if (minimum_ > maximum_) {
-            throw transwarp::invalid_parameter("minimum size larger than maximum size");
-        }
-        for (std::size_t i=0; i<minimum_; ++i) {
-            idle_.push(generate());
-        }
-    }
 
     std::shared_ptr<graph_type> generate() {
         std::shared_ptr<graph_type> graph = generator_();
@@ -2619,23 +2734,23 @@ private:
         return graph;
     }
 
-    std::size_t size_impl() const {
-        return idle_.size() + busy_.size();
+    std::size_t size_impl(std::size_t finished_size) const {
+        return idle_.size() + busy_.size() - finished_size;
     }
 
-    void resize_impl(std::size_t new_size) {
-        if (new_size > size_impl()) { // grow
-            const std::size_t count = new_size - size_impl();
+    void resize_impl(std::size_t new_size, std::size_t finished_size) {
+        if (new_size > size_impl(finished_size)) { // grow
+            const std::size_t count = new_size - size_impl(finished_size);
             for (std::size_t i=0; i<count; ++i) {
-                if (size_impl() == maximum_) {
+                if (size_impl(finished_size) == maximum_) {
                     break;
                 }
                 idle_.push(generate());
             }
-        } else if (new_size < size_impl()) { // shrink
-            const std::size_t count = size_impl() - new_size;
+        } else if (new_size < size_impl(finished_size)) { // shrink
+            const std::size_t count = size_impl(finished_size) - new_size;
             for (std::size_t i=0; i<count; ++i) {
-                if (size_impl() == minimum_) {
+                if (size_impl(finished_size) == minimum_) {
                     break;
                 }
                 idle_.pop();
@@ -2645,9 +2760,10 @@ private:
 
     std::function<std::shared_ptr<graph_type>()> generator_;
     std::size_t minimum_;
-    std::size_t maximum_ = std::numeric_limits<std::size_t>::max();
-    mutable spinlock spinlock_; // protecting idle_ and busy_
+    std::size_t maximum_;
+    mutable spinlock spinlock_; // protecting finished_
     std::stack<std::shared_ptr<graph_type>> idle_;
+    std::stack<std::shared_ptr<transwarp::node>> finished_;
     std::unordered_map<std::shared_ptr<transwarp::node>, std::shared_ptr<graph_type>> busy_;
     std::shared_ptr<transwarp::listener> listener_{new finished_listener(*this)};
 };
