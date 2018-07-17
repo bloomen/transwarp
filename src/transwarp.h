@@ -1387,11 +1387,11 @@ public:
         }
     }
 
-    // default copy/move semantics
-    circular_buffer(const circular_buffer&) = default;
-    circular_buffer& operator=(const circular_buffer&) = default;
-    circular_buffer(circular_buffer&&) = default;
-    circular_buffer& operator=(circular_buffer&&) = default;
+    // delete copy/move semantics
+    circular_buffer(const circular_buffer&) = delete;
+    circular_buffer& operator=(const circular_buffer&) = delete;
+    circular_buffer(circular_buffer&& other) = delete;
+    circular_buffer& operator=(circular_buffer&&) = delete;
 
     /// Pushes a new value onto the end of the buffer. If that exceeds the capacity
     /// of the buffer then the oldest value gets dropped (the one at the front).
@@ -1434,6 +1434,14 @@ public:
     /// Returns whether the buffer is full
     bool full() const {
         return size_ == data_.size();
+    }
+
+    /// Swaps this buffer with the given buffer
+    void swap(circular_buffer& buffer) {
+        std::swap(end_, buffer.end_);
+        std::swap(front_, buffer.front_);
+        std::swap(size_, buffer.size_);
+        std::swap(data_, buffer.data_);
     }
 
 private:
@@ -2680,6 +2688,7 @@ public:
 
     /// Resizes the graph pool to the given new size if possible
     void resize(std::size_t new_size) {
+        reclaim();
         if (new_size > size()) { // grow
             const std::size_t count = new_size - size();
             for (std::size_t i=0; i<count; ++i) {
@@ -2691,11 +2700,26 @@ public:
         } else if (new_size < size()) { // shrink
             const std::size_t count = size() - new_size;
             for (std::size_t i=0; i<count; ++i) {
-                if (size() == minimum_) {
+                if (idle_.empty() || size() == minimum_) {
                     break;
                 }
                 idle_.pop();
             }
+        }
+    }
+
+    /// Reclaims finished graphs by marking them as idle again
+    void reclaim() {
+        decltype(finished_) finished{finished_.capacity()};
+        {
+            std::lock_guard<spinlock> lock(spinlock_);
+            finished_.swap(finished);
+        }
+        while (!finished.empty()) {
+            const std::shared_ptr<transwarp::node> node = finished.front(); finished.pop();
+            const auto it = busy_.find(node);
+            idle_.push(it->second);
+            busy_.erase(it);
         }
     }
 

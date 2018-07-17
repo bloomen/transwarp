@@ -2001,6 +2001,28 @@ TEST_CASE("graph_pool_resize_with_max") {
     REQUIRE(5 == pool.size());
 }
 
+TEST_CASE("graph_pool_reclaim") {
+    tw::graph_pool<int> pool(make_mock_graph, 2, 4);
+    REQUIRE(2 == pool.size());
+    auto g1 = pool.next_idle_graph<mock_graph>();
+    REQUIRE(g1);
+    auto g2 = pool.next_idle_graph<mock_graph>();
+    REQUIRE(g2);
+    auto g3 = pool.next_idle_graph<mock_graph>();
+    REQUIRE(g3);
+    auto g4 = pool.next_idle_graph<mock_graph>();
+    REQUIRE(g4);
+    REQUIRE(4 == pool.size());
+    pool.resize(2);
+    REQUIRE(4 == pool.size());
+    g1->task->schedule();
+    g2->task->schedule();
+    g3->task->schedule();
+    g4->task->schedule();
+    pool.resize(2); // calls reclaim
+    REQUIRE(2 == pool.size());
+}
+
 TEST_CASE("circular_buffer_buffer_of_capacity_one_no_elements") {
     const std::size_t capacity = 1;
     tw::detail::circular_buffer<double> buffer(capacity);
