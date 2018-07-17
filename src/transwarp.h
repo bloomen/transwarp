@@ -2556,7 +2556,7 @@ make_value_task(Value&& value) {
 }
 
 
-/// A graph interface giving access to the final task as needed by transwarp::graph_pool
+/// A graph interface giving access to the final task as required by transwarp::graph_pool
 template<typename FinalResultType>
 class graph {
 public:
@@ -2604,7 +2604,7 @@ public:
     graph_pool& operator=(graph_pool&&) = delete;
 
     /// Returns the next idle graph.
-    /// If the stack of idle graphs is empty then it will attempt to double the
+    /// If there are no idle graphs then it will attempt to double the
     /// pool size. If that fails then it will return a nullptr. On successful
     /// retrieval of an idle graph the function will mark that graph as busy.
     template<typename Graph>
