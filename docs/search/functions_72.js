@@ -1,5 +1,6 @@
 var searchData=
 [
+  ['reclaim',['reclaim',['../classtranswarp_1_1graph__pool.html#aae01291cb76406fa70a11e3ff3719ffe',1,'transwarp::graph_pool']]],
   ['remove_5fcustom_5fdata',['remove_custom_data',['../classtranswarp_1_1detail_1_1task__impl__base.html#a92343be9926f90f7e09e6f5acc83a7e4',1,'transwarp::detail::task_impl_base::remove_custom_data()'],['../classtranswarp_1_1value__task.html#acb1e68df1b915f9bb5bedc658bb5a208',1,'transwarp::value_task::remove_custom_data()']]],
   ['remove_5fcustom_5fdata_5fall',['remove_custom_data_all',['../classtranswarp_1_1detail_1_1task__impl__base.html#a117815bc16470c34c209c664999041d3',1,'transwarp::detail::task_impl_base::remove_custom_data_all()'],['../classtranswarp_1_1value__task.html#a400101758f70367698224c83ede43f10',1,'transwarp::value_task::remove_custom_data_all()']]],
   ['remove_5fexecutor',['remove_executor',['../classtranswarp_1_1detail_1_1task__impl__base.html#a9a195cd09889aa2008c840cb667b8147',1,'transwarp::detail::task_impl_base::remove_executor()'],['../classtranswarp_1_1value__task.html#ab14e491ebc0b22e48283bb3f3b6c54c0',1,'transwarp::value_task::remove_executor()']]],
@@ -10,5 +11,6 @@ var searchData=
   ['reset_5fall',['reset_all',['../classtranswarp_1_1detail_1_1task__impl__base.html#afc2bb4a5017de5ddd00425fd51ae5d14',1,'transwarp::detail::task_impl_base::reset_all()'],['../classtranswarp_1_1value__task.html#adab6b2eca3521da706575d2d27e93ffe',1,'transwarp::value_task::reset_all()']]],
   ['reset_5fpriority',['reset_priority',['../classtranswarp_1_1detail_1_1task__impl__base.html#a5e43e8cafa360ce460ffeef3933dd696',1,'transwarp::detail::task_impl_base::reset_priority()'],['../classtranswarp_1_1value__task.html#a53950fab0b0e236b325d0f6c2cae2cce',1,'transwarp::value_task::reset_priority()']]],
   ['reset_5fpriority_5fall',['reset_priority_all',['../classtranswarp_1_1detail_1_1task__impl__base.html#a3f07ac9522ba402c37597cd793922897',1,'transwarp::detail::task_impl_base::reset_priority_all()'],['../classtranswarp_1_1value__task.html#abbe89747e97c17698d591b1b0f547a1e',1,'transwarp::value_task::reset_priority_all()']]],
+  ['resize',['resize',['../classtranswarp_1_1graph__pool.html#aef63bfb345b1d2fb65377593cd2b2ba3',1,'transwarp::graph_pool']]],
   ['run_5ftask',['run_task',['../namespacetranswarp_1_1detail.html#afb86d4910b3e47af0dc8bf5a42f145ea',1,'transwarp::detail']]]
 ];

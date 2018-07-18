@@ -1,6 +1,9 @@
 var searchData=
 [
+  ['final_5ftask',['final_task',['../classtranswarp_1_1graph.html#a5b0ecf8ed188379cfb69914bf7ba0619',1,'transwarp::graph']]],
   ['final_5fvisitor',['final_visitor',['../structtranswarp_1_1detail_1_1final__visitor.html',1,'transwarp::detail']]],
+  ['front',['front',['../classtranswarp_1_1detail_1_1circular__buffer.html#a5ca048e81e69165f28038e363f3d5675',1,'transwarp::detail::circular_buffer']]],
+  ['full',['full',['../classtranswarp_1_1detail_1_1circular__buffer.html#a45ce59c0991063464878c179dad9ba0b',1,'transwarp::detail::circular_buffer']]],
   ['functor',['functor',['../classtranswarp_1_1functor.html',1,'transwarp']]],
   ['functor_5fresult',['functor_result',['../structtranswarp_1_1detail_1_1functor__result.html',1,'transwarp::detail']]],
   ['functor_5fresult_3c_20transwarp_3a_3aaccept_5fany_5ftype_2c_20functor_2c_20parentresults_2e_2e_2e_3e',['functor_result&lt; transwarp::accept_any_type, Functor, ParentResults...&gt;',['../structtranswarp_1_1detail_1_1functor__result_3_01transwarp_1_1accept__any__type_00_01Functor_00_01ParentResults_8_8_8_4.html',1,'transwarp::detail']]],

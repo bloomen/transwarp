@@ -15,5 +15,8 @@ var searchData=
   ['get_5fparents',['get_parents',['../classtranswarp_1_1node.html#a990e3be1d69db9c5c76812c9c021c05c',1,'transwarp::node']]],
   ['get_5fpriority',['get_priority',['../classtranswarp_1_1node.html#ad170e3aae99a01006569ddf9368ecbe7',1,'transwarp::node']]],
   ['get_5ftype',['get_type',['../classtranswarp_1_1node.html#af7e2d17f6b5079c9e2b15098c242f0a9',1,'transwarp::node']]],
+  ['graph',['graph',['../classtranswarp_1_1graph.html',1,'transwarp']]],
+  ['graph_5fpool',['graph_pool',['../classtranswarp_1_1graph__pool.html#af8b416f9fe9c28c46c4a173ea976eefc',1,'transwarp::graph_pool']]],
+  ['graph_5fpool',['graph_pool',['../classtranswarp_1_1graph__pool.html',1,'transwarp']]],
   ['graph_5fvisitor',['graph_visitor',['../structtranswarp_1_1detail_1_1graph__visitor.html',1,'transwarp::detail']]]
 ];
