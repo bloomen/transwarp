@@ -2650,9 +2650,9 @@ public:
     /// Just like next_idle_graph() but waits for a graph to become available.
     /// The returned graph will always be a valid pointer
     template<typename Graph>
-    std::shared_ptr<Graph> wait_for_next_idle_graph() {
+    std::shared_ptr<Graph> wait_for_next_idle_graph(bool maybe_resize=true) {
         for (;;) {
-            std::shared_ptr<Graph> g = next_idle_graph<Graph>();
+            std::shared_ptr<Graph> g = next_idle_graph<Graph>(maybe_resize);
             if (g) {
                 return g;
             }
