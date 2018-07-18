@@ -2616,7 +2616,7 @@ public:
     /// pool size. If that fails then it will return a nullptr. On successful
     /// retrieval of an idle graph the function will mark that graph as busy.
     template<typename Graph>
-    std::shared_ptr<Graph> next_idle_graph() {
+    std::shared_ptr<Graph> next_idle_graph(bool maybe_resize=true) {
         static_assert(std::is_base_of<graph_type, Graph>::value, "Graph must be a subclass of transwarp::graph");
         std::shared_ptr<transwarp::node> finished_node;
         {
@@ -2630,7 +2630,7 @@ public:
         if (finished_node) {
             g = busy_.find(finished_node)->second;
         } else {
-            if (idle_.empty()) {
+            if (maybe_resize && idle_.empty()) {
                 resize(size() * 2); // double pool size
             }
             if (idle_.empty()) {
