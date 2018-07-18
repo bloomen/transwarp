@@ -39,6 +39,7 @@ Tested with GCC, Clang, and Visual Studio.
      * [Executors](#executors)
      * [Canceling tasks](#canceling-tasks)
      * [Event system](#event-system)
+     * [Graph pool](#graph-pool)
   * [Feedback](#feedback)
   * [Contributors](#contributors)
 
