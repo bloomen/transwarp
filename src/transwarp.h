@@ -1,6 +1,6 @@
 /// @mainpage transwarp is a header-only C++ library for task concurrency
 /// @details https://github.com/bloomen/transwarp
-/// @version 1.6.2
+/// @version 1.7.0
 /// @author Christian Blume, Guan Wang
 /// @date 2018
 /// @copyright MIT http://www.opensource.org/licenses/mit-license.php
@@ -2577,16 +2577,14 @@ public:
 
 
 /// A graph pool that allows running multiple instances of the same graph in parallel
-template<typename FinalResultType>
+template<typename Graph>
 class graph_pool {
 public:
 
-    using graph_type = transwarp::graph<FinalResultType>;
-
     /// Constructs a graph pool by passing a generator to create a new graph
     /// and a minimum and maximum size of the pool. The minimum size is used as
-    /// the initial size of the pool
-    graph_pool(std::function<std::shared_ptr<graph_type>()> generator,
+    /// the initial size of the pool. Graph should be a subclass of transwarp::graph
+    graph_pool(std::function<std::shared_ptr<Graph>()> generator,
                std::size_t minimum_size,
                std::size_t maximum_size)
     : generator_(std::move(generator)),
@@ -2615,9 +2613,7 @@ public:
     /// If there are no idle graphs then it will attempt to double the
     /// pool size. If that fails then it will return a nullptr. On successful
     /// retrieval of an idle graph the function will mark that graph as busy.
-    template<typename Graph>
     std::shared_ptr<Graph> next_idle_graph(bool maybe_resize=true) {
-        static_assert(std::is_base_of<graph_type, Graph>::value, "Graph must be a subclass of transwarp::graph");
         std::shared_ptr<transwarp::node> finished_node;
         {
             std::lock_guard<spinlock> lock(spinlock_);
@@ -2626,7 +2622,7 @@ public:
             }
         }
 
-        std::shared_ptr<graph_type> g;
+        std::shared_ptr<Graph> g;
         if (finished_node) {
             g = busy_.find(finished_node)->second;
         } else {
@@ -2640,19 +2636,18 @@ public:
             busy_.emplace(g->final_task()->get_node(), g);
         }
 
-        const std::shared_future<FinalResultType>& future = g->final_task()->get_future();
+        const auto& future = g->final_task()->get_future();
         if (future.valid()) {
             future.wait(); // will return immediately
         }
-        return std::dynamic_pointer_cast<Graph>(g);
+        return g;
     }
 
     /// Just like next_idle_graph() but waits for a graph to become available.
     /// The returned graph will always be a valid pointer
-    template<typename Graph>
     std::shared_ptr<Graph> wait_for_next_idle_graph(bool maybe_resize=true) {
         for (;;) {
-            std::shared_ptr<Graph> g = next_idle_graph<Graph>(maybe_resize);
+            std::shared_ptr<Graph> g = next_idle_graph(maybe_resize);
             if (g) {
                 return g;
             }
@@ -2744,7 +2739,7 @@ private:
     public:
 
         explicit
-        finished_listener(graph_pool<FinalResultType>& pool)
+        finished_listener(graph_pool<Graph>& pool)
         : pool_(pool)
         {}
 
@@ -2755,22 +2750,22 @@ private:
         }
 
     private:
-        graph_pool<FinalResultType>& pool_;
+        graph_pool<Graph>& pool_;
     };
 
-    std::shared_ptr<graph_type> generate() {
-        std::shared_ptr<graph_type> graph = generator_();
+    std::shared_ptr<Graph> generate() {
+        std::shared_ptr<Graph> graph = generator_();
         graph->final_task()->add_listener(transwarp::event_type::after_finished, listener_);
         return graph;
     }
 
-    std::function<std::shared_ptr<graph_type>()> generator_;
+    std::function<std::shared_ptr<Graph>()> generator_;
     std::size_t minimum_;
     std::size_t maximum_;
     mutable spinlock spinlock_; // protecting finished_
     transwarp::detail::circular_buffer<std::shared_ptr<transwarp::node>> finished_;
-    std::queue<std::shared_ptr<graph_type>> idle_;
-    std::unordered_map<std::shared_ptr<transwarp::node>, std::shared_ptr<graph_type>> busy_;
+    std::queue<std::shared_ptr<Graph>> idle_;
+    std::unordered_map<std::shared_ptr<transwarp::node>, std::shared_ptr<Graph>> busy_;
     std::shared_ptr<transwarp::listener> listener_{new finished_listener(*this)};
 };
 

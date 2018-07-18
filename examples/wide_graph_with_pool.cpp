@@ -83,12 +83,12 @@ void wide_graph_with_pool(std::ostream& os, std::size_t iterations, std::size_t 
     std::mt19937 gen{1};
 
     // Graph pool with 16 initial graphs
-    tw::graph_pool<double> pool{make_graph, 16, 16*10};
+    tw::graph_pool<graph> pool{make_graph, 16, 16*10};
 
     std::vector<std::shared_future<double>> futures;
     for (std::size_t i=0; i<iterations; ++i) {
         auto data = std::make_shared<std::vector<double>>(dist(gen), 1); // New data arrive
-        auto g = pool.wait_for_next_idle_graph<graph>(); // Get the next available graph
+        auto g = pool.wait_for_next_idle_graph(); // Get the next available graph
         g->input->set_value(data);
         g->final->schedule_all(exec); // Schedule the graph
         futures.push_back(g->final->get_future()); // Collect the future
