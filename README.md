@@ -371,11 +371,11 @@ graph_pool(std::function<std::shared_ptr<Graph>()> generator,
            std::size_t minimum_size,
            std::size_t maximum_size);
 ```
-where `Graph` denotes the user's subclass of `tw::graph`. 
+where `Graph` denotes the user's sub-class of `tw::graph`. 
 It takes the user's generator function along with minimum and maximum size
 of the graph pool. Once constructed, the next available graph can be queried like so:
 ```
-auto g = pool.next_idle_graph();
+std::shared_ptr<Graph> g = pool.next_idle_graph();
 ```
 `g` can now be used to schedule the current graph instance. Take a look at the 
 [wide_graph_with_pool](https://github.com/bloomen/transwarp/blob/master/examples/wide_graph_with_pool.cpp) 
