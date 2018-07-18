@@ -1,6 +1,6 @@
-1.6.2
+1.7.0
 
-- added an example demonstrating the use of a graph pool
+- added a graph pool to run different instances of the same graph in parallel
 
 1.6.1
 
