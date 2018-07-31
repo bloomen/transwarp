@@ -361,7 +361,7 @@ public:
 
     virtual ~graph() = default;
 
-    /// Returns the final task of the graph
+    // Returns the final task of the graph
     virtual const std::shared_ptr<tw::task<FinalResultType>>& final_task() const = 0;
 };
 ```
