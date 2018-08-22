@@ -2565,21 +2565,26 @@ make_value_task(Value&& value) {
 
 
 /// A graph interface giving access to the final task as required by transwarp::graph_pool
-template<typename FinalResultType>
+template<typename ResultType>
 class graph {
 public:
+    using result_type = ResultType;
 
     virtual ~graph() = default;
 
     /// Returns the final task of the graph
-    virtual const std::shared_ptr<transwarp::task<FinalResultType>>& final_task() const = 0;
+    virtual const std::shared_ptr<transwarp::task<result_type>>& final_task() const = 0;
 };
 
 
-/// A graph pool that allows running multiple instances of the same graph in parallel
+/// A graph pool that allows running multiple instances of the same graph in parallel.
+/// Graph must be a sub-class of transwarp::graph
 template<typename Graph>
 class graph_pool {
 public:
+
+    static_assert(std::is_base_of<transwarp::graph<typename Graph::result_type>, Graph>::value,
+                  "Graph must be a sub-class of transwarp::graph");
 
     /// Constructs a graph pool by passing a generator to create a new graph
     /// and a minimum and maximum size of the pool. The minimum size is used as

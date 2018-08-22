@@ -353,16 +353,17 @@ an existing listener.
 It is currently not possible to schedule the same graph again while it is still
 running. However, `tw::graph_pool` allows you to easily run multiple instances
 of the same graph in parallel. All you need to do is provide a generator function
-that returns a pointer to a `tw::graph`:
+that returns a pointer to a graph:
 ```cpp
-template<typename FinalResultType>
+template<typename ResultType>
 class graph {
 public:
+    using result_type = ResultType;
 
     virtual ~graph() = default;
 
     // Returns the final task of the graph
-    virtual const std::shared_ptr<tw::task<FinalResultType>>& final_task() const = 0;
+    virtual const std::shared_ptr<tw::task<result_type>>& final_task() const = 0;
 };
 ```
 The graph pool's constructor looks like this:
