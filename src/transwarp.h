@@ -199,6 +199,16 @@ public:
         return canceled_.load();
     }
 
+    /// Returns the average waittime in microseconds (-1 if never set)
+    std::int64_t get_avg_waittime_us() const noexcept {
+        return avg_waittime_us_.load();
+    }
+
+    /// Returns the average runtime in microseconds (-1 if never set)
+    std::int64_t get_avg_runtime_us() const noexcept {
+        return avg_runtime_us_.load();
+    }
+
 private:
     friend struct transwarp::detail::node_manip;
 
@@ -210,23 +220,33 @@ private:
     std::vector<std::shared_ptr<node>> parents_;
     std::size_t priority_ = 0;
     std::shared_ptr<void> custom_data_;
-    std::atomic_bool canceled_{false};
+    std::atomic<bool> canceled_{false};
+    std::atomic<std::int64_t> avg_waittime_us_{-1};
+    std::atomic<std::int64_t> avg_runtime_us_{-1};
 };
 
 /// String conversion for the node class
-inline std::string to_string(const transwarp::node& node, const std::string& seperator="\n") {
+inline std::string to_string(const transwarp::node& node, const std::string& separator="\n") {
     std::string s;
     s += '"';
     const std::shared_ptr<std::string>& name = node.get_name();
     if (name) {
-        s += "<" + *name + ">" + seperator;
+        s += "<" + *name + ">" + separator;
     }
     s += transwarp::to_string(node.get_type());
     s += " id=" + std::to_string(node.get_id());
     s += " lev=" + std::to_string(node.get_level());
     const std::shared_ptr<std::string>& exec = node.get_executor();
     if (exec) {
-        s += seperator + "<" + *exec + ">";
+        s += separator + "<" + *exec + ">";
+    }
+    const std::int64_t avg_waittime_us = node.get_avg_waittime_us();
+    if (avg_waittime_us >= 0) {
+        s += separator + "avg-waittime-us=" + std::to_string(avg_waittime_us);
+    }
+    const std::int64_t avg_runtime_us = node.get_avg_runtime_us();
+    if (avg_runtime_us >= 0) {
+        s += separator + "avg-runtime-us=" + std::to_string(avg_runtime_us);
     }
     s += '"';
     return s;
@@ -527,6 +547,14 @@ struct node_manip {
 
     static void set_canceled(transwarp::node& node, bool enabled) noexcept {
         node.canceled_ = enabled;
+    }
+
+    static void set_avg_waittime_us(transwarp::node& node, std::int64_t waittime) noexcept {
+        node.avg_waittime_us_ = waittime;
+    }
+
+    static void set_avg_runtime_us(transwarp::node& node, std::int64_t runtime) noexcept {
+        node.avg_runtime_us_ = runtime;
     }
 
 };
@@ -1554,6 +1582,22 @@ private:
     std::size_t front_{};
     std::size_t size_{};
     std::vector<value_type> data_;
+};
+
+
+class spinlock {
+public:
+
+    void lock() noexcept {
+        while (locked_.test_and_set(std::memory_order_acquire));
+    }
+
+    void unlock() noexcept {
+        locked_.clear(std::memory_order_release);
+    }
+
+private:
+    std::atomic_flag locked_ = ATOMIC_FLAG_INIT;
 };
 
 
@@ -2763,7 +2807,7 @@ public:
     std::shared_ptr<Graph> next_idle_graph(bool maybe_resize=true) {
         std::shared_ptr<transwarp::node> finished_node;
         {
-            std::lock_guard<spinlock> lock(spinlock_);
+            std::lock_guard<transwarp::detail::spinlock> lock(spinlock_);
             if (!finished_.empty()) {
                 finished_node = finished_.front(); finished_.pop();
             }
@@ -2818,13 +2862,13 @@ public:
 
     /// Returns the number of idle graphs in the pool
     std::size_t idle_count() const {
-        std::lock_guard<spinlock> lock(spinlock_);
+        std::lock_guard<transwarp::detail::spinlock> lock(spinlock_);
         return idle_.size() + finished_.size();
     }
 
     /// Returns the number of busy graphs in the pool
     std::size_t busy_count() const {
-        std::lock_guard<spinlock> lock(spinlock_);
+        std::lock_guard<transwarp::detail::spinlock> lock(spinlock_);
         return busy_.size() - finished_.size();
     }
 
@@ -2854,7 +2898,7 @@ public:
     void reclaim() {
         decltype(finished_) finished{finished_.capacity()};
         {
-            std::lock_guard<spinlock> lock(spinlock_);
+            std::lock_guard<transwarp::detail::spinlock> lock(spinlock_);
             finished_.swap(finished);
         }
         while (!finished.empty()) {
@@ -2867,21 +2911,6 @@ public:
 
 private:
 
-    class spinlock {
-    public:
-
-        void lock() noexcept {
-            while (locked_.test_and_set(std::memory_order_acquire));
-        }
-
-        void unlock() noexcept {
-            locked_.clear(std::memory_order_release);
-        }
-
-    private:
-        std::atomic_flag locked_ = ATOMIC_FLAG_INIT;
-    };
-
     class finished_listener : public transwarp::listener {
     public:
 
@@ -2892,7 +2921,7 @@ private:
 
         // Called on a potentially high-priority thread
         void handle_event(transwarp::event_type, const std::shared_ptr<transwarp::node>& node) override {
-            std::lock_guard<spinlock> lock(pool_.spinlock_);
+            std::lock_guard<transwarp::detail::spinlock> lock(pool_.spinlock_);
             pool_.finished_.push(node);
         }
 
@@ -2909,11 +2938,94 @@ private:
     std::function<std::shared_ptr<Graph>()> generator_;
     std::size_t minimum_;
     std::size_t maximum_;
-    mutable spinlock spinlock_; // protecting finished_
+    mutable transwarp::detail::spinlock spinlock_; // protecting finished_
     transwarp::detail::circular_buffer<std::shared_ptr<transwarp::node>> finished_;
     std::queue<std::shared_ptr<Graph>> idle_;
     std::unordered_map<std::shared_ptr<transwarp::node>, std::shared_ptr<Graph>> busy_;
     std::shared_ptr<transwarp::listener> listener_{new finished_listener(*this)};
+};
+
+
+/// A timer that tracks the average waittime and runtime of each task it listens to
+class timer : public transwarp::listener {
+public:
+    timer() = default;
+
+    // delete copy/move semantics
+    timer(const timer&) = delete;
+    timer& operator=(const timer&) = delete;
+    timer(timer&&) = delete;
+    timer& operator=(timer&&) = delete;
+
+    /// Performs the actual timing and populates the node's average waittime and runtime member
+    void handle_event(transwarp::event_type event, const std::shared_ptr<transwarp::node>& node) override {
+
+        auto track_waittime = [this](const std::shared_ptr<transwarp::node>& node, const std::chrono::time_point<std::chrono::steady_clock>& now)
+        {
+            std::int64_t avg_waittime_us;
+            {
+                std::lock_guard<transwarp::detail::spinlock> lock(spinlock_);
+                auto& track = tracks_[node];
+                track.waittime += std::chrono::duration_cast<std::chrono::microseconds>(now - track.startwait).count();
+                ++track.waitcount;
+                avg_waittime_us = static_cast<std::int64_t>(track.waittime / track.waitcount);
+            }
+            transwarp::detail::node_manip::set_avg_waittime_us(*node, avg_waittime_us);
+        };
+
+        if (event == transwarp::event_type::before_started) {
+            const std::chrono::time_point<std::chrono::steady_clock> now = std::chrono::steady_clock::now();
+            std::lock_guard<transwarp::detail::spinlock> lock(spinlock_);
+            auto& track = tracks_[node];
+            track.startwait = now;
+        } else if (event == transwarp::event_type::after_canceled) {
+            const std::chrono::time_point<std::chrono::steady_clock> now = std::chrono::steady_clock::now();
+            track_waittime(node, now);
+        } else if (event == transwarp::event_type::before_invoked) {
+            const std::chrono::time_point<std::chrono::steady_clock> now = std::chrono::steady_clock::now();
+            track_waittime(node, now);
+            std::lock_guard<transwarp::detail::spinlock> lock(spinlock_);
+            auto& track = tracks_[node];
+            track.running = true;
+            track.startrun = now;
+        } else if (event == transwarp::event_type::after_finished) {
+            const std::chrono::time_point<std::chrono::steady_clock> now = std::chrono::steady_clock::now();
+            std::int64_t avg_runtime_us;
+            {
+                std::lock_guard<transwarp::detail::spinlock> lock(spinlock_);
+                auto& track = tracks_[node];
+                if (!track.running) {
+                    return;
+                }
+                track.running = false;
+                track.runtime += std::chrono::duration_cast<std::chrono::microseconds>(now - track.startrun).count();
+                ++track.runcount;
+                avg_runtime_us = static_cast<std::int64_t>(track.runtime / track.runcount);
+            }
+            transwarp::detail::node_manip::set_avg_runtime_us(*node, avg_runtime_us);
+        }
+    }
+
+    /// Resets all timing information
+    void reset() {
+        std::lock_guard<transwarp::detail::spinlock> lock(spinlock_);
+        tracks_.clear();
+    }
+
+private:
+
+    struct track {
+        bool running = false;
+        std::chrono::time_point<std::chrono::steady_clock> startwait;
+        std::chrono::time_point<std::chrono::steady_clock> startrun;
+        std::chrono::microseconds::rep waittime = 0;
+        std::chrono::microseconds::rep waitcount = 0;
+        std::chrono::microseconds::rep runtime = 0;
+        std::chrono::microseconds::rep runcount = 0;
+    };
+
+    transwarp::detail::spinlock spinlock_; // protecting tracks_
+    std::unordered_map<std::shared_ptr<transwarp::node>, track> tracks_;
 };
 
 

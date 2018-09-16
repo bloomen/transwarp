@@ -107,6 +107,7 @@ namespace examples {
 // This example computes statistical key measures from numbers sampled
 // from a gamma distribution. The example computes average, standard deviation,
 // median, and mode for varying values of alpha and beta.
+// This example also demonstrates how tasks can be timed (see tw::timer).
 void statistical_key_facts(std::ostream& os, std::size_t sample_size, bool parallel) {
     os.precision(3);
 
@@ -116,9 +117,8 @@ void statistical_key_facts(std::ostream& os, std::size_t sample_size, bool paral
     // Building the graph and retrieving the final task
     auto final_task = build_graph(sample_size, alpha, beta);
 
-    // Output the graph for visualization
-    const auto graph = final_task->get_graph();
-    std::ofstream("statistical_key_facts.dot") << tw::to_string(graph);
+    // Adds a timer to all tasks in the graph
+    final_task->add_listener_all(std::make_shared<tw::timer>());
 
     // Creating the executor
     std::shared_ptr<tw::executor> executor;
@@ -140,6 +140,9 @@ void statistical_key_facts(std::ostream& os, std::size_t sample_size, bool paral
         ++count;
     }
 
+    // Output the graph for visualization
+    const auto graph = final_task->get_graph();
+    std::ofstream("statistical_key_facts.dot") << tw::to_string(graph);
 }
 
 }

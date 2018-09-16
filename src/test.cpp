@@ -290,11 +290,13 @@ TEST_CASE("make_dot_graph_with_three_nodes") {
     tw::detail::node_manip::set_type(*node2, tw::task_type::consume);
     tw::detail::node_manip::set_name(*node2, std::make_shared<std::string>("node2"));
     tw::detail::node_manip::set_id(*node2, 1);
+    tw::detail::node_manip::set_avg_runtime_us(*node2, 42);
     auto node3 = std::make_shared<tw::node>();
     tw::detail::node_manip::set_type(*node3, tw::task_type::wait);
     tw::detail::node_manip::set_name(*node3, std::make_shared<std::string>("node3"));
     tw::detail::node_manip::set_id(*node3, 2);
     tw::detail::node_manip::set_executor(*node3, std::make_shared<std::string>("exec"));
+    tw::detail::node_manip::set_avg_waittime_us(*node3, 43);
     auto node1 = std::make_shared<tw::node>();
     tw::detail::node_manip::set_type(*node1, tw::task_type::consume);
     tw::detail::node_manip::set_name(*node1, std::make_shared<std::string>("node1"));
@@ -308,10 +310,10 @@ TEST_CASE("make_dot_graph_with_three_nodes") {
     const auto dot_graph = tw::to_string(graph);
     const std::string exp_dot_graph = "digraph {\n"
 "\"<node2>\nconsume "
-"id=1 lev=0\" -> \"<node1>\nconsume "
+"id=1 lev=0\navg-runtime-us=42\" -> \"<node1>\nconsume "
 "id=0 lev=1\"\n"
 "\"<node3>\nwait "
-"id=2 lev=0\n<exec>\" -> \"<node1>\nconsume "
+"id=2 lev=0\n<exec>\navg-waittime-us=43\" -> \"<node1>\nconsume "
 "id=0 lev=1\"\n"
 "}";
 
