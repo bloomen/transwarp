@@ -345,10 +345,16 @@ public:
     virtual const std::shared_ptr<transwarp::node>& get_node() const noexcept = 0;
     virtual void add_listener(std::shared_ptr<transwarp::listener> listener) = 0;
     virtual void add_listener(transwarp::event_type event, std::shared_ptr<transwarp::listener> listener) = 0;
+    virtual void add_listener_all(std::shared_ptr<transwarp::listener> listener) = 0;
+    virtual void add_listener_all(transwarp::event_type event, std::shared_ptr<transwarp::listener> listener) = 0;
     virtual void remove_listener(const std::shared_ptr<transwarp::listener>& listener) = 0;
     virtual void remove_listener(transwarp::event_type event, const std::shared_ptr<transwarp::listener>& listener) = 0;
-    virtual void remove_listeners(transwarp::event_type event) = 0;
+    virtual void remove_listener_all(const std::shared_ptr<transwarp::listener>& listener) = 0;
+    virtual void remove_listener_all(transwarp::event_type event, const std::shared_ptr<transwarp::listener>& listener) = 0;
     virtual void remove_listeners() = 0;
+    virtual void remove_listeners(transwarp::event_type event) = 0;
+    virtual void remove_listeners_all() = 0;
+    virtual void remove_listeners_all(transwarp::event_type event) = 0;
     virtual void schedule() = 0;
     virtual void schedule(transwarp::executor& executor) = 0;
     virtual void schedule(bool reset) = 0;
@@ -1124,6 +1130,82 @@ struct push_task_visitor {
     std::vector<transwarp::itask*>& tasks_;
 };
 
+/// Adds a new listener to the given task
+struct add_listener_visitor {
+    explicit add_listener_visitor(std::shared_ptr<transwarp::listener> listener)
+    : listener_(std::move(listener))
+    {}
+
+    void operator()(transwarp::itask& task) {
+        task.add_listener(listener_);
+    }
+
+    std::shared_ptr<transwarp::listener> listener_;
+};
+
+/// Adds a new listener per event type to the given task
+struct add_listener_per_event_visitor {
+    add_listener_per_event_visitor(transwarp::event_type event, std::shared_ptr<transwarp::listener> listener)
+    : event_(event), listener_(std::move(listener))
+    {}
+
+    void operator()(transwarp::itask& task) {
+        task.add_listener(event_, listener_);
+    }
+
+    transwarp::event_type event_;
+    std::shared_ptr<transwarp::listener> listener_;
+};
+
+/// Removes a listener from the given task
+struct remove_listener_visitor {
+    explicit remove_listener_visitor(std::shared_ptr<transwarp::listener> listener)
+    : listener_(std::move(listener))
+    {}
+
+    void operator()(transwarp::itask& task) {
+        task.remove_listener(listener_);
+    }
+
+    std::shared_ptr<transwarp::listener> listener_;
+};
+
+/// Removes a listener per event type from the given task
+struct remove_listener_per_event_visitor {
+    remove_listener_per_event_visitor(transwarp::event_type event, std::shared_ptr<transwarp::listener> listener)
+    : event_(event), listener_(std::move(listener))
+    {}
+
+    void operator()(transwarp::itask& task) {
+        task.remove_listener(event_, listener_);
+    }
+
+    transwarp::event_type event_;
+    std::shared_ptr<transwarp::listener> listener_;
+};
+
+/// Removes all listeners from the given task
+struct remove_listeners_visitor {
+
+    void operator()(transwarp::itask& task) {
+        task.remove_listeners();
+    }
+
+};
+
+/// Removes all listeners per event type from the given task
+struct remove_listeners_per_event_visitor {
+    explicit remove_listeners_per_event_visitor(transwarp::event_type event)
+    : event_(event)
+    {}
+
+    void operator()(transwarp::itask& task) {
+        task.remove_listeners(event_);
+    }
+
+    transwarp::event_type event_;
+};
+
 /// Visits the given task using the visitor given in the constructor
 struct visit_depth {
     explicit visit_depth(const std::function<void(transwarp::itask&)>& visitor) noexcept
@@ -1664,6 +1746,20 @@ public:
         listeners_[get_event_index(event)].push_back(std::move(listener));
     }
 
+    /// Adds a new listener for all event types and for all parents
+    void add_listener_all(std::shared_ptr<transwarp::listener> listener) override {
+        ensure_task_not_running();
+        transwarp::detail::add_listener_visitor visitor(std::move(listener));
+        visit_depth_all(visitor);
+    }
+
+    /// Adds a new listener for the given event type only and for all parents
+    void add_listener_all(transwarp::event_type event, std::shared_ptr<transwarp::listener> listener) override {
+        ensure_task_not_running();
+        transwarp::detail::add_listener_per_event_visitor visitor(event, std::move(listener));
+        visit_depth_all(visitor);
+    }
+
     /// Removes the listener for all event types
     void remove_listener(const std::shared_ptr<transwarp::listener>& listener) override {
         ensure_task_not_running();
@@ -1681,10 +1777,18 @@ public:
         l.erase(std::remove(l.begin(), l.end(), listener), l.end());
     }
 
-    /// Removes all listeners for the given event type
-    void remove_listeners(transwarp::event_type event) override {
+    /// Removes the listener for all event types and for all parents
+    void remove_listener_all(const std::shared_ptr<transwarp::listener>& listener) override {
         ensure_task_not_running();
-        listeners_[get_event_index(event)].clear();
+        transwarp::detail::remove_listener_visitor visitor(std::move(listener));
+        visit_depth_all(visitor);
+    }
+
+    /// Removes the listener for the given event type only and for all parents
+    void remove_listener_all(transwarp::event_type event, const std::shared_ptr<transwarp::listener>& listener) override {
+        ensure_task_not_running();
+        transwarp::detail::remove_listener_per_event_visitor visitor(event, std::move(listener));
+        visit_depth_all(visitor);
     }
 
     /// Removes all listeners
@@ -1693,6 +1797,26 @@ public:
         for (std::vector<std::shared_ptr<transwarp::listener>>& l : listeners_) {
             l.clear();
         }
+    }
+
+    /// Removes all listeners for the given event type
+    void remove_listeners(transwarp::event_type event) override {
+        ensure_task_not_running();
+        listeners_[get_event_index(event)].clear();
+    }
+
+    /// Removes all listeners and for all parents
+    void remove_listeners_all() override {
+        ensure_task_not_running();
+        transwarp::detail::remove_listeners_visitor visitor;
+        visit_depth_all(visitor);
+    }
+
+    /// Removes all listeners for the given event type and for all parents
+    void remove_listeners_all(transwarp::event_type event) override {
+        ensure_task_not_running();
+        transwarp::detail::remove_listeners_per_event_visitor visitor(event);
+        visit_depth_all(visitor);
     }
 
     /// Schedules this task for execution on the caller thread.
@@ -2382,16 +2506,34 @@ public:
     void add_listener(transwarp::event_type, std::shared_ptr<transwarp::listener>) override {}
 
     /// No-op because a value task doesn't raise events
+    void add_listener_all(std::shared_ptr<transwarp::listener>) override {}
+
+    /// No-op because a value task doesn't raise events
+    void add_listener_all(transwarp::event_type, std::shared_ptr<transwarp::listener>) override {}
+
+    /// No-op because a value task doesn't raise events
     void remove_listener(const std::shared_ptr<transwarp::listener>&) override {}
 
     /// No-op because a value task doesn't raise events
     void remove_listener(transwarp::event_type, const std::shared_ptr<transwarp::listener>&) override {}
 
     /// No-op because a value task doesn't raise events
-    void remove_listeners(transwarp::event_type) override {}
+    void remove_listener_all(const std::shared_ptr<transwarp::listener>&) override {}
+
+    /// No-op because a value task doesn't raise events
+    void remove_listener_all(transwarp::event_type, const std::shared_ptr<transwarp::listener>&) override {}
 
     /// No-op because a value task doesn't raise events
     void remove_listeners() override {}
+
+    /// No-op because a value task doesn't raise events
+    void remove_listeners(transwarp::event_type) override {}
+
+    /// No-op because a value task doesn't raise events
+    void remove_listeners_all() override {}
+
+    /// No-op because a value task doesn't raise events
+    void remove_listeners_all(transwarp::event_type) override {}
 
     /// No-op because a value task never runs
     void schedule() override {}

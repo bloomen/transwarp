@@ -1487,6 +1487,43 @@ TEST_CASE("add_remove_listener") {
     REQUIRE(1 == l2.use_count());
 }
 
+TEST_CASE("add_remove_listener_all") {
+    auto t1 = tw::make_task(tw::root, []{});
+    auto t2 = tw::make_task(tw::root, []{});
+    auto t3 = tw::make_task(tw::wait, []{}, t1, t2);
+    auto l1 = std::make_shared<mock_listener>();
+    t3->add_listener_all(l1);
+    REQUIRE(1 + 3*n_events == l1.use_count());
+    t3->remove_listener_all(l1);
+    REQUIRE(1 == l1.use_count());
+}
+
+TEST_CASE("add_remove_listener_per_event_all") {
+    auto t1 = tw::make_task(tw::root, []{});
+    auto t2 = tw::make_task(tw::root, []{});
+    auto t3 = tw::make_task(tw::wait, []{}, t1, t2);
+    auto l1 = std::make_shared<mock_listener>();
+    t3->add_listener_all(transwarp::event_type::before_started, l1);
+    REQUIRE(1 + 3 == l1.use_count());
+    t3->remove_listener_all(transwarp::event_type::after_finished, l1);
+    REQUIRE(1 + 3 == l1.use_count());
+    t3->remove_listener_all(transwarp::event_type::before_started, l1);
+    REQUIRE(1 == l1.use_count());
+}
+
+TEST_CASE("add_remove_listeners_all") {
+    auto t1 = tw::make_task(tw::root, []{});
+    auto t2 = tw::make_task(tw::root, []{});
+    auto t3 = tw::make_task(tw::wait, []{}, t1, t2);
+    auto l1 = std::make_shared<mock_listener>();
+    t3->add_listener_all(l1);
+    REQUIRE(1 + 3*n_events == l1.use_count());
+    t3->remove_listeners_all(transwarp::event_type::after_finished);
+    REQUIRE(1 + 3*(n_events-1) == l1.use_count());
+    t3->remove_listeners_all();
+    REQUIRE(1 == l1.use_count());
+}
+
 TEST_CASE("scheduled_event") {
     auto t = tw::make_task(tw::root, []{});
     auto l = std::make_shared<mock_listener>();
