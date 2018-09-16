@@ -184,10 +184,13 @@ Classes</h2></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">A value task that stores a single value and doesn't require scheduling. Value tasks should be created using the make_value_task factory functions.  <a href="classtranswarp_1_1value__task.html#details">More...</a><br/></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1graph.html">graph</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">A graph interface giving access to the final task as required by <a class="el" href="classtranswarp_1_1graph__pool.html" title="A graph pool that allows running multiple instances of the same graph in parallel. ">transwarp::graph_pool</a>.  <a href="classtranswarp_1_1graph.html#details">More...</a><br/></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">A graph interface giving access to the final task as required by <a class="el" href="classtranswarp_1_1graph__pool.html" title="A graph pool that allows running multiple instances of the same graph in parallel. Graph must be a sub-class of transwarp::graph. ">transwarp::graph_pool</a>.  <a href="classtranswarp_1_1graph.html#details">More...</a><br/></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1graph__pool.html">graph_pool</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">A graph pool that allows running multiple instances of the same graph in parallel.  <a href="classtranswarp_1_1graph__pool.html#details">More...</a><br/></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">A graph pool that allows running multiple instances of the same graph in parallel. Graph must be a sub-class of <a class="el" href="classtranswarp_1_1graph.html" title="A graph interface giving access to the final task as required by transwarp::graph_pool. ">transwarp::graph</a>.  <a href="classtranswarp_1_1graph__pool.html#details">More...</a><br/></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1timer.html">timer</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">A timer that tracks the average waittime and runtime of each task it listens to.  <a href="classtranswarp_1_1timer.html#details">More...</a><br/></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="enum-members"></a>
@@ -229,10 +232,10 @@ Functions</h2></td></tr>
 std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacetranswarp.html#ab7cae8c7d0267dd51406f77f69697c3b">to_string</a> (const <a class="el" href="namespacetranswarp.html#a10f2b2567332cf9514d4c366c1cc5a5e">transwarp::task_type</a> &amp;type)</td></tr>
 <tr class="memdesc:ab7cae8c7d0267dd51406f77f69697c3b"><td class="mdescLeft">&#160;</td><td class="mdescRight">String conversion for the task_type enumeration. <br/></td></tr>
 <tr class="separator:ab7cae8c7d0267dd51406f77f69697c3b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2d9c9675c44a22cb818d450620606163"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a2d9c9675c44a22cb818d450620606163"></a>
-std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacetranswarp.html#a2d9c9675c44a22cb818d450620606163">to_string</a> (const <a class="el" href="classtranswarp_1_1node.html">transwarp::node</a> &amp;<a class="el" href="classtranswarp_1_1node.html">node</a>, const std::string &amp;seperator=&quot;\n&quot;)</td></tr>
-<tr class="memdesc:a2d9c9675c44a22cb818d450620606163"><td class="mdescLeft">&#160;</td><td class="mdescRight">String conversion for the node class. <br/></td></tr>
-<tr class="separator:a2d9c9675c44a22cb818d450620606163"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a28da1fe6230ae54e0d3552739185d0d5"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a28da1fe6230ae54e0d3552739185d0d5"></a>
+std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacetranswarp.html#a28da1fe6230ae54e0d3552739185d0d5">to_string</a> (const <a class="el" href="classtranswarp_1_1node.html">transwarp::node</a> &amp;<a class="el" href="classtranswarp_1_1node.html">node</a>, const std::string &amp;separator=&quot;\n&quot;)</td></tr>
+<tr class="memdesc:a28da1fe6230ae54e0d3552739185d0d5"><td class="mdescLeft">&#160;</td><td class="mdescRight">String conversion for the node class. <br/></td></tr>
+<tr class="separator:a28da1fe6230ae54e0d3552739185d0d5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a13e95277c8454385155c33f11b4cb576"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a13e95277c8454385155c33f11b4cb576"></a>
 std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacetranswarp.html#a13e95277c8454385155c33f11b4cb576">to_string</a> (const <a class="el" href="classtranswarp_1_1edge.html">transwarp::edge</a> &amp;<a class="el" href="classtranswarp_1_1edge.html">edge</a>, const std::string &amp;separator=&quot;\n&quot;)</td></tr>
 <tr class="memdesc:a13e95277c8454385155c33f11b4cb576"><td class="mdescLeft">&#160;</td><td class="mdescRight">String conversion for the edge class. <br/></td></tr>

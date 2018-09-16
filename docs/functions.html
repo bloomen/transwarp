@@ -116,7 +116,12 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <li>add_listener()
 : <a class="el" href="classtranswarp_1_1detail_1_1task__impl__base.html#a3384c87d59d2df37ffbea1c384e155a1">transwarp::detail::task_impl_base&lt; ResultType, TaskType, Functor, ParentResults &gt;</a>
 , <a class="el" href="classtranswarp_1_1value__task.html#a88b49a0de8c34696bc580d5c21efa72a">transwarp::value_task&lt; ResultType &gt;</a>
-, <a class="el" href="classtranswarp_1_1detail_1_1task__impl__base.html#a0ae1ead01e9871d503da7c3a4294fb08">transwarp::detail::task_impl_base&lt; ResultType, TaskType, Functor, ParentResults &gt;</a>
+</li>
+<li>add_listener_all()
+: <a class="el" href="classtranswarp_1_1detail_1_1task__impl__base.html#a882e36d39ab3be3ffa53451ec87f0672">transwarp::detail::task_impl_base&lt; ResultType, TaskType, Functor, ParentResults &gt;</a>
+, <a class="el" href="classtranswarp_1_1value__task.html#a3d61c4110c020961f12cdd46af3d88e1">transwarp::value_task&lt; ResultType &gt;</a>
+, <a class="el" href="classtranswarp_1_1detail_1_1task__impl__base.html#a97a7a1cb3f24f2d33c28b30596b0c7fb">transwarp::detail::task_impl_base&lt; ResultType, TaskType, Functor, ParentResults &gt;</a>
+, <a class="el" href="classtranswarp_1_1value__task.html#a0ffc41d47430403228cfe821c437e0a1">transwarp::value_task&lt; ResultType &gt;</a>
 </li>
 </ul>
 
@@ -166,7 +171,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 
 <h3><a class="anchor" id="index_f"></a>- f -</h3><ul>
 <li>final_task()
-: <a class="el" href="classtranswarp_1_1graph.html#a5b0ecf8ed188379cfb69914bf7ba0619">transwarp::graph&lt; FinalResultType &gt;</a>
+: <a class="el" href="classtranswarp_1_1graph.html#a045659374a29226ba4c0b68271332974">transwarp::graph&lt; ResultType &gt;</a>
 </li>
 <li>front()
 : <a class="el" href="classtranswarp_1_1detail_1_1circular__buffer.html#a5ca048e81e69165f28038e363f3d5675">transwarp::detail::circular_buffer&lt; ValueType &gt;</a>
@@ -183,6 +188,12 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 , <a class="el" href="classtranswarp_1_1detail_1_1task__impl__proxy_3_01ResultType_01_6_00_01TaskType_00_01Functor_00_01ParentResults_8_8_8_4.html#a06b88d154f3c5bcc4b999308ecbaf881">transwarp::detail::task_impl_proxy&lt; ResultType &amp;, TaskType, Functor, ParentResults...&gt;</a>
 , <a class="el" href="classtranswarp_1_1value__task.html#a0c9f54b8a56633fda406f72cda05ab6d">transwarp::value_task&lt; ResultType &gt;</a>
 , <a class="el" href="classtranswarp_1_1detail_1_1task__impl__proxy_3_01void_00_01TaskType_00_01Functor_00_01ParentResults_8_8_8_4.html#a31147b0e7cd49d8fff18c9c3055fc6b9">transwarp::detail::task_impl_proxy&lt; void, TaskType, Functor, ParentResults...&gt;</a>
+</li>
+<li>get_avg_runtime_us()
+: <a class="el" href="classtranswarp_1_1node.html#a4e6725df0b4f8096503441008a9638d5">transwarp::node</a>
+</li>
+<li>get_avg_waittime_us()
+: <a class="el" href="classtranswarp_1_1node.html#a6a290f3b3bbdf9ace374d7325d944587">transwarp::node</a>
 </li>
 <li>get_child()
 : <a class="el" href="classtranswarp_1_1edge.html#a3158f3179de9963acbc4f430c2f4bbde">transwarp::edge</a>
@@ -208,10 +219,10 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 : <a class="el" href="classtranswarp_1_1node.html#a68a7f5dde0317d04397fad57dcccd38e">transwarp::node</a>
 </li>
 <li>get_name()
-: <a class="el" href="classtranswarp_1_1executor.html#a0c093b29d240907be9887dadf04f101b">transwarp::executor</a>
+: <a class="el" href="classtranswarp_1_1node.html#a2306f3e676c0fe33c5486fbda4343616">transwarp::node</a>
+, <a class="el" href="classtranswarp_1_1executor.html#a0c093b29d240907be9887dadf04f101b">transwarp::executor</a>
 , <a class="el" href="classtranswarp_1_1sequential.html#a7717c110a9090a6e4cdbdc1418974e56">transwarp::sequential</a>
 , <a class="el" href="classtranswarp_1_1parallel.html#a2be1199c6959c0b25a80c0591e2f0cc2">transwarp::parallel</a>
-, <a class="el" href="classtranswarp_1_1node.html#a2306f3e676c0fe33c5486fbda4343616">transwarp::node</a>
 </li>
 <li>get_node()
 : <a class="el" href="classtranswarp_1_1detail_1_1task__impl__base.html#a2d56bce351de07f2c73eb6bfc637e845">transwarp::detail::task_impl_base&lt; ResultType, TaskType, Functor, ParentResults &gt;</a>
@@ -238,10 +249,11 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <h3><a class="anchor" id="index_h"></a>- h -</h3><ul>
 <li>handle_event()
 : <a class="el" href="classtranswarp_1_1listener.html#a4f1a77e32a61ca58992f00ab0b9e9162">transwarp::listener</a>
+, <a class="el" href="classtranswarp_1_1timer.html#adb7a2f7120d9a0ae99568c27b0fb2183">transwarp::timer</a>
 </li>
 <li>has_result()
-: <a class="el" href="classtranswarp_1_1value__task.html#add8e0b6bb925bc4cb38e5477db340902">transwarp::value_task&lt; ResultType &gt;</a>
-, <a class="el" href="classtranswarp_1_1detail_1_1task__impl__base.html#ac352cbb81a05f85c16ee5dac3c5ae9dc">transwarp::detail::task_impl_base&lt; ResultType, TaskType, Functor, ParentResults &gt;</a>
+: <a class="el" href="classtranswarp_1_1detail_1_1task__impl__base.html#ac352cbb81a05f85c16ee5dac3c5ae9dc">transwarp::detail::task_impl_base&lt; ResultType, TaskType, Functor, ParentResults &gt;</a>
+, <a class="el" href="classtranswarp_1_1value__task.html#add8e0b6bb925bc4cb38e5477db340902">transwarp::value_task&lt; ResultType &gt;</a>
 </li>
 </ul>
 
@@ -318,13 +330,22 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 : <a class="el" href="classtranswarp_1_1detail_1_1task__impl__base.html#ad87903d77e26f66ae0164a3257bc21e9">transwarp::detail::task_impl_base&lt; ResultType, TaskType, Functor, ParentResults &gt;</a>
 , <a class="el" href="classtranswarp_1_1value__task.html#a0ab1a6d2173c9a5a14f00fd7b77d5625">transwarp::value_task&lt; ResultType &gt;</a>
 </li>
+<li>remove_listener_all()
+: <a class="el" href="classtranswarp_1_1value__task.html#abc8c10caecc5d2608d9ab42744441776">transwarp::value_task&lt; ResultType &gt;</a>
+, <a class="el" href="classtranswarp_1_1detail_1_1task__impl__base.html#a59a726d9c146ae248b6c0cd3f5e21c73">transwarp::detail::task_impl_base&lt; ResultType, TaskType, Functor, ParentResults &gt;</a>
+</li>
 <li>remove_listeners()
-: <a class="el" href="classtranswarp_1_1value__task.html#a1b8e521bf79836e6bdfc040a51c5005e">transwarp::value_task&lt; ResultType &gt;</a>
-, <a class="el" href="classtranswarp_1_1detail_1_1task__impl__base.html#a468263bff43a2fcc59450f62e940cfb9">transwarp::detail::task_impl_base&lt; ResultType, TaskType, Functor, ParentResults &gt;</a>
+: <a class="el" href="classtranswarp_1_1detail_1_1task__impl__base.html#ae62d3195292e9850d01a199c28bc548f">transwarp::detail::task_impl_base&lt; ResultType, TaskType, Functor, ParentResults &gt;</a>
+, <a class="el" href="classtranswarp_1_1value__task.html#a8a9f474592f68da13e85a3ab5fe5b579">transwarp::value_task&lt; ResultType &gt;</a>
+</li>
+<li>remove_listeners_all()
+: <a class="el" href="classtranswarp_1_1detail_1_1task__impl__base.html#a8c20f81b19b8693c3144998ad178f15f">transwarp::detail::task_impl_base&lt; ResultType, TaskType, Functor, ParentResults &gt;</a>
+, <a class="el" href="classtranswarp_1_1value__task.html#a9a88cd8504f36869f7283e2552ed81a5">transwarp::value_task&lt; ResultType &gt;</a>
 </li>
 <li>reset()
 : <a class="el" href="classtranswarp_1_1detail_1_1task__impl__base.html#ae9395346d257ac48c5dc807681bc0859">transwarp::detail::task_impl_base&lt; ResultType, TaskType, Functor, ParentResults &gt;</a>
 , <a class="el" href="classtranswarp_1_1value__task.html#aaabba1c76cb65b138157a367e9403df5">transwarp::value_task&lt; ResultType &gt;</a>
+, <a class="el" href="classtranswarp_1_1timer.html#a8dccb75290dfe52e3f64bc06989e5738">transwarp::timer</a>
 </li>
 <li>reset_all()
 : <a class="el" href="classtranswarp_1_1detail_1_1task__impl__base.html#afc2bb4a5017de5ddd00425fd51ae5d14">transwarp::detail::task_impl_base&lt; ResultType, TaskType, Functor, ParentResults &gt;</a>
@@ -342,12 +363,12 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 : <a class="el" href="classtranswarp_1_1graph__pool.html#aef63bfb345b1d2fb65377593cd2b2ba3">transwarp::graph_pool&lt; Graph &gt;</a>
 </li>
 <li>result_type
-: <a class="el" href="classtranswarp_1_1detail_1_1task__impl__proxy_3_01ResultType_01_6_00_01TaskType_00_01Functor_00_01ParentResults_8_8_8_4.html#a11f34fe35dc1f7912e79441c94370124">transwarp::detail::task_impl_proxy&lt; ResultType &amp;, TaskType, Functor, ParentResults...&gt;</a>
-, <a class="el" href="classtranswarp_1_1task__impl.html#ad9c8f46fd039b42c33c407076cacd58d">transwarp::task_impl&lt; TaskType, Functor, ParentResults &gt;</a>
-, <a class="el" href="classtranswarp_1_1detail_1_1task__impl__base.html#a9ae1931585a8304aaa172c74d06bf8f3">transwarp::detail::task_impl_base&lt; ResultType, TaskType, Functor, ParentResults &gt;</a>
+: <a class="el" href="classtranswarp_1_1value__task.html#ae50370afa016049320bccf5073db808d">transwarp::value_task&lt; ResultType &gt;</a>
 , <a class="el" href="classtranswarp_1_1detail_1_1task__impl__proxy.html#a2b947ffb7d999d701885098b0fd0d8b1">transwarp::detail::task_impl_proxy&lt; ResultType, TaskType, Functor, ParentResults &gt;</a>
+, <a class="el" href="classtranswarp_1_1task__impl.html#ad9c8f46fd039b42c33c407076cacd58d">transwarp::task_impl&lt; TaskType, Functor, ParentResults &gt;</a>
+, <a class="el" href="classtranswarp_1_1detail_1_1task__impl__proxy_3_01ResultType_01_6_00_01TaskType_00_01Functor_00_01ParentResults_8_8_8_4.html#a11f34fe35dc1f7912e79441c94370124">transwarp::detail::task_impl_proxy&lt; ResultType &amp;, TaskType, Functor, ParentResults...&gt;</a>
 , <a class="el" href="classtranswarp_1_1detail_1_1task__impl__proxy_3_01void_00_01TaskType_00_01Functor_00_01ParentResults_8_8_8_4.html#a0f9f7fb59ae39d4039f91b2701d7d4a1">transwarp::detail::task_impl_proxy&lt; void, TaskType, Functor, ParentResults...&gt;</a>
-, <a class="el" href="classtranswarp_1_1value__task.html#ae50370afa016049320bccf5073db808d">transwarp::value_task&lt; ResultType &gt;</a>
+, <a class="el" href="classtranswarp_1_1detail_1_1task__impl__base.html#a9ae1931585a8304aaa172c74d06bf8f3">transwarp::detail::task_impl_base&lt; ResultType, TaskType, Functor, ParentResults &gt;</a>
 </li>
 </ul>
 

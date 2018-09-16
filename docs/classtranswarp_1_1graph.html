@@ -4,7 +4,7 @@
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.5"/>
-<title>transwarp: transwarp::graph&lt; FinalResultType &gt; Class Template Reference</title>
+<title>transwarp: transwarp::graph&lt; ResultType &gt; Class Template Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -87,32 +87,38 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 </div><!-- top -->
 <div class="header">
   <div class="summary">
+<a href="#pub-types">Public Types</a> &#124;
 <a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="classtranswarp_1_1graph-members.html">List of all members</a>  </div>
   <div class="headertitle">
-<div class="title">transwarp::graph&lt; FinalResultType &gt; Class Template Reference<span class="mlabels"><span class="mlabel">abstract</span></span></div>  </div>
+<div class="title">transwarp::graph&lt; ResultType &gt; Class Template Reference<span class="mlabels"><span class="mlabel">abstract</span></span></div>  </div>
 </div><!--header-->
 <div class="contents">
 
-<p>A graph interface giving access to the final task as required by <a class="el" href="classtranswarp_1_1graph__pool.html" title="A graph pool that allows running multiple instances of the same graph in parallel. ">transwarp::graph_pool</a>.  
+<p>A graph interface giving access to the final task as required by <a class="el" href="classtranswarp_1_1graph__pool.html" title="A graph pool that allows running multiple instances of the same graph in parallel. Graph must be a sub-class of transwarp::graph. ">transwarp::graph_pool</a>.  
  <a href="classtranswarp_1_1graph.html#details">More...</a></p>
 
 <p><code>#include &lt;<a class="el" href="transwarp_8h_source.html">transwarp.h</a>&gt;</code></p>
 <table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-types"></a>
+Public Types</h2></td></tr>
+<tr class="memitem:a070ec5a1968d2b8602066b65971be0c6"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a070ec5a1968d2b8602066b65971be0c6"></a>
+using&#160;</td><td class="memItemRight" valign="bottom"><b>result_type</b> = ResultType</td></tr>
+<tr class="separator:a070ec5a1968d2b8602066b65971be0c6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a5b0ecf8ed188379cfb69914bf7ba0619"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a5b0ecf8ed188379cfb69914bf7ba0619"></a>
+<tr class="memitem:a045659374a29226ba4c0b68271332974"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a045659374a29226ba4c0b68271332974"></a>
 virtual const std::shared_ptr<br class="typebreak"/>
-&lt; <a class="el" href="classtranswarp_1_1task.html">transwarp::task</a><br class="typebreak"/>
-&lt; FinalResultType &gt; &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1graph.html#a5b0ecf8ed188379cfb69914bf7ba0619">final_task</a> () const =0</td></tr>
-<tr class="memdesc:a5b0ecf8ed188379cfb69914bf7ba0619"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the final task of the graph. <br/></td></tr>
-<tr class="separator:a5b0ecf8ed188379cfb69914bf7ba0619"><td class="memSeparator" colspan="2">&#160;</td></tr>
+&lt; <a class="el" href="classtranswarp_1_1task.html">transwarp::task</a>&lt; result_type &gt; &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1graph.html#a045659374a29226ba4c0b68271332974">final_task</a> () const =0</td></tr>
+<tr class="memdesc:a045659374a29226ba4c0b68271332974"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the final task of the graph. <br/></td></tr>
+<tr class="separator:a045659374a29226ba4c0b68271332974"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><h3>template&lt;typename FinalResultType&gt;<br/>
-class transwarp::graph&lt; FinalResultType &gt;</h3>
+<div class="textblock"><h3>template&lt;typename ResultType&gt;<br/>
+class transwarp::graph&lt; ResultType &gt;</h3>
 
-<p>A graph interface giving access to the final task as required by <a class="el" href="classtranswarp_1_1graph__pool.html" title="A graph pool that allows running multiple instances of the same graph in parallel. ">transwarp::graph_pool</a>. </p>
+<p>A graph interface giving access to the final task as required by <a class="el" href="classtranswarp_1_1graph__pool.html" title="A graph pool that allows running multiple instances of the same graph in parallel. Graph must be a sub-class of transwarp::graph. ">transwarp::graph_pool</a>. </p>
 </div><hr/>The documentation for this class was generated from the following file:<ul>
 <li>src/<a class="el" href="transwarp_8h_source.html">transwarp.h</a></li>
 </ul>

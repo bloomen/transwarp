@@ -4,7 +4,7 @@
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.5"/>
-<title>transwarp: transwarp::listener Class Reference</title>
+<title>transwarp: Member List</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -82,45 +82,21 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 
 <div id="nav-path" class="navpath">
   <ul>
-<li class="navelem"><a class="el" href="namespacetranswarp.html">transwarp</a></li><li class="navelem"><a class="el" href="classtranswarp_1_1listener.html">listener</a></li>  </ul>
+<li class="navelem"><a class="el" href="namespacetranswarp.html">transwarp</a></li><li class="navelem"><a class="el" href="namespacetranswarp_1_1detail.html">detail</a></li><li class="navelem"><a class="el" href="structtranswarp_1_1detail_1_1remove__listener__visitor.html">remove_listener_visitor</a></li>  </ul>
 </div>
 </div><!-- top -->
 <div class="header">
-  <div class="summary">
-<a href="#pub-methods">Public Member Functions</a> &#124;
-<a href="classtranswarp_1_1listener-members.html">List of all members</a>  </div>
   <div class="headertitle">
-<div class="title">transwarp::listener Class Reference<span class="mlabels"><span class="mlabel">abstract</span></span></div>  </div>
+<div class="title">transwarp::detail::remove_listener_visitor Member List</div>  </div>
 </div><!--header-->
 <div class="contents">
 
-<p>The listener interface to listen to events raised by tasks.  
- <a href="classtranswarp_1_1listener.html#details">More...</a></p>
-
-<p><code>#include &lt;<a class="el" href="transwarp_8h_source.html">transwarp.h</a>&gt;</code></p>
-<div class="dynheader">
-Inheritance diagram for transwarp::listener:</div>
-<div class="dyncontent">
- <div class="center">
-  <img src="classtranswarp_1_1listener.png" usemap="#transwarp::listener_map" alt=""/>
-  <map id="transwarp::listener_map" name="transwarp::listener_map">
-<area href="classtranswarp_1_1timer.html" title="A timer that tracks the average waittime and runtime of each task it listens to. " alt="transwarp::timer" shape="rect" coords="0,56,115,80"/>
-</map>
- </div></div>
-<table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
-Public Member Functions</h2></td></tr>
-<tr class="memitem:a4f1a77e32a61ca58992f00ab0b9e9162"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a4f1a77e32a61ca58992f00ab0b9e9162"></a>
-virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1listener.html#a4f1a77e32a61ca58992f00ab0b9e9162">handle_event</a> (<a class="el" href="namespacetranswarp.html#a857009a6efbb2f34495ee81664a376dc">transwarp::event_type</a> event, const std::shared_ptr&lt; <a class="el" href="classtranswarp_1_1node.html">transwarp::node</a> &gt; &amp;<a class="el" href="classtranswarp_1_1node.html">node</a>)=0</td></tr>
-<tr class="memdesc:a4f1a77e32a61ca58992f00ab0b9e9162"><td class="mdescLeft">&#160;</td><td class="mdescRight">This may be called from arbitrary threads depending on the event type (see <a class="el" href="namespacetranswarp.html#a857009a6efbb2f34495ee81664a376dc" title="The task events that can be subscribed to using the listener interface. ">transwarp::event_type</a>). The implementer needs to ensure that this never throws exceptions. <br/></td></tr>
-<tr class="separator:a4f1a77e32a61ca58992f00ab0b9e9162"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table>
-<a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p>The listener interface to listen to events raised by tasks. </p>
-</div><hr/>The documentation for this class was generated from the following file:<ul>
-<li>src/<a class="el" href="transwarp_8h_source.html">transwarp.h</a></li>
-</ul>
-</div><!-- contents -->
+<p>This is the complete list of members for <a class="el" href="structtranswarp_1_1detail_1_1remove__listener__visitor.html">transwarp::detail::remove_listener_visitor</a>, including all inherited members.</p>
+<table class="directory">
+  <tr bgcolor="#f0f0f0" class="even"><td class="entry"><b>listener_</b> (defined in <a class="el" href="structtranswarp_1_1detail_1_1remove__listener__visitor.html">transwarp::detail::remove_listener_visitor</a>)</td><td class="entry"><a class="el" href="structtranswarp_1_1detail_1_1remove__listener__visitor.html">transwarp::detail::remove_listener_visitor</a></td><td class="entry"></td></tr>
+  <tr bgcolor="#f0f0f0"><td class="entry"><b>operator()</b>(transwarp::itask &amp;task) (defined in <a class="el" href="structtranswarp_1_1detail_1_1remove__listener__visitor.html">transwarp::detail::remove_listener_visitor</a>)</td><td class="entry"><a class="el" href="structtranswarp_1_1detail_1_1remove__listener__visitor.html">transwarp::detail::remove_listener_visitor</a></td><td class="entry"><span class="mlabel">inline</span></td></tr>
+  <tr bgcolor="#f0f0f0" class="even"><td class="entry"><b>remove_listener_visitor</b>(std::shared_ptr&lt; transwarp::listener &gt; listener) (defined in <a class="el" href="structtranswarp_1_1detail_1_1remove__listener__visitor.html">transwarp::detail::remove_listener_visitor</a>)</td><td class="entry"><a class="el" href="structtranswarp_1_1detail_1_1remove__listener__visitor.html">transwarp::detail::remove_listener_visitor</a></td><td class="entry"><span class="mlabel">inline</span><span class="mlabel">explicit</span></td></tr>
+</table></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
 Generated by &#160;<a href="http://www.doxygen.org/index.html">
