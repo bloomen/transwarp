@@ -5,7 +5,7 @@ import os
 
 class TranswarpConan(ConanFile):
     name = "transwarp"
-    version = "1.7.0"
+    version = "1.8.0"
     description = "Conan package for bloomen/transwarp."
     url = "https://github.com/bloomen/transwarp"
     license = "MIT"

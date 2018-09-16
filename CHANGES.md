@@ -1,3 +1,9 @@
+1.8.0
+
+- added a timer that can be added as a listener (node will carry the timing info)
+- added methods to add/remove listeners to/from all tasks in the graph
+- improved documentation
+
 1.7.0
 
 - added a graph pool to run different instances of the same graph in parallel
