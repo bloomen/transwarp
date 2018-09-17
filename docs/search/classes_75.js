@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['unvisit',['unvisit',['../structtranswarp_1_1detail_1_1unvisit.html',1,'transwarp::detail']]]
+  ['unvisit_5fvisitor',['unvisit_visitor',['../structtranswarp_1_1detail_1_1unvisit__visitor.html',1,'transwarp::detail']]]
 ];
