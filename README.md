@@ -9,7 +9,7 @@
 [![Gitter](https://badges.gitter.im/bloomen/transwarp.svg)](https://gitter.im/bloomen/transwarp)
 
 transwarp is a header-only C++ library for task concurrency. It
-enables you to easily create a graph of tasks where every task can be executed
+allows you to easily create a graph of tasks where every task can be executed
 asynchronously. transwarp is designed for ease of use, portability, and
 scalability. It is written in C++11 and only depends on the standard
 library. Just copy `src/transwarp.h` to your project and off you go!
