@@ -81,7 +81,6 @@ struct result {
     double stddev;
 };
 
-// cppcheck-suppress unusedFunction
 std::ostream& operator<<(std::ostream& os, const result& r) {
     os << "avg=" << r.avg << ", stddev=" << r.stddev;
     return os;

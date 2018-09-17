@@ -34,10 +34,9 @@ struct graph : tw::graph<double> {
     std::shared_ptr<tw::task<data_t>> input;
     std::shared_ptr<tw::task<double>> final;
 
-    graph(std::shared_ptr<tw::task<data_t>> input,
-          std::shared_ptr<tw::task<double>> final)
-    : input(std::move(input)),
-      final(std::move(final))
+    // cppcheck-suppress passedByValue
+    graph(std::shared_ptr<tw::task<data_t>> input, std::shared_ptr<tw::task<double>> final)
+    : input(std::move(input)), final(std::move(final))
     {}
 
     const std::shared_ptr<transwarp::task<double>>& final_task() const override {

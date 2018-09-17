@@ -71,7 +71,6 @@ struct result {
     int mode;
 };
 
-// cppcheck-suppress unusedFunction
 std::ostream& operator<<(std::ostream& os, const result& r) {
     os << "avg=" << r.avg << ", stddev=" << r.stddev << ", median=" << r.median << ", mode=" << r.mode;
     return os;

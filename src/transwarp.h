@@ -131,8 +131,8 @@ constexpr transwarp::wait_any_type wait_any{}; ///< The wait_any task tag
 /// Detail namespace for internal functionality only
 namespace detail {
 
-struct visit_depth;
-struct unvisit;
+struct visit_depth_visitor;
+struct unvisit_visitor;
 struct final_visitor;
 struct schedule_visitor;
 struct node_manip;
@@ -256,7 +256,6 @@ inline std::string to_string(const transwarp::node& node, const std::string& sep
 /// An edge between two nodes
 class edge {
 public:
-    // cppcheck-suppress passedByValue
     edge(std::shared_ptr<transwarp::node> parent, std::shared_ptr<transwarp::node> child) noexcept
     : parent_(std::move(parent)), child_(std::move(child))
     {}
@@ -402,8 +401,8 @@ protected:
     virtual void schedule_impl(bool reset, transwarp::executor* executor=nullptr) = 0;
 
 private:
-    friend struct transwarp::detail::visit_depth;
-    friend struct transwarp::detail::unvisit;
+    friend struct transwarp::detail::visit_depth_visitor;
+    friend struct transwarp::detail::unvisit_visitor;
     friend struct transwarp::detail::final_visitor;
     friend struct transwarp::detail::schedule_visitor;
 
@@ -518,7 +517,7 @@ struct node_manip {
     }
 
     static void set_name(transwarp::node& node, std::shared_ptr<std::string> name) noexcept {
-        node.name_ = name;
+        node.name_ = std::move(name);
     }
 
     static void set_executor(transwarp::node& node, std::shared_ptr<std::string> executor) noexcept {
@@ -1235,8 +1234,8 @@ struct remove_listeners_per_event_visitor {
 };
 
 /// Visits the given task using the visitor given in the constructor
-struct visit_depth {
-    explicit visit_depth(const std::function<void(transwarp::itask&)>& visitor) noexcept
+struct visit_depth_visitor {
+    explicit visit_depth_visitor(const std::function<void(transwarp::itask&)>& visitor) noexcept
     : visitor_(visitor) {}
 
     void operator()(transwarp::itask& task) const {
@@ -1247,7 +1246,7 @@ struct visit_depth {
 };
 
 /// Unvisits the given task
-struct unvisit {
+struct unvisit_visitor {
 
     void operator()(transwarp::itask& task) const noexcept {
         task.unvisit();
@@ -1995,7 +1994,7 @@ public:
 
     /// Returns whether this task contains a result
     bool has_result() const noexcept override {
-        return was_scheduled() && is_ready();
+        return was_scheduled() && future_.wait_for(std::chrono::seconds(0)) == std::future_status::ready;
     }
 
     /// Resets this task
@@ -2041,7 +2040,6 @@ public:
 protected:
 
     template<typename F>
-    // cppcheck-suppress passedByValue
     task_impl_base(bool has_name, std::string name, F&& functor, std::shared_ptr<transwarp::task<ParentResults>>... parents)
     : node_(new transwarp::node),
       functor_(std::forward<F>(functor)),
@@ -2051,7 +2049,6 @@ protected:
     }
 
     template<typename F, typename P>
-    // cppcheck-suppress passedByValue
     task_impl_base(bool has_name, std::string name, F&& functor, std::vector<std::shared_ptr<transwarp::task<P>>> parents)
     : node_(new transwarp::node),
       functor_(std::forward<F>(functor)),
@@ -2182,7 +2179,7 @@ private:
     /// Visits each task in a depth-first traversal.
     void visit_depth(const std::function<void(transwarp::itask&)>& visitor) override {
         if (!visited_) {
-            transwarp::detail::call_with_each(transwarp::detail::visit_depth(visitor), parents_);
+            transwarp::detail::call_with_each(transwarp::detail::visit_depth_visitor(visitor), parents_);
             visitor(*this);
             visited_ = true;
         }
@@ -2192,7 +2189,7 @@ private:
     void unvisit() noexcept override {
         if (visited_) {
             visited_ = false;
-            transwarp::detail::call_with_each(transwarp::detail::unvisit(), parents_);
+            transwarp::detail::call_with_each(transwarp::detail::unvisit_visitor(), parents_);
         }
     }
 
@@ -2267,15 +2264,11 @@ public:
 protected:
 
     template<typename F>
-    // cppcheck-suppress passedByValue
-    // cppcheck-suppress uninitMemberVar
     task_impl_proxy(bool has_name, std::string name, F&& functor, std::shared_ptr<transwarp::task<ParentResults>>... parents)
     : transwarp::detail::task_impl_base<result_type, task_type, Functor, ParentResults...>(has_name, std::move(name), std::forward<F>(functor), std::move(parents)...)
     {}
 
     template<typename F, typename P>
-    // cppcheck-suppress passedByValue
-    // cppcheck-suppress uninitMemberVar
     task_impl_proxy(bool has_name, std::string name, F&& functor, std::vector<std::shared_ptr<transwarp::task<P>>> parents)
     : transwarp::detail::task_impl_base<result_type, task_type, Functor, ParentResults...>(has_name, std::move(name), std::forward<F>(functor), std::move(parents))
     {}
@@ -2311,15 +2304,11 @@ public:
 protected:
 
     template<typename F>
-    // cppcheck-suppress passedByValue
-    // cppcheck-suppress uninitMemberVar
     task_impl_proxy(bool has_name, std::string name, F&& functor, std::shared_ptr<transwarp::task<ParentResults>>... parents)
     : transwarp::detail::task_impl_base<result_type, task_type, Functor, ParentResults...>(has_name, std::move(name), std::forward<F>(functor), std::move(parents)...)
     {}
 
     template<typename F, typename P>
-    // cppcheck-suppress passedByValue
-    // cppcheck-suppress uninitMemberVar
     task_impl_proxy(bool has_name, std::string name, F&& functor, std::vector<std::shared_ptr<transwarp::task<P>>> parents)
     : transwarp::detail::task_impl_base<result_type, task_type, Functor, ParentResults...>(has_name, std::move(name), std::forward<F>(functor), std::move(parents))
     {}
@@ -2355,15 +2344,11 @@ public:
 protected:
 
     template<typename F>
-    // cppcheck-suppress passedByValue
-    // cppcheck-suppress uninitMemberVar
     task_impl_proxy(bool has_name, std::string name, F&& functor, std::shared_ptr<transwarp::task<ParentResults>>... parents)
     : transwarp::detail::task_impl_base<result_type, task_type, Functor, ParentResults...>(has_name, std::move(name), std::forward<F>(functor), std::move(parents)...)
     {}
 
     template<typename F, typename P>
-    // cppcheck-suppress passedByValue
-    // cppcheck-suppress uninitMemberVar
     task_impl_proxy(bool has_name, std::string name, F&& functor, std::vector<std::shared_ptr<transwarp::task<P>>> parents)
     : transwarp::detail::task_impl_base<result_type, task_type, Functor, ParentResults...>(has_name, std::move(name), std::forward<F>(functor), std::move(parents))
     {}
@@ -2388,8 +2373,6 @@ public:
     /// A task is defined by name, functor, and parent tasks.
     /// Note: Don't use this constructor directly, use transwarp::make_task
     template<typename F>
-    // cppcheck-suppress passedByValue
-    // cppcheck-suppress uninitMemberVar
     task_impl(bool has_name, std::string name, F&& functor, std::shared_ptr<transwarp::task<ParentResults>>... parents)
     : transwarp::detail::task_impl_proxy<result_type, task_type, Functor, ParentResults...>(has_name, std::move(name), std::forward<F>(functor), std::move(parents)...)
     {}
@@ -2397,7 +2380,6 @@ public:
     /// A task is defined by name, functor, and parent tasks.
     /// Note: Don't use this constructor directly, use transwarp::make_task
     template<typename F, typename P>
-    // cppcheck-suppress uninitMemberVar
     task_impl(bool has_name, std::string name, F&& functor, std::vector<std::shared_ptr<transwarp::task<P>>> parents)
     : transwarp::detail::task_impl_proxy<result_type, task_type, Functor, ParentResults...>(has_name, std::move(name), std::forward<F>(functor), std::move(parents))
     {}
@@ -2442,8 +2424,6 @@ public:
     /// A value task is defined by name and value.
     /// Note: Don't use this constructor directly, use transwarp::make_value_task
     template<typename T>
-    // cppcheck-suppress passedByValue
-    // cppcheck-suppress uninitMemberVar
     value_task(bool has_name, std::string name, T&& value)
     : node_(new transwarp::node),
       future_(transwarp::detail::make_future_with_value<result_type>(std::forward<T>(value)))
