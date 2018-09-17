@@ -2959,20 +2959,6 @@ public:
 
     /// Performs the actual timing and populates the node's average waittime and runtime member
     void handle_event(transwarp::event_type event, const std::shared_ptr<transwarp::node>& node) override {
-
-        auto track_waittime = [this](const std::shared_ptr<transwarp::node>& node, const std::chrono::time_point<std::chrono::steady_clock>& now)
-        {
-            std::int64_t avg_waittime_us;
-            {
-                std::lock_guard<transwarp::detail::spinlock> lock(spinlock_);
-                auto& track = tracks_[node];
-                track.waittime += std::chrono::duration_cast<std::chrono::microseconds>(now - track.startwait).count();
-                ++track.waitcount;
-                avg_waittime_us = static_cast<std::int64_t>(track.waittime / track.waitcount);
-            }
-            transwarp::detail::node_manip::set_avg_waittime_us(*node, avg_waittime_us);
-        };
-
         if (event == transwarp::event_type::before_started) {
             const std::chrono::time_point<std::chrono::steady_clock> now = std::chrono::steady_clock::now();
             std::lock_guard<transwarp::detail::spinlock> lock(spinlock_);
@@ -2990,19 +2976,7 @@ public:
             track.startrun = now;
         } else if (event == transwarp::event_type::after_finished) {
             const std::chrono::time_point<std::chrono::steady_clock> now = std::chrono::steady_clock::now();
-            std::int64_t avg_runtime_us;
-            {
-                std::lock_guard<transwarp::detail::spinlock> lock(spinlock_);
-                auto& track = tracks_[node];
-                if (!track.running) {
-                    return;
-                }
-                track.running = false;
-                track.runtime += std::chrono::duration_cast<std::chrono::microseconds>(now - track.startrun).count();
-                ++track.runcount;
-                avg_runtime_us = static_cast<std::int64_t>(track.runtime / track.runcount);
-            }
-            transwarp::detail::node_manip::set_avg_runtime_us(*node, avg_runtime_us);
+            track_runtime(node, now);
         }
     }
 
@@ -3013,6 +2987,34 @@ public:
     }
 
 private:
+
+    void track_waittime(const std::shared_ptr<transwarp::node>& node, const std::chrono::time_point<std::chrono::steady_clock>& now) {
+        std::int64_t avg_waittime_us;
+        {
+            std::lock_guard<transwarp::detail::spinlock> lock(spinlock_);
+            auto& track = tracks_[node];
+            track.waittime += std::chrono::duration_cast<std::chrono::microseconds>(now - track.startwait).count();
+            ++track.waitcount;
+            avg_waittime_us = static_cast<std::int64_t>(track.waittime / track.waitcount);
+        }
+        transwarp::detail::node_manip::set_avg_waittime_us(*node, avg_waittime_us);
+    };
+
+    void track_runtime(const std::shared_ptr<transwarp::node>& node, const std::chrono::time_point<std::chrono::steady_clock>& now) {
+        std::int64_t avg_runtime_us;
+        {
+            std::lock_guard<transwarp::detail::spinlock> lock(spinlock_);
+            auto& track = tracks_[node];
+            if (!track.running) {
+                return;
+            }
+            track.running = false;
+            track.runtime += std::chrono::duration_cast<std::chrono::microseconds>(now - track.startrun).count();
+            ++track.runcount;
+            avg_runtime_us = static_cast<std::int64_t>(track.runtime / track.runcount);
+        }
+        transwarp::detail::node_manip::set_avg_runtime_us(*node, avg_runtime_us);
+    }
 
     struct track {
         bool running = false;
