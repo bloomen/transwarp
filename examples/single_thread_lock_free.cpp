@@ -56,7 +56,6 @@ private:
 
 using data_t = std::array<double, 1024>;
 
-// cppcheck-suppress passedByValue
 const data_t& generate_data(data_t& data, std::shared_ptr<std::mt19937> gen) {
     std::uniform_real_distribution<double> dist;
     for (auto& value : data) {

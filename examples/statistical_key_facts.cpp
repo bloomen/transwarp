@@ -11,7 +11,6 @@ namespace {
 
 using data_t = std::shared_ptr<std::vector<double>>;
 
-// cppcheck-suppress passedByValue
 data_t generate_gamma(std::size_t sample_size, double alpha, double beta, std::shared_ptr<std::mt19937> gen) {
     auto data = std::make_shared<std::vector<double>>(sample_size);
     std::gamma_distribution<double> dist(alpha, beta);
