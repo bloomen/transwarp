@@ -199,6 +199,11 @@ public:
         return canceled_.load();
     }
 
+    /// Returns the average idletime in microseconds (-1 if never set)
+    std::int64_t get_avg_idletime_us() const noexcept {
+        return avg_idletime_us_.load();
+    }
+
     /// Returns the average waittime in microseconds (-1 if never set)
     std::int64_t get_avg_waittime_us() const noexcept {
         return avg_waittime_us_.load();
@@ -221,6 +226,7 @@ private:
     std::size_t priority_ = 0;
     std::shared_ptr<void> custom_data_;
     std::atomic<bool> canceled_{false};
+    std::atomic<std::int64_t> avg_idletime_us_{-1};
     std::atomic<std::int64_t> avg_waittime_us_{-1};
     std::atomic<std::int64_t> avg_runtime_us_{-1};
 };
@@ -240,13 +246,17 @@ inline std::string to_string(const transwarp::node& node, const std::string& sep
     if (exec) {
         s += separator + "<" + *exec + ">";
     }
+    const std::int64_t avg_idletime_us = node.get_avg_idletime_us();
+    if (avg_idletime_us >= 0) {
+        s += separator + "avg-idle-us=" + std::to_string(avg_idletime_us);
+    }
     const std::int64_t avg_waittime_us = node.get_avg_waittime_us();
     if (avg_waittime_us >= 0) {
-        s += separator + "avg-waittime-us=" + std::to_string(avg_waittime_us);
+        s += separator + "avg-wait-us=" + std::to_string(avg_waittime_us);
     }
     const std::int64_t avg_runtime_us = node.get_avg_runtime_us();
     if (avg_runtime_us >= 0) {
-        s += separator + "avg-runtime-us=" + std::to_string(avg_runtime_us);
+        s += separator + "avg-run-us=" + std::to_string(avg_runtime_us);
     }
     s += '"';
     return s;
@@ -546,6 +556,10 @@ struct node_manip {
 
     static void set_canceled(transwarp::node& node, bool enabled) noexcept {
         node.canceled_ = enabled;
+    }
+
+    static void set_avg_idletime_us(transwarp::node& node, std::int64_t idletime) noexcept {
+        node.avg_idletime_us_ = idletime;
     }
 
     static void set_avg_waittime_us(transwarp::node& node, std::int64_t waittime) noexcept {
@@ -2926,7 +2940,10 @@ private:
 };
 
 
-/// A timer that tracks the average waittime and runtime of each task it listens to
+/// A timer that tracks the average idle, wait, and run time of each task it listens to
+/// idle = time between scheduling and starting the task (executor dependent)
+/// wait = time between starting and invoking the task's functor, i.e. wait for parent tasks to finish
+/// run = time between invoking and finishing the task's computations
 class timer : public transwarp::listener {
 public:
     timer() = default;
@@ -2937,26 +2954,44 @@ public:
     timer(timer&&) = delete;
     timer& operator=(timer&&) = delete;
 
-    /// Performs the actual timing and populates the node's average waittime and runtime member
+    /// Performs the actual timing and populates the node's timing members
     void handle_event(transwarp::event_type event, const std::shared_ptr<transwarp::node>& node) override {
-        if (event == transwarp::event_type::before_started) {
+        switch (event) {
+        case transwarp::event_type::before_scheduled: {
             const std::chrono::time_point<std::chrono::steady_clock> now = std::chrono::steady_clock::now();
             std::lock_guard<transwarp::detail::spinlock> lock(spinlock_);
             auto& track = tracks_[node];
+            track.startidle = now;
+        }
+        break;
+        case transwarp::event_type::before_started: {
+            const std::chrono::time_point<std::chrono::steady_clock> now = std::chrono::steady_clock::now();
+            track_idletime(node, now);
+            std::lock_guard<transwarp::detail::spinlock> lock(spinlock_);
+            auto& track = tracks_[node];
             track.startwait = now;
-        } else if (event == transwarp::event_type::after_canceled) {
+        }
+        break;
+        case transwarp::event_type::after_canceled: {
             const std::chrono::time_point<std::chrono::steady_clock> now = std::chrono::steady_clock::now();
             track_waittime(node, now);
-        } else if (event == transwarp::event_type::before_invoked) {
+        }
+        break;
+        case transwarp::event_type::before_invoked: {
             const std::chrono::time_point<std::chrono::steady_clock> now = std::chrono::steady_clock::now();
             track_waittime(node, now);
             std::lock_guard<transwarp::detail::spinlock> lock(spinlock_);
             auto& track = tracks_[node];
             track.running = true;
             track.startrun = now;
-        } else if (event == transwarp::event_type::after_finished) {
+        }
+        break;
+        case transwarp::event_type::after_finished: {
             const std::chrono::time_point<std::chrono::steady_clock> now = std::chrono::steady_clock::now();
             track_runtime(node, now);
+        }
+        break;
+        default: break;
         }
     }
 
@@ -2967,6 +3002,18 @@ public:
     }
 
 private:
+
+    void track_idletime(const std::shared_ptr<transwarp::node>& node, const std::chrono::time_point<std::chrono::steady_clock>& now) {
+        std::int64_t avg_idletime_us;
+        {
+            std::lock_guard<transwarp::detail::spinlock> lock(spinlock_);
+            auto& track = tracks_[node];
+            track.idletime += std::chrono::duration_cast<std::chrono::microseconds>(now - track.startidle).count();
+            ++track.idlecount;
+            avg_idletime_us = static_cast<std::int64_t>(track.idletime / track.idlecount);
+        }
+        transwarp::detail::node_manip::set_avg_idletime_us(*node, avg_idletime_us);
+    };
 
     void track_waittime(const std::shared_ptr<transwarp::node>& node, const std::chrono::time_point<std::chrono::steady_clock>& now) {
         std::int64_t avg_waittime_us;
@@ -2998,8 +3045,11 @@ private:
 
     struct track {
         bool running = false;
+        std::chrono::time_point<std::chrono::steady_clock> startidle;
         std::chrono::time_point<std::chrono::steady_clock> startwait;
         std::chrono::time_point<std::chrono::steady_clock> startrun;
+        std::chrono::microseconds::rep idletime = 0;
+        std::chrono::microseconds::rep idlecount = 0;
         std::chrono::microseconds::rep waittime = 0;
         std::chrono::microseconds::rep waitcount = 0;
         std::chrono::microseconds::rep runtime = 0;

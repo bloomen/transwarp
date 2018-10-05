@@ -310,10 +310,10 @@ TEST_CASE("make_dot_graph_with_three_nodes") {
     const auto dot_graph = tw::to_string(graph);
     const std::string exp_dot_graph = "digraph {\n"
 "\"<node2>\nconsume "
-"id=1 lev=0\navg-runtime-us=42\" -> \"<node1>\nconsume "
+"id=1 lev=0\navg-run-us=42\" -> \"<node1>\nconsume "
 "id=0 lev=1\"\n"
 "\"<node3>\nwait "
-"id=2 lev=0\n<exec>\navg-waittime-us=43\" -> \"<node1>\nconsume "
+"id=2 lev=0\n<exec>\navg-wait-us=43\" -> \"<node1>\nconsume "
 "id=0 lev=1\"\n"
 "}";
 
