@@ -1,6 +1,6 @@
 # transwarp 
 
-**Version 1.8.0**
+**Version 1.8.1**
 
 <a href="https://raw.githubusercontent.com/bloomen/transwarp/master/src/transwarp.h" download="transwarp.h">Download as single header from here</a>
 

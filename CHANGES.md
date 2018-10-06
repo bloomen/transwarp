@@ -1,3 +1,7 @@
+1.8.1
+
+- timer class: Added tracking of idle time along with wait and run time
+
 1.8.0
 
 - added a timer that can be added as a listener (node will carry the timing info)
