@@ -95,7 +95,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 </div><!--header-->
 <div class="contents">
 
-<p>A timer that tracks the average waittime and runtime of each task it listens to.  
+<p>A timer that tracks the average idle, wait, and run time of each task it listens to idle = time between scheduling and starting the task (executor dependent) wait = time between starting and invoking the task's functor, i.e. wait for parent tasks to finish run = time between invoking and finishing the task's computations.  
  <a href="classtranswarp_1_1timer.html#details">More...</a></p>
 
 <p><code>#include &lt;<a class="el" href="transwarp_8h_source.html">transwarp.h</a>&gt;</code></p>
@@ -125,7 +125,7 @@ Public Member Functions</h2></td></tr>
 <tr class="separator:a05982717b77fe6848b9c9550f7097464"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:adb7a2f7120d9a0ae99568c27b0fb2183"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="adb7a2f7120d9a0ae99568c27b0fb2183"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1timer.html#adb7a2f7120d9a0ae99568c27b0fb2183">handle_event</a> (<a class="el" href="namespacetranswarp.html#a857009a6efbb2f34495ee81664a376dc">transwarp::event_type</a> event, const std::shared_ptr&lt; <a class="el" href="classtranswarp_1_1node.html">transwarp::node</a> &gt; &amp;<a class="el" href="classtranswarp_1_1node.html">node</a>) override</td></tr>
-<tr class="memdesc:adb7a2f7120d9a0ae99568c27b0fb2183"><td class="mdescLeft">&#160;</td><td class="mdescRight">Performs the actual timing and populates the node's average waittime and runtime member. <br/></td></tr>
+<tr class="memdesc:adb7a2f7120d9a0ae99568c27b0fb2183"><td class="mdescLeft">&#160;</td><td class="mdescRight">Performs the actual timing and populates the node's timing members. <br/></td></tr>
 <tr class="separator:adb7a2f7120d9a0ae99568c27b0fb2183"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8dccb75290dfe52e3f64bc06989e5738"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a8dccb75290dfe52e3f64bc06989e5738"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1timer.html#a8dccb75290dfe52e3f64bc06989e5738">reset</a> ()</td></tr>
@@ -133,7 +133,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
 <tr class="separator:a8dccb75290dfe52e3f64bc06989e5738"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p>A timer that tracks the average waittime and runtime of each task it listens to. </p>
+<div class="textblock"><p>A timer that tracks the average idle, wait, and run time of each task it listens to idle = time between scheduling and starting the task (executor dependent) wait = time between starting and invoking the task's functor, i.e. wait for parent tasks to finish run = time between invoking and finishing the task's computations. </p>
 </div><hr/>The documentation for this class was generated from the following file:<ul>
 <li>src/<a class="el" href="transwarp_8h_source.html">transwarp.h</a></li>
 </ul>

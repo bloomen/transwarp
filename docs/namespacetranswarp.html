@@ -190,7 +190,7 @@ Classes</h2></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">A graph pool that allows running multiple instances of the same graph in parallel. Graph must be a sub-class of <a class="el" href="classtranswarp_1_1graph.html" title="A graph interface giving access to the final task as required by transwarp::graph_pool. ">transwarp::graph</a>.  <a href="classtranswarp_1_1graph__pool.html#details">More...</a><br/></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1timer.html">timer</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">A timer that tracks the average waittime and runtime of each task it listens to.  <a href="classtranswarp_1_1timer.html#details">More...</a><br/></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">A timer that tracks the average idle, wait, and run time of each task it listens to idle = time between scheduling and starting the task (executor dependent) wait = time between starting and invoking the task's functor, i.e. wait for parent tasks to finish run = time between invoking and finishing the task's computations.  <a href="classtranswarp_1_1timer.html#details">More...</a><br/></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="enum-members"></a>

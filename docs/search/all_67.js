@@ -1,6 +1,7 @@
 var searchData=
 [
   ['get',['get',['../classtranswarp_1_1detail_1_1task__impl__proxy.html#aa24d4d5df65e621601b1ad4a5a445e8a',1,'transwarp::detail::task_impl_proxy::get()'],['../classtranswarp_1_1detail_1_1task__impl__proxy_3_01ResultType_01_6_00_01TaskType_00_01Functor_00_01ParentResults_8_8_8_4.html#a06b88d154f3c5bcc4b999308ecbaf881',1,'transwarp::detail::task_impl_proxy&lt; ResultType &amp;, TaskType, Functor, ParentResults...&gt;::get()'],['../classtranswarp_1_1detail_1_1task__impl__proxy_3_01void_00_01TaskType_00_01Functor_00_01ParentResults_8_8_8_4.html#a31147b0e7cd49d8fff18c9c3055fc6b9',1,'transwarp::detail::task_impl_proxy&lt; void, TaskType, Functor, ParentResults...&gt;::get()'],['../classtranswarp_1_1value__task.html#a0c9f54b8a56633fda406f72cda05ab6d',1,'transwarp::value_task::get()']]],
+  ['get_5favg_5fidletime_5fus',['get_avg_idletime_us',['../classtranswarp_1_1node.html#a389643112b6f2d8ba1564d89139235a7',1,'transwarp::node']]],
   ['get_5favg_5fruntime_5fus',['get_avg_runtime_us',['../classtranswarp_1_1node.html#a4e6725df0b4f8096503441008a9638d5',1,'transwarp::node']]],
   ['get_5favg_5fwaittime_5fus',['get_avg_waittime_us',['../classtranswarp_1_1node.html#a6a290f3b3bbdf9ace374d7325d944587',1,'transwarp::node']]],
   ['get_5fchild',['get_child',['../classtranswarp_1_1edge.html#a3158f3179de9963acbc4f430c2f4bbde',1,'transwarp::edge']]],
@@ -18,7 +19,7 @@ var searchData=
   ['get_5fpriority',['get_priority',['../classtranswarp_1_1node.html#ad170e3aae99a01006569ddf9368ecbe7',1,'transwarp::node']]],
   ['get_5ftype',['get_type',['../classtranswarp_1_1node.html#af7e2d17f6b5079c9e2b15098c242f0a9',1,'transwarp::node']]],
   ['graph',['graph',['../classtranswarp_1_1graph.html',1,'transwarp']]],
-  ['graph_5fpool',['graph_pool',['../classtranswarp_1_1graph__pool.html#af8b416f9fe9c28c46c4a173ea976eefc',1,'transwarp::graph_pool']]],
   ['graph_5fpool',['graph_pool',['../classtranswarp_1_1graph__pool.html',1,'transwarp']]],
+  ['graph_5fpool',['graph_pool',['../classtranswarp_1_1graph__pool.html#af8b416f9fe9c28c46c4a173ea976eefc',1,'transwarp::graph_pool']]],
   ['graph_5fvisitor',['graph_visitor',['../structtranswarp_1_1detail_1_1graph__visitor.html',1,'transwarp::detail']]]
 ];
