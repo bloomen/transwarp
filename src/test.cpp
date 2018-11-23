@@ -2220,6 +2220,23 @@ TEST_CASE("circular_buffer_buffer_of_capacity_three_push_and_pop") {
     REQUIRE(value2 == buffer.front());
 }
 
+TEST_CASE("get_size_with_one_task") {
+    auto t1 = tw::make_task(tw::root, []{});
+    REQUIRE(1 == t1->get_size());
+}
+
+TEST_CASE("get_size_with_one_task_for_value_task") {
+    auto t1 = tw::make_value_task(42);
+    REQUIRE(1 == t1->get_size());
+}
+
+TEST_CASE("get_size_with_three_tasks") {
+    auto t1 = tw::make_value_task(42);
+    auto t2 = tw::make_value_task(43);
+    auto t3 = tw::make_task(tw::wait, []{}, t1, t2);
+    REQUIRE(3 == t3->get_size());
+}
+
 // Examples
 
 TEST_CASE("example__basic_with_three_tasks") {

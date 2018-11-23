@@ -405,6 +405,7 @@ public:
     virtual void reset_all() = 0;
     virtual void cancel(bool enabled) noexcept = 0;
     virtual void cancel_all(bool enabled) noexcept = 0;
+    virtual std::size_t get_size() const noexcept = 0;
     virtual std::vector<transwarp::edge> get_graph() const = 0;
 
 protected:
@@ -2041,6 +2042,11 @@ public:
         visit_depth_all(visitor);
     }
 
+    /// Returns the size of the graph, i.e. the task count
+    std::size_t get_size() const noexcept override {
+        return node_->get_id() + 1;
+    }
+
     /// Returns the graph of the task structure. This is mainly for visualizing
     /// the tasks and their interdependencies. Pass the result into transwarp::to_string
     /// to retrieve a dot-style graph representation for easy viewing.
@@ -2671,6 +2677,11 @@ public:
 
     /// No-op because a value task never runs and doesn't have parents
     void cancel_all(bool) noexcept override {}
+
+    /// Returns the size of the graph, i.e. the task count
+    std::size_t get_size() const noexcept override {
+        return node_->get_id() + 1;
+    }
 
     /// Returns an empty graph because a value task doesn't have parents
     std::vector<transwarp::edge> get_graph() const override {
