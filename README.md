@@ -299,6 +299,7 @@ private:
 ```
 By placing calls to `transwarp_cancel_point()` in strategic places of your functor
 you can denote well defined points where the functor will exit when the associated task is canceled.
+A task can also be canceled by throwing `transwarp::task_canceled` directly.
 
 As mentioned above, tasks can be explicitly canceled on client request. In addition,
 all tasks considered abandoned by `accept_any`, `consume_any`, or `wait_any`
