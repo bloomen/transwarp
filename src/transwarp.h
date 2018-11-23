@@ -2156,13 +2156,32 @@ private:
         }
     }
 
+    /// Collects all tasks in depth order
+    std::vector<transwarp::itask*> tasks_in_depth_order() {
+        std::vector<transwarp::itask*> tasks;
+        tasks.reserve(node_->get_id() + 1);
+        visit_depth(transwarp::detail::push_task_visitor(tasks));
+        unvisit();
+        return tasks;
+    }
+
+    /// Visits all tasks
+    template<typename Visitor>
+    void visit_all(std::vector<transwarp::itask*>& tasks, Visitor& visitor) {
+        for (transwarp::itask* task : tasks) {
+            visitor(*task);
+        }
+    }
+
     /// Visits all tasks in a breadth-first traversal.
     template<typename Visitor>
     void visit_breadth_all(Visitor& visitor) {
         if (breadth_tasks_.empty()) {
-            breadth_tasks_.reserve(node_->get_id() + 1);
-            visit_depth(transwarp::detail::push_task_visitor(breadth_tasks_));
-            unvisit();
+            if (depth_tasks_.empty()) {
+                breadth_tasks_ = tasks_in_depth_order();
+            } else {
+                breadth_tasks_ = depth_tasks_;
+            }
             auto compare = [](const transwarp::itask* const l, const transwarp::itask* const r) {
                 const std::size_t l_level = l->get_node()->get_level();
                 const std::size_t l_id = l->get_node()->get_id();
@@ -2172,22 +2191,16 @@ private:
             };
             std::sort(breadth_tasks_.begin(), breadth_tasks_.end(), compare);
         }
-        for (transwarp::itask* task : breadth_tasks_) {
-            visitor(*task);
-        }
+        visit_all(breadth_tasks_, visitor);
     }
 
     /// Visits all tasks in a depth-first traversal.
     template<typename Visitor>
     void visit_depth_all(Visitor& visitor) {
         if (depth_tasks_.empty()) {
-            depth_tasks_.reserve(node_->get_id() + 1);
-            visit_depth(transwarp::detail::push_task_visitor(depth_tasks_));
-            unvisit();
+            depth_tasks_ = tasks_in_depth_order();
         }
-        for (transwarp::itask* task : depth_tasks_) {
-            visitor(*task);
-        }
+        visit_all(depth_tasks_, visitor);
     }
 
     /// Visits each task in a depth-first traversal.
