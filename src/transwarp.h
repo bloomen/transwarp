@@ -405,7 +405,8 @@ public:
     virtual void reset_all() = 0;
     virtual void cancel(bool enabled) noexcept = 0;
     virtual void cancel_all(bool enabled) noexcept = 0;
-    virtual std::size_t get_size() const noexcept = 0;
+    virtual std::size_t get_parent_count() const noexcept = 0;
+    virtual std::size_t get_task_count() const noexcept = 0;
     virtual std::vector<transwarp::edge> get_graph() const = 0;
 
 protected:
@@ -1042,13 +1043,15 @@ struct parent_visitor {
 
 /// Applies final bookkeeping to the task
 struct final_visitor {
-    final_visitor() noexcept
-    : id_(0) {}
+    explicit final_visitor(std::size_t& count) noexcept
+    : count_(count), id_(0) {}
 
     void operator()(transwarp::itask& task) noexcept {
+        ++count_;
         task.set_node_id(id_++);
     }
 
+    std::size_t& count_;
     std::size_t id_;
 };
 
@@ -1409,12 +1412,18 @@ std::shared_future<ResultType> make_future_with_exception(std::exception_ptr exc
 template<typename... ParentResults>
 struct parents {
     using type = std::tuple<std::shared_ptr<transwarp::task<ParentResults>>...>;
+    static std::size_t size(const type&) {
+        return std::tuple_size<type>::value;
+    }
 };
 
 /// Determines the type of the parents. Specialization for vector parents
 template<typename ParentResultType>
 struct parents<std::vector<std::shared_ptr<transwarp::task<ParentResultType>>>> {
     using type = std::vector<std::shared_ptr<transwarp::task<ParentResultType>>>;
+    static std::size_t size(const type& obj) {
+        return obj.size();
+    }
 };
 
 
@@ -2049,9 +2058,14 @@ public:
         visit_depth_all(visitor);
     }
 
-    /// Returns the size of the graph, i.e. the task count
-    std::size_t get_size() const noexcept override {
-        return node_->get_id() + 1;
+    /// Returns the number of direct parents of this task
+    std::size_t get_parent_count() const noexcept override {
+        return transwarp::detail::parents<ParentResults...>::size(parents_);
+    }
+
+    /// Returns the number of tasks in the graph
+    std::size_t get_task_count() const noexcept override {
+        return task_count_;
     }
 
     /// Returns the graph of the task structure. This is mainly for visualizing
@@ -2060,7 +2074,8 @@ public:
     std::vector<transwarp::edge> get_graph() const override {
         std::vector<transwarp::edge> graph;
         transwarp::detail::graph_visitor visitor(graph);
-        const_cast<task_impl_base*>(this)->visit_depth_all(visitor);
+        const_cast<task_impl_base*>(this)->visit_depth(visitor);
+        const_cast<task_impl_base*>(this)->unvisit();
         return graph;
     }
 
@@ -2092,7 +2107,7 @@ protected:
         transwarp::detail::node_manip::set_name(*node_, (has_name ? std::shared_ptr<std::string>(new std::string(std::move(name))) : nullptr));
         transwarp::detail::assign_node_if(functor_, node_);
         transwarp::detail::call_with_each(transwarp::detail::parent_visitor(*node_), parents_);
-        transwarp::detail::final_visitor visitor;
+        transwarp::detail::final_visitor visitor(task_count_);
         visit_depth(visitor);
         unvisit();
     }
@@ -2170,12 +2185,11 @@ private:
     }
 
     /// Collects all tasks in depth order
-    std::vector<transwarp::itask*> tasks_in_depth_order() {
-        std::vector<transwarp::itask*> tasks;
-        tasks.reserve(node_->get_id() + 1);
-        visit_depth(transwarp::detail::push_task_visitor(tasks));
-        unvisit();
-        return tasks;
+    void assign_depth_tasks_if() {
+        if (depth_tasks_.empty()) {
+            visit_depth(transwarp::detail::push_task_visitor(depth_tasks_));
+            unvisit();
+        }
     }
 
     /// Visits all tasks
@@ -2190,11 +2204,8 @@ private:
     template<typename Visitor>
     void visit_breadth_all(Visitor& visitor) {
         if (breadth_tasks_.empty()) {
-            if (depth_tasks_.empty()) {
-                breadth_tasks_ = tasks_in_depth_order();
-            } else {
-                breadth_tasks_ = depth_tasks_;
-            }
+            assign_depth_tasks_if();
+            breadth_tasks_ = depth_tasks_;
             auto compare = [](const transwarp::itask* const l, const transwarp::itask* const r) {
                 const std::size_t l_level = l->get_node()->get_level();
                 const std::size_t l_id = l->get_node()->get_id();
@@ -2210,9 +2221,7 @@ private:
     /// Visits all tasks in a depth-first traversal.
     template<typename Visitor>
     void visit_depth_all(Visitor& visitor) {
-        if (depth_tasks_.empty()) {
-            depth_tasks_ = tasks_in_depth_order();
-        }
+        assign_depth_tasks_if();
         visit_all(depth_tasks_, visitor);
     }
 
@@ -2256,6 +2265,7 @@ private:
         }
     }
 
+    std::size_t task_count_ = 0;
     std::shared_ptr<transwarp::node> node_;
     Functor functor_;
     typename transwarp::detail::parents<ParentResults...>::type parents_;
@@ -2685,9 +2695,14 @@ public:
     /// No-op because a value task never runs and doesn't have parents
     void cancel_all(bool) noexcept override {}
 
-    /// Returns the size of the graph, i.e. the task count
-    std::size_t get_size() const noexcept override {
-        return node_->get_id() + 1;
+    /// Returns the number of direct parents of this task
+    std::size_t get_parent_count() const noexcept override {
+        return 0;
+    }
+
+    /// Returns the number of tasks in the graph
+    std::size_t get_task_count() const noexcept override {
+        return 1;
     }
 
     /// Returns an empty graph because a value task doesn't have parents
@@ -2778,17 +2793,36 @@ make_value_task(Value&& value) {
 /// A function similar to std::for_each but returning a transwarp task for
 /// deferred, possibly asynchronous execution. This function creates a graph
 /// with std::distance(first, last) root nodes
-template<typename InputIt, typename UnaryFunction>
+template<typename InputIt, typename UnaryOperation>
 std::shared_ptr<transwarp::task_impl<transwarp::wait_type, transwarp::no_op_type, std::vector<std::shared_ptr<transwarp::task<void>>>>>
-for_each(InputIt first, InputIt last, UnaryFunction f) {
+for_each(InputIt first, InputIt last, UnaryOperation unary_op) {
     const auto distance = std::distance(first, last);
     if (distance <= 0) {
-        throw transwarp::control_error("Invalid distance between first and last");
+        throw transwarp::invalid_parameter("distance");
     }
     std::vector<std::shared_ptr<transwarp::task<void>>> tasks;
     tasks.reserve(distance);
     for (; first != last; ++first) {
-        tasks.push_back(transwarp::make_task(transwarp::root, [f,first]{ f(*first); }));
+        tasks.push_back(transwarp::make_task(transwarp::root, [unary_op,first]{ unary_op(*first); }));
+    }
+    return transwarp::make_task(transwarp::wait, transwarp::no_op, tasks);
+}
+
+
+/// A function similar to std::transform but returning a transwarp task for
+/// deferred, possibly asynchronous execution. This function creates a graph
+/// with std::distance(first1, last1) root nodes
+template<typename InputIt, typename OutputIt, typename UnaryOperation>
+std::shared_ptr<transwarp::task_impl<transwarp::wait_type, transwarp::no_op_type, std::vector<std::shared_ptr<transwarp::task<void>>>>>
+transform(InputIt first1, InputIt last1, OutputIt d_first, UnaryOperation unary_op) {
+    const auto distance = std::distance(first1, last1);
+    if (distance <= 0) {
+        throw transwarp::invalid_parameter("distance");
+    }
+    std::vector<std::shared_ptr<transwarp::task<void>>> tasks;
+    tasks.reserve(distance);
+    for (; first1 != last1; ++first1, ++d_first) {
+        tasks.push_back(transwarp::make_task(transwarp::root, [unary_op,first1,d_first]{ *d_first = unary_op(*first1); }));
     }
     return transwarp::make_task(transwarp::wait, transwarp::no_op, tasks);
 }

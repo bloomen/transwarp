@@ -2220,21 +2220,32 @@ TEST_CASE("circular_buffer_buffer_of_capacity_three_push_and_pop") {
     REQUIRE(value2 == buffer.front());
 }
 
-TEST_CASE("get_size_with_one_task") {
+TEST_CASE("get_task_count_with_one_task") {
     auto t1 = tw::make_task(tw::root, []{});
-    REQUIRE(1 == t1->get_size());
+    REQUIRE(1 == t1->get_task_count());
 }
 
-TEST_CASE("get_size_with_one_task_for_value_task") {
+TEST_CASE("get_task_count_with_one_task_for_value_task") {
     auto t1 = tw::make_value_task(42);
-    REQUIRE(1 == t1->get_size());
+    REQUIRE(1 == t1->get_task_count());
 }
 
-TEST_CASE("get_size_with_three_tasks") {
+TEST_CASE("get_task_count_with_three_tasks") {
     auto t1 = tw::make_value_task(42);
     auto t2 = tw::make_value_task(43);
     auto t3 = tw::make_task(tw::wait, []{}, t1, t2);
-    REQUIRE(3 == t3->get_size());
+    REQUIRE(1 == t1->get_task_count());
+    REQUIRE(1 == t2->get_task_count());
+    REQUIRE(3 == t3->get_task_count());
+}
+
+TEST_CASE("get_parent_count_with_three_tasks") {
+    auto t1 = tw::make_value_task(42);
+    auto t2 = tw::make_value_task(43);
+    auto t3 = tw::make_task(tw::wait, []{}, t1, t2);
+    REQUIRE(0 == t1->get_parent_count());
+    REQUIRE(0 == t2->get_parent_count());
+    REQUIRE(2 == t3->get_parent_count());
 }
 
 TEST_CASE("for_each") {
@@ -2249,7 +2260,24 @@ TEST_CASE("for_each") {
 
 TEST_CASE("for_each_with_invalid_distance") {
     std::vector<int> vec = {1, 2, 3};
-    REQUIRE_THROWS_AS(tw::for_each(vec.begin(), vec.begin(), [](int& x){ x *= 2; }), transwarp::control_error);
+    REQUIRE_THROWS_AS(tw::for_each(vec.begin(), vec.begin(), [](int& x){ x *= 2; }), transwarp::invalid_parameter);
+}
+
+TEST_CASE("transform") {
+    const std::vector<int> vec = {1, 2, 3};
+    std::vector<int> out(vec.size());
+    auto t = tw::transform(vec.begin(), vec.end(), out.begin(), [](int x){ return x * 2; });
+    tw::sequential exec;
+    t->schedule_all(exec);
+    REQUIRE(2 == out[0]);
+    REQUIRE(4 == out[1]);
+    REQUIRE(6 == out[2]);
+}
+
+TEST_CASE("transform_with_invalid_distance") {
+    const std::vector<int> vec = {1, 2, 3};
+    std::vector<int> out(vec.size());
+    REQUIRE_THROWS_AS(tw::transform(vec.begin(), vec.begin(), out.begin(), [](int x){ return x * 2; }), transwarp::invalid_parameter);
 }
 
 // Examples
