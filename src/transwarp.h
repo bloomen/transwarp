@@ -1718,7 +1718,7 @@ public:
     void set_executor_all(std::shared_ptr<transwarp::executor> executor) override {
         ensure_task_not_running();
         transwarp::detail::set_executor_visitor visitor(std::move(executor));
-        visit_depth_all(visitor);
+        visit_breadth_all(visitor);
     }
 
     /// Removes the executor from this task
@@ -1732,7 +1732,7 @@ public:
     void remove_executor_all() override {
         ensure_task_not_running();
         transwarp::detail::remove_executor_visitor visitor;
-        visit_depth_all(visitor);
+        visit_breadth_all(visitor);
     }
 
     /// Sets a task priority (defaults to 0). transwarp will not directly use this.
@@ -1747,7 +1747,7 @@ public:
     void set_priority_all(std::size_t priority) override {
         ensure_task_not_running();
         transwarp::detail::set_priority_visitor visitor(priority);
-        visit_depth_all(visitor);
+        visit_breadth_all(visitor);
     }
 
     /// Resets the task priority to 0
@@ -1760,7 +1760,7 @@ public:
     void reset_priority_all() override {
         ensure_task_not_running();
         transwarp::detail::reset_priority_visitor visitor;
-        visit_depth_all(visitor);
+        visit_breadth_all(visitor);
     }
 
     /// Assigns custom data to this task. transwarp will not directly use this.
@@ -1778,7 +1778,7 @@ public:
     void set_custom_data_all(std::shared_ptr<void> custom_data) override {
         ensure_task_not_running();
         transwarp::detail::set_custom_data_visitor visitor(std::move(custom_data));
-        visit_depth_all(visitor);
+        visit_breadth_all(visitor);
     }
 
     /// Removes custom data from this task
@@ -1791,7 +1791,7 @@ public:
     void remove_custom_data_all() override {
         ensure_task_not_running();
         transwarp::detail::remove_custom_data_visitor visitor;
-        visit_depth_all(visitor);
+        visit_breadth_all(visitor);
     }
 
     /// Returns the future associated to the underlying execution
@@ -1824,14 +1824,14 @@ public:
     void add_listener_all(std::shared_ptr<transwarp::listener> listener) override {
         ensure_task_not_running();
         transwarp::detail::add_listener_visitor visitor(std::move(listener));
-        visit_depth_all(visitor);
+        visit_breadth_all(visitor);
     }
 
     /// Adds a new listener for the given event type only and for all parents
     void add_listener_all(transwarp::event_type event, std::shared_ptr<transwarp::listener> listener) override {
         ensure_task_not_running();
         transwarp::detail::add_listener_per_event_visitor visitor(event, std::move(listener));
-        visit_depth_all(visitor);
+        visit_breadth_all(visitor);
     }
 
     /// Removes the listener for all event types
@@ -1855,14 +1855,14 @@ public:
     void remove_listener_all(const std::shared_ptr<transwarp::listener>& listener) override {
         ensure_task_not_running();
         transwarp::detail::remove_listener_visitor visitor(std::move(listener));
-        visit_depth_all(visitor);
+        visit_breadth_all(visitor);
     }
 
     /// Removes the listener for the given event type only and for all parents
     void remove_listener_all(transwarp::event_type event, const std::shared_ptr<transwarp::listener>& listener) override {
         ensure_task_not_running();
         transwarp::detail::remove_listener_per_event_visitor visitor(event, std::move(listener));
-        visit_depth_all(visitor);
+        visit_breadth_all(visitor);
     }
 
     /// Removes all listeners
@@ -1883,14 +1883,14 @@ public:
     void remove_listeners_all() override {
         ensure_task_not_running();
         transwarp::detail::remove_listeners_visitor visitor;
-        visit_depth_all(visitor);
+        visit_breadth_all(visitor);
     }
 
     /// Removes all listeners for the given event type and for all parents
     void remove_listeners_all(transwarp::event_type event) override {
         ensure_task_not_running();
         transwarp::detail::remove_listeners_per_event_visitor visitor(event);
-        visit_depth_all(visitor);
+        visit_breadth_all(visitor);
     }
 
     /// Schedules this task for execution on the caller thread.
@@ -2040,7 +2040,7 @@ public:
     void reset_all() override {
         ensure_task_not_running();
         transwarp::detail::reset_visitor visitor;
-        visit_depth_all(visitor);
+        visit_breadth_all(visitor);
     }
 
     /// If enabled then this task is canceled which will
@@ -2055,7 +2055,7 @@ public:
     /// Passing false is equivalent to resume.
     void cancel_all(bool enabled) noexcept override {
         transwarp::detail::cancel_visitor visitor(enabled);
-        visit_depth_all(visitor);
+        visit_breadth_all(visitor);
     }
 
     /// Returns the number of direct parents of this task
