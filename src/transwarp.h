@@ -2185,11 +2185,11 @@ private:
     }
 
     /// Collects all tasks in depth order
-    void assign_depth_tasks_if() {
-        if (depth_tasks_.empty()) {
-            visit_depth(transwarp::detail::push_task_visitor(depth_tasks_));
-            unvisit();
-        }
+    std::vector<transwarp::itask*> tasks_in_depth_order() const {
+        std::vector<transwarp::itask*> tasks;
+        const_cast<task_impl_base*>(this)->visit_depth(transwarp::detail::push_task_visitor(tasks));
+        const_cast<task_impl_base*>(this)->unvisit();
+        return tasks;
     }
 
     /// Visits all tasks
@@ -2204,8 +2204,7 @@ private:
     template<typename Visitor>
     void visit_breadth_all(Visitor& visitor) {
         if (breadth_tasks_.empty()) {
-            assign_depth_tasks_if();
-            breadth_tasks_ = depth_tasks_;
+            breadth_tasks_ = tasks_in_depth_order();
             auto compare = [](const transwarp::itask* const l, const transwarp::itask* const r) {
                 const std::size_t l_level = l->get_node()->get_level();
                 const std::size_t l_id = l->get_node()->get_id();
@@ -2221,7 +2220,9 @@ private:
     /// Visits all tasks in a depth-first traversal.
     template<typename Visitor>
     void visit_depth_all(Visitor& visitor) {
-        assign_depth_tasks_if();
+        if (depth_tasks_.empty()) {
+            depth_tasks_ = tasks_in_depth_order();
+        }
         visit_all(depth_tasks_, visitor);
     }
 
