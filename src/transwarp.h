@@ -1618,6 +1618,13 @@ private:
 } // detail
 
 
+/// A functor not doing nothing
+struct no_op_type {
+    void operator()() const noexcept {}
+};
+constexpr no_op_type no_op;
+
+
 /// Executor for sequential execution. Runs functors sequentially on the same thread
 class sequential : public transwarp::executor {
 public:
@@ -2765,6 +2772,25 @@ std::shared_ptr<transwarp::value_task<typename transwarp::decay<Value>::type>>
 make_value_task(Value&& value) {
     using task_t = transwarp::value_task<typename transwarp::decay<Value>::type>;
     return std::shared_ptr<task_t>(new task_t(false, "", std::forward<Value>(value)));
+}
+
+
+/// A function similar to std::for_each but returning a transwarp task for
+/// deferred, possibly asynchronous execution. This function creates a graph
+/// with std::distance(first, last) root nodes
+template<typename InputIt, typename UnaryFunction>
+std::shared_ptr<transwarp::task_impl<transwarp::wait_type, transwarp::no_op_type, std::vector<std::shared_ptr<transwarp::task<void>>>>>
+for_each(InputIt first, InputIt last, UnaryFunction f) {
+    const auto distance = std::distance(first, last);
+    if (distance <= 0) {
+        throw transwarp::control_error("Invalid distance between first and last");
+    }
+    std::vector<std::shared_ptr<transwarp::task<void>>> tasks;
+    tasks.reserve(distance);
+    for (; first != last; ++first) {
+        tasks.push_back(transwarp::make_task(transwarp::root, [f,first]{ f(*first); }));
+    }
+    return transwarp::make_task(transwarp::wait, transwarp::no_op, tasks);
 }
 
 
