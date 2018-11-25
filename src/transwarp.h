@@ -3025,10 +3025,10 @@ private:
 };
 
 
-/// A timer that tracks the average idle, wait, and run time of each task it listens to
-/// idle = time between scheduling and starting the task (executor dependent)
-/// wait = time between starting and invoking the task's functor, i.e. wait for parent tasks to finish
-/// run = time between invoking and finishing the task's computations
+/// A timer that tracks the average idle, wait, and run time of each task it listens to.
+/// - idle = time between scheduling and starting the task (executor dependent)
+/// - wait = time between starting and invoking the task's functor, i.e. wait for parent tasks to finish
+/// - run = time between invoking and finishing the task's computations
 class timer : public transwarp::listener {
 public:
     timer() = default;
