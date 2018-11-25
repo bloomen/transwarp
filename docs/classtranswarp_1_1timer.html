@@ -95,7 +95,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 </div><!--header-->
 <div class="contents">
 
-<p>A timer that tracks the average idle, wait, and run time of each task it listens to idle = time between scheduling and starting the task (executor dependent) wait = time between starting and invoking the task's functor, i.e. wait for parent tasks to finish run = time between invoking and finishing the task's computations.  
+<p>A timer that tracks the average idle, wait, and run time of each task it listens to.  
  <a href="classtranswarp_1_1timer.html#details">More...</a></p>
 
 <p><code>#include &lt;<a class="el" href="transwarp_8h_source.html">transwarp.h</a>&gt;</code></p>
@@ -133,7 +133,12 @@ void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
 <tr class="separator:a8dccb75290dfe52e3f64bc06989e5738"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p>A timer that tracks the average idle, wait, and run time of each task it listens to idle = time between scheduling and starting the task (executor dependent) wait = time between starting and invoking the task's functor, i.e. wait for parent tasks to finish run = time between invoking and finishing the task's computations. </p>
+<div class="textblock"><p>A timer that tracks the average idle, wait, and run time of each task it listens to. </p>
+<ul>
+<li>idle = time between scheduling and starting the task (executor dependent)</li>
+<li>wait = time between starting and invoking the task's functor, i.e. wait for parent tasks to finish</li>
+<li>run = time between invoking and finishing the task's computations </li>
+</ul>
 </div><hr/>The documentation for this class was generated from the following file:<ul>
 <li>src/<a class="el" href="transwarp_8h_source.html">transwarp.h</a></li>
 </ul>
