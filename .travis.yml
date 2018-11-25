@@ -30,7 +30,7 @@ matrix:
 script:
     - mkdir build && cd build
     - cmake -DCMAKE_BUILD_TYPE=$CONFIGURATION ..
-    - make
+    - make -j4
     - ctest --verbose
 
 notifications:

@@ -1628,10 +1628,12 @@ private:
 
 
 /// A functor not doing nothing
-struct no_op_type {
+struct no_op_functor {
     void operator()() const noexcept {}
 };
-constexpr no_op_type no_op;
+
+/// An object to use in places where a no-op functor is required
+constexpr no_op_functor no_op{};
 
 
 /// Executor for sequential execution. Runs functors sequentially on the same thread
@@ -2795,14 +2797,14 @@ make_value_task(Value&& value) {
 /// deferred, possibly asynchronous execution. This function creates a graph
 /// with std::distance(first, last) root nodes
 template<typename InputIt, typename UnaryOperation>
-std::shared_ptr<transwarp::task_impl<transwarp::wait_type, transwarp::no_op_type, std::vector<std::shared_ptr<transwarp::task<void>>>>>
+std::shared_ptr<transwarp::task_impl<transwarp::wait_type, transwarp::no_op_functor, std::vector<std::shared_ptr<transwarp::task<void>>>>>
 for_each(InputIt first, InputIt last, UnaryOperation unary_op) {
     const auto distance = std::distance(first, last);
     if (distance <= 0) {
         throw transwarp::invalid_parameter("distance");
     }
     std::vector<std::shared_ptr<transwarp::task<void>>> tasks;
-    tasks.reserve(distance);
+    tasks.reserve(static_cast<std::size_t>(distance));
     for (; first != last; ++first) {
         tasks.push_back(transwarp::make_task(transwarp::root, [unary_op,first]{ unary_op(*first); }));
     }
@@ -2814,14 +2816,14 @@ for_each(InputIt first, InputIt last, UnaryOperation unary_op) {
 /// deferred, possibly asynchronous execution. This function creates a graph
 /// with std::distance(first1, last1) root nodes
 template<typename InputIt, typename OutputIt, typename UnaryOperation>
-std::shared_ptr<transwarp::task_impl<transwarp::wait_type, transwarp::no_op_type, std::vector<std::shared_ptr<transwarp::task<void>>>>>
+std::shared_ptr<transwarp::task_impl<transwarp::wait_type, transwarp::no_op_functor, std::vector<std::shared_ptr<transwarp::task<void>>>>>
 transform(InputIt first1, InputIt last1, OutputIt d_first, UnaryOperation unary_op) {
     const auto distance = std::distance(first1, last1);
     if (distance <= 0) {
         throw transwarp::invalid_parameter("distance");
     }
     std::vector<std::shared_ptr<transwarp::task<void>>> tasks;
-    tasks.reserve(distance);
+    tasks.reserve(static_cast<std::size_t>(distance));
     for (; first1 != last1; ++first1, ++d_first) {
         tasks.push_back(transwarp::make_task(transwarp::root, [unary_op,first1,d_first]{ *d_first = unary_op(*first1); }));
     }

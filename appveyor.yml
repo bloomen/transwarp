@@ -34,7 +34,7 @@ before_build:
 
 build:
   project: C:\projects\transwarp\build\transwarp.sln
-  parallel: false
+  parallel: true
 
 test_script:
   - cmd: cd C:\projects\transwarp\build
