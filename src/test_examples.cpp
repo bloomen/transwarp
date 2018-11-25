@@ -5,7 +5,6 @@
 #include "../examples/benchmark_statistical.h"
 #include "../examples/single_thread_lock_free.h"
 #include "../examples/wide_graph_with_pool.h"
-#include <sstream>
 
 TEST_CASE("example__basic_with_three_tasks") {
     std::ostringstream os;
