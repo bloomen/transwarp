@@ -2809,7 +2809,7 @@ std::shared_ptr<transwarp::task_impl<transwarp::wait_type, transwarp::no_op_func
 for_each(InputIt first, InputIt last, UnaryOperation unary_op) {
     const auto distance = std::distance(first, last);
     if (distance <= 0) {
-        throw transwarp::invalid_parameter("distance");
+        throw transwarp::invalid_parameter("first or last");
     }
     std::vector<std::shared_ptr<transwarp::task<void>>> tasks;
     tasks.reserve(static_cast<std::size_t>(distance));
@@ -2840,7 +2840,7 @@ std::shared_ptr<transwarp::task_impl<transwarp::wait_type, transwarp::no_op_func
 transform(InputIt first1, InputIt last1, OutputIt d_first, UnaryOperation unary_op) {
     const auto distance = std::distance(first1, last1);
     if (distance <= 0) {
-        throw transwarp::invalid_parameter("distance");
+        throw transwarp::invalid_parameter("first1 or last1");
     }
     std::vector<std::shared_ptr<transwarp::task<void>>> tasks;
     tasks.reserve(static_cast<std::size_t>(distance));
