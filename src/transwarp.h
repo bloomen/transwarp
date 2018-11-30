@@ -2819,6 +2819,18 @@ for_each(InputIt first, InputIt last, UnaryOperation unary_op) {
     return transwarp::make_task(transwarp::wait, transwarp::no_op, tasks);
 }
 
+/// A function similar to std::for_each but returning a transwarp task for
+/// deferred, possibly asynchronous execution. This function creates a graph
+/// with std::distance(first, last) root nodes.
+/// Overload for automatic scheduling by passing an executor.
+template<typename InputIt, typename UnaryOperation>
+std::shared_ptr<transwarp::task_impl<transwarp::wait_type, transwarp::no_op_functor, std::vector<std::shared_ptr<transwarp::task<void>>>>>
+for_each(transwarp::executor& executor, InputIt first, InputIt last, UnaryOperation unary_op) {
+    auto task = transwarp::for_each(first, last, unary_op);
+    task->schedule_all(executor);
+    return task;
+}
+
 
 /// A function similar to std::transform but returning a transwarp task for
 /// deferred, possibly asynchronous execution. This function creates a graph
@@ -2836,6 +2848,18 @@ transform(InputIt first1, InputIt last1, OutputIt d_first, UnaryOperation unary_
         tasks.push_back(transwarp::make_task(transwarp::root, [unary_op,first1,d_first]{ *d_first = unary_op(*first1); }));
     }
     return transwarp::make_task(transwarp::wait, transwarp::no_op, tasks);
+}
+
+/// A function similar to std::transform but returning a transwarp task for
+/// deferred, possibly asynchronous execution. This function creates a graph
+/// with std::distance(first1, last1) root nodes.
+/// Overload for automatic scheduling by passing an executor.
+template<typename InputIt, typename OutputIt, typename UnaryOperation>
+std::shared_ptr<transwarp::task_impl<transwarp::wait_type, transwarp::no_op_functor, std::vector<std::shared_ptr<transwarp::task<void>>>>>
+transform(transwarp::executor& executor, InputIt first1, InputIt last1, OutputIt d_first, UnaryOperation unary_op) {
+    auto task = transwarp::transform(first1, last1, d_first, unary_op);
+    task->schedule_all(executor);
+    return task;
 }
 
 
