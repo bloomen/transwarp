@@ -1,6 +1,6 @@
 # transwarp 
 
-**Version 1.8.1**
+**Version 1.9.0**
 
 <a href="https://raw.githubusercontent.com/bloomen/transwarp/master/src/transwarp.h" download="transwarp.h">Download as single header from here</a>
 
@@ -22,6 +22,7 @@ Tested with GCC, Clang, and Visual Studio.
      * [Creating tasks](#creating-tasks)
      * [Scheduling tasks](#scheduling-tasks)
      * [Executors](#executors)
+     * [Range functions](#range-functions)
      * [Canceling tasks](#canceling-tasks)
      * [Event system](#event-system)
      * [Graph pool](#graph-pool)
@@ -272,6 +273,23 @@ public:
 ``` 
 where `functor` denotes the function to be run and `node` an object that holds 
 meta-data of the current task.
+
+### Range functions
+
+There are convenience functions that can be applied to an iterator range:
+* `tw::for_each`
+* `tw::transform`
+
+These are very similar to their standard library counterparts except that they 
+return a task for deferred, possibly asynchronous execution. Here's an example:
+
+```
+std::vector<int> vec = {1, 2, 3, 4, 5, 6, 7};
+tw::parallel exec{4};
+auto task = tw::for_each(exec, vec.begin(), vec.end(), [](int& x){ x *= 2; });
+task->wait();  // all values in vec will have doubled
+
+```
 
 ### Canceling tasks
 
