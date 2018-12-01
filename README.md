@@ -279,12 +279,11 @@ There are convenience functions that can be applied to an iterator range:
 These are very similar to their standard library counterparts except that they 
 return a task for deferred, possibly asynchronous execution. Here's an example:
 
-```
+```cpp
 std::vector<int> vec = {1, 2, 3, 4, 5, 6, 7};
 tw::parallel exec{4};
 auto task = tw::for_each(exec, vec.begin(), vec.end(), [](int& x){ x *= 2; });
 task->wait();  // all values in vec will have doubled
-
 ```
 
 ### Canceling tasks
