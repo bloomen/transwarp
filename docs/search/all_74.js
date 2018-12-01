@@ -24,7 +24,7 @@ var searchData=
   ['thread_5fpool',['thread_pool',['../classtranswarp_1_1detail_1_1thread__pool.html',1,'transwarp::detail']]],
   ['timer',['timer',['../classtranswarp_1_1timer.html',1,'transwarp']]],
   ['to_5fstring',['to_string',['../namespacetranswarp.html#ab7cae8c7d0267dd51406f77f69697c3b',1,'transwarp::to_string(const transwarp::task_type &amp;type)'],['../namespacetranswarp.html#a28da1fe6230ae54e0d3552739185d0d5',1,'transwarp::to_string(const transwarp::node &amp;node, const std::string &amp;separator=&quot;\n&quot;)'],['../namespacetranswarp.html#a13e95277c8454385155c33f11b4cb576',1,'transwarp::to_string(const transwarp::edge &amp;edge, const std::string &amp;separator=&quot;\n&quot;)'],['../namespacetranswarp.html#ad3278182c37dab03799f90c0dff12db0',1,'transwarp::to_string(const std::vector&lt; transwarp::edge &gt; &amp;graph, const std::string &amp;separator=&quot;\n&quot;)']]],
-  ['transform',['transform',['../namespacetranswarp.html#aad30d80797247688119d71a8b5f33655',1,'transwarp']]],
+  ['transform',['transform',['../namespacetranswarp.html#aad30d80797247688119d71a8b5f33655',1,'transwarp::transform(InputIt first1, InputIt last1, OutputIt d_first, UnaryOperation unary_op)'],['../namespacetranswarp.html#aa898be1c81bb5aa44f15149f18d59f06',1,'transwarp::transform(transwarp::executor &amp;executor, InputIt first1, InputIt last1, OutputIt d_first, UnaryOperation unary_op)']]],
   ['transwarp',['transwarp',['../namespacetranswarp.html',1,'']]],
   ['transwarp_5fcancel_5fpoint',['transwarp_cancel_point',['../classtranswarp_1_1functor.html#a4bdb9b52c5fc46d7a872a25b0a5866af',1,'transwarp::functor']]],
   ['transwarp_5ferror',['transwarp_error',['../classtranswarp_1_1transwarp__error.html',1,'transwarp']]],

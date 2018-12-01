@@ -311,6 +311,16 @@ std::vector&lt; std::shared_ptr<br class="typebreak"/>
 &lt; <a class="el" href="classtranswarp_1_1task.html">transwarp::task</a>&lt; void &gt; &gt; &gt; &gt; &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacetranswarp.html#a5f305e6b8c511e3f1b5b23405ba643a2">for_each</a> (InputIt first, InputIt last, UnaryOperation unary_op)</td></tr>
 <tr class="memdesc:a5f305e6b8c511e3f1b5b23405ba643a2"><td class="mdescLeft">&#160;</td><td class="mdescRight">A function similar to std::for_each but returning a transwarp task for deferred, possibly asynchronous execution. This function creates a graph with std::distance(first, last) root nodes. <br/></td></tr>
 <tr class="separator:a5f305e6b8c511e3f1b5b23405ba643a2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abba7f2db660057293023ada21d26d3fa"><td class="memTemplParams" colspan="2"><a class="anchor" id="abba7f2db660057293023ada21d26d3fa"></a>
+template&lt;typename InputIt , typename UnaryOperation &gt; </td></tr>
+<tr class="memitem:abba7f2db660057293023ada21d26d3fa"><td class="memTemplItemLeft" align="right" valign="top">std::shared_ptr<br class="typebreak"/>
+&lt; <a class="el" href="classtranswarp_1_1task__impl.html">transwarp::task_impl</a><br class="typebreak"/>
+&lt; <a class="el" href="structtranswarp_1_1wait__type.html">transwarp::wait_type</a>, <br class="typebreak"/>
+<a class="el" href="structtranswarp_1_1no__op__functor.html">transwarp::no_op_functor</a>, <br class="typebreak"/>
+std::vector&lt; std::shared_ptr<br class="typebreak"/>
+&lt; <a class="el" href="classtranswarp_1_1task.html">transwarp::task</a>&lt; void &gt; &gt; &gt; &gt; &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacetranswarp.html#abba7f2db660057293023ada21d26d3fa">for_each</a> (<a class="el" href="classtranswarp_1_1executor.html">transwarp::executor</a> &amp;<a class="el" href="classtranswarp_1_1executor.html">executor</a>, InputIt first, InputIt last, UnaryOperation unary_op)</td></tr>
+<tr class="memdesc:abba7f2db660057293023ada21d26d3fa"><td class="mdescLeft">&#160;</td><td class="mdescRight">A function similar to std::for_each but returning a transwarp task for deferred, possibly asynchronous execution. This function creates a graph with std::distance(first, last) root nodes. Overload for automatic scheduling by passing an executor. <br/></td></tr>
+<tr class="separator:abba7f2db660057293023ada21d26d3fa"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aad30d80797247688119d71a8b5f33655"><td class="memTemplParams" colspan="2"><a class="anchor" id="aad30d80797247688119d71a8b5f33655"></a>
 template&lt;typename InputIt , typename OutputIt , typename UnaryOperation &gt; </td></tr>
 <tr class="memitem:aad30d80797247688119d71a8b5f33655"><td class="memTemplItemLeft" align="right" valign="top">std::shared_ptr<br class="typebreak"/>
@@ -321,6 +331,16 @@ std::vector&lt; std::shared_ptr<br class="typebreak"/>
 &lt; <a class="el" href="classtranswarp_1_1task.html">transwarp::task</a>&lt; void &gt; &gt; &gt; &gt; &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacetranswarp.html#aad30d80797247688119d71a8b5f33655">transform</a> (InputIt first1, InputIt last1, OutputIt d_first, UnaryOperation unary_op)</td></tr>
 <tr class="memdesc:aad30d80797247688119d71a8b5f33655"><td class="mdescLeft">&#160;</td><td class="mdescRight">A function similar to std::transform but returning a transwarp task for deferred, possibly asynchronous execution. This function creates a graph with std::distance(first1, last1) root nodes. <br/></td></tr>
 <tr class="separator:aad30d80797247688119d71a8b5f33655"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa898be1c81bb5aa44f15149f18d59f06"><td class="memTemplParams" colspan="2"><a class="anchor" id="aa898be1c81bb5aa44f15149f18d59f06"></a>
+template&lt;typename InputIt , typename OutputIt , typename UnaryOperation &gt; </td></tr>
+<tr class="memitem:aa898be1c81bb5aa44f15149f18d59f06"><td class="memTemplItemLeft" align="right" valign="top">std::shared_ptr<br class="typebreak"/>
+&lt; <a class="el" href="classtranswarp_1_1task__impl.html">transwarp::task_impl</a><br class="typebreak"/>
+&lt; <a class="el" href="structtranswarp_1_1wait__type.html">transwarp::wait_type</a>, <br class="typebreak"/>
+<a class="el" href="structtranswarp_1_1no__op__functor.html">transwarp::no_op_functor</a>, <br class="typebreak"/>
+std::vector&lt; std::shared_ptr<br class="typebreak"/>
+&lt; <a class="el" href="classtranswarp_1_1task.html">transwarp::task</a>&lt; void &gt; &gt; &gt; &gt; &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacetranswarp.html#aa898be1c81bb5aa44f15149f18d59f06">transform</a> (<a class="el" href="classtranswarp_1_1executor.html">transwarp::executor</a> &amp;<a class="el" href="classtranswarp_1_1executor.html">executor</a>, InputIt first1, InputIt last1, OutputIt d_first, UnaryOperation unary_op)</td></tr>
+<tr class="memdesc:aa898be1c81bb5aa44f15149f18d59f06"><td class="mdescLeft">&#160;</td><td class="mdescRight">A function similar to std::transform but returning a transwarp task for deferred, possibly asynchronous execution. This function creates a graph with std::distance(first1, last1) root nodes. Overload for automatic scheduling by passing an executor. <br/></td></tr>
+<tr class="separator:aa898be1c81bb5aa44f15149f18d59f06"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="var-members"></a>
 Variables</h2></td></tr>
