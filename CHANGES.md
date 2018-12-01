@@ -1,3 +1,11 @@
+1.9.0
+
+- added `for_each` and `transform` free functions
+- added `get_task_count` and `get_parent_count` methods to the task class
+- performance optimizations regarding scheduling tasks
+- split up the test suite into multiple files
+- improved documentation
+
 1.8.1
 
 - timer class: Added tracking of idle time along with wait and run time
