@@ -1,3 +1,7 @@
+2.0.0
+
+- ?
+
 1.9.0
 
 - added `for_each` and `transform` free functions

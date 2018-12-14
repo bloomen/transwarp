@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 thisdir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-echo "+++ Running CppCheck ..."
+echo "+++ Running CppCheck (assuming version 1.83) ..."
 output=$(cppcheck --template="{file};{line};{severity};{id};{message}" --quiet \
 --enable=all --std=c99 --std=c++11 --relative-paths --suppress=missingIncludeSystem \
 --suppress=syntaxError --suppress=passedByValue --force --inline-suppr \
