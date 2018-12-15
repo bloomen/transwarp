@@ -22,6 +22,7 @@
 #include <tuple>
 #include <type_traits>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 
@@ -969,42 +970,17 @@ Result call(std::size_t node_id, const Task& task, const std::vector<std::shared
             work<Result>(node_id, task, parents);
 }
 
-template<std::size_t...> struct indices {};
-
-template<std::size_t...> struct construct_range;
-
-template<std::size_t end, std::size_t idx, std::size_t... i>
-struct construct_range<end, idx, i...> : construct_range<end, idx + 1, i..., idx> {};
-
-template<std::size_t end, std::size_t... i>
-struct construct_range<end, end, i...> {
-    using type = transwarp::detail::indices<i...>;
-};
-
-template<std::size_t b, std::size_t e>
-struct index_range {
-    using type = typename transwarp::detail::construct_range<e, b>::type;
-};
-
-template<typename Functor, typename... ParentResults>
-void call_with_each_index(transwarp::detail::indices<>, const Functor&, const std::tuple<std::shared_ptr<transwarp::task<ParentResults>>...>&) {}
-
-template<std::size_t i, std::size_t... j, typename Functor, typename... ParentResults>
-void call_with_each_index(transwarp::detail::indices<i, j...>, const Functor& f, const std::tuple<std::shared_ptr<transwarp::task<ParentResults>>...>& t) {
-    auto ptr = std::get<i>(t);
-    if (!ptr) {
-        throw transwarp::invalid_parameter{"task pointer"};
-    }
-    f(*ptr);
-    transwarp::detail::call_with_each_index(transwarp::detail::indices<j...>(), f, t);
-}
 
 /// Calls the functor with every element in the tuple
 template<typename Functor, typename... ParentResults>
 void call_with_each(const Functor& f, const std::tuple<std::shared_ptr<transwarp::task<ParentResults>>...>& t) {
-    constexpr std::size_t n = std::tuple_size<std::tuple<std::shared_ptr<transwarp::task<ParentResults>>...>>::value;
-    using index_t = typename transwarp::detail::index_range<0, n>::type;
-    transwarp::detail::call_with_each_index(index_t(), f, t);
+    auto callable = [&f](const auto& task) {
+        if (!task) {
+            throw transwarp::invalid_parameter{"task pointer"};
+        }
+        f(*task);
+    };
+    std::apply([&callable](const auto&... task){(..., callable(task));}, t);
 }
 
 /// Calls the functor with every element in the vector
