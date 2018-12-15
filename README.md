@@ -1,10 +1,8 @@
 # transwarp 
 
-<a href="https://raw.githubusercontent.com/bloomen/transwarp/master/src/transwarp.h" download="transwarp.h">Download as single header from here</a>
+[![Gitter](https://badges.gitter.im/bloomen/transwarp.svg)](https://gitter.im/bloomen/transwarp) [![Travis](https://travis-ci.org/bloomen/transwarp.svg?branch=master)](https://travis-ci.org/bloomen/transwarp/branches) [![Appveyor](https://ci.appveyor.com/api/projects/status/wrtbk9l3b94eeb9t/branch/master?svg=true)](https://ci.appveyor.com/project/bloomen/transwarp?branch=master)
 
 <a href="https://bloomen.github.io/transwarp">Doxygen documentation</a>
-
-[![Gitter](https://badges.gitter.im/bloomen/transwarp.svg)](https://gitter.im/bloomen/transwarp) [![Travis](https://travis-ci.org/bloomen/transwarp.svg?branch=master)](https://travis-ci.org/bloomen/transwarp/branches) [![Appveyor](https://ci.appveyor.com/api/projects/status/wrtbk9l3b94eeb9t/branch/master?svg=true)](https://ci.appveyor.com/project/bloomen/transwarp?branch=master)
 
 transwarp is a header-only C++ library for task concurrency. It
 allows you to easily create a graph of tasks where every task can be executed
