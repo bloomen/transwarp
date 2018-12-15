@@ -139,8 +139,6 @@ struct unvisit_visitor;
 struct final_visitor;
 struct schedule_visitor;
 struct node_manip;
-template<bool>
-struct assign_node_if_impl;
 
 } // detail
 
@@ -482,6 +480,15 @@ public:
 };
 
 
+/// Detail namespace for internal functionality only
+namespace detail {
+
+template<typename F>
+void assign_node_if(F&, const std::shared_ptr<transwarp::node>&) noexcept;
+
+} // detail
+
+
 /// A base class for a user-defined functor that needs access to the node associated
 /// to the task or a cancel point to stop a task while it's running
 class functor {
@@ -505,8 +512,8 @@ protected:
     }
 
 private:
-    template<bool>
-    friend struct transwarp::detail::assign_node_if_impl;
+    template<typename F>
+    friend void transwarp::detail::assign_node_if(F&, const std::shared_ptr<transwarp::node>&) noexcept;
 
     std::shared_ptr<transwarp::node> transwarp_node_;
 };
@@ -1325,28 +1332,15 @@ struct functor_result<transwarp::wait_any_type, Functor, std::vector<std::shared
     using type = decltype(std::declval<Functor>()());
 };
 
-template<bool is_transwarp_functor>
-struct assign_node_if_impl;
-
-template<>
-struct assign_node_if_impl<true> {
-    template<typename Functor>
-    void operator()(Functor& functor, std::shared_ptr<transwarp::node> node) const noexcept {
-        functor.transwarp_node_ = std::move(node);
-    }
-};
-
-template<>
-struct assign_node_if_impl<false> {
-    template<typename Functor>
-    void operator()(Functor&, std::shared_ptr<transwarp::node>) const noexcept {}
-};
 
 /// Assigns the node to the given functor if the functor is a subclass of transwarp::functor
 template<typename Functor>
-void assign_node_if(Functor& functor, std::shared_ptr<transwarp::node> node) noexcept {
-    transwarp::detail::assign_node_if_impl<std::is_base_of<transwarp::functor, Functor>::value>{}(functor, std::move(node));
+void assign_node_if(Functor& functor, const std::shared_ptr<transwarp::node>& node) noexcept {
+    if constexpr (std::is_base_of<transwarp::functor, Functor>::value) {
+        functor.transwarp_node_ = node;
+    }
 }
+
 
 /// Returns a ready future with the given value as its state
 template<typename ResultType, typename Value>
