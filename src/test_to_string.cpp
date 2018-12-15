@@ -10,18 +10,18 @@ TEST_CASE("make_dot_graph_with_empty_graph") {
 TEST_CASE("make_dot_graph_with_three_nodes") {
     auto node2 = std::make_shared<tw::node>();
     tw::detail::node_manip::set_type(*node2, tw::task_type::consume);
-    tw::detail::node_manip::set_name(*node2, std::make_shared<std::string>("node2"));
+    tw::detail::node_manip::set_name(*node2, std::make_optional(std::string{"node2"}));
     tw::detail::node_manip::set_id(*node2, 1);
     tw::detail::node_manip::set_avg_runtime_us(*node2, 42);
     auto node3 = std::make_shared<tw::node>();
     tw::detail::node_manip::set_type(*node3, tw::task_type::wait);
-    tw::detail::node_manip::set_name(*node3, std::make_shared<std::string>("node3"));
+    tw::detail::node_manip::set_name(*node3, std::make_optional(std::string{"node3"}));
     tw::detail::node_manip::set_id(*node3, 2);
-    tw::detail::node_manip::set_executor(*node3, std::make_shared<std::string>("exec"));
+    tw::detail::node_manip::set_executor(*node3, std::make_optional(std::string{"exec"}));
     tw::detail::node_manip::set_avg_waittime_us(*node3, 43);
     auto node1 = std::make_shared<tw::node>();
     tw::detail::node_manip::set_type(*node1, tw::task_type::consume);
-    tw::detail::node_manip::set_name(*node1, std::make_shared<std::string>("node1"));
+    tw::detail::node_manip::set_name(*node1, std::make_optional(std::string{"node1"}));
     tw::detail::node_manip::set_id(*node1, 0);
     tw::detail::node_manip::set_level(*node1, 1);
     tw::detail::node_manip::add_parent(*node1, node2);

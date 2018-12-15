@@ -3,7 +3,7 @@
 std::shared_ptr<tw::node> generic_node() {
     auto node = std::make_shared<tw::node>();
     tw::detail::node_manip::set_type(*node, tw::task_type::consume);
-    tw::detail::node_manip::set_name(*node, std::make_shared<std::string>("cool"));
+    tw::detail::node_manip::set_name(*node, std::make_optional(std::string{"cool"}));
     tw::detail::node_manip::set_id(*node, 1);
     return node;
 }

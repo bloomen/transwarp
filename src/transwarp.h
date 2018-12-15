@@ -13,6 +13,7 @@
 #include <future>
 #include <memory>
 #include <mutex>
+#include <optional>
 #include <queue>
 #include <stdexcept>
 #include <string>
@@ -169,13 +170,13 @@ public:
         return type_;
     }
 
-    /// The optional task name (may be null)
-    const std::shared_ptr<std::string>& name() const noexcept {
+    /// The optional task name
+    const std::optional<std::string>& name() const noexcept {
         return name_;
     }
 
-    /// The optional, task-specific executor (may be null)
-    const std::shared_ptr<std::string>& executor() const noexcept {
+    /// The optional, task-specific executor
+    const std::optional<std::string>& executor() const noexcept {
         return executor_;
     }
 
@@ -220,8 +221,8 @@ private:
     std::size_t id_ = 0;
     std::size_t level_ = 0;
     transwarp::task_type type_ = transwarp::task_type::root;
-    std::shared_ptr<std::string> name_;
-    std::shared_ptr<std::string> executor_;
+    std::optional<std::string> name_;
+    std::optional<std::string> executor_;
     std::vector<std::shared_ptr<node>> parents_;
     std::size_t priority_ = 0;
     std::shared_ptr<void> custom_data_;
@@ -235,14 +236,14 @@ private:
 inline std::string to_string(const transwarp::node& node, const std::string& separator="\n") {
     std::string s;
     s += '"';
-    const std::shared_ptr<std::string>& name = node.name();
+    const std::optional<std::string>& name = node.name();
     if (name) {
         s += "<" + *name + ">" + separator;
     }
     s += transwarp::to_string(node.type());
     s += " id=" + std::to_string(node.id());
     s += " lev=" + std::to_string(node.level());
-    const std::shared_ptr<std::string>& exec = node.executor();
+    const std::optional<std::string>& exec = node.executor();
     if (exec) {
         s += separator + "<" + *exec + ">";
     }
@@ -528,16 +529,12 @@ struct node_manip {
         node.type_ = type;
     }
 
-    static void set_name(transwarp::node& node, std::shared_ptr<std::string> name) noexcept {
+    static void set_name(transwarp::node& node, std::optional<std::string> name) noexcept {
         node.name_ = std::move(name);
     }
 
-    static void set_executor(transwarp::node& node, std::shared_ptr<std::string> executor) noexcept {
-        if (executor) {
-            node.executor_ = std::move(executor);
-        } else {
-            node.executor_.reset();
-        }
+    static void set_executor(transwarp::node& node, std::optional<std::string> executor) noexcept {
+        node.executor_ = std::move(executor);
     }
 
     static void add_parent(transwarp::node& node, std::shared_ptr<transwarp::node> parent) {
@@ -549,11 +546,7 @@ struct node_manip {
     }
 
     static void set_custom_data(transwarp::node& node, std::shared_ptr<void> custom_data) {
-        if (custom_data) {
-            node.custom_data_ = std::move(custom_data);
-        } else {
-            node.custom_data_.reset();
-        }
+        node.custom_data_ = std::move(custom_data);
     }
 
     static void set_canceled(transwarp::node& node, bool enabled) noexcept {
@@ -1712,7 +1705,7 @@ public:
             throw transwarp::invalid_parameter("executor pointer");
         }
         executor_ = std::move(executor);
-        transwarp::detail::node_manip::set_executor(*node_, std::shared_ptr<std::string>(new std::string{executor_->get_name()}));
+        transwarp::detail::node_manip::set_executor(*node_, std::make_optional(executor_->get_name()));
     }
 
     /// Assigns an executor to all tasks which takes precedence over
@@ -1727,7 +1720,7 @@ public:
     void remove_executor() override {
         ensure_task_not_running();
         executor_.reset();
-        transwarp::detail::node_manip::set_executor(*node_, nullptr);
+        transwarp::detail::node_manip::set_executor(*node_, {});
     }
 
     /// Removes the executor from all tasks
@@ -1786,7 +1779,7 @@ public:
     /// Removes custom data from this task
     void remove_custom_data() override {
         ensure_task_not_running();
-        transwarp::detail::node_manip::set_custom_data(*node_, nullptr);
+        transwarp::detail::node_manip::set_custom_data(*node_, {});
     }
 
     /// Removes custom data from all tasks
@@ -2106,7 +2099,7 @@ protected:
 
     void init(bool has_name, std::string name) {
         transwarp::detail::node_manip::set_type(*node_, task_type::value);
-        transwarp::detail::node_manip::set_name(*node_, (has_name ? std::shared_ptr<std::string>(new std::string{std::move(name)}) : nullptr));
+        transwarp::detail::node_manip::set_name(*node_, (has_name ? std::make_optional(std::move(name)) : std::optional<std::string>{}));
         transwarp::detail::assign_node_if(functor_, node_);
         transwarp::detail::call_with_each(transwarp::detail::parent_visitor(*node_), parents_);
         transwarp::detail::final_visitor visitor{task_count_};
@@ -2490,7 +2483,7 @@ public:
       future_{transwarp::detail::make_future_with_value<result_type>(std::forward<T>(value))}
     {
         transwarp::detail::node_manip::set_type(*node_, task_type::value);
-        transwarp::detail::node_manip::set_name(*node_, (has_name ? std::shared_ptr<std::string>(new std::string{std::move(name)}) : nullptr));
+        transwarp::detail::node_manip::set_name(*node_, (has_name ? std::make_optional(std::move(name)) : std::optional<std::string>{}));
     }
 
     // delete copy/move semantics
@@ -2566,7 +2559,7 @@ public:
 
     /// Removes custom data from this task
     void remove_custom_data() override {
-        transwarp::detail::node_manip::set_custom_data(*node_, nullptr);
+        transwarp::detail::node_manip::set_custom_data(*node_, {});
     }
 
     /// Removes custom data from all tasks
