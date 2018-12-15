@@ -905,15 +905,9 @@ struct call_impl<transwarp::wait_type, true, total, n...> {
     template<typename Result, typename Task, typename... ParentResults>
     static Result work(std::size_t node_id, const Task& task, const std::tuple<std::shared_ptr<transwarp::task<ParentResults>>...>& parents) {
         transwarp::detail::wait_for_all(std::get<n>(parents)...);
-        get_all(std::get<n>(parents)...); // Ensures that exceptions are propagated
+        std::apply([](auto&... parent){(..., parent->future().get());}, parents); // Ensures that exceptions are propagated
         return transwarp::detail::run_task<Result>(node_id, task);
     }
-    template<typename T, typename... Args>
-    static void get_all(const T& arg, const Args& ...args) {
-        arg->future().get();
-        get_all(args...);
-    }
-    static void get_all() {}
 };
 
 template<>
