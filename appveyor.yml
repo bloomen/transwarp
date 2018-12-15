@@ -12,7 +12,6 @@ environment:
 branches:
   only:
     - master
-    - master_cpp11
 
 configuration:
   - Debug
@@ -28,11 +27,9 @@ before_build:
   - cmd: cd C:\projects\transwarp
   - cmd: md build
   - cmd: cd build
-  - cmd: set CPPSTD=/std:c++17
-  - cmd: if "%branch%"=="master_cpp11" set CPPSTD=/std:c++14
   - cmd: if "%platform%"=="Win32" set CMAKE_GENERATOR_NAME=Visual Studio 15 2017
   - cmd: if "%platform%"=="x64"   set CMAKE_GENERATOR_NAME=Visual Studio 15 2017 Win64
-  - cmd: cmake -G "%CMAKE_GENERATOR_NAME%" -DCMAKE_CXX_COMPILER_ARG1="%CPPSTD%" ..
+  - cmd: cmake -G "%CMAKE_GENERATOR_NAME%" -DCMAKE_CXX_COMPILER_ARG1=/std:c++17 ..
 
 build:
   project: C:\projects\transwarp\build\transwarp.sln

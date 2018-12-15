@@ -4,7 +4,6 @@ language: cpp
 branches:
   only:
     - master
-    - master_cpp11
 
 matrix:
   include:
@@ -29,9 +28,7 @@ matrix:
 
 script:
     - mkdir build && cd build
-    - CPPSTD="-std=c++17"
-    - if [ "$TRAVIS_BRANCH" = "master_cpp11" ]; then CPPSTD="-std=c++11"; fi
-    - cmake -DCMAKE_BUILD_TYPE=$CONFIGURATION -DCMAKE_CXX_COMPILER_ARG1=$CPPSTD ..
+    - cmake -DCMAKE_BUILD_TYPE=$CONFIGURATION -DCMAKE_CXX_COMPILER_ARG1=-std=c++17 ..
     - make -j4
     - ctest --verbose
 
