@@ -62,8 +62,8 @@ int main() {
     std::cout << "result = " << task3->get() << std::endl;  // result = 58.8
 
     // Creating a dot-style graph for visualization
-    const auto graph = task3->get_graph();
-    std::ofstream("basic_with_three_tasks.dot") << tw::to_string(graph);
+    const auto edges = task3->edges();
+    std::ofstream("basic_with_three_tasks.dot") << tw::to_string(edges);
 }
 ```
 
@@ -122,8 +122,7 @@ the resulting parent futures as they are without unwrapping. Hence, the child
 can decide how to proceed since a call to `get()` can potentially throw an
 exception. Here's an example:
 ```cpp
-auto task = tw::make_task(tw::accept, [](std::shared_future<int> f1,
-                                         std::shared_future<int> f2) {
+auto task = tw::make_task(tw::accept, [](auto f1, auto f2) {
                                              return f1.get() + f2.get();
                                          }, parent1, parent2);
 ```
@@ -132,7 +131,7 @@ auto task = tw::make_task(tw::accept, [](std::shared_future<int> f1,
 functor takes exactly one future, namely the future of the parent that
 first finishes. All other parents are abandoned and canceled. Here's an example:
 ```cpp
-auto task = tw::make_task(tw::accept_any, [](std::shared_future<int> f1) {
+auto task = tw::make_task(tw::accept_any, [](auto f1) {
                                                  return f1.get();
                                              }, parent1, parent2);
 ```
@@ -248,7 +247,7 @@ public:
     virtual ~executor() = default;
     
     // The name of the executor
-    virtual std::string get_name() const = 0;
+    virtual std::string name() const = 0;
     
     // Only ever called on the thread of the caller to schedule()
     virtual void execute(const std::function<void()>& functor, const std::shared_ptr<tw::node>& node) = 0;
