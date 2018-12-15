@@ -1,7 +1,5 @@
 # transwarp 
 
-**Version 2.0.0 (in development)**
-
 <a href="https://raw.githubusercontent.com/bloomen/transwarp/master/src/transwarp.h" download="transwarp.h">Download as single header from here</a>
 
 <a href="https://bloomen.github.io/transwarp">Doxygen documentation</a>
