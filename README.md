@@ -122,18 +122,14 @@ the resulting parent futures as they are without unwrapping. Hence, the child
 can decide how to proceed since a call to `get()` can potentially throw an
 exception. Here's an example:
 ```cpp
-auto task = tw::make_task(tw::accept, [](auto f1, auto f2) {
-                                             return f1.get() + f2.get();
-                                         }, parent1, parent2);
+auto task = tw::make_task(tw::accept, [](auto f1, auto f2) { return f1.get() + f2.get(); }, parent1, parent2);
 ```
 
 **_accept_any_**: This task is required to have at least one parent but its
 functor takes exactly one future, namely the future of the parent that
 first finishes. All other parents are abandoned and canceled. Here's an example:
 ```cpp
-auto task = tw::make_task(tw::accept_any, [](auto f1) {
-                                                 return f1.get();
-                                             }, parent1, parent2);
+auto task = tw::make_task(tw::accept_any, [](auto f1) { return f1.get(); }, parent1, parent2);
 ```
 Note that canceling only works for already running tasks when the functor is 
 sub-classed from `transwarp::functor`.
@@ -144,18 +140,14 @@ The results are then passed to the child, hence, consumed by the child task.
 The child task will not be invoked if any parent throws an exception.
 For example:
 ```cpp
-auto task = tw::make_task(tw::consume, [](int x, int y) {
-                                              return x + y;
-                                          }, parent1, parent2);
+auto task = tw::make_task(tw::consume, [](int x, int y) { return x + y; }, parent1, parent2);
 ```
 
 **_consume_any_**: This task follows the same rules as `accept_any` with the difference
 that the resulting parent futures are unwrapped (have `get()` called on them).
 For example:
 ```cpp
-auto task = tw::make_task(tw::consume_any, [](int x) {
-                                                  return x;
-                                              }, parent1, parent2);
+auto task = tw::make_task(tw::consume_any, [](int x) { return x; }, parent1, parent2);
 ``` 
 
 **_wait_**: This task's functor does not take any parameters but the task
