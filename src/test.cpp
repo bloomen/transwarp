@@ -264,7 +264,7 @@ TEST_CASE("task_priority") {
 TEST_CASE("task_custom_data") {
     auto t = tw::make_task(tw::root, []{});
     REQUIRE(nullptr == t->get_node()->custom_data());
-    auto cd = std::make_shared<int>(42);
+    auto cd = std::make_shared<std::any>(42);
     t->set_custom_data(cd);
     REQUIRE(cd.get() == t->get_node()->custom_data().get());
     t->remove_custom_data();
@@ -293,19 +293,19 @@ TEST_CASE("reset_priority_all") {
 TEST_CASE("set_custom_data_all") {
     auto t1 = tw::make_task(tw::root, []{});
     auto t2 = tw::make_task(tw::wait, []{}, t1);
-    auto data = std::make_shared<int>(42);
+    auto data = std::make_shared<std::any>(42);
     t2->set_custom_data_all(data);
-    REQUIRE(*static_cast<int*>(t1->get_node()->custom_data().get()) == *data);
-    REQUIRE(*static_cast<int*>(t2->get_node()->custom_data().get()) == *data);
+    REQUIRE(42 == std::any_cast<int>(*(t1->get_node()->custom_data())));
+    REQUIRE(42 == std::any_cast<int>(*(t2->get_node()->custom_data())));
 }
 
 TEST_CASE("remove_custom_data_all") {
     auto t1 = tw::make_task(tw::root, []{});
     auto t2 = tw::make_task(tw::wait, []{}, t1);
-    auto data = std::make_shared<int>(42);
+    auto data = std::make_shared<std::any>(42);
     t2->set_custom_data_all(data);
-    REQUIRE(*static_cast<int*>(t1->get_node()->custom_data().get()) == *data);
-    REQUIRE(*static_cast<int*>(t2->get_node()->custom_data().get()) == *data);
+    REQUIRE(42 == std::any_cast<int>(*(t1->get_node()->custom_data())));
+    REQUIRE(42 == std::any_cast<int>(*(t2->get_node()->custom_data())));
     t2->remove_custom_data_all();
     REQUIRE_FALSE(t1->get_node()->custom_data());
     REQUIRE_FALSE(t2->get_node()->custom_data());

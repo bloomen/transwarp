@@ -40,7 +40,7 @@ TEST_CASE("value_task_with_name") {
 TEST_CASE("value_task_with_priority_and_custom_data") {
     auto t = tw::make_value_task(42);
     t->set_priority(13);
-    auto data = std::make_shared<double>(13.5);
+    auto data = std::make_shared<std::any>(13.5);
     t->set_custom_data(data);
     auto n = t->get_node();
     REQUIRE(13u == n->priority());
@@ -54,7 +54,7 @@ TEST_CASE("value_task_with_priority_and_custom_data") {
 TEST_CASE("value_task_with_priority_all_and_custom_data_all") {
     auto t = tw::make_value_task(42);
     t->set_priority_all(13);
-    auto data = std::make_shared<double>(13.5);
+    auto data = std::make_shared<std::any>(13.5);
     t->set_custom_data_all(data);
     auto n = t->get_node();
     REQUIRE(13u == n->priority());
