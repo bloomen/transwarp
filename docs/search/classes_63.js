@@ -19,10 +19,6 @@ var searchData=
   ['cancel_5fvisitor',['cancel_visitor',['../structtranswarp_1_1detail_1_1cancel__visitor.html',1,'transwarp::detail']]],
   ['circular_5fbuffer',['circular_buffer',['../classtranswarp_1_1detail_1_1circular__buffer.html',1,'transwarp::detail']]],
   ['circular_5fbuffer_3c_20std_3a_3ashared_5fptr_3c_20transwarp_3a_3atranswarp_3a_3anode_20_3e_20_3e',['circular_buffer&lt; std::shared_ptr&lt; transwarp::transwarp::node &gt; &gt;',['../classtranswarp_1_1detail_1_1circular__buffer.html',1,'transwarp::detail']]],
-  ['construct_5frange',['construct_range',['../structtranswarp_1_1detail_1_1construct__range.html',1,'transwarp::detail']]],
-  ['construct_5frange_3c_20end_2c_20end_2c_20i_2e_2e_2e_3e',['construct_range&lt; end, end, i...&gt;',['../structtranswarp_1_1detail_1_1construct__range_3_01end_00_01end_00_01i_8_8_8_4.html',1,'transwarp::detail']]],
-  ['construct_5frange_3c_20end_2c_20idx_2b1_2c_20i_2e_2e_2e_2c_20idx_20_3e',['construct_range&lt; end, idx+1, i..., idx &gt;',['../structtranswarp_1_1detail_1_1construct__range.html',1,'transwarp::detail']]],
-  ['construct_5frange_3c_20end_2c_20idx_2c_20i_2e_2e_2e_3e',['construct_range&lt; end, idx, i...&gt;',['../structtranswarp_1_1detail_1_1construct__range_3_01end_00_01idx_00_01i_8_8_8_4.html',1,'transwarp::detail']]],
   ['consume_5fany_5ftype',['consume_any_type',['../structtranswarp_1_1consume__any__type.html',1,'transwarp']]],
   ['consume_5ftype',['consume_type',['../structtranswarp_1_1consume__type.html',1,'transwarp']]],
   ['control_5ferror',['control_error',['../classtranswarp_1_1control__error.html',1,'transwarp']]]
