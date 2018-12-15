@@ -7,21 +7,21 @@ branches:
 
 matrix:
   include:
-#    - os: linux
-#      env: CONFIGURATION=Debug
-#      compiler: gcc
-#    - os: linux
-#      env: CONFIGURATION=Debug
-#      compiler: clang
+    - os: linux
+      env: CONFIGURATION=Debug
+      compiler: gcc
+    - os: linux
+      env: CONFIGURATION=Debug
+      compiler: clang
     - os: osx
       env: CONFIGURATION=Debug
       compiler: clang
-#    - os: linux
-#      env: CONFIGURATION=Release
-#      compiler: gcc
-#    - os: linux
-#      env: CONFIGURATION=Release
-#      compiler: clang
+    - os: linux
+      env: CONFIGURATION=Release
+      compiler: gcc
+    - os: linux
+      env: CONFIGURATION=Release
+      compiler: clang
     - os: osx
       env: CONFIGURATION=Release
       compiler: clang
