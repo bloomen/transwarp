@@ -2877,10 +2877,10 @@ public:
       finished_{maximum_size}
     {
         if (minimum_ < 1) {
-            throw transwarp::invalid_parameter("minimum size");
+            throw transwarp::invalid_parameter{"minimum size"};
         }
         if (minimum_ > maximum_) {
-            throw transwarp::invalid_parameter("minimum or maximum size");
+            throw transwarp::invalid_parameter{"minimum or maximum size"};
         }
         for (std::size_t i=0; i<minimum_; ++i) {
             idle_.push(generate());
@@ -2900,7 +2900,7 @@ public:
     std::shared_ptr<Graph> next_idle_graph(bool maybe_resize=true) {
         std::shared_ptr<transwarp::node> finished_node;
         {
-            std::lock_guard<transwarp::detail::spinlock> lock(spinlock_);
+            std::lock_guard<transwarp::detail::spinlock> lock{spinlock_};
             if (!finished_.empty()) {
                 finished_node = finished_.front(); finished_.pop();
             }
@@ -3035,7 +3035,7 @@ private:
     transwarp::detail::circular_buffer<std::shared_ptr<transwarp::node>> finished_;
     std::queue<std::shared_ptr<Graph>> idle_;
     std::unordered_map<std::shared_ptr<transwarp::node>, std::shared_ptr<Graph>> busy_;
-    std::shared_ptr<transwarp::listener> listener_{new finished_listener(*this)};
+    std::shared_ptr<transwarp::listener> listener_{new finished_listener{*this}};
 };
 
 
