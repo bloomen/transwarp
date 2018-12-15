@@ -155,42 +155,42 @@ public:
     node& operator=(node&&) = delete;
 
     /// The task ID
-    std::size_t get_id() const noexcept {
+    std::size_t id() const noexcept {
         return id_;
     }
 
     /// The task level
-    std::size_t get_level() const noexcept {
+    std::size_t level() const noexcept {
         return level_;
     }
 
     /// The task type
-    transwarp::task_type get_type() const noexcept {
+    transwarp::task_type type() const noexcept {
         return type_;
     }
 
     /// The optional task name (may be null)
-    const std::shared_ptr<std::string>& get_name() const noexcept {
+    const std::shared_ptr<std::string>& name() const noexcept {
         return name_;
     }
 
     /// The optional, task-specific executor (may be null)
-    const std::shared_ptr<std::string>& get_executor() const noexcept {
+    const std::shared_ptr<std::string>& executor() const noexcept {
         return executor_;
     }
 
     /// The task's parents (may be empty)
-    const std::vector<std::shared_ptr<node>>& get_parents() const noexcept {
+    const std::vector<std::shared_ptr<node>>& parents() const noexcept {
         return parents_;
     }
 
     /// The task priority (defaults to 0)
-    std::size_t get_priority() const noexcept {
+    std::size_t priority() const noexcept {
         return priority_;
     }
 
     /// The custom task data (may be null)
-    const std::shared_ptr<void>& get_custom_data() const noexcept {
+    const std::shared_ptr<void>& custom_data() const noexcept {
         return custom_data_;
     }
 
@@ -200,17 +200,17 @@ public:
     }
 
     /// Returns the average idletime in microseconds (-1 if never set)
-    std::int64_t get_avg_idletime_us() const noexcept {
+    std::int64_t avg_idletime_us() const noexcept {
         return avg_idletime_us_.load();
     }
 
     /// Returns the average waittime in microseconds (-1 if never set)
-    std::int64_t get_avg_waittime_us() const noexcept {
+    std::int64_t avg_waittime_us() const noexcept {
         return avg_waittime_us_.load();
     }
 
     /// Returns the average runtime in microseconds (-1 if never set)
-    std::int64_t get_avg_runtime_us() const noexcept {
+    std::int64_t avg_runtime_us() const noexcept {
         return avg_runtime_us_.load();
     }
 
@@ -235,26 +235,26 @@ private:
 inline std::string to_string(const transwarp::node& node, const std::string& separator="\n") {
     std::string s;
     s += '"';
-    const std::shared_ptr<std::string>& name = node.get_name();
+    const std::shared_ptr<std::string>& name = node.name();
     if (name) {
         s += "<" + *name + ">" + separator;
     }
-    s += transwarp::to_string(node.get_type());
-    s += " id=" + std::to_string(node.get_id());
-    s += " lev=" + std::to_string(node.get_level());
-    const std::shared_ptr<std::string>& exec = node.get_executor();
+    s += transwarp::to_string(node.type());
+    s += " id=" + std::to_string(node.id());
+    s += " lev=" + std::to_string(node.level());
+    const std::shared_ptr<std::string>& exec = node.executor();
     if (exec) {
         s += separator + "<" + *exec + ">";
     }
-    const std::int64_t avg_idletime_us = node.get_avg_idletime_us();
+    const std::int64_t avg_idletime_us = node.avg_idletime_us();
     if (avg_idletime_us >= 0) {
         s += separator + "avg-idle-us=" + std::to_string(avg_idletime_us);
     }
-    const std::int64_t avg_waittime_us = node.get_avg_waittime_us();
+    const std::int64_t avg_waittime_us = node.avg_waittime_us();
     if (avg_waittime_us >= 0) {
         s += separator + "avg-wait-us=" + std::to_string(avg_waittime_us);
     }
-    const std::int64_t avg_runtime_us = node.get_avg_runtime_us();
+    const std::int64_t avg_runtime_us = node.avg_runtime_us();
     if (avg_runtime_us >= 0) {
         s += separator + "avg-run-us=" + std::to_string(avg_runtime_us);
     }
@@ -497,7 +497,7 @@ protected:
     /// which will stop the task while it's running
     void transwarp_cancel_point() const {
         if (transwarp_node_->is_canceled()) {
-            throw transwarp::task_canceled(std::to_string(transwarp_node_->get_id()));
+            throw transwarp::task_canceled(std::to_string(transwarp_node_->id()));
         }
     }
 
@@ -1032,9 +1032,9 @@ struct parent_visitor {
 
     void operator()(const transwarp::itask& task) const {
         transwarp::detail::node_manip::add_parent(node_, task.get_node());
-        if (node_.get_level() <= task.get_node()->get_level()) {
+        if (node_.level() <= task.get_node()->level()) {
             /// A child's level is always larger than any of its parents' levels
-            transwarp::detail::node_manip::set_level(node_, task.get_node()->get_level() + 1);
+            transwarp::detail::node_manip::set_level(node_, task.get_node()->level() + 1);
         }
     }
 
@@ -1062,7 +1062,7 @@ struct graph_visitor {
 
     void operator()(const transwarp::itask& task) {
         const std::shared_ptr<transwarp::node>& node = task.get_node();
-        for (const std::shared_ptr<transwarp::node>& parent : node->get_parents()) {
+        for (const std::shared_ptr<transwarp::node>& parent : node->parents()) {
             graph_.emplace_back(parent, node);
         }
     }
@@ -2155,7 +2155,7 @@ private:
             }
             std::weak_ptr<task_impl_base> self = this->shared_from_this();
             using runner_t = transwarp::detail::runner<result_type, task_type, task_impl_base, decltype(parents_)>;
-            std::shared_ptr<runner_t> runner = std::shared_ptr<runner_t>(new runner_t{node_->get_id(), self, parents_});
+            std::shared_ptr<runner_t> runner = std::shared_ptr<runner_t>(new runner_t{node_->id(), self, parents_});
             raise_event(transwarp::event_type::before_scheduled);
             future_ = runner->get_future();
             if (executor_) {
@@ -2212,10 +2212,10 @@ private:
         if (breadth_tasks_.empty()) {
             breadth_tasks_ = tasks_in_depth_order();
             auto compare = [](const transwarp::itask* const l, const transwarp::itask* const r) {
-                const std::size_t l_level = l->get_node()->get_level();
-                const std::size_t l_id = l->get_node()->get_id();
-                const std::size_t r_level = r->get_node()->get_level();
-                const std::size_t r_id = r->get_node()->get_id();
+                const std::size_t l_level = l->get_node()->level();
+                const std::size_t l_id = l->get_node()->id();
+                const std::size_t r_level = r->get_node()->level();
+                const std::size_t r_id = r->get_node()->id();
                 return std::tie(l_level, l_id) < std::tie(r_level, r_id);
             };
             std::sort(breadth_tasks_.begin(), breadth_tasks_.end(), compare);

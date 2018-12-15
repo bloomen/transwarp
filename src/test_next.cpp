@@ -13,7 +13,7 @@ TEST_CASE("task_next_with_name") {
     auto t2 = t1->then(tw::consume, name, [](int x){ return x + 1; });
     t2->schedule_all();
     REQUIRE(43 == t2->get());
-    REQUIRE(name == *t2->get_node()->get_name());
+    REQUIRE(name == *t2->get_node()->name());
 }
 
 TEST_CASE("value_task_next") {
@@ -29,5 +29,5 @@ TEST_CASE("value_task_next_with_name") {
     auto t2 = t1->then(tw::consume, name, [](int x){ return x + 1; });
     t2->schedule_all();
     REQUIRE(43 == t2->get());
-    REQUIRE(name == *t2->get_node()->get_name());
+    REQUIRE(name == *t2->get_node()->name());
 }

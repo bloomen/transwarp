@@ -58,9 +58,9 @@ TEST_CASE("schedule_with_three_tasks_wait") {
     auto f3 = []() { return 17; };
     auto task3 = tw::make_task(tw::wait, f3, task1, task2);
 
-    REQUIRE(tw::task_type::root == task1->get_node()->get_type());
-    REQUIRE(tw::task_type::root == task2->get_node()->get_type());
-    REQUIRE(tw::task_type::wait == task3->get_node()->get_type());
+    REQUIRE(tw::task_type::root == task1->get_node()->type());
+    REQUIRE(tw::task_type::root == task2->get_node()->type());
+    REQUIRE(tw::task_type::wait == task3->get_node()->type());
 
     task3->schedule_all();
     REQUIRE(17 == task3->get_future().get());
@@ -74,9 +74,9 @@ TEST_CASE("schedule_with_three_tasks_wait_any") {
     auto f3 = []() { return 17; };
     auto task3 = tw::make_task(tw::wait_any, f3, task1, task2);
 
-    REQUIRE(tw::task_type::root == task1->get_node()->get_type());
-    REQUIRE(tw::task_type::root == task2->get_node()->get_type());
-    REQUIRE(tw::task_type::wait_any == task3->get_node()->get_type());
+    REQUIRE(tw::task_type::root == task1->get_node()->type());
+    REQUIRE(tw::task_type::root == task2->get_node()->type());
+    REQUIRE(tw::task_type::wait_any == task3->get_node()->type());
 
     task3->schedule_all();
     REQUIRE(17 == task3->get_future().get());
@@ -96,9 +96,9 @@ TEST_CASE("schedule_with_three_tasks_consume_any") {
     auto f3 = [](int& x) -> int { return x; };
     auto task3 = tw::make_task(tw::consume_any, f3, task1, task2);
 
-    REQUIRE(tw::task_type::root == task1->get_node()->get_type());
-    REQUIRE(tw::task_type::root == task2->get_node()->get_type());
-    REQUIRE(tw::task_type::consume_any == task3->get_node()->get_type());
+    REQUIRE(tw::task_type::root == task1->get_node()->type());
+    REQUIRE(tw::task_type::root == task2->get_node()->type());
+    REQUIRE(tw::task_type::consume_any == task3->get_node()->type());
 
     tw::parallel exec{4};
     task3->schedule_all(exec);

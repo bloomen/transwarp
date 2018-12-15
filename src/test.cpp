@@ -13,9 +13,9 @@ void make_test_one_task(std::size_t threads, tw::schedule_type type) {
         task = tw::make_task(tw::root, f1);
         executor = std::make_shared<tw::sequential>();
     }
-    REQUIRE(0u == task->get_node()->get_id());
-    REQUIRE(0u == task->get_node()->get_parents().size());
-    REQUIRE_FALSE(task->get_node()->get_name());
+    REQUIRE(0u == task->get_node()->id());
+    REQUIRE(0u == task->get_node()->parents().size());
+    REQUIRE_FALSE(task->get_node()->name());
     const auto graph = task->get_graph();
     REQUIRE(0u == graph.size());
     task->schedule_all(*executor, type);
@@ -62,18 +62,18 @@ void make_test_three_tasks(std::size_t threads, tw::schedule_type type) {
         executor = std::make_shared<tw::sequential>();
     }
 
-    REQUIRE(0u == task1->get_node()->get_id());
-    REQUIRE(0u == task1->get_node()->get_parents().size());
-    REQUIRE("t1" == *task1->get_node()->get_name());
+    REQUIRE(0u == task1->get_node()->id());
+    REQUIRE(0u == task1->get_node()->parents().size());
+    REQUIRE("t1" == *task1->get_node()->name());
 
-    REQUIRE(1u == task2->get_node()->get_id());
-    REQUIRE(1u == task2->get_node()->get_parents().size());
-    REQUIRE("t2" == *task2->get_node()->get_name());
+    REQUIRE(1u == task2->get_node()->id());
+    REQUIRE(1u == task2->get_node()->parents().size());
+    REQUIRE("t2" == *task2->get_node()->name());
     task2->set_executor(std::make_shared<tw::sequential>());
 
-    REQUIRE(2u == task3->get_node()->get_id());
-    REQUIRE(2u == task3->get_node()->get_parents().size());
-    REQUIRE("t3" == *task3->get_node()->get_name());
+    REQUIRE(2u == task3->get_node()->id());
+    REQUIRE(2u == task3->get_node()->parents().size());
+    REQUIRE("t3" == *task3->get_node()->name());
 
     REQUIRE_FALSE(task1->was_scheduled());
     REQUIRE_FALSE(task2->was_scheduled());
@@ -221,21 +221,21 @@ TEST_CASE("get_node") {
     auto task3 = tw::make_task(tw::consume, f3, task1, task2);
 
     // task3
-    REQUIRE(2 == task3->get_node()->get_id());
-    REQUIRE_FALSE(task3->get_node()->get_name());
-    REQUIRE(2u == task3->get_node()->get_parents().size());
-    REQUIRE(task1->get_node().get() == task3->get_node()->get_parents()[0].get());
-    REQUIRE(task2->get_node().get() == task3->get_node()->get_parents()[1].get());
+    REQUIRE(2 == task3->get_node()->id());
+    REQUIRE_FALSE(task3->get_node()->name());
+    REQUIRE(2u == task3->get_node()->parents().size());
+    REQUIRE(task1->get_node().get() == task3->get_node()->parents()[0].get());
+    REQUIRE(task2->get_node().get() == task3->get_node()->parents()[1].get());
 
     // task1
-    REQUIRE(0 == task1->get_node()->get_id());
-    REQUIRE_FALSE(task1->get_node()->get_name());
-    REQUIRE(0u == task1->get_node()->get_parents().size());
+    REQUIRE(0 == task1->get_node()->id());
+    REQUIRE_FALSE(task1->get_node()->name());
+    REQUIRE(0u == task1->get_node()->parents().size());
 
     // task2
-    REQUIRE(1 == task2->get_node()->get_id());
-    REQUIRE_FALSE(task2->get_node()->get_name());
-    REQUIRE(0u == task2->get_node()->get_parents().size());
+    REQUIRE(1 == task2->get_node()->id());
+    REQUIRE_FALSE(task2->get_node()->name());
+    REQUIRE(0u == task2->get_node()->parents().size());
 }
 
 TEST_CASE("itask") {
@@ -254,40 +254,40 @@ TEST_CASE("itask") {
 
 TEST_CASE("task_priority") {
     auto t = tw::make_task(tw::root, []{});
-    REQUIRE(0 == t->get_node()->get_priority());
+    REQUIRE(0 == t->get_node()->priority());
     t->set_priority(3);
-    REQUIRE(3 == t->get_node()->get_priority());
+    REQUIRE(3 == t->get_node()->priority());
     t->reset_priority();
-    REQUIRE(0 == t->get_node()->get_priority());
+    REQUIRE(0 == t->get_node()->priority());
 }
 
 TEST_CASE("task_custom_data") {
     auto t = tw::make_task(tw::root, []{});
-    REQUIRE(nullptr == t->get_node()->get_custom_data());
+    REQUIRE(nullptr == t->get_node()->custom_data());
     auto cd = std::make_shared<int>(42);
     t->set_custom_data(cd);
-    REQUIRE(cd.get() == t->get_node()->get_custom_data().get());
+    REQUIRE(cd.get() == t->get_node()->custom_data().get());
     t->remove_custom_data();
-    REQUIRE(nullptr == t->get_node()->get_custom_data());
+    REQUIRE(nullptr == t->get_node()->custom_data());
 }
 
 TEST_CASE("set_priority_all") {
     auto t1 = tw::make_task(tw::root, []{});
     auto t2 = tw::make_task(tw::wait, []{}, t1);
     t2->set_priority_all(42);
-    REQUIRE(t1->get_node()->get_priority() == 42);
-    REQUIRE(t2->get_node()->get_priority() == 42);
+    REQUIRE(t1->get_node()->priority() == 42);
+    REQUIRE(t2->get_node()->priority() == 42);
 }
 
 TEST_CASE("reset_priority_all") {
     auto t1 = tw::make_task(tw::root, []{});
     auto t2 = tw::make_task(tw::wait, []{}, t1);
     t2->set_priority_all(42);
-    REQUIRE(t1->get_node()->get_priority() == 42);
-    REQUIRE(t2->get_node()->get_priority() == 42);
+    REQUIRE(t1->get_node()->priority() == 42);
+    REQUIRE(t2->get_node()->priority() == 42);
     t2->reset_priority_all();
-    REQUIRE(t1->get_node()->get_priority() == 0);
-    REQUIRE(t2->get_node()->get_priority() == 0);
+    REQUIRE(t1->get_node()->priority() == 0);
+    REQUIRE(t2->get_node()->priority() == 0);
 }
 
 TEST_CASE("set_custom_data_all") {
@@ -295,8 +295,8 @@ TEST_CASE("set_custom_data_all") {
     auto t2 = tw::make_task(tw::wait, []{}, t1);
     auto data = std::make_shared<int>(42);
     t2->set_custom_data_all(data);
-    REQUIRE(*static_cast<int*>(t1->get_node()->get_custom_data().get()) == *data);
-    REQUIRE(*static_cast<int*>(t2->get_node()->get_custom_data().get()) == *data);
+    REQUIRE(*static_cast<int*>(t1->get_node()->custom_data().get()) == *data);
+    REQUIRE(*static_cast<int*>(t2->get_node()->custom_data().get()) == *data);
 }
 
 TEST_CASE("remove_custom_data_all") {
@@ -304,9 +304,9 @@ TEST_CASE("remove_custom_data_all") {
     auto t2 = tw::make_task(tw::wait, []{}, t1);
     auto data = std::make_shared<int>(42);
     t2->set_custom_data_all(data);
-    REQUIRE(*static_cast<int*>(t1->get_node()->get_custom_data().get()) == *data);
-    REQUIRE(*static_cast<int*>(t2->get_node()->get_custom_data().get()) == *data);
+    REQUIRE(*static_cast<int*>(t1->get_node()->custom_data().get()) == *data);
+    REQUIRE(*static_cast<int*>(t2->get_node()->custom_data().get()) == *data);
     t2->remove_custom_data_all();
-    REQUIRE_FALSE(t1->get_node()->get_custom_data());
-    REQUIRE_FALSE(t2->get_node()->get_custom_data());
+    REQUIRE_FALSE(t1->get_node()->custom_data());
+    REQUIRE_FALSE(t2->get_node()->custom_data());
 }

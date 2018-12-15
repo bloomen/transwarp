@@ -77,9 +77,9 @@ TEST_CASE("set_executor_name_and_reset") {
     auto task = tw::make_task(tw::root, []{});
     auto exec = std::make_shared<mock_exec>();
     task->set_executor(exec);
-    REQUIRE(exec->get_name() == *task->get_node()->get_executor());
+    REQUIRE(exec->get_name() == *task->get_node()->executor());
     task->remove_executor();
-    REQUIRE_FALSE(task->get_node()->get_executor());
+    REQUIRE_FALSE(task->get_node()->executor());
 }
 
 TEST_CASE("set_executor_without_exec_passed_to_schedule") {
@@ -124,8 +124,8 @@ TEST_CASE("set_executor_all") {
     auto t2 = tw::make_task(tw::wait, []{}, t1);
     auto exec = std::make_shared<tw::sequential>();
     t2->set_executor_all(exec);
-    REQUIRE(*(t1->get_node()->get_executor()) == exec->get_name());
-    REQUIRE(*(t2->get_node()->get_executor()) == exec->get_name());
+    REQUIRE(*(t1->get_node()->executor()) == exec->get_name());
+    REQUIRE(*(t2->get_node()->executor()) == exec->get_name());
 }
 
 TEST_CASE("remove_executor_all") {
@@ -133,9 +133,9 @@ TEST_CASE("remove_executor_all") {
     auto t2 = tw::make_task(tw::wait, []{}, t1);
     auto exec = std::make_shared<tw::sequential>();
     t2->set_executor_all(exec);
-    REQUIRE(*(t1->get_node()->get_executor()) == exec->get_name());
-    REQUIRE(*(t2->get_node()->get_executor()) == exec->get_name());
+    REQUIRE(*(t1->get_node()->executor()) == exec->get_name());
+    REQUIRE(*(t2->get_node()->executor()) == exec->get_name());
     t2->remove_executor_all();
-    REQUIRE_FALSE(t1->get_node()->get_executor());
-    REQUIRE_FALSE(t2->get_node()->get_executor());
+    REQUIRE_FALSE(t1->get_node()->executor());
+    REQUIRE_FALSE(t2->get_node()->executor());
 }

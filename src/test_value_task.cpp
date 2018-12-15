@@ -8,13 +8,13 @@ TEST_CASE("value_task") {
     REQUIRE(t->is_ready());
     REQUIRE(t->get_graph().empty());
     auto n = t->get_node();
-    REQUIRE(0u == n->get_id());
-    REQUIRE(tw::task_type::root == n->get_type());
-    REQUIRE(!n->get_name());
-    REQUIRE(!n->get_executor());
-    REQUIRE(n->get_parents().empty());
-    REQUIRE(0u == n->get_priority());
-    REQUIRE(!n->get_custom_data());
+    REQUIRE(0u == n->id());
+    REQUIRE(tw::task_type::root == n->type());
+    REQUIRE(!n->name());
+    REQUIRE(!n->executor());
+    REQUIRE(n->parents().empty());
+    REQUIRE(0u == n->priority());
+    REQUIRE(!n->custom_data());
     REQUIRE(!n->is_canceled());
 }
 
@@ -27,13 +27,13 @@ TEST_CASE("value_task_with_name") {
     REQUIRE(t->is_ready());
     REQUIRE(t->get_graph().empty());
     auto n = t->get_node();
-    REQUIRE(0u == n->get_id());
-    REQUIRE(tw::task_type::root == n->get_type());
-    REQUIRE(name == *n->get_name());
-    REQUIRE(!n->get_executor());
-    REQUIRE(n->get_parents().empty());
-    REQUIRE(0u == n->get_priority());
-    REQUIRE(!n->get_custom_data());
+    REQUIRE(0u == n->id());
+    REQUIRE(tw::task_type::root == n->type());
+    REQUIRE(name == *n->name());
+    REQUIRE(!n->executor());
+    REQUIRE(n->parents().empty());
+    REQUIRE(0u == n->priority());
+    REQUIRE(!n->custom_data());
     REQUIRE(!n->is_canceled());
 }
 
@@ -43,12 +43,12 @@ TEST_CASE("value_task_with_priority_and_custom_data") {
     auto data = std::make_shared<double>(13.5);
     t->set_custom_data(data);
     auto n = t->get_node();
-    REQUIRE(13u == n->get_priority());
-    REQUIRE(data.get() == n->get_custom_data().get());
+    REQUIRE(13u == n->priority());
+    REQUIRE(data.get() == n->custom_data().get());
     t->remove_custom_data();
     t->reset_priority();
-    REQUIRE(0u == n->get_priority());
-    REQUIRE(!n->get_custom_data());
+    REQUIRE(0u == n->priority());
+    REQUIRE(!n->custom_data());
 }
 
 TEST_CASE("value_task_with_priority_all_and_custom_data_all") {
@@ -57,12 +57,12 @@ TEST_CASE("value_task_with_priority_all_and_custom_data_all") {
     auto data = std::make_shared<double>(13.5);
     t->set_custom_data_all(data);
     auto n = t->get_node();
-    REQUIRE(13u == n->get_priority());
-    REQUIRE(data.get() == n->get_custom_data().get());
+    REQUIRE(13u == n->priority());
+    REQUIRE(data.get() == n->custom_data().get());
     t->remove_custom_data_all();
     t->reset_priority_all();
-    REQUIRE(0u == n->get_priority());
-    REQUIRE(!n->get_custom_data());
+    REQUIRE(0u == n->priority());
+    REQUIRE(!n->custom_data());
 }
 
 TEST_CASE("value_task_in_a_graph") {
@@ -80,9 +80,9 @@ TEST_CASE("value_task_and_executor") {
     REQUIRE(42 == t->get());
     auto exec = std::make_shared<tw::sequential>();
     t->set_executor(exec);
-    REQUIRE(!t->get_node()->get_executor());
+    REQUIRE(!t->get_node()->executor());
     t->remove_executor();
-    REQUIRE(!t->get_node()->get_executor());
+    REQUIRE(!t->get_node()->executor());
     REQUIRE(42 == t->get());
 }
 
@@ -91,9 +91,9 @@ TEST_CASE("value_task_and_executor_all") {
     REQUIRE(42 == t->get());
     auto exec = std::make_shared<tw::sequential>();
     t->set_executor_all(exec);
-    REQUIRE(!t->get_node()->get_executor());
+    REQUIRE(!t->get_node()->executor());
     t->remove_executor_all();
-    REQUIRE(!t->get_node()->get_executor());
+    REQUIRE(!t->get_node()->executor());
     REQUIRE(42 == t->get());
 }
 
