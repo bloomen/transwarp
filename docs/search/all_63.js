@@ -23,6 +23,7 @@ var searchData=
   ['cancel_5fall_5fbut_5fone',['cancel_all_but_one',['../namespacetranswarp_1_1detail.html#a2aaa611e217ca37c8a7bd7194de55b6d',1,'transwarp::detail::cancel_all_but_one(const std::shared_ptr&lt; transwarp::task&lt; OneResult &gt;&gt; &amp;one, const std::shared_ptr&lt; transwarp::task&lt; ParentResult &gt;&gt; &amp;parent, const std::shared_ptr&lt; transwarp::task&lt; ParentResults &gt;&gt; &amp;...parents)'],['../namespacetranswarp_1_1detail.html#af86bc4279f4e7356620bd8a7e0a60397',1,'transwarp::detail::cancel_all_but_one(const std::shared_ptr&lt; transwarp::task&lt; OneResult &gt;&gt; &amp;one, const std::vector&lt; std::shared_ptr&lt; transwarp::task&lt; ParentResultType &gt;&gt;&gt; &amp;parents)']]],
   ['cancel_5fvisitor',['cancel_visitor',['../structtranswarp_1_1detail_1_1cancel__visitor.html',1,'transwarp::detail']]],
   ['capacity',['capacity',['../classtranswarp_1_1detail_1_1circular__buffer.html#a3ffe6d8f29a7397b5f73cd8da1aa78dc',1,'transwarp::detail::circular_buffer']]],
+  ['child',['child',['../classtranswarp_1_1edge.html#abd4defd213ae8e41cdd15984a1e8c5ff',1,'transwarp::edge']]],
   ['circular_5fbuffer',['circular_buffer',['../classtranswarp_1_1detail_1_1circular__buffer.html#a13fa676f234b0c1ecceb40977b2cc540',1,'transwarp::detail::circular_buffer']]],
   ['circular_5fbuffer',['circular_buffer',['../classtranswarp_1_1detail_1_1circular__buffer.html',1,'transwarp::detail']]],
   ['circular_5fbuffer_3c_20std_3a_3ashared_5fptr_3c_20transwarp_3a_3atranswarp_3a_3anode_20_3e_20_3e',['circular_buffer&lt; std::shared_ptr&lt; transwarp::transwarp::node &gt; &gt;',['../classtranswarp_1_1detail_1_1circular__buffer.html',1,'transwarp::detail']]],
@@ -34,5 +35,6 @@ var searchData=
   ['consume_5fany',['consume_any',['../namespacetranswarp.html#a6ff5ff00b1049e223771e8692a216464',1,'transwarp::consume_any()'],['../namespacetranswarp.html#a10f2b2567332cf9514d4c366c1cc5a5ea8bbb28bf2d86bf6249fb17e919cf672c',1,'transwarp::consume_any()']]],
   ['consume_5fany_5ftype',['consume_any_type',['../structtranswarp_1_1consume__any__type.html',1,'transwarp']]],
   ['consume_5ftype',['consume_type',['../structtranswarp_1_1consume__type.html',1,'transwarp']]],
-  ['control_5ferror',['control_error',['../classtranswarp_1_1control__error.html',1,'transwarp']]]
+  ['control_5ferror',['control_error',['../classtranswarp_1_1control__error.html',1,'transwarp']]],
+  ['custom_5fdata',['custom_data',['../classtranswarp_1_1node.html#a668c81df8681bf0a105ebb662103081e',1,'transwarp::node']]]
 ];

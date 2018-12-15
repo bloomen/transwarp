@@ -15,5 +15,8 @@ var searchData=
   ['assign_5fnode_5fif',['assign_node_if',['../namespacetranswarp_1_1detail.html#acc9ae3f8fce1d94e5a1477b1f5d98b2f',1,'transwarp::detail']]],
   ['assign_5fnode_5fif_5fimpl',['assign_node_if_impl',['../structtranswarp_1_1detail_1_1assign__node__if__impl.html',1,'transwarp::detail']]],
   ['assign_5fnode_5fif_5fimpl_3c_20false_20_3e',['assign_node_if_impl&lt; false &gt;',['../structtranswarp_1_1detail_1_1assign__node__if__impl_3_01false_01_4.html',1,'transwarp::detail']]],
-  ['assign_5fnode_5fif_5fimpl_3c_20true_20_3e',['assign_node_if_impl&lt; true &gt;',['../structtranswarp_1_1detail_1_1assign__node__if__impl_3_01true_01_4.html',1,'transwarp::detail']]]
+  ['assign_5fnode_5fif_5fimpl_3c_20true_20_3e',['assign_node_if_impl&lt; true &gt;',['../structtranswarp_1_1detail_1_1assign__node__if__impl_3_01true_01_4.html',1,'transwarp::detail']]],
+  ['avg_5fidletime_5fus',['avg_idletime_us',['../classtranswarp_1_1node.html#a1ba6ec528ddf7ad35e8e31a7700add1a',1,'transwarp::node']]],
+  ['avg_5fruntime_5fus',['avg_runtime_us',['../classtranswarp_1_1node.html#ab23dc47ebd690f39d3451986bd70ed19',1,'transwarp::node']]],
+  ['avg_5fwaittime_5fus',['avg_waittime_us',['../classtranswarp_1_1node.html#a4d6456ce7cfe3707fd81dfa29f65fb85',1,'transwarp::node']]]
 ];
