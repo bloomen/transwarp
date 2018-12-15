@@ -2419,7 +2419,7 @@ public:
         return std::shared_ptr<task_t>{new task_t{true, std::move(name), std::forward<Functor_>(functor), std::dynamic_pointer_cast<transwarp::task<result_type>>(const_cast<task_impl*>(this)->shared_from_this())}};
     }
 
-    /// Creates a continuation to this task. Overload for omitting for task name
+    /// Creates a continuation to this task. Overload for omitting the task name
     template<typename TaskType_, typename Functor_>
     auto then(TaskType_, Functor_&& functor) const {
         using task_t = transwarp::task_impl<TaskType_, typename std::decay<Functor_>::type, result_type>;
