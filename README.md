@@ -6,17 +6,18 @@
 
 <a href="https://bloomen.github.io/transwarp">Doxygen documentation</a>
 
-[![Gitter](https://badges.gitter.im/bloomen/transwarp.svg)](https://gitter.im/bloomen/transwarp)
+[![Gitter](https://badges.gitter.im/bloomen/transwarp.svg)](https://gitter.im/bloomen/transwarp) [![Travis](https://travis-ci.org/bloomen/transwarp.svg?branch=master)](https://travis-ci.org/bloomen/transwarp/branches) [![Appveyor](https://ci.appveyor.com/api/projects/status/wrtbk9l3b94eeb9t/branch/master?svg=true)](https://ci.appveyor.com/project/bloomen/transwarp?branch=master)
 
 transwarp is a header-only C++ library for task concurrency. It
 allows you to easily create a graph of tasks where every task can be executed
-asynchronously. transwarp is written in C++11 and only depends on the standard
+asynchronously. transwarp is written in C++17 and only depends on the standard
 library. Just copy `src/transwarp.h` to your project and off you go!
 Tested with GCC, Clang, and Visual Studio.
 
+There is also support for C++11 which is maintained on the `master_cpp11` branch.
+
 **Table of contents**
 
-  * [Build status](#build-status)
   * [Example](#example)
   * [API doc](#api-doc)
      * [Creating tasks](#creating-tasks)
@@ -28,15 +29,6 @@ Tested with GCC, Clang, and Visual Studio.
      * [Graph pool](#graph-pool)
   * [Feedback](#feedback)
   * [Contributors](#contributors)
-
-## Build status
-
-The *master* branch is always at the latest release. The *develop* branch is at 
-the latest release plus some delta.
-
-GCC/Clang on master [![Travis](https://travis-ci.org/bloomen/transwarp.svg?branch=master)](https://travis-ci.org/bloomen/transwarp/branches) and develop [![Travis](https://travis-ci.org/bloomen/transwarp.svg?branch=develop)](https://travis-ci.org/bloomen/transwarp/branches)
-
-Visual Studio on master [![Appveyor](https://ci.appveyor.com/api/projects/status/wrtbk9l3b94eeb9t/branch/master?svg=true)](https://ci.appveyor.com/project/bloomen/transwarp?branch=master) and develop [![Appveyor](https://ci.appveyor.com/api/projects/status/wrtbk9l3b94eeb9t/branch/develop?svg=true)](https://ci.appveyor.com/project/bloomen/transwarp?branch=develop)
 
 ## Example
 
@@ -389,7 +381,6 @@ create a Github issue, or simply email one of the contributors.
 
 If you're serious about contributing code to transwarp (which would be awesome!) then 
 please submit a pull request and keep in mind that:
-- all new development happens on the _develop_ branch while the _master_ branch is at the latest release
 - unit tests should be added for all new code by extending the existing unit test suite
 - C++ code uses spaces throughout 
 
