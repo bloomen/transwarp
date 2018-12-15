@@ -13,10 +13,10 @@ TEST_CASE("wait_any") {
     auto task3 = tw::make_task(tw::wait_any, [] {}, task1, task2);
     tw::parallel exec{2};
     task3->schedule_all(exec);
-    task3->get_future().wait();
+    task3->future().wait();
     REQUIRE(43 == result);
     cont = true;
-    REQUIRE(task1->get_node()->is_canceled());
+    REQUIRE(task1->node()->is_canceled());
 }
 
 TEST_CASE("wait_any_with_vector_parents") {
@@ -33,10 +33,10 @@ TEST_CASE("wait_any_with_vector_parents") {
     auto task3 = tw::make_task(tw::wait_any, [] {}, parents);
     tw::parallel exec{2};
     task3->schedule_all(exec);
-    task3->get_future().wait();
+    task3->future().wait();
     REQUIRE(43 == result);
     cont = true;
-    REQUIRE(task1->get_node()->is_canceled());
+    REQUIRE(task1->node()->is_canceled());
 }
 
 TEST_CASE("wait") {
@@ -51,7 +51,7 @@ TEST_CASE("wait") {
     auto task3 = tw::make_task(tw::wait, [] {}, task1, task2);
     tw::parallel exec{2};
     task3->schedule_all(exec);
-    task3->get_future().wait();
+    task3->future().wait();
     REQUIRE(42 == result1);
     REQUIRE(43 == result2);
 }
@@ -69,7 +69,7 @@ TEST_CASE("wait_with_vector_parents") {
     auto task3 = tw::make_task(tw::wait, [] {}, parents);
     tw::parallel exec{2};
     task3->schedule_all(exec);
-    task3->get_future().wait();
+    task3->future().wait();
     REQUIRE(42 == result1);
     REQUIRE(43 == result2);
 }

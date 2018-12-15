@@ -72,7 +72,7 @@ void make_test_task_with_exception_thrown(std::size_t threads) {
     }
     task3->schedule_all(*executor);
     try {
-        task3->get_future().get();
+        task3->future().get();
         REQUIRE(false);
     } catch (const std::logic_error& e) {
         REQUIRE(std::string("from f1") == e.what());
@@ -97,7 +97,7 @@ TEST_CASE("future_throws_task_destroyed") {
         });
         auto task2 = tw::make_task(tw::wait, []{}, task1);
         task2->schedule_all(exec);
-        future = task2->get_future();
+        future = task2->future();
     }
     cont = true;
     REQUIRE(future.valid());

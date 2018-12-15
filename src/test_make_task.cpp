@@ -11,7 +11,7 @@ TEST_CASE("task_with_const_reference_return_type") {
     auto functor = [value]() -> const int& { return *value; };
     auto task = tw::make_task(tw::root, functor);
     task->schedule();
-    REQUIRE(*value == task->get_future().get());
+    REQUIRE(*value == task->future().get());
     REQUIRE(*value == task->get());
 }
 
@@ -20,7 +20,7 @@ TEST_CASE("task_with_reference_return_type") {
     auto functor = [value]() -> int& { return *value; };
     auto task = tw::make_task(tw::root, functor);
     task->schedule();
-    REQUIRE(*value == task->get_future().get());
+    REQUIRE(*value == task->future().get());
     REQUIRE(*value == task->get());
 }
 
@@ -50,21 +50,21 @@ TEST_CASE("make_task_with_non_copy_functor") {
     non_copy_functor functor;
     auto task = tw::make_task(tw::root, std::move(functor));
     task->schedule();
-    REQUIRE(42 == task->get_future().get());
+    REQUIRE(42 == task->future().get());
 }
 
 TEST_CASE("make_task_with_non_move_functor") {
     non_move_functor functor;
     auto task = tw::make_task(tw::root, functor);
     task->schedule();
-    REQUIRE(43 == task->get_future().get());
+    REQUIRE(43 == task->future().get());
 }
 
 TEST_CASE("make_task_std_function") {
     std::function<int()> functor = [] { return 44; };
     auto task = tw::make_task(tw::root, functor);
     task->schedule();
-    REQUIRE(44 == task->get_future().get());
+    REQUIRE(44 == task->future().get());
 }
 
 int myfunc() {
@@ -74,7 +74,7 @@ int myfunc() {
 TEST_CASE("make_task_raw_function") {
     auto task = tw::make_task(tw::root, myfunc);
     task->schedule();
-    REQUIRE(45 == task->get_future().get());
+    REQUIRE(45 == task->future().get());
 }
 
 template<typename T>
@@ -88,7 +88,7 @@ void make_test_pass_by_reference() {
     auto t3 = tw::make_task(tw::consume_any, [](T d) -> T { return d; }, t2);
     t3->schedule_all();
 
-    auto& result = t3->get_future().get();
+    auto& result = t3->future().get();
     const auto result_ptr = &result;
     REQUIRE(data_ptr == result_ptr);
 
@@ -107,5 +107,5 @@ TEST_CASE("make_task_from_base_task") {
     std::shared_ptr<tw::task<int>> t1 = tw::make_task(tw::root, []{ return 42; });
     auto t2 = tw::make_task(tw::consume, [](int x){ return x; }, t1);
     t2->schedule_all();
-    REQUIRE(42 == t2->get_future().get());
+    REQUIRE(42 == t2->future().get());
 }

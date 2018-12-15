@@ -73,7 +73,7 @@ void wide_graph_with_pool(std::ostream& os, std::size_t iterations, std::size_t 
     tw::parallel exec{8}; // thread pool with 8 threads
 
     // Output graph for visualization
-    const auto gr = make_graph()->final->get_graph();
+    const auto gr = make_graph()->final->edges();
     std::ofstream("wide_graph_with_pool.dot") << tw::to_string(gr);
 
     // This is to generate random data
@@ -89,7 +89,7 @@ void wide_graph_with_pool(std::ostream& os, std::size_t iterations, std::size_t 
         auto g = pool.wait_for_next_idle_graph(); // Get the next available graph
         g->input->set_value(data);
         g->final->schedule_all(exec); // Schedule the graph
-        futures.push_back(g->final->get_future()); // Collect the future
+        futures.push_back(g->final->future()); // Collect the future
         if (i % 10 == 0) {
             os << "pool size = " << pool.size() << std::endl;
         }

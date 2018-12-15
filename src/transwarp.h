@@ -279,12 +279,12 @@ public:
     edge& operator=(edge&&) = default;
 
     /// Returns the parent node
-    const std::shared_ptr<transwarp::node>& get_parent() const noexcept {
+    const std::shared_ptr<transwarp::node>& parent() const noexcept {
         return parent_;
     }
 
     /// Returns the child node
-    const std::shared_ptr<transwarp::node>& get_child() const noexcept {
+    const std::shared_ptr<transwarp::node>& child() const noexcept {
         return child_;
     }
 
@@ -295,14 +295,14 @@ private:
 
 /// String conversion for the edge class
 inline std::string to_string(const transwarp::edge& edge, const std::string& separator="\n") {
-    return transwarp::to_string(*edge.get_parent(), separator) + " -> " + transwarp::to_string(*edge.get_child(), separator);
+    return transwarp::to_string(*edge.parent(), separator) + " -> " + transwarp::to_string(*edge.child(), separator);
 }
 
 
-/// Creates a dot-style string from the given graph
-inline std::string to_string(const std::vector<transwarp::edge>& graph, const std::string& separator="\n") {
+/// Creates a dot-style string from the given edges
+inline std::string to_string(const std::vector<transwarp::edge>& edges, const std::string& separator="\n") {
     std::string dot = "digraph {" + separator;
-    for (const transwarp::edge& edge : graph) {
+    for (const transwarp::edge& edge : edges) {
         dot += transwarp::to_string(edge, separator) + separator;
     }
     dot += "}";
@@ -316,7 +316,7 @@ public:
     virtual ~executor() = default;
 
     /// Returns the name of the executor
-    virtual std::string get_name() const = 0;
+    virtual std::string name() const = 0;
 
     /// Runs a task which is wrapped by the given functor. The functor only
     /// captures one shared pointer and can hence be copied at low cost.
@@ -373,7 +373,7 @@ public:
     virtual void set_custom_data_all(std::shared_ptr<std::any> custom_data) = 0;
     virtual void remove_custom_data() = 0;
     virtual void remove_custom_data_all() = 0;
-    virtual const std::shared_ptr<transwarp::node>& get_node() const noexcept = 0;
+    virtual const std::shared_ptr<transwarp::node>& node() const noexcept = 0;
     virtual void add_listener(std::shared_ptr<transwarp::listener> listener) = 0;
     virtual void add_listener(transwarp::event_type event, std::shared_ptr<transwarp::listener> listener) = 0;
     virtual void add_listener_all(std::shared_ptr<transwarp::listener> listener) = 0;
@@ -407,9 +407,9 @@ public:
     virtual void reset_all() = 0;
     virtual void cancel(bool enabled) noexcept = 0;
     virtual void cancel_all(bool enabled) noexcept = 0;
-    virtual std::size_t get_parent_count() const noexcept = 0;
-    virtual std::size_t get_task_count() const noexcept = 0;
-    virtual std::vector<transwarp::edge> get_graph() const = 0;
+    virtual std::size_t parent_count() const noexcept = 0;
+    virtual std::size_t task_count() const noexcept = 0;
+    virtual std::vector<transwarp::edge> edges() const = 0;
 
 protected:
     virtual void schedule_impl(bool reset, transwarp::executor* executor=nullptr) = 0;
@@ -450,7 +450,7 @@ public:
 
     virtual void set_value(const typename transwarp::decay<result_type>::type& value) = 0;
     virtual void set_value(typename transwarp::decay<result_type>::type&& value) = 0;
-    virtual const std::shared_future<result_type>& get_future() const noexcept = 0;
+    virtual const std::shared_future<result_type>& future() const noexcept = 0;
     virtual typename transwarp::result<result_type>::type get() const = 0;
 };
 
@@ -463,7 +463,7 @@ public:
     virtual ~task() = default;
 
     virtual void set_value(typename transwarp::decay<result_type>::type& value) = 0;
-    virtual const std::shared_future<result_type>& get_future() const noexcept = 0;
+    virtual const std::shared_future<result_type>& future() const noexcept = 0;
     virtual typename transwarp::result<result_type>::type get() const = 0;
 };
 
@@ -476,7 +476,7 @@ public:
     virtual ~task() = default;
 
     virtual void set_value() = 0;
-    virtual const std::shared_future<result_type>& get_future() const noexcept = 0;
+    virtual const std::shared_future<result_type>& future() const noexcept = 0;
     virtual result_type get() const = 0;
 };
 
@@ -659,7 +659,7 @@ private:
 template<int offset, typename... ParentResults>
 struct assign_futures_impl {
     static void work(const std::tuple<std::shared_ptr<transwarp::task<ParentResults>>...>& source, std::tuple<std::shared_future<ParentResults>...>& target) {
-        std::get<offset>(target) = std::get<offset>(source)->get_future();
+        std::get<offset>(target) = std::get<offset>(source)->future();
         assign_futures_impl<offset - 1, ParentResults...>::work(source, target);
     }
 };
@@ -683,7 +683,7 @@ std::vector<std::shared_future<ParentResultType>> get_futures(const std::vector<
     std::vector<std::shared_future<ParentResultType>> result;
     result.reserve(input.size());
     for (const std::shared_ptr<transwarp::task<ParentResultType>>& task : input) {
-        result.emplace_back(task->get_future());
+        result.emplace_back(task->future());
     }
     return result;
 }
@@ -709,7 +709,7 @@ inline void wait_for_all() {}
 /// Waits for all parents to finish
 template<typename ParentResult, typename... ParentResults>
 void wait_for_all(const std::shared_ptr<transwarp::task<ParentResult>>& parent, const std::shared_ptr<transwarp::task<ParentResults>>& ...parents) {
-    parent->get_future().wait();
+    parent->future().wait();
     transwarp::detail::wait_for_all(parents...);
 }
 
@@ -718,7 +718,7 @@ void wait_for_all(const std::shared_ptr<transwarp::task<ParentResult>>& parent, 
 template<typename ParentResultType>
 void wait_for_all(const std::vector<std::shared_ptr<transwarp::task<ParentResultType>>>& parents) {
     for (const std::shared_ptr<transwarp::task<ParentResultType>>& parent : parents) {
-        parent->get_future().wait();
+        parent->future().wait();
     }
 }
 
@@ -730,7 +730,7 @@ Parent wait_for_any_impl() {
 
 template<typename Parent, typename ParentResult, typename... ParentResults>
 Parent wait_for_any_impl(const std::shared_ptr<transwarp::task<ParentResult>>& parent, const std::shared_ptr<transwarp::task<ParentResults>>& ...parents) {
-    const std::future_status status = parent->get_future().wait_for(std::chrono::microseconds(1));
+    const std::future_status status = parent->future().wait_for(std::chrono::microseconds(1));
     if (status == std::future_status::ready) {
         return parent;
     }
@@ -754,7 +754,7 @@ template<typename ParentResultType>
 std::shared_ptr<transwarp::task<ParentResultType>> wait_for_any(const std::vector<std::shared_ptr<transwarp::task<ParentResultType>>>& parents) {
     for (;;) {
         for (const std::shared_ptr<transwarp::task<ParentResultType>>& parent : parents) {
-            const std::future_status status = parent->get_future().wait_for(std::chrono::microseconds(1));
+            const std::future_status status = parent->future().wait_for(std::chrono::microseconds(1));
             if (status == std::future_status::ready) {
                 return parent;
             }
@@ -841,7 +841,7 @@ struct call_impl<transwarp::accept_any_type, true, total, n...> {
         using parent_t = typename std::remove_reference<decltype(std::get<0>(parents))>::type; // Use first type as reference
         parent_t parent = transwarp::detail::wait_for_any<parent_t>(std::get<n>(parents)...);
         transwarp::detail::cancel_all_but_one(parent, std::get<n>(parents)...);
-        return transwarp::detail::run_task<Result>(node_id, task, parent->get_future());
+        return transwarp::detail::run_task<Result>(node_id, task, parent->future());
     }
 };
 
@@ -851,7 +851,7 @@ struct call_impl_vector<transwarp::accept_any_type> {
     static Result work(std::size_t node_id, const Task& task, const std::vector<std::shared_ptr<transwarp::task<ParentResultType>>>& parents) {
         std::shared_ptr<transwarp::task<ParentResultType>> parent = transwarp::detail::wait_for_any(parents);
         transwarp::detail::cancel_all_but_one(parent, parents);
-        return transwarp::detail::run_task<Result>(node_id, task, parent->get_future());
+        return transwarp::detail::run_task<Result>(node_id, task, parent->future());
     }
 };
 
@@ -860,7 +860,7 @@ struct call_impl<transwarp::consume_type, true, total, n...> {
     template<typename Result, typename Task, typename... ParentResults>
     static Result work(std::size_t node_id, const Task& task, const std::tuple<std::shared_ptr<transwarp::task<ParentResults>>...>& parents) {
         transwarp::detail::wait_for_all(std::get<n>(parents)...);
-        return transwarp::detail::run_task<Result>(node_id, task, std::get<n>(parents)->get_future().get()...);
+        return transwarp::detail::run_task<Result>(node_id, task, std::get<n>(parents)->future().get()...);
     }
 };
 
@@ -872,7 +872,7 @@ struct call_impl_vector<transwarp::consume_type> {
         std::vector<ParentResultType> results;
         results.reserve(parents.size());
         for (const std::shared_ptr<transwarp::task<ParentResultType>>& parent : parents) {
-            results.emplace_back(parent->get_future().get());
+            results.emplace_back(parent->future().get());
         }
         return transwarp::detail::run_task<Result>(node_id, task, std::move(results));
     }
@@ -885,7 +885,7 @@ struct call_impl<transwarp::consume_any_type, true, total, n...> {
         using parent_t = typename std::remove_reference<decltype(std::get<0>(parents))>::type; /// Use first type as reference
         parent_t parent = transwarp::detail::wait_for_any<parent_t>(std::get<n>(parents)...);
         transwarp::detail::cancel_all_but_one(parent, std::get<n>(parents)...);
-        return transwarp::detail::run_task<Result>(node_id, task, parent->get_future().get());
+        return transwarp::detail::run_task<Result>(node_id, task, parent->future().get());
     }
 };
 
@@ -895,7 +895,7 @@ struct call_impl_vector<transwarp::consume_any_type> {
     static Result work(std::size_t node_id, const Task& task, const std::vector<std::shared_ptr<transwarp::task<ParentResultType>>>& parents) {
         std::shared_ptr<transwarp::task<ParentResultType>> parent = transwarp::detail::wait_for_any(parents);
         transwarp::detail::cancel_all_but_one(parent, parents);
-        return transwarp::detail::run_task<Result>(node_id, task, parent->get_future().get());
+        return transwarp::detail::run_task<Result>(node_id, task, parent->future().get());
     }
 };
 
@@ -909,7 +909,7 @@ struct call_impl<transwarp::wait_type, true, total, n...> {
     }
     template<typename T, typename... Args>
     static void get_all(const T& arg, const Args& ...args) {
-        arg->get_future().get();
+        arg->future().get();
         get_all(args...);
     }
     static void get_all() {}
@@ -921,7 +921,7 @@ struct call_impl_vector<transwarp::wait_type> {
     static Result work(std::size_t node_id, const Task& task, const std::vector<std::shared_ptr<transwarp::task<ParentResultType>>>& parents) {
         transwarp::detail::wait_for_all(parents);
         for (const std::shared_ptr<transwarp::task<ParentResultType>>& parent : parents) {
-            parent->get_future().get(); // Ensures that exceptions are propagated
+            parent->future().get(); // Ensures that exceptions are propagated
         }
         return transwarp::detail::run_task<Result>(node_id, task);
     }
@@ -934,7 +934,7 @@ struct call_impl<transwarp::wait_any_type, true, total, n...> {
         using parent_t = typename std::remove_reference<decltype(std::get<0>(parents))>::type; // Use first type as reference
         parent_t parent = transwarp::detail::wait_for_any<parent_t>(std::get<n>(parents)...);
         transwarp::detail::cancel_all_but_one(parent, std::get<n>(parents)...);
-        parent->get_future().get(); // Ensures that exceptions are propagated
+        parent->future().get(); // Ensures that exceptions are propagated
         return transwarp::detail::run_task<Result>(node_id, task);
     }
 };
@@ -945,7 +945,7 @@ struct call_impl_vector<transwarp::wait_any_type> {
     static Result work(std::size_t node_id, const Task& task, const std::vector<std::shared_ptr<transwarp::task<ParentResultType>>>& parents) {
         std::shared_ptr<transwarp::task<ParentResultType>> parent = transwarp::detail::wait_for_any(parents);
         transwarp::detail::cancel_all_but_one(parent, parents);
-        parent->get_future().get(); // Ensures that exceptions are propagated
+        parent->future().get(); // Ensures that exceptions are propagated
         return transwarp::detail::run_task<Result>(node_id, task);
     }
 };
@@ -1025,10 +1025,10 @@ struct parent_visitor {
     : node_(node) {}
 
     void operator()(const transwarp::itask& task) const {
-        transwarp::detail::node_manip::add_parent(node_, task.get_node());
-        if (node_.level() <= task.get_node()->level()) {
+        transwarp::detail::node_manip::add_parent(node_, task.node());
+        if (node_.level() <= task.node()->level()) {
             /// A child's level is always larger than any of its parents' levels
-            transwarp::detail::node_manip::set_level(node_, task.get_node()->level() + 1);
+            transwarp::detail::node_manip::set_level(node_, task.node()->level() + 1);
         }
     }
 
@@ -1049,19 +1049,19 @@ struct final_visitor {
     std::size_t id_ = 0;
 };
 
-/// Generates a graph
-struct graph_visitor {
-    explicit graph_visitor(std::vector<transwarp::edge>& graph) noexcept
-    : graph_{graph} {}
+/// Generates edges
+struct edges_visitor {
+    explicit edges_visitor(std::vector<transwarp::edge>& edges) noexcept
+    : edges_{edges} {}
 
     void operator()(const transwarp::itask& task) {
-        const std::shared_ptr<transwarp::node>& node = task.get_node();
+        const std::shared_ptr<transwarp::node>& node = task.node();
         for (const std::shared_ptr<transwarp::node>& parent : node->parents()) {
-            graph_.emplace_back(parent, node);
+            edges_.emplace_back(parent, node);
         }
     }
 
-    std::vector<transwarp::edge>& graph_;
+    std::vector<transwarp::edge>& edges_;
 };
 
 /// Schedules using the given executor
@@ -1463,7 +1463,7 @@ public:
       parents_{parents}
     {}
 
-    std::future<ResultType> get_future() {
+    std::future<ResultType> future() {
         return this->promise_.get_future();
     }
 
@@ -1643,7 +1643,7 @@ public:
     sequential& operator=(sequential&&) = delete;
 
     /// Returns the name of the executor
-    std::string get_name() const override {
+    std::string name() const override {
         return "transwarp::sequential";
     }
 
@@ -1669,7 +1669,7 @@ public:
     parallel& operator=(parallel&&) = delete;
 
     /// Returns the name of the executor
-    std::string get_name() const override {
+    std::string name() const override {
         return "transwarp::parallel";
     }
 
@@ -1706,7 +1706,7 @@ public:
             throw transwarp::invalid_parameter("executor pointer");
         }
         executor_ = std::move(executor);
-        transwarp::detail::node_manip::set_executor(*node_, std::make_optional(executor_->get_name()));
+        transwarp::detail::node_manip::set_executor(*node_, std::make_optional(executor_->name()));
     }
 
     /// Assigns an executor to all tasks which takes precedence over
@@ -1791,12 +1791,12 @@ public:
     }
 
     /// Returns the future associated to the underlying execution
-    const std::shared_future<result_type>& get_future() const noexcept override {
+    const std::shared_future<result_type>& future() const noexcept override {
         return future_;
     }
 
     /// Returns the associated node
-    const std::shared_ptr<transwarp::node>& get_node() const noexcept override {
+    const std::shared_ptr<transwarp::node>& node() const noexcept override {
         return node_;
     }
 
@@ -1813,7 +1813,7 @@ public:
     void add_listener(transwarp::event_type event, std::shared_ptr<transwarp::listener> listener) override {
         ensure_task_not_running();
         check_listener(listener);
-        listeners_[get_event_index(event)].push_back(std::move(listener));
+        listeners_[event_index(event)].push_back(std::move(listener));
     }
 
     /// Adds a new listener for all event types and for all parents
@@ -1843,7 +1843,7 @@ public:
     void remove_listener(transwarp::event_type event, const std::shared_ptr<transwarp::listener>& listener) override {
         ensure_task_not_running();
         check_listener(listener);
-        std::vector<std::shared_ptr<transwarp::listener>>& l = listeners_[get_event_index(event)];
+        std::vector<std::shared_ptr<transwarp::listener>>& l = listeners_[event_index(event)];
         l.erase(std::remove(l.begin(), l.end(), listener), l.end());
     }
 
@@ -1872,7 +1872,7 @@ public:
     /// Removes all listeners for the given event type
     void remove_listeners(transwarp::event_type event) override {
         ensure_task_not_running();
-        listeners_[get_event_index(event)].clear();
+        listeners_[event_index(event)].clear();
     }
 
     /// Removes all listeners and for all parents
@@ -2055,24 +2055,24 @@ public:
     }
 
     /// Returns the number of direct parents of this task
-    std::size_t get_parent_count() const noexcept override {
+    std::size_t parent_count() const noexcept override {
         return transwarp::detail::parents<ParentResults...>::size(parents_);
     }
 
     /// Returns the number of tasks in the graph
-    std::size_t get_task_count() const noexcept override {
+    std::size_t task_count() const noexcept override {
         return task_count_;
     }
 
-    /// Returns the graph of the task structure. This is mainly for visualizing
+    /// Returns all edges in the graph. This is mainly for visualizing
     /// the tasks and their interdependencies. Pass the result into transwarp::to_string
     /// to retrieve a dot-style graph representation for easy viewing.
-    std::vector<transwarp::edge> get_graph() const override {
-        std::vector<transwarp::edge> graph;
-        transwarp::detail::graph_visitor visitor{graph};
+    std::vector<transwarp::edge> edges() const override {
+        std::vector<transwarp::edge> edges;
+        transwarp::detail::edges_visitor visitor{edges};
         const_cast<task_impl_base*>(this)->visit_depth(visitor);
         const_cast<task_impl_base*>(this)->unvisit();
-        return graph;
+        return edges;
     }
 
 protected:
@@ -2151,7 +2151,7 @@ private:
             using runner_t = transwarp::detail::runner<result_type, task_type, task_impl_base, decltype(parents_)>;
             std::shared_ptr<runner_t> runner = std::shared_ptr<runner_t>(new runner_t{node_->id(), self, parents_});
             raise_event(transwarp::event_type::before_scheduled);
-            future_ = runner->get_future();
+            future_ = runner->future();
             if (executor_) {
                 executor_->execute([runner]{ (*runner)(); }, node_);
             } else if (executor) {
@@ -2206,10 +2206,10 @@ private:
         if (breadth_tasks_.empty()) {
             breadth_tasks_ = tasks_in_depth_order();
             auto compare = [](const transwarp::itask* const l, const transwarp::itask* const r) {
-                const std::size_t l_level = l->get_node()->level();
-                const std::size_t l_id = l->get_node()->id();
-                const std::size_t r_level = r->get_node()->level();
-                const std::size_t r_id = r->get_node()->id();
+                const std::size_t l_level = l->node()->level();
+                const std::size_t l_id = l->node()->id();
+                const std::size_t r_level = r->node()->level();
+                const std::size_t r_id = r->node()->id();
                 return std::tie(l_level, l_id) < std::tie(r_level, r_id);
             };
             std::sort(breadth_tasks_.begin(), breadth_tasks_.end(), compare);
@@ -2248,7 +2248,7 @@ private:
     }
 
     /// Returns the index for a given event type
-    std::size_t get_event_index(transwarp::event_type event) const {
+    std::size_t event_index(transwarp::event_type event) const {
         const std::size_t index = static_cast<std::size_t>(event);
         if (index >= static_cast<std::size_t>(transwarp::event_type::count)) {
             throw transwarp::invalid_parameter{"event type"};
@@ -2569,12 +2569,12 @@ public:
     }
 
     /// Returns the future associated to the underlying execution
-    const std::shared_future<result_type>& get_future() const noexcept override {
+    const std::shared_future<result_type>& future() const noexcept override {
         return future_;
     }
 
     /// Returns the associated node
-    const std::shared_ptr<transwarp::node>& get_node() const noexcept override {
+    const std::shared_ptr<transwarp::node>& node() const noexcept override {
         return node_;
     }
 
@@ -2701,17 +2701,17 @@ public:
     void cancel_all(bool) noexcept override {}
 
     /// Returns the number of direct parents of this task
-    std::size_t get_parent_count() const noexcept override {
+    std::size_t parent_count() const noexcept override {
         return 0;
     }
 
     /// Returns the number of tasks in the graph
-    std::size_t get_task_count() const noexcept override {
+    std::size_t task_count() const noexcept override {
         return 1;
     }
 
-    /// Returns an empty graph because a value task doesn't have parents
-    std::vector<transwarp::edge> get_graph() const override {
+    /// Returns empty edges because a value task doesn't have parents
+    std::vector<transwarp::edge> edges() const override {
         return {};
     }
 
@@ -2931,10 +2931,10 @@ public:
                 return nullptr;
             }
             g = idle_.front(); idle_.pop();
-            busy_.emplace(g->final_task()->get_node(), g);
+            busy_.emplace(g->final_task()->node(), g);
         }
 
-        const auto& future = g->final_task()->get_future();
+        const auto& future = g->final_task()->future();
         if (future.valid()) {
             future.wait(); // will return immediately
         }

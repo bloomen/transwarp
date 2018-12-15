@@ -13,10 +13,10 @@ void cancel_with_schedule_all(int expected, Functor functor, TaskType task_type)
     task2->schedule_all(executor);
     task2->cancel_all(true);
     cont = true;
-    REQUIRE_THROWS_AS(task2->get_future().get(), tw::task_canceled);
+    REQUIRE_THROWS_AS(task2->future().get(), tw::task_canceled);
     task2->cancel_all(false);
     task2->schedule_all(executor);
-    REQUIRE(expected == task2->get_future().get());
+    REQUIRE(expected == task2->future().get());
 }
 
 TEST_CASE("cancel_with_schedule_all_called_before_in_parallel_and_uncancel") {
@@ -34,7 +34,7 @@ TEST_CASE("cancel_with_schedule_all_called_after") {
     task2->cancel_all(true);
     tw::sequential executor;
     task2->schedule_all(executor);
-    REQUIRE(task2->get_future().valid());
+    REQUIRE(task2->future().valid());
 }
 
 struct functor : tw::functor {

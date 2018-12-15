@@ -46,9 +46,9 @@ TEST_CASE("accept_any_with_two_parents") {
     auto t3 = tw::make_task(tw::accept_any, [](std::shared_future<int> x) { return x.get(); }, t1, t2);
     tw::parallel exec{2};
     t3->schedule_all(exec);
-    REQUIRE(43 == t3->get_future().get());
+    REQUIRE(43 == t3->future().get());
     cont = true;
-    REQUIRE(t1->get_node()->is_canceled());
+    REQUIRE(t1->node()->is_canceled());
 }
 
 TEST_CASE("accept_any_with_two_vector_parents") {
@@ -64,7 +64,7 @@ TEST_CASE("accept_any_with_two_vector_parents") {
     auto t3 = tw::make_task(tw::accept_any, [](std::shared_future<int> x) { return x.get(); }, parents);
     tw::parallel exec{2};
     t3->schedule_all(exec);
-    REQUIRE(43 == t3->get_future().get());
+    REQUIRE(43 == t3->future().get());
     cont = true;
-    REQUIRE(t1->get_node()->is_canceled());
+    REQUIRE(t1->node()->is_canceled());
 }

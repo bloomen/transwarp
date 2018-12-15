@@ -24,7 +24,7 @@ public:
         thread_.join();
     }
 
-    std::string get_name() const override {
+    std::string name() const override {
         return "lock_free_executor";
     }
 
@@ -112,7 +112,7 @@ void single_thread_lock_free(std::ostream& os, std::size_t sample_size) {
     auto task = build_graph(buffer);
 
     // Output the graph for visualization
-    std::ofstream("single_thread_lock_free.dot") << tw::to_string(task->get_graph());
+    std::ofstream("single_thread_lock_free.dot") << tw::to_string(task->edges());
 
     // The lock-free, single-thread executor
     lock_free_executor executor;

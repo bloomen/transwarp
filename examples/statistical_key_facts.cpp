@@ -139,7 +139,7 @@ void statistical_key_facts(std::ostream& os, std::size_t sample_size, bool paral
     }
 
     // Output the graph for visualization
-    const auto graph = final_task->get_graph();
+    const auto graph = final_task->edges();
     std::ofstream("statistical_key_facts.dot") << tw::to_string(graph);
 }
 

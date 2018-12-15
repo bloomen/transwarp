@@ -34,8 +34,8 @@ void basic_with_three_tasks(std::ostream& os) {
     os << "result = " << task3->get() << std::endl;  // result = 58.8
 
     // Creating a dot-style graph for visualization
-    const auto graph = task3->get_graph();
-    std::ofstream("basic_with_three_tasks.dot") << tw::to_string(graph);
+    const auto edges = task3->edges();
+    std::ofstream("basic_with_three_tasks.dot") << tw::to_string(edges);
 }
 
 }

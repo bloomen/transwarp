@@ -12,9 +12,9 @@ TEST_CASE("consume_any") {
     auto task3 = tw::make_task(tw::consume_any, [](int x) { return x; }, task1, task2);
     tw::parallel exec{2};
     task3->schedule_all(exec);
-    REQUIRE(43 == task3->get_future().get());
+    REQUIRE(43 == task3->future().get());
     cont = true;
-    REQUIRE(task1->get_node()->is_canceled());
+    REQUIRE(task1->node()->is_canceled());
 }
 
 TEST_CASE("consume_any_with_vector_parents") {
@@ -30,7 +30,7 @@ TEST_CASE("consume_any_with_vector_parents") {
     auto task3 = tw::make_task(tw::consume_any, [](int x) { return x; }, parents);
     tw::parallel exec{2};
     task3->schedule_all(exec);
-    REQUIRE(43 == task3->get_future().get());
+    REQUIRE(43 == task3->future().get());
     cont = true;
-    REQUIRE(task1->get_node()->is_canceled());
+    REQUIRE(task1->node()->is_canceled());
 }

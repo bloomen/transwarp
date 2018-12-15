@@ -3,11 +3,11 @@
 TEST_CASE("value_task") {
     auto t = tw::make_value_task(42);
     REQUIRE(42 == t->get());
-    REQUIRE(42 == t->get_future().get());
+    REQUIRE(42 == t->future().get());
     REQUIRE(t->was_scheduled());
     REQUIRE(t->is_ready());
-    REQUIRE(t->get_graph().empty());
-    auto n = t->get_node();
+    REQUIRE(t->edges().empty());
+    auto n = t->node();
     REQUIRE(0u == n->id());
     REQUIRE(tw::task_type::root == n->type());
     REQUIRE(!n->name());
@@ -22,11 +22,11 @@ TEST_CASE("value_task_with_name") {
     const std::string name = "albert";
     auto t = tw::make_value_task(name, 42);
     REQUIRE(42 == t->get());
-    REQUIRE(42 == t->get_future().get());
+    REQUIRE(42 == t->future().get());
     REQUIRE(t->was_scheduled());
     REQUIRE(t->is_ready());
-    REQUIRE(t->get_graph().empty());
-    auto n = t->get_node();
+    REQUIRE(t->edges().empty());
+    auto n = t->node();
     REQUIRE(0u == n->id());
     REQUIRE(tw::task_type::root == n->type());
     REQUIRE(name == *n->name());
@@ -42,7 +42,7 @@ TEST_CASE("value_task_with_priority_and_custom_data") {
     t->set_priority(13);
     auto data = std::make_shared<std::any>(13.5);
     t->set_custom_data(data);
-    auto n = t->get_node();
+    auto n = t->node();
     REQUIRE(13u == n->priority());
     REQUIRE(data.get() == n->custom_data().get());
     t->remove_custom_data();
@@ -56,7 +56,7 @@ TEST_CASE("value_task_with_priority_all_and_custom_data_all") {
     t->set_priority_all(13);
     auto data = std::make_shared<std::any>(13.5);
     t->set_custom_data_all(data);
-    auto n = t->get_node();
+    auto n = t->node();
     REQUIRE(13u == n->priority());
     REQUIRE(data.get() == n->custom_data().get());
     t->remove_custom_data_all();
@@ -80,9 +80,9 @@ TEST_CASE("value_task_and_executor") {
     REQUIRE(42 == t->get());
     auto exec = std::make_shared<tw::sequential>();
     t->set_executor(exec);
-    REQUIRE(!t->get_node()->executor());
+    REQUIRE(!t->node()->executor());
     t->remove_executor();
-    REQUIRE(!t->get_node()->executor());
+    REQUIRE(!t->node()->executor());
     REQUIRE(42 == t->get());
 }
 
@@ -91,9 +91,9 @@ TEST_CASE("value_task_and_executor_all") {
     REQUIRE(42 == t->get());
     auto exec = std::make_shared<tw::sequential>();
     t->set_executor_all(exec);
-    REQUIRE(!t->get_node()->executor());
+    REQUIRE(!t->node()->executor());
     t->remove_executor_all();
-    REQUIRE(!t->get_node()->executor());
+    REQUIRE(!t->node()->executor());
     REQUIRE(42 == t->get());
 }
 
