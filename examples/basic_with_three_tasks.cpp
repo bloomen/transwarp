@@ -7,35 +7,34 @@ namespace tw = transwarp;
 
 namespace examples {
 
-double adder(double x, int y) {
-    return x + y;
-}
-
 // This example creates three tasks and connects them with each other to form
 // a two-level graph. The tasks are then scheduled twice for computation
 // while using 4 threads.
 void basic_with_three_tasks(std::ostream& os) {
+    double x = 0;
+    int y = 0;
 
     // Building the task graph
-    auto task1 = tw::make_value_task("something", 13.3);
-    auto task2 = tw::make_value_task("something else", 42);
-    auto task3 = tw::make_task(tw::consume, "adder", adder, task1, task2);
+    auto parent1 = tw::make_task(tw::root, "something", [&x]{ return 13.3 + x; });
+    auto parent2 = tw::make_task(tw::root, "something else", [&y]{ return 42 + y; });
+    auto final = tw::make_task(tw::consume, "adder", [](double x, int y) {
+                                                         return x + y;
+                                                     }, parent1, parent2);
 
     tw::parallel executor{4};  // Parallel execution with 4 threads
 
-    task3->schedule_all(executor);  // Schedules all tasks for execution
-    os << "result = " << task3->get() << std::endl;  // result = 55.3
+    final->schedule_all(executor);  // Schedules all tasks for execution
+    os << "result = " << final->get() << std::endl;  // result = 55.3
 
     // Modifying data input
-    task1->set_value(15.8);
-    task2->set_value(43);
+    x += 2.5;
+    y += 1;
 
-    task3->schedule_all(executor);  // Re-schedules all tasks for execution
-    os << "result = " << task3->get() << std::endl;  // result = 58.8
+    final->schedule_all(executor);  // Re-schedules all tasks for execution
+    os << "result = " << final->get() << std::endl;  // result = 58.8
 
     // Creating a dot-style graph for visualization
-    const auto edges = task3->edges();
-    std::ofstream("basic_with_three_tasks.dot") << tw::to_string(edges);
+    std::ofstream{"basic_with_three_tasks.dot"} << tw::to_string(final->edges());
 }
 
 }

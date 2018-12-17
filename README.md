@@ -10,7 +10,7 @@ asynchronously. transwarp is written in C++17 and only depends on the standard
 library. Just copy `src/transwarp.h` to your project and off you go!
 Tested with GCC, Clang, and Visual Studio.
 
-There is also support for C++11 which is maintained on the `master_cpp11` branch.
+There is also support for C++11 which is maintained on the `transwarp1.X` branch.
 
 **Table of contents**
 
@@ -38,32 +38,31 @@ while using 4 threads.
 
 namespace tw = transwarp;
 
-double adder(double x, int y) {
-    return x + y;
-}
-
 int main() {
+    double x = 0;
+    int y = 0;
 
     // Building the task graph
-    auto task1 = tw::make_value_task("something", 13.3);
-    auto task2 = tw::make_value_task("something else", 42);
-    auto task3 = tw::make_task(tw::consume, "adder", adder, task1, task2);
+    auto parent1 = tw::make_task(tw::root, "something", [&x]{ return 13.3 + x; });
+    auto parent2 = tw::make_task(tw::root, "something else", [&y]{ return 42 + y; });
+    auto final = tw::make_task(tw::consume, "adder", [](double x, int y) {
+                                                         return x + y;
+                                                     }, parent1, parent2);
 
     tw::parallel executor{4};  // Parallel execution with 4 threads
 
-    task3->schedule_all(executor);  // Schedules all tasks for execution
-    std::cout << "result = " << task3->get() << std::endl;  // result = 55.3
+    final->schedule_all(executor);  // Schedules all tasks for execution
+    std::cout << "result = " << final->get() << std::endl;  // result = 55.3
 
     // Modifying data input
-    task1->set_value(15.8);
-    task2->set_value(43);
+    x += 2.5;
+    y += 1;
 
-    task3->schedule_all(executor);  // Re-schedules all tasks for execution
-    std::cout << "result = " << task3->get() << std::endl;  // result = 58.8
+    final->schedule_all(executor);  // Re-schedules all tasks for execution
+    std::cout << "result = " << final->get() << std::endl;  // result = 58.8
 
     // Creating a dot-style graph for visualization
-    const auto edges = task3->edges();
-    std::ofstream("basic_with_three_tasks.dot") << tw::to_string(edges);
+    std::ofstream{"basic_with_three_tasks.dot"} << tw::to_string(final->edges());
 }
 ```
 
