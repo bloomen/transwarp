@@ -79,7 +79,7 @@ add_test(statistical_key_facts statistical_key_facts)
 add_test(wide_graph_with_pool wide_graph_with_pool)
 
 if (MSVC)
-	set(CMAKE_CXX_FLAGS "/std:c++17 /W4 /bigobj /EHsc /wd4503 /wd4996 /wd4702")
+	set(CMAKE_CXX_FLAGS "/std:c++17 /W4 /bigobj /EHsc /wd4503 /wd4996 /wd4702 /wd4100")
 else()
 	set(CMAKE_CXX_FLAGS "-std=c++17 -pedantic -Wall -Wextra -Wconversion")
 	if (CMAKE_COMPILER_IS_GNUCC)
