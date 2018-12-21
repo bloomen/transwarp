@@ -28,7 +28,7 @@ matrix:
 
 script:
     - mkdir build && cd build
-    - cmake -DCMAKE_BUILD_TYPE=$CONFIGURATION -DCMAKE_CXX_COMPILER_ARG1=-std=c++17 ..
+    - cmake -DCMAKE_BUILD_TYPE=$CONFIGURATION ..
     - make -j4
     - ctest --verbose
 
