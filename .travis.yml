@@ -25,14 +25,14 @@ matrix:
             - g++-7
       env:
         - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7 && CONFIGURATION=Release"
-#    - os: osx
-#      osx_image: xcode10
-#      compiler: clang++
-#      env: CONFIGURATION=Debug
-#    - os: osx
-#      osx_image: xcode10
-#      compiler: clang++
-#      env: CONFIGURATION=Release
+    - os: osx
+      osx_image: xcode10
+      compiler: clang++
+      env: CONFIGURATION=Debug
+    - os: osx
+      osx_image: xcode10
+      compiler: clang++
+      env: CONFIGURATION=Release
 
 before_install:
     - eval "${MATRIX_EVAL}"

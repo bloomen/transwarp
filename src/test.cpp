@@ -290,6 +290,7 @@ TEST_CASE("reset_priority_all") {
     REQUIRE(t2->node()->priority() == 0);
 }
 
+#if !defined(__APPLE__) // any_cast not supported on travis
 TEST_CASE("set_custom_data_all") {
     auto t1 = tw::make_task(tw::root, []{});
     auto t2 = tw::make_task(tw::wait, []{}, t1);
@@ -310,3 +311,4 @@ TEST_CASE("remove_custom_data_all") {
     REQUIRE_FALSE(t1->node()->custom_data());
     REQUIRE_FALSE(t2->node()->custom_data());
 }
+#endif
