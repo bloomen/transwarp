@@ -1,30 +1,38 @@
-sudo: false
+sudo: required
 language: cpp
 
 branches:
   only:
     - master
 
+cache:
+  directories:
+    - ${TRAVIS_BUILD_DIR}/deps
+
 matrix:
   include:
     - os: linux
-      env: CONFIGURATION=Debug
-      compiler: gcc
+      compiler: g++
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-7
+      env:
+        - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7"
+        - CONFIGURATION=Debug
     - os: linux
-      env: CONFIGURATION=Debug
-      compiler: clang
-    - os: osx
-      env: CONFIGURATION=Debug
-      compiler: clang
-    - os: linux
-      env: CONFIGURATION=Release
-      compiler: gcc
-    - os: linux
-      env: CONFIGURATION=Release
-      compiler: clang
-    - os: osx
-      env: CONFIGURATION=Release
-      compiler: clang
+      compiler: g++
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-7
+      env:
+        - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7"
+        - CONFIGURATION=Release
 
 script:
     - mkdir build && cd build
