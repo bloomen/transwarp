@@ -8,7 +8,6 @@ branches:
 matrix:
   include:
     - os: linux
-      compiler: g++-7
       addons:
         apt:
           sources:
@@ -16,10 +15,8 @@ matrix:
           packages:
             - g++-7
       env:
-        - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7"
-        - CONFIGURATION=Debug
+        - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7 && CONFIGURATION=Debug"
     - os: linux
-      compiler: g++-7
       addons:
         apt:
           sources:
@@ -27,8 +24,7 @@ matrix:
           packages:
             - g++-7
       env:
-        - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7"
-        - CONFIGURATION=Release
+        - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7 && CONFIGURATION=Release"
 #    - os: osx
 #      osx_image: xcode10
 #      compiler: clang++
@@ -37,6 +33,9 @@ matrix:
 #      osx_image: xcode10
 #      compiler: clang++
 #      env: CONFIGURATION=Release
+
+before_install:
+    - eval "${MATRIX_EVAL}"
 
 script:
     - mkdir build && cd build
