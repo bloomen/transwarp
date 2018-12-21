@@ -20,7 +20,8 @@ matrix:
           packages:
             - g++-7
       env:
-        - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7"
+        - CC=gcc-7
+        - CXX=g++-7
         - CONFIGURATION=Debug
     - os: linux
       compiler: g++
@@ -31,8 +32,17 @@ matrix:
           packages:
             - g++-7
       env:
-        - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7"
+        - CC=gcc-7
+        - CXX=g++-7
         - CONFIGURATION=Release
+    - os: osx
+      osx_image: xcode10 
+      compiler: clang++
+      env: CONFIGURATION=Debug
+    - os: osx
+      osx_image: xcode10 
+      compiler: clang++
+      env: CONFIGURATION=Release
 
 script:
     - mkdir build && cd build
