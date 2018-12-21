@@ -5,14 +5,10 @@ branches:
   only:
     - master
 
-cache:
-  directories:
-    - ${TRAVIS_BUILD_DIR}/deps
-
 matrix:
   include:
     - os: linux
-      compiler: g++
+      compiler: g++-7
       addons:
         apt:
           sources:
@@ -20,11 +16,9 @@ matrix:
           packages:
             - g++-7
       env:
-        - CC=gcc-7
-        - CXX=g++-7
         - CONFIGURATION=Debug
     - os: linux
-      compiler: g++
+      compiler: g++-7
       addons:
         apt:
           sources:
@@ -32,8 +26,6 @@ matrix:
           packages:
             - g++-7
       env:
-        - CC=gcc-7
-        - CXX=g++-7
         - CONFIGURATION=Release
     - os: osx
       osx_image: xcode10 
