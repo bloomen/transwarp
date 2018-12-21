@@ -16,6 +16,8 @@ matrix:
           packages:
             - g++-7
       env:
+        - CC=gcc-7
+        - CXX=g++-7
         - CONFIGURATION=Debug
     - os: linux
       compiler: g++-7
@@ -26,6 +28,8 @@ matrix:
           packages:
             - g++-7
       env:
+        - CC=gcc-7
+        - CXX=g++-7
         - CONFIGURATION=Release
     - os: osx
       osx_image: xcode10 
