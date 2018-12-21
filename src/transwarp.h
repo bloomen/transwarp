@@ -233,31 +233,31 @@ private:
 };
 
 /// String conversion for the node class
-inline std::string to_string(const transwarp::node& node, const std::string& separator="\n") {
+inline std::string to_string(const transwarp::node& node, std::string_view separator="\n") {
     std::string s;
     s += '"';
     const std::optional<std::string>& name = node.name();
     if (name) {
-        s += "<" + *name + ">" + separator;
+        s += std::string{"<"} + *name + std::string{">"} + separator.data();
     }
     s += transwarp::to_string(node.type());
-    s += " id=" + std::to_string(node.id());
-    s += " lev=" + std::to_string(node.level());
+    s += std::string{" id="} + std::to_string(node.id());
+    s += std::string{" lev="} + std::to_string(node.level());
     const std::optional<std::string>& exec = node.executor();
     if (exec) {
-        s += separator + "<" + *exec + ">";
+        s += separator.data() + std::string{"<"} + *exec + std::string{">"};
     }
     const std::int64_t avg_idletime_us = node.avg_idletime_us();
     if (avg_idletime_us >= 0) {
-        s += separator + "avg-idle-us=" + std::to_string(avg_idletime_us);
+        s += separator.data() + std::string{"avg-idle-us="} + std::to_string(avg_idletime_us);
     }
     const std::int64_t avg_waittime_us = node.avg_waittime_us();
     if (avg_waittime_us >= 0) {
-        s += separator + "avg-wait-us=" + std::to_string(avg_waittime_us);
+        s += separator.data() + std::string{"avg-wait-us="} + std::to_string(avg_waittime_us);
     }
     const std::int64_t avg_runtime_us = node.avg_runtime_us();
     if (avg_runtime_us >= 0) {
-        s += separator + "avg-run-us=" + std::to_string(avg_runtime_us);
+        s += separator.data() + std::string{"avg-run-us="} + std::to_string(avg_runtime_us);
     }
     s += '"';
     return s;
@@ -293,18 +293,18 @@ private:
 };
 
 /// String conversion for the edge class
-inline std::string to_string(const transwarp::edge& edge, const std::string& separator="\n") {
-    return transwarp::to_string(*edge.parent(), separator) + " -> " + transwarp::to_string(*edge.child(), separator);
+inline std::string to_string(const transwarp::edge& edge, std::string_view separator="\n") {
+    return transwarp::to_string(*edge.parent(), separator) + std::string{" -> "} + transwarp::to_string(*edge.child(), separator);
 }
 
 
 /// Creates a dot-style string from the given edges
-inline std::string to_string(const std::vector<transwarp::edge>& edges, const std::string& separator="\n") {
-    std::string dot = "digraph {" + separator;
+inline std::string to_string(const std::vector<transwarp::edge>& edges, std::string_view separator="\n") {
+    std::string dot = std::string{"digraph {"} + separator.data();
     for (const transwarp::edge& edge : edges) {
-        dot += transwarp::to_string(edge, separator) + separator;
+        dot += transwarp::to_string(edge, separator) + separator.data();
     }
-    dot += "}";
+    dot += std::string{"}"};
     return dot;
 }
 
