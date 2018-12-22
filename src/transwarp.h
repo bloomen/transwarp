@@ -259,8 +259,7 @@ inline std::string to_string(const transwarp::node& node, std::string_view separ
     if (avg_runtime_us >= 0) {
         s += separator.data() + std::string{"avg-run-us="} + std::to_string(avg_runtime_us);
     }
-    s += '"';
-    return s;
+    return s + '"';
 }
 
 
@@ -578,7 +577,6 @@ class thread_pool {
 public:
 
     explicit thread_pool(std::size_t n_threads)
-    : done_(false)
     {
         if (n_threads == 0) {
             throw transwarp::invalid_parameter{"number of threads"};
@@ -652,7 +650,7 @@ private:
         threads_.clear();
     }
 
-    bool done_;
+    bool done_ = false;
     std::vector<std::thread> threads_;
     std::queue<std::function<void()>> functors_;
     std::condition_variable cond_var_;
