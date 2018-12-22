@@ -13,7 +13,7 @@ TEST_CASE("value_task") {
     REQUIRE(!n->name());
     REQUIRE(!n->executor());
     REQUIRE(n->parents().empty());
-    REQUIRE(0u == n->priority());
+    REQUIRE(0 == n->priority());
     REQUIRE(!n->custom_data().has_value());
     REQUIRE(!n->is_canceled());
 }
@@ -32,7 +32,7 @@ TEST_CASE("value_task_with_name") {
     REQUIRE(name == *n->name());
     REQUIRE(!n->executor());
     REQUIRE(n->parents().empty());
-    REQUIRE(0u == n->priority());
+    REQUIRE(0 == n->priority());
     REQUIRE(!n->custom_data().has_value());
     REQUIRE(!n->is_canceled());
 }
@@ -43,11 +43,11 @@ TEST_CASE("value_task_with_priority_and_custom_data") {
     t->set_priority(13);
     t->set_custom_data(13.5);
     auto n = t->node();
-    REQUIRE(13u == n->priority());
+    REQUIRE(13 == n->priority());
     REQUIRE(13.5 == std::any_cast<double>(n->custom_data()));
     t->remove_custom_data();
     t->reset_priority();
-    REQUIRE(0u == n->priority());
+    REQUIRE(0 == n->priority());
     REQUIRE(!n->custom_data().has_value());
 }
 
@@ -56,11 +56,11 @@ TEST_CASE("value_task_with_priority_all_and_custom_data_all") {
     t->set_priority_all(13);
     t->set_custom_data_all(13.5);
     auto n = t->node();
-    REQUIRE(13u == n->priority());
+    REQUIRE(13 == n->priority());
     REQUIRE(13.5 == std::any_cast<double>(n->custom_data()));
     t->remove_custom_data_all();
     t->reset_priority_all();
-    REQUIRE(0u == n->priority());
+    REQUIRE(0 == n->priority());
     REQUIRE(!n->custom_data().has_value());
 }
 #endif

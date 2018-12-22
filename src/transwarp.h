@@ -186,7 +186,7 @@ public:
     }
 
     /// The task priority (defaults to 0)
-    std::size_t priority() const noexcept {
+    std::int64_t priority() const noexcept {
         return priority_;
     }
 
@@ -224,7 +224,7 @@ private:
     std::optional<std::string> name_;
     std::optional<std::string> executor_;
     std::vector<std::shared_ptr<node>> parents_;
-    std::size_t priority_ = 0;
+    std::int64_t priority_ = 0;
     std::any custom_data_;
     std::atomic<bool> canceled_{false};
     std::atomic<std::int64_t> avg_idletime_us_{-1};
@@ -363,8 +363,8 @@ public:
     virtual void set_executor_all(std::shared_ptr<transwarp::executor> executor) = 0;
     virtual void remove_executor() = 0;
     virtual void remove_executor_all() = 0;
-    virtual void set_priority(std::size_t priority) = 0;
-    virtual void set_priority_all(std::size_t priority) = 0;
+    virtual void set_priority(std::int64_t priority) = 0;
+    virtual void set_priority_all(std::int64_t priority) = 0;
     virtual void reset_priority() = 0;
     virtual void reset_priority_all() = 0;
     virtual void set_custom_data(std::any custom_data) = 0;
@@ -545,7 +545,7 @@ struct node_manip {
         node.parents_.push_back(std::move(parent));
     }
 
-    static void set_priority(transwarp::node& node, std::size_t priority) noexcept {
+    static void set_priority(transwarp::node& node, std::int64_t priority) noexcept {
         node.priority_ = priority;
     }
 
@@ -1093,14 +1093,14 @@ struct remove_executor_visitor {
 
 /// Assigns a priority to the given task
 struct set_priority_visitor {
-    explicit set_priority_visitor(std::size_t priority) noexcept
+    explicit set_priority_visitor(std::int64_t priority) noexcept
     : priority_{priority} {}
 
     void operator()(transwarp::itask& task) const noexcept {
         task.set_priority(priority_);
     }
 
-    std::size_t priority_;
+    std::int64_t priority_;
 };
 
 /// Resets the priority of the given task
@@ -1702,14 +1702,14 @@ public:
 
     /// Sets a task priority (defaults to 0). transwarp will not directly use this.
     /// This is only useful if something else is using the priority (e.g. a custom executor)
-    void set_priority(std::size_t priority) override {
+    void set_priority(std::int64_t priority) override {
         ensure_task_not_running();
         transwarp::detail::node_manip::set_priority(*node_, priority);
     }
 
     /// Sets a priority to all tasks (defaults to 0). transwarp will not directly use this.
     /// This is only useful if something else is using the priority (e.g. a custom executor)
-    void set_priority_all(std::size_t priority) override {
+    void set_priority_all(std::int64_t priority) override {
         ensure_task_not_running();
         transwarp::detail::set_priority_visitor visitor{priority};
         visit_all(visitor);
@@ -2488,13 +2488,13 @@ public:
 
     /// Sets a task priority (defaults to 0). transwarp will not directly use this.
     /// This is only useful if something else is using the priority
-    void set_priority(std::size_t priority) override {
+    void set_priority(std::int64_t priority) override {
         transwarp::detail::node_manip::set_priority(*node_, priority);
     }
 
     /// Sets a priority to all tasks (defaults to 0). transwarp will not directly use this.
     /// This is only useful if something else is using the priority
-    void set_priority_all(std::size_t priority) override {
+    void set_priority_all(std::int64_t priority) override {
         set_priority(priority);
     }
 
