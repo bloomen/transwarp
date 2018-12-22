@@ -86,6 +86,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="header">
   <div class="summary">
 <a href="#nested-classes">Classes</a> &#124;
+<a href="#typedef-members">Typedefs</a> &#124;
 <a href="#func-members">Functions</a>  </div>
   <div class="headertitle">
 <div class="title">transwarp::detail Namespace Reference</div>  </div>
@@ -261,6 +262,19 @@ Classes</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1detail_1_1task__impl__proxy_3_01void_00_01TaskType_00_01Functor_00_01ParentResults_8_8_8_4.html">task_impl_proxy&lt; void, TaskType, Functor, ParentResults...&gt;</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">A task proxy for void result type.  <a href="classtranswarp_1_1detail_1_1task__impl__proxy_3_01void_00_01TaskType_00_01Functor_00_01ParentResults_8_8_8_4.html#details">More...</a><br/></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="typedef-members"></a>
+Typedefs</h2></td></tr>
+<tr class="memitem:a163390d86abafecaccdc82c10f889dc4"><td class="memTemplParams" colspan="2"><a class="anchor" id="a163390d86abafecaccdc82c10f889dc4"></a>
+template&lt;typename TaskType , typename Functor , typename... ParentResults&gt; </td></tr>
+<tr class="memitem:a163390d86abafecaccdc82c10f889dc4"><td class="memTemplItemLeft" align="right" valign="top">using&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacetranswarp_1_1detail.html#a163390d86abafecaccdc82c10f889dc4">functor_result_t</a> = typename <a class="el" href="structtranswarp_1_1detail_1_1functor__result.html">transwarp::detail::functor_result</a>&lt; TaskType, Functor, ParentResults...&gt;::type</td></tr>
+<tr class="memdesc:a163390d86abafecaccdc82c10f889dc4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Determines the result type of the Functor dispatching on the task type. <br/></td></tr>
+<tr class="separator:a163390d86abafecaccdc82c10f889dc4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab9b242b56b7ddc566a1cbf9951e603bd"><td class="memTemplParams" colspan="2"><a class="anchor" id="ab9b242b56b7ddc566a1cbf9951e603bd"></a>
+template&lt;typename... ParentResults&gt; </td></tr>
+<tr class="memitem:ab9b242b56b7ddc566a1cbf9951e603bd"><td class="memTemplItemLeft" align="right" valign="top">using&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacetranswarp_1_1detail.html#ab9b242b56b7ddc566a1cbf9951e603bd">parents_t</a> = typename <a class="el" href="structtranswarp_1_1detail_1_1parents.html">transwarp::detail::parents</a>&lt; ParentResults...&gt;::type</td></tr>
+<tr class="memdesc:ab9b242b56b7ddc566a1cbf9951e603bd"><td class="mdescLeft">&#160;</td><td class="mdescRight">Determines the type of the parents. <br/></td></tr>
+<tr class="separator:ab9b242b56b7ddc566a1cbf9951e603bd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>

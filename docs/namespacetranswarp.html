@@ -83,6 +83,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
   <div class="summary">
 <a href="#namespaces">Namespaces</a> &#124;
 <a href="#nested-classes">Classes</a> &#124;
+<a href="#typedef-members">Typedefs</a> &#124;
 <a href="#enum-members">Enumerations</a> &#124;
 <a href="#func-members">Functions</a> &#124;
 <a href="#var-members">Variables</a>  </div>
@@ -153,12 +154,6 @@ Classes</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1itask.html">itask</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">An interface for the task class.  <a href="classtranswarp_1_1itask.html#details">More...</a><br/></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structtranswarp_1_1decay.html">decay</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Removes reference and const from a type.  <a href="structtranswarp_1_1decay.html#details">More...</a><br/></td></tr>
-<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structtranswarp_1_1result.html">result</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the result type of a std::shared_future&lt;T&gt;  <a href="structtranswarp_1_1result.html#details">More...</a><br/></td></tr>
-<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1task.html">task</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">The task class.  <a href="classtranswarp_1_1task.html#details">More...</a><br/></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -195,6 +190,19 @@ Classes</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1timer.html">timer</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">A timer that tracks the average idle, wait, and run time of each task it listens to.  <a href="classtranswarp_1_1timer.html#details">More...</a><br/></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="typedef-members"></a>
+Typedefs</h2></td></tr>
+<tr class="memitem:a080c99818d36a4878e67e45363656286"><td class="memTemplParams" colspan="2"><a class="anchor" id="a080c99818d36a4878e67e45363656286"></a>
+template&lt;typename T &gt; </td></tr>
+<tr class="memitem:a080c99818d36a4878e67e45363656286"><td class="memTemplItemLeft" align="right" valign="top">using&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacetranswarp.html#a080c99818d36a4878e67e45363656286">decay_t</a> = std::remove_const_t&lt; std::remove_reference_t&lt; T &gt;&gt;</td></tr>
+<tr class="memdesc:a080c99818d36a4878e67e45363656286"><td class="mdescLeft">&#160;</td><td class="mdescRight">Removes reference and const from a type. <br/></td></tr>
+<tr class="separator:a080c99818d36a4878e67e45363656286"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa636472d53db0071fabe34fbca820db6"><td class="memTemplParams" colspan="2"><a class="anchor" id="aa636472d53db0071fabe34fbca820db6"></a>
+template&lt;typename T &gt; </td></tr>
+<tr class="memitem:aa636472d53db0071fabe34fbca820db6"><td class="memTemplItemLeft" align="right" valign="top">using&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacetranswarp.html#aa636472d53db0071fabe34fbca820db6">result_t</a> = std::result_of_t&lt; decltype(&amp;std::shared_future&lt; T &gt;::get)(std::shared_future&lt; T &gt;)&gt;</td></tr>
+<tr class="memdesc:aa636472d53db0071fabe34fbca820db6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the result type of a std::shared_future&lt;T&gt; <br/></td></tr>
+<tr class="separator:aa636472d53db0071fabe34fbca820db6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="enum-members"></a>
 Enumerations</h2></td></tr>
@@ -235,18 +243,18 @@ Functions</h2></td></tr>
 std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacetranswarp.html#ab7cae8c7d0267dd51406f77f69697c3b">to_string</a> (const <a class="el" href="namespacetranswarp.html#a10f2b2567332cf9514d4c366c1cc5a5e">transwarp::task_type</a> &amp;type)</td></tr>
 <tr class="memdesc:ab7cae8c7d0267dd51406f77f69697c3b"><td class="mdescLeft">&#160;</td><td class="mdescRight">String conversion for the task_type enumeration. <br/></td></tr>
 <tr class="separator:ab7cae8c7d0267dd51406f77f69697c3b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a28da1fe6230ae54e0d3552739185d0d5"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a28da1fe6230ae54e0d3552739185d0d5"></a>
-std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacetranswarp.html#a28da1fe6230ae54e0d3552739185d0d5">to_string</a> (const <a class="el" href="classtranswarp_1_1node.html">transwarp::node</a> &amp;<a class="el" href="classtranswarp_1_1node.html">node</a>, const std::string &amp;separator=&quot;\n&quot;)</td></tr>
-<tr class="memdesc:a28da1fe6230ae54e0d3552739185d0d5"><td class="mdescLeft">&#160;</td><td class="mdescRight">String conversion for the node class. <br/></td></tr>
-<tr class="separator:a28da1fe6230ae54e0d3552739185d0d5"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a13e95277c8454385155c33f11b4cb576"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a13e95277c8454385155c33f11b4cb576"></a>
-std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacetranswarp.html#a13e95277c8454385155c33f11b4cb576">to_string</a> (const <a class="el" href="classtranswarp_1_1edge.html">transwarp::edge</a> &amp;<a class="el" href="classtranswarp_1_1edge.html">edge</a>, const std::string &amp;separator=&quot;\n&quot;)</td></tr>
-<tr class="memdesc:a13e95277c8454385155c33f11b4cb576"><td class="mdescLeft">&#160;</td><td class="mdescRight">String conversion for the edge class. <br/></td></tr>
-<tr class="separator:a13e95277c8454385155c33f11b4cb576"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9d46189f565636bcab348e598de96c90"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a9d46189f565636bcab348e598de96c90"></a>
-std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacetranswarp.html#a9d46189f565636bcab348e598de96c90">to_string</a> (const std::vector&lt; <a class="el" href="classtranswarp_1_1edge.html">transwarp::edge</a> &gt; &amp;edges, const std::string &amp;separator=&quot;\n&quot;)</td></tr>
-<tr class="memdesc:a9d46189f565636bcab348e598de96c90"><td class="mdescLeft">&#160;</td><td class="mdescRight">Creates a dot-style string from the given edges. <br/></td></tr>
-<tr class="separator:a9d46189f565636bcab348e598de96c90"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae3fa01d1290f68a6b9ea72390bca087e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae3fa01d1290f68a6b9ea72390bca087e"></a>
+std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacetranswarp.html#ae3fa01d1290f68a6b9ea72390bca087e">to_string</a> (const <a class="el" href="classtranswarp_1_1node.html">transwarp::node</a> &amp;<a class="el" href="classtranswarp_1_1node.html">node</a>, std::string_view separator=&quot;\n&quot;)</td></tr>
+<tr class="memdesc:ae3fa01d1290f68a6b9ea72390bca087e"><td class="mdescLeft">&#160;</td><td class="mdescRight">String conversion for the node class. <br/></td></tr>
+<tr class="separator:ae3fa01d1290f68a6b9ea72390bca087e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a66bc005dcf7b2d422f7dba9a71526c7f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a66bc005dcf7b2d422f7dba9a71526c7f"></a>
+std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacetranswarp.html#a66bc005dcf7b2d422f7dba9a71526c7f">to_string</a> (const <a class="el" href="classtranswarp_1_1edge.html">transwarp::edge</a> &amp;<a class="el" href="classtranswarp_1_1edge.html">edge</a>, std::string_view separator=&quot;\n&quot;)</td></tr>
+<tr class="memdesc:a66bc005dcf7b2d422f7dba9a71526c7f"><td class="mdescLeft">&#160;</td><td class="mdescRight">String conversion for the edge class. <br/></td></tr>
+<tr class="separator:a66bc005dcf7b2d422f7dba9a71526c7f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adf0c63e221587c70afc83d00bf78255c"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="adf0c63e221587c70afc83d00bf78255c"></a>
+std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacetranswarp.html#adf0c63e221587c70afc83d00bf78255c">to_string</a> (const std::vector&lt; <a class="el" href="classtranswarp_1_1edge.html">transwarp::edge</a> &gt; &amp;edges, std::string_view separator=&quot;\n&quot;)</td></tr>
+<tr class="memdesc:adf0c63e221587c70afc83d00bf78255c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Creates a dot-style string from the given edges. <br/></td></tr>
+<tr class="separator:adf0c63e221587c70afc83d00bf78255c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab5bfe65a3f750dafe27d05c8b4bb2c23"><td class="memTemplParams" colspan="2"><a class="anchor" id="ab5bfe65a3f750dafe27d05c8b4bb2c23"></a>
 template&lt;typename TaskType , typename Functor , typename... Parents&gt; </td></tr>
 <tr class="memitem:ab5bfe65a3f750dafe27d05c8b4bb2c23"><td class="memTemplItemLeft" align="right" valign="top">auto&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacetranswarp.html#ab5bfe65a3f750dafe27d05c8b4bb2c23">make_task</a> (TaskType, std::string name, Functor &amp;&amp;<a class="el" href="classtranswarp_1_1functor.html">functor</a>, std::shared_ptr&lt; Parents &gt;...parents)</td></tr>

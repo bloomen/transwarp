@@ -8,5 +8,5 @@ var searchData=
   ['capacity',['capacity',['../classtranswarp_1_1detail_1_1circular__buffer.html#a3ffe6d8f29a7397b5f73cd8da1aa78dc',1,'transwarp::detail::circular_buffer']]],
   ['child',['child',['../classtranswarp_1_1edge.html#abd4defd213ae8e41cdd15984a1e8c5ff',1,'transwarp::edge']]],
   ['circular_5fbuffer',['circular_buffer',['../classtranswarp_1_1detail_1_1circular__buffer.html#a13fa676f234b0c1ecceb40977b2cc540',1,'transwarp::detail::circular_buffer']]],
-  ['custom_5fdata',['custom_data',['../classtranswarp_1_1node.html#a668c81df8681bf0a105ebb662103081e',1,'transwarp::node']]]
+  ['custom_5fdata',['custom_data',['../classtranswarp_1_1node.html#a95d09033a3e841b9e7ac08d736b2b962',1,'transwarp::node']]]
 ];

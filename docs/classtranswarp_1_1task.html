@@ -121,21 +121,21 @@ using&#160;</td><td class="memItemRight" valign="bottom"><b>result_type</b> = Re
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a96ed306fe867aff61712e817861d2d59"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a96ed306fe867aff61712e817861d2d59"></a>
-virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>set_value</b> (const typename <a class="el" href="structtranswarp_1_1decay.html">transwarp::decay</a>&lt; result_type &gt;::type &amp;value)=0</td></tr>
-<tr class="separator:a96ed306fe867aff61712e817861d2d59"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac1cce9b79af1a150f490543a519927f7"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac1cce9b79af1a150f490543a519927f7"></a>
-virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>set_value</b> (typename <a class="el" href="structtranswarp_1_1decay.html">transwarp::decay</a>&lt; result_type &gt;::type &amp;&amp;value)=0</td></tr>
-<tr class="separator:ac1cce9b79af1a150f490543a519927f7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a92b21cee3bd856dc5f2542ca238e24db"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a92b21cee3bd856dc5f2542ca238e24db"></a>
+virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>set_value</b> (const <a class="el" href="namespacetranswarp.html#a080c99818d36a4878e67e45363656286">transwarp::decay_t</a>&lt; result_type &gt; &amp;value)=0</td></tr>
+<tr class="separator:a92b21cee3bd856dc5f2542ca238e24db"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad008ce41a3f1f0c0a54b0626ed10a63a"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad008ce41a3f1f0c0a54b0626ed10a63a"></a>
+virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>set_value</b> (<a class="el" href="namespacetranswarp.html#a080c99818d36a4878e67e45363656286">transwarp::decay_t</a>&lt; result_type &gt; &amp;&amp;value)=0</td></tr>
+<tr class="separator:ad008ce41a3f1f0c0a54b0626ed10a63a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a93d305dee3311dfba80f13cee7945099"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a93d305dee3311dfba80f13cee7945099"></a>
 virtual const <br class="typebreak"/>
 std::shared_future<br class="typebreak"/>
 &lt; result_type &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>future</b> () const noexcept=0</td></tr>
 <tr class="separator:a93d305dee3311dfba80f13cee7945099"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad847b42714be666d1eb468e9e2a076a4"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad847b42714be666d1eb468e9e2a076a4"></a>
-virtual <a class="el" href="structtranswarp_1_1result.html">transwarp::result</a><br class="typebreak"/>
-&lt; result_type &gt;::type&#160;</td><td class="memItemRight" valign="bottom"><b>get</b> () const =0</td></tr>
-<tr class="separator:ad847b42714be666d1eb468e9e2a076a4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af34e28abfeec3debb27041165fe78918"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af34e28abfeec3debb27041165fe78918"></a>
+virtual <a class="el" href="namespacetranswarp.html#aa636472d53db0071fabe34fbca820db6">transwarp::result_t</a><br class="typebreak"/>
+&lt; result_type &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>get</b> () const =0</td></tr>
+<tr class="separator:af34e28abfeec3debb27041165fe78918"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header pub_methods_classtranswarp_1_1itask"><td colspan="2" onclick="javascript:toggleInherit('pub_methods_classtranswarp_1_1itask')"><img src="closed.png" alt="-"/>&#160;Public Member Functions inherited from <a class="el" href="classtranswarp_1_1itask.html">transwarp::itask</a></td></tr>
 <tr class="memitem:a8dfced2859982a802a36cbd062402b77 inherit pub_methods_classtranswarp_1_1itask"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a8dfced2859982a802a36cbd062402b77"></a>
 virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>set_executor</b> (std::shared_ptr&lt; <a class="el" href="classtranswarp_1_1executor.html">transwarp::executor</a> &gt; <a class="el" href="classtranswarp_1_1executor.html">executor</a>)=0</td></tr>
@@ -149,24 +149,24 @@ virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>remove_execut
 <tr class="memitem:ae84331677483cae36600bc56e2079f40 inherit pub_methods_classtranswarp_1_1itask"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae84331677483cae36600bc56e2079f40"></a>
 virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>remove_executor_all</b> ()=0</td></tr>
 <tr class="separator:ae84331677483cae36600bc56e2079f40 inherit pub_methods_classtranswarp_1_1itask"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a90655bd5409b28efc2ec9fb9f5b5c20a inherit pub_methods_classtranswarp_1_1itask"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a90655bd5409b28efc2ec9fb9f5b5c20a"></a>
-virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>set_priority</b> (std::size_t priority)=0</td></tr>
-<tr class="separator:a90655bd5409b28efc2ec9fb9f5b5c20a inherit pub_methods_classtranswarp_1_1itask"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0d4d650a5cb08a2ae9309ba742e1a174 inherit pub_methods_classtranswarp_1_1itask"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a0d4d650a5cb08a2ae9309ba742e1a174"></a>
-virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>set_priority_all</b> (std::size_t priority)=0</td></tr>
-<tr class="separator:a0d4d650a5cb08a2ae9309ba742e1a174 inherit pub_methods_classtranswarp_1_1itask"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acc130f39608371a52e788a294ab5b4dd inherit pub_methods_classtranswarp_1_1itask"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="acc130f39608371a52e788a294ab5b4dd"></a>
+virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>set_priority</b> (std::int64_t priority)=0</td></tr>
+<tr class="separator:acc130f39608371a52e788a294ab5b4dd inherit pub_methods_classtranswarp_1_1itask"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5362638d51307db7e2755ef2796329d6 inherit pub_methods_classtranswarp_1_1itask"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a5362638d51307db7e2755ef2796329d6"></a>
+virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>set_priority_all</b> (std::int64_t priority)=0</td></tr>
+<tr class="separator:a5362638d51307db7e2755ef2796329d6 inherit pub_methods_classtranswarp_1_1itask"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a811e0825a070bdbd51ec70f37723b53a inherit pub_methods_classtranswarp_1_1itask"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a811e0825a070bdbd51ec70f37723b53a"></a>
 virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>reset_priority</b> ()=0</td></tr>
 <tr class="separator:a811e0825a070bdbd51ec70f37723b53a inherit pub_methods_classtranswarp_1_1itask"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a60c6f3beb644b4839b1aff3e7cbfebb9 inherit pub_methods_classtranswarp_1_1itask"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a60c6f3beb644b4839b1aff3e7cbfebb9"></a>
 virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>reset_priority_all</b> ()=0</td></tr>
 <tr class="separator:a60c6f3beb644b4839b1aff3e7cbfebb9 inherit pub_methods_classtranswarp_1_1itask"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aad7f9fd8ab3f2361913903387b46a50a inherit pub_methods_classtranswarp_1_1itask"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aad7f9fd8ab3f2361913903387b46a50a"></a>
-virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>set_custom_data</b> (std::shared_ptr&lt; std::any &gt; custom_data)=0</td></tr>
-<tr class="separator:aad7f9fd8ab3f2361913903387b46a50a inherit pub_methods_classtranswarp_1_1itask"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aabcfcf2c6afe16194bdf0c1556e3c954 inherit pub_methods_classtranswarp_1_1itask"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aabcfcf2c6afe16194bdf0c1556e3c954"></a>
-virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>set_custom_data_all</b> (std::shared_ptr&lt; std::any &gt; custom_data)=0</td></tr>
-<tr class="separator:aabcfcf2c6afe16194bdf0c1556e3c954 inherit pub_methods_classtranswarp_1_1itask"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a31ec05e7ccb99f9fc2846f578dc56dc5 inherit pub_methods_classtranswarp_1_1itask"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a31ec05e7ccb99f9fc2846f578dc56dc5"></a>
+virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>set_custom_data</b> (std::any custom_data)=0</td></tr>
+<tr class="separator:a31ec05e7ccb99f9fc2846f578dc56dc5 inherit pub_methods_classtranswarp_1_1itask"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af1945750dc87fce11ee40151edba375f inherit pub_methods_classtranswarp_1_1itask"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af1945750dc87fce11ee40151edba375f"></a>
+virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>set_custom_data_all</b> (std::any custom_data)=0</td></tr>
+<tr class="separator:af1945750dc87fce11ee40151edba375f inherit pub_methods_classtranswarp_1_1itask"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aeed07b7e43b0f01110177955836d54aa inherit pub_methods_classtranswarp_1_1itask"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aeed07b7e43b0f01110177955836d54aa"></a>
 virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>remove_custom_data</b> ()=0</td></tr>
 <tr class="separator:aeed07b7e43b0f01110177955836d54aa inherit pub_methods_classtranswarp_1_1itask"><td class="memSeparator" colspan="2">&#160;</td></tr>

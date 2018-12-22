@@ -125,7 +125,7 @@ Public Member Functions</h2></td></tr>
 <a class="el" href="classtranswarp_1_1detail_1_1circular__buffer.html">circular_buffer</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>operator=</b> (<a class="el" href="classtranswarp_1_1detail_1_1circular__buffer.html">circular_buffer</a> &amp;&amp;)=delete</td></tr>
 <tr class="separator:a4d5ac21ecbd5c1288cd8703b66128198"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6916fa11beb3f28e7bcf70652084a1dc"><td class="memTemplParams" colspan="2"><a class="anchor" id="a6916fa11beb3f28e7bcf70652084a1dc"></a>
-template&lt;typename T , typename  = typename std::enable_if&lt;std::is_same&lt;typename std::decay&lt;T&gt;::type, value_type&gt;::value&gt;::type&gt; </td></tr>
+template&lt;typename T , typename  = std::enable_if_t&lt;std::is_same_v&lt;std::decay_t&lt;T&gt;, value_type&gt;&gt;&gt; </td></tr>
 <tr class="memitem:a6916fa11beb3f28e7bcf70652084a1dc"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1detail_1_1circular__buffer.html#a6916fa11beb3f28e7bcf70652084a1dc">push</a> (T &amp;&amp;value)</td></tr>
 <tr class="memdesc:a6916fa11beb3f28e7bcf70652084a1dc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Pushes a new value onto the end of the buffer. If that exceeds the capacity of the buffer then the oldest value gets dropped (the one at the front). <br/></td></tr>
 <tr class="separator:a6916fa11beb3f28e7bcf70652084a1dc"><td class="memSeparator" colspan="2">&#160;</td></tr>
