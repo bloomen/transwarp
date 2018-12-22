@@ -7,8 +7,6 @@ else
     echo "Compiler: "$CXX
 fi
 
-$thisdir/cppcheck.sh
-
 modes='Debug Release'
 
 function run_many_times() {
