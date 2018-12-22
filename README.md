@@ -12,6 +12,8 @@ Tested with GCC, Clang, and Visual Studio.
 
 There is also support for C++11 which is maintained on the `transwarp1.X` branch.
 
+**Important:** Only use tagged releases of transwarp in production code!
+
 **Table of contents**
 
   * [Example](#example)
