@@ -14,7 +14,7 @@ TEST_CASE("value_task") {
     REQUIRE(!n->executor());
     REQUIRE(n->parents().empty());
     REQUIRE(0u == n->priority());
-    REQUIRE(!n->custom_data());
+    REQUIRE(!n->custom_data().has_value());
     REQUIRE(!n->is_canceled());
 }
 
@@ -33,37 +33,37 @@ TEST_CASE("value_task_with_name") {
     REQUIRE(!n->executor());
     REQUIRE(n->parents().empty());
     REQUIRE(0u == n->priority());
-    REQUIRE(!n->custom_data());
+    REQUIRE(!n->custom_data().has_value());
     REQUIRE(!n->is_canceled());
 }
 
+#if !defined(__APPLE__) // any_cast not supported on travis
 TEST_CASE("value_task_with_priority_and_custom_data") {
     auto t = tw::make_value_task(42);
     t->set_priority(13);
-    auto data = std::make_shared<std::any>(13.5);
-    t->set_custom_data(data);
+    t->set_custom_data(13.5);
     auto n = t->node();
     REQUIRE(13u == n->priority());
-    REQUIRE(data.get() == n->custom_data().get());
+    REQUIRE(13.5 == std::any_cast<double>(n->custom_data()));
     t->remove_custom_data();
     t->reset_priority();
     REQUIRE(0u == n->priority());
-    REQUIRE(!n->custom_data());
+    REQUIRE(!n->custom_data().has_value());
 }
 
 TEST_CASE("value_task_with_priority_all_and_custom_data_all") {
     auto t = tw::make_value_task(42);
     t->set_priority_all(13);
-    auto data = std::make_shared<std::any>(13.5);
-    t->set_custom_data_all(data);
+    t->set_custom_data_all(13.5);
     auto n = t->node();
     REQUIRE(13u == n->priority());
-    REQUIRE(data.get() == n->custom_data().get());
+    REQUIRE(13.5 == std::any_cast<double>(n->custom_data()));
     t->remove_custom_data_all();
     t->reset_priority_all();
     REQUIRE(0u == n->priority());
-    REQUIRE(!n->custom_data());
+    REQUIRE(!n->custom_data().has_value());
 }
+#endif
 
 TEST_CASE("value_task_in_a_graph") {
     auto t1 = tw::make_value_task(42);

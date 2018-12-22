@@ -261,15 +261,17 @@ TEST_CASE("task_priority") {
     REQUIRE(0 == t->node()->priority());
 }
 
+#if !defined(__APPLE__) // any_cast not supported on travis
 TEST_CASE("task_custom_data") {
     auto t = tw::make_task(tw::root, []{});
-    REQUIRE(nullptr == t->node()->custom_data());
-    auto cd = std::make_shared<std::any>(42);
+    REQUIRE(!t->node()->custom_data().has_value());
+    auto cd = std::make_shared<int>(42);
     t->set_custom_data(cd);
-    REQUIRE(cd.get() == t->node()->custom_data().get());
+    REQUIRE(cd.get() == std::any_cast<std::shared_ptr<int>>(t->node()->custom_data()).get());
     t->remove_custom_data();
-    REQUIRE(nullptr == t->node()->custom_data());
+    REQUIRE(!t->node()->custom_data().has_value());
 }
+#endif
 
 TEST_CASE("set_priority_all") {
     auto t1 = tw::make_task(tw::root, []{});
@@ -294,21 +296,21 @@ TEST_CASE("reset_priority_all") {
 TEST_CASE("set_custom_data_all") {
     auto t1 = tw::make_task(tw::root, []{});
     auto t2 = tw::make_task(tw::wait, []{}, t1);
-    auto data = std::make_shared<std::any>(42);
+    int data = 42;
     t2->set_custom_data_all(data);
-    REQUIRE(42 == std::any_cast<int>(*(t1->node()->custom_data())));
-    REQUIRE(42 == std::any_cast<int>(*(t2->node()->custom_data())));
+    REQUIRE(42 == std::any_cast<int>(t1->node()->custom_data()));
+    REQUIRE(42 == std::any_cast<int>(t2->node()->custom_data()));
 }
 
 TEST_CASE("remove_custom_data_all") {
     auto t1 = tw::make_task(tw::root, []{});
     auto t2 = tw::make_task(tw::wait, []{}, t1);
-    auto data = std::make_shared<std::any>(42);
+    int data = 42;
     t2->set_custom_data_all(data);
-    REQUIRE(42 == std::any_cast<int>(*(t1->node()->custom_data())));
-    REQUIRE(42 == std::any_cast<int>(*(t2->node()->custom_data())));
+    REQUIRE(42 == std::any_cast<int>(t1->node()->custom_data()));
+    REQUIRE(42 == std::any_cast<int>(t2->node()->custom_data()));
     t2->remove_custom_data_all();
-    REQUIRE_FALSE(t1->node()->custom_data());
-    REQUIRE_FALSE(t2->node()->custom_data());
+    REQUIRE(!t1->node()->custom_data().has_value());
+    REQUIRE(!t2->node()->custom_data().has_value());
 }
 #endif

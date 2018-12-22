@@ -190,8 +190,8 @@ public:
         return priority_;
     }
 
-    /// The custom task data (may be null)
-    const std::shared_ptr<std::any>& custom_data() const noexcept {
+    /// The custom task data (may not hold a value)
+    const std::any& custom_data() const noexcept {
         return custom_data_;
     }
 
@@ -225,7 +225,7 @@ private:
     std::optional<std::string> executor_;
     std::vector<std::shared_ptr<node>> parents_;
     std::size_t priority_ = 0;
-    std::shared_ptr<std::any> custom_data_;
+    std::any custom_data_;
     std::atomic<bool> canceled_{false};
     std::atomic<std::int64_t> avg_idletime_us_{-1};
     std::atomic<std::int64_t> avg_waittime_us_{-1};
@@ -367,8 +367,8 @@ public:
     virtual void set_priority_all(std::size_t priority) = 0;
     virtual void reset_priority() = 0;
     virtual void reset_priority_all() = 0;
-    virtual void set_custom_data(std::shared_ptr<std::any> custom_data) = 0;
-    virtual void set_custom_data_all(std::shared_ptr<std::any> custom_data) = 0;
+    virtual void set_custom_data(std::any custom_data) = 0;
+    virtual void set_custom_data_all(std::any custom_data) = 0;
     virtual void remove_custom_data() = 0;
     virtual void remove_custom_data_all() = 0;
     virtual const std::shared_ptr<transwarp::node>& node() const noexcept = 0;
@@ -549,7 +549,7 @@ struct node_manip {
         node.priority_ = priority;
     }
 
-    static void set_custom_data(transwarp::node& node, std::shared_ptr<std::any> custom_data) {
+    static void set_custom_data(transwarp::node& node, std::any custom_data) {
         node.custom_data_ = std::move(custom_data);
     }
 
@@ -1113,14 +1113,14 @@ struct reset_priority_visitor {
 
 /// Assigns custom data to the given task
 struct set_custom_data_visitor {
-    explicit set_custom_data_visitor(std::shared_ptr<std::any> custom_data) noexcept
+    explicit set_custom_data_visitor(std::any custom_data) noexcept
     : custom_data_{std::move(custom_data)} {}
 
     void operator()(transwarp::itask& task) const noexcept {
         task.set_custom_data(custom_data_);
     }
 
-    std::shared_ptr<std::any> custom_data_;
+    std::any custom_data_;
 };
 
 /// Removes custom data from the given task
@@ -1359,7 +1359,7 @@ inline std::shared_future<void> make_ready_future() {
 template<typename ResultType>
 std::shared_future<ResultType> make_future_with_exception(std::exception_ptr exception) {
     if (!exception) {
-        throw transwarp::invalid_parameter("exception pointer");
+        throw transwarp::invalid_parameter{"exception pointer"};
     }
     std::promise<ResultType> promise;
     promise.set_exception(exception);
@@ -1730,17 +1730,17 @@ public:
 
     /// Assigns custom data to this task. transwarp will not directly use this.
     /// This is only useful if something else is using this custom data (e.g. a custom executor)
-    void set_custom_data(std::shared_ptr<std::any> custom_data) override {
+    void set_custom_data(std::any custom_data) override {
         ensure_task_not_running();
-        if (!custom_data) {
-            throw transwarp::invalid_parameter{"custom data pointer"};
+        if (!custom_data.has_value()) {
+            throw transwarp::invalid_parameter{"custom data"};
         }
         transwarp::detail::node_manip::set_custom_data(*node_, std::move(custom_data));
     }
 
     /// Assigns custom data to all tasks. transwarp will not directly use this.
     /// This is only useful if something else is using this custom data (e.g. a custom executor)
-    void set_custom_data_all(std::shared_ptr<std::any> custom_data) override {
+    void set_custom_data_all(std::any custom_data) override {
         ensure_task_not_running();
         transwarp::detail::set_custom_data_visitor visitor{std::move(custom_data)};
         visit_all(visitor);
@@ -2118,7 +2118,7 @@ private:
             }
             std::weak_ptr<task_impl_base> self = this->shared_from_this();
             using runner_t = transwarp::detail::runner<result_type, task_type, task_impl_base, decltype(parents_)>;
-            std::shared_ptr<runner_t> runner = std::shared_ptr<runner_t>(new runner_t{node_->id(), self, parents_});
+            std::shared_ptr<runner_t> runner = std::shared_ptr<runner_t>{new runner_t{node_->id(), self, parents_}};
             raise_event(transwarp::event_type::before_scheduled);
             future_ = runner->future();
             if (executor_) {
@@ -2510,16 +2510,16 @@ public:
 
     /// Assigns custom data to this task. transwarp will not directly use this.
     /// This is only useful if something else is using this custom data
-    void set_custom_data(std::shared_ptr<std::any> custom_data) override {
-        if (!custom_data) {
-            throw transwarp::invalid_parameter{"custom data pointer"};
+    void set_custom_data(std::any custom_data) override {
+        if (!custom_data.has_value()) {
+            throw transwarp::invalid_parameter{"custom data"};
         }
         transwarp::detail::node_manip::set_custom_data(*node_, std::move(custom_data));
     }
 
     /// Assigns custom data to all tasks. transwarp will not directly use this.
     /// This is only useful if something else is using this custom data
-    void set_custom_data_all(std::shared_ptr<std::any> custom_data) override {
+    void set_custom_data_all(std::any custom_data) override {
         set_custom_data(std::move(custom_data));
     }
 
