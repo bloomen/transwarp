@@ -2,7 +2,7 @@
 /// @details https://github.com/bloomen/transwarp
 /// @version 2.0.0
 /// @author Christian Blume, Guan Wang
-/// @date 2018
+/// @date 2019
 /// @copyright MIT http://www.opensource.org/licenses/mit-license.php
 #pragma once
 #include <algorithm>
