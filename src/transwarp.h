@@ -2422,9 +2422,9 @@ public:
 
     /// Creates a continuation to this task
     template<typename TaskType_, typename Functor_>
-    auto then(TaskType_, Functor_&& functor) const {
+    auto then(TaskType_, Functor_&& functor) {
         using task_t = transwarp::task_impl<TaskType_, std::decay_t<Functor_>, result_type>;
-        return std::shared_ptr<task_t>{new task_t{std::forward<Functor_>(functor), std::dynamic_pointer_cast<transwarp::task<result_type>>(const_cast<task_impl*>(this)->shared_from_this())}};
+        return std::shared_ptr<task_t>{new task_t{std::forward<Functor_>(functor), this->shared_from_this()}};
     }
 
 };
@@ -2466,9 +2466,9 @@ public:
 
     /// Creates a continuation to this task
     template<typename TaskType_, typename Functor_>
-    auto then(TaskType_, Functor_&& functor) const {
+    auto then(TaskType_, Functor_&& functor) {
         using task_t = transwarp::task_impl<TaskType_, std::decay_t<Functor_>, result_type>;
-        return std::shared_ptr<task_t>{new task_t{std::forward<Functor_>(functor), std::dynamic_pointer_cast<transwarp::task<result_type>>(const_cast<value_task*>(this)->shared_from_this())}};
+        return std::shared_ptr<task_t>{new task_t{std::forward<Functor_>(functor), this->shared_from_this()}};
     }
 
     /// No-op because a value task never runs
