@@ -15,11 +15,10 @@ void basic_with_three_tasks(std::ostream& os) {
     int y = 0;
 
     // Building the task graph
-    auto parent1 = tw::make_task(tw::root, "something", [&x]{ return 13.3 + x; });
-    auto parent2 = tw::make_task(tw::root, "something else", [&y]{ return 42 + y; });
-    auto final = tw::make_task(tw::consume, "adder", [](double a, int b) {
-                                                         return a + b;
-                                                     }, parent1, parent2);
+    auto parent1 = tw::make_task(tw::root, [&x]{ return 13.3 + x; })->named("something");
+    auto parent2 = tw::make_task(tw::root, [&y]{ return 42 + y; })->named("something else");
+    auto final = tw::make_task(tw::consume, [](double a, int b) { return a + b;
+                                            }, parent1, parent2)->named("adder");
 
     tw::parallel executor{4};  // Parallel execution with 4 threads
 

@@ -87,14 +87,13 @@ std::ostream& operator<<(std::ostream& os, const result& r) {
 
 std::shared_ptr<tw::task<result>> build_graph(data_t& buffer) {
     auto gen = std::make_shared<std::mt19937>(1);
-    auto gen_task = tw::make_value_task("rand gen", gen);
-    auto buffer_task = tw::make_task(tw::root, "buffer", [&buffer]() -> data_t& { return buffer; });
-    auto generator_task = tw::make_task(tw::consume, "generator", generate_data, buffer_task, gen_task);
-    auto avg_task = tw::make_task(tw::consume, "average", average, generator_task);
-    auto stddev_task = tw::make_task(tw::consume, "stddev", stddev, generator_task, avg_task);
-    return tw::make_task(tw::consume, "aggregation",
-                         [](double avg, double stddev) { return result{avg, stddev}; },
-                         avg_task, stddev_task);
+    auto gen_task = tw::make_value_task(gen)->named("rand gen");
+    auto buffer_task = tw::make_task(tw::root, [&buffer]() -> data_t& { return buffer; })->named("buffer");
+    auto generator_task = tw::make_task(tw::consume, generate_data, buffer_task, gen_task)->named("generator");
+    auto avg_task = tw::make_task(tw::consume, average, generator_task)->named("average");
+    auto stddev_task = tw::make_task(tw::consume, stddev, generator_task, avg_task)->named("stddev");
+    return tw::make_task(tw::consume, [](double avg, double stddev) { return result{avg, stddev}; },
+                         avg_task, stddev_task)->named("aggregation");
 }
 
 }

@@ -20,7 +20,7 @@ TEST_CASE("value_task") {
 
 TEST_CASE("value_task_with_name") {
     const std::string name = "albert";
-    auto t = tw::make_value_task(name, 42);
+    auto t = tw::make_value_task(42)->named(name);
     REQUIRE(42 == t->get());
     REQUIRE(42 == t->future().get());
     REQUIRE(t->was_scheduled());

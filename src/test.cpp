@@ -45,20 +45,20 @@ void make_test_three_tasks(std::size_t threads, tw::schedule_type type) {
     int value = 42;
 
     auto f1 = [&value]{ return value; };
-    auto task1 = tw::make_task(tw::root, "t1", f1);
+    auto task1 = tw::make_task(tw::root, f1)->named("t1");
 
     auto f2 = [](int v) { return v + 2; };
-    auto task2 = tw::make_task(tw::consume, "t2", f2, task1);
+    auto task2 = tw::make_task(tw::consume, f2, task1)->named("t2");
 
     auto f3 = [](int v, int w) { return v + w + 3; }; 
 
     std::shared_ptr<tw::executor> executor;
     std::shared_ptr<tw::task<int>> task3;
     if (threads > 0) {
-        task3 = tw::make_task(tw::consume, "t3", f3, task1, task2);
+        task3 = tw::make_task(tw::consume, f3, task1, task2)->named("t3");
         executor = std::make_shared<tw::parallel>(threads);
     } else {
-        task3 = tw::make_task(tw::consume, "t3", f3, task1, task2);
+        task3 = tw::make_task(tw::consume, f3, task1, task2)->named("t3");
         executor = std::make_shared<tw::sequential>();
     }
 
@@ -153,7 +153,7 @@ void make_test_bunch_of_tasks(std::size_t threads, tw::schedule_type type) {
     auto task2 = tw::make_task(tw::consume, f1, task1);
     auto task3 = tw::make_task(tw::consume, f2, task2, task0);
     task3->set_executor(seq);
-    auto task5 = tw::make_task(tw::consume, "task5", f2, task3, task2);
+    auto task5 = tw::make_task(tw::consume, f2, task3, task2)->named("task5");
     auto task6 = tw::make_task(tw::consume, f3, task1, task2, task5);
     auto task7 = tw::make_task(tw::consume, f2, task5, task6);
     task7->set_executor(seq);

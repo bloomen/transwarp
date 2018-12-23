@@ -81,21 +81,21 @@ result aggregate_results(double avg, double stddev, double median, int mode) {
 
 std::shared_ptr<tw::task<result>> build_graph(std::size_t sample_size, double& alpha, double& beta) {
     auto gen = std::make_shared<std::mt19937>(1);
-    auto gen_task = tw::make_value_task("rand gen", gen);
-    auto size_task = tw::make_value_task("sample size", sample_size);
-    auto alpha_task = tw::make_task(tw::root, "alpha", [&alpha] { return alpha; });
-    auto beta_task = tw::make_task(tw::root, "beta", [&beta] { return beta; });
+    auto gen_task = tw::make_value_task(gen)->named("rand gen");
+    auto size_task = tw::make_value_task(sample_size)->named("sample size");
+    auto alpha_task = tw::make_task(tw::root, [&alpha] { return alpha; })->named("alpha");
+    auto beta_task = tw::make_task(tw::root, [&beta] { return beta; })->named("beta");
 
-    auto data_task = tw::make_task(tw::consume, "generate gamma", generate_gamma,
-                                   size_task, alpha_task, beta_task, gen_task);
+    auto data_task = tw::make_task(tw::consume, generate_gamma,
+                                   size_task, alpha_task, beta_task, gen_task)->named("generate gamma");
 
-    auto avg_task = tw::make_task(tw::consume, "average", average, data_task);
-    auto stddev_task = tw::make_task(tw::consume, "stddev", stddev, data_task, avg_task);
-    auto median_task = tw::make_task(tw::consume, "median", median, data_task);
-    auto mode_task = tw::make_task(tw::consume, "mode", mode, data_task);
+    auto avg_task = tw::make_task(tw::consume, average, data_task)->named("average");
+    auto stddev_task = tw::make_task(tw::consume, stddev, data_task, avg_task)->named("stddev");
+    auto median_task = tw::make_task(tw::consume, median, data_task)->named("median");
+    auto mode_task = tw::make_task(tw::consume, mode, data_task)->named("mode");
 
-    return tw::make_task(tw::consume, "aggregate results", aggregate_results,
-                         avg_task, stddev_task, median_task, mode_task);
+    return tw::make_task(tw::consume, aggregate_results,
+                         avg_task, stddev_task, median_task, mode_task)->named("aggregate results");
 }
 
 }
