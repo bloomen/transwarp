@@ -14,7 +14,7 @@ TEST_CASE("consume_any") {
     task3->schedule_all(exec);
     REQUIRE(43 == task3->future().get());
     cont = true;
-    REQUIRE(task1->node()->is_canceled());
+    REQUIRE(task1->node()->canceled());
 }
 
 TEST_CASE("consume_any_with_vector_parents") {
@@ -32,5 +32,5 @@ TEST_CASE("consume_any_with_vector_parents") {
     task3->schedule_all(exec);
     REQUIRE(43 == task3->future().get());
     cont = true;
-    REQUIRE(task1->node()->is_canceled());
+    REQUIRE(task1->node()->canceled());
 }

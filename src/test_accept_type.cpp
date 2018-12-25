@@ -48,7 +48,7 @@ TEST_CASE("accept_any_with_two_parents") {
     t3->schedule_all(exec);
     REQUIRE(43 == t3->future().get());
     cont = true;
-    REQUIRE(t1->node()->is_canceled());
+    REQUIRE(t1->node()->canceled());
 }
 
 TEST_CASE("accept_any_with_two_vector_parents") {
@@ -66,5 +66,5 @@ TEST_CASE("accept_any_with_two_vector_parents") {
     t3->schedule_all(exec);
     REQUIRE(43 == t3->future().get());
     cont = true;
-    REQUIRE(t1->node()->is_canceled());
+    REQUIRE(t1->node()->canceled());
 }

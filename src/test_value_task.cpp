@@ -15,7 +15,7 @@ TEST_CASE("value_task") {
     REQUIRE(n->parents().empty());
     REQUIRE(0 == n->priority());
     REQUIRE(!n->custom_data().has_value());
-    REQUIRE(!n->is_canceled());
+    REQUIRE(!n->canceled());
 }
 
 TEST_CASE("value_task_with_name") {
@@ -34,7 +34,7 @@ TEST_CASE("value_task_with_name") {
     REQUIRE(n->parents().empty());
     REQUIRE(0 == n->priority());
     REQUIRE(!n->custom_data().has_value());
-    REQUIRE(!n->is_canceled());
+    REQUIRE(!n->canceled());
 }
 
 #if !defined(__APPLE__) // any_cast not supported on travis

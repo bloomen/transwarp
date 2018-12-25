@@ -24,17 +24,6 @@ TEST_CASE("task_with_reference_return_type") {
     REQUIRE(*value == task->get());
 }
 
-struct non_copy_functor {
-    non_copy_functor() = default;
-    non_copy_functor(const non_copy_functor&) = delete;
-    non_copy_functor& operator=(const non_copy_functor&) = delete;
-    non_copy_functor(non_copy_functor&&) = default;
-    non_copy_functor& operator=(non_copy_functor&&) = default;
-    int operator()() const {
-        return 42;
-    }
-};
-
 struct non_move_functor {
     non_move_functor() = default;
     non_move_functor(const non_move_functor&) = default;
@@ -45,13 +34,6 @@ struct non_move_functor {
         return 43;
     }
 };
-
-TEST_CASE("make_task_with_non_copy_functor") {
-    non_copy_functor functor;
-    auto task = tw::make_task(tw::root, std::move(functor));
-    task->schedule();
-    REQUIRE(42 == task->future().get());
-}
 
 TEST_CASE("make_task_with_non_move_functor") {
     non_move_functor functor;

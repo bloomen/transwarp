@@ -7,6 +7,7 @@
 #pragma once
 #include <algorithm>
 #include <any>
+#include <array>
 #include <atomic>
 #include <chrono>
 #include <cstddef>
@@ -156,6 +157,27 @@ public:
     node(node&&) = delete;
     node& operator=(node&&) = delete;
 
+    /// Clones this node
+    std::unique_ptr<node> clone() const {
+        auto n = std::unique_ptr<node>{new node};
+        n->id_ = id_;
+        n->level_ = level_;
+        n->type_ = type_;
+        n->name_ = name_;
+        n->executor_ = executor_;
+        n->parents_ = parents_;
+        for (auto& parent : n->parents_) {
+            parent = parent->clone();
+        }
+        n->priority_ = priority_;
+        n->custom_data_ = custom_data_;
+        n->canceled_ = canceled_.load();
+        n->avg_idletime_us_ = avg_idletime_us_.load();
+        n->avg_waittime_us_ = avg_waittime_us_.load();
+        n->avg_runtime_us_ = avg_runtime_us_.load();
+        return n;
+    }
+
     /// The task ID
     std::size_t id() const noexcept {
         return id_;
@@ -197,7 +219,7 @@ public:
     }
 
     /// Returns whether the associated task is canceled
-    bool is_canceled() const noexcept {
+    bool canceled() const noexcept {
         return canceled_.load();
     }
 
@@ -360,6 +382,7 @@ class itask {
 public:
     virtual ~itask() = default;
 
+    virtual std::shared_ptr<transwarp::itask> clone() const = 0;
     virtual void set_executor(std::shared_ptr<transwarp::executor> executor) = 0;
     virtual void set_executor_all(std::shared_ptr<transwarp::executor> executor) = 0;
     virtual void remove_executor() = 0;
@@ -502,7 +525,7 @@ protected:
     /// If the associated task is canceled then this will throw transwarp::task_canceled
     /// which will stop the task while it's running
     void transwarp_cancel_point() const {
-        if (transwarp_node_->is_canceled()) {
+        if (transwarp_node_->canceled()) {
             throw transwarp::task_canceled(std::to_string(transwarp_node_->id()));
         }
     }
@@ -665,6 +688,12 @@ void apply_to_each(const Functor& f, const std::tuple<Args...>& t) {
     std::apply([&f](auto&&... arg){(..., f(std::forward<decltype(arg)>(arg)));}, t);
 }
 
+/// Applies the functor to each element in the tuple
+template<typename Functor, typename... Args>
+void apply_to_each(const Functor& f, std::tuple<Args...>& t) {
+    std::apply([&f](auto&&... arg){(..., f(std::forward<decltype(arg)>(arg)));}, t);
+}
+
 
 template<int offset, typename... ParentResults>
 struct assign_futures_impl {
@@ -706,11 +735,11 @@ Result run_task(std::size_t node_id, const std::weak_ptr<Task>& task, Args&&... 
     if (!t) {
         throw transwarp::task_destroyed{std::to_string(node_id)};
     }
-    if (t->node_->is_canceled()) {
+    if (t->node_->canceled()) {
         throw transwarp::task_canceled{std::to_string(node_id)};
     }
     t->raise_event(transwarp::event_type::before_invoked);
-    return t->functor_(std::forward<Args>(args)...);
+    return (*t->functor_)(std::forward<Args>(args)...);
 }
 
 
@@ -1375,6 +1404,11 @@ struct parents {
     static std::size_t size(const type&) {
         return std::tuple_size_v<type>;
     }
+    static type clone(const type& obj) {
+        type cloned = obj;
+        transwarp::detail::apply_to_each([](auto& t) { t = std::dynamic_pointer_cast<std::decay_t<decltype(*t)>>(t->clone()); }, cloned);
+        return cloned;
+    }
 };
 
 /// Determines the type of the parents. Specialization for vector parents
@@ -1383,6 +1417,13 @@ struct parents<std::vector<std::shared_ptr<transwarp::task<ParentResultType>>>> 
     using type = std::vector<std::shared_ptr<transwarp::task<ParentResultType>>>;
     static std::size_t size(const type& obj) {
         return obj.size();
+    }
+    static type clone(const type& obj) {
+        type cloned = obj;
+        for (auto& t : cloned) {
+            t = std::dynamic_pointer_cast<transwarp::task<ParentResultType>>(t->clone());
+        }
+        return cloned;
     }
 };
 
@@ -2047,10 +2088,12 @@ public:
 
 protected:
 
+    task_impl_base() = default;
+
     template<typename F>
     task_impl_base(F&& functor, std::shared_ptr<transwarp::task<ParentResults>>... parents)
     : node_{new transwarp::node},
-      functor_{std::forward<F>(functor)},
+      functor_{new Functor{std::forward<F>(functor)}},
       parents_{std::move(parents)...}
     {
         init();
@@ -2059,7 +2102,7 @@ protected:
     template<typename F, typename P>
     task_impl_base(F&& functor, std::vector<std::shared_ptr<transwarp::task<P>>> parents)
     : node_{new transwarp::node},
-      functor_{std::forward<F>(functor)},
+      functor_{new Functor{std::forward<F>(functor)}},
       parents_{std::move(parents)}
     {
         if (parents_.empty()) {
@@ -2070,7 +2113,7 @@ protected:
 
     void init() {
         transwarp::detail::node_manip::set_type(*node_, task_type::value);
-        transwarp::detail::assign_node_if(functor_, node_);
+        transwarp::detail::assign_node_if(*functor_, node_);
         transwarp::detail::call_with_each(transwarp::detail::parent_visitor(*node_), parents_);
         transwarp::detail::final_visitor visitor{task_count_};
         visit_depth(visitor);
@@ -2090,11 +2133,6 @@ protected:
             throw transwarp::control_error{"task was not scheduled: " + transwarp::to_string(*node_, " ")};
         }
     }
-
-    bool schedule_mode_ = true;
-    std::shared_future<result_type> future_;
-
-private:
 
     template<typename R, typename Y, typename T, typename P>
     friend class transwarp::detail::runner;
@@ -2239,13 +2277,15 @@ private:
         }
     }
 
+    bool schedule_mode_ = true;
+    std::shared_future<result_type> future_;
     std::size_t task_count_ = 0;
     std::shared_ptr<transwarp::node> node_;
-    Functor functor_;
+    std::unique_ptr<Functor> functor_;
     transwarp::detail::parents_t<ParentResults...> parents_;
     bool visited_ = false;
     std::shared_ptr<transwarp::executor> executor_;
-    std::vector<std::shared_ptr<transwarp::listener>> listeners_[static_cast<std::size_t>(transwarp::event_type::count)];
+    std::array<std::vector<std::shared_ptr<transwarp::listener>>, static_cast<std::size_t>(transwarp::event_type::count)> listeners_;
     std::vector<transwarp::itask*> depth_tasks_;
     std::vector<transwarp::itask*> breadth_tasks_;
 };
@@ -2287,6 +2327,8 @@ public:
 
 protected:
 
+    task_impl_proxy() = default;
+
     template<typename F>
     task_impl_proxy(F&& functor, std::shared_ptr<transwarp::task<ParentResults>>... parents)
     : transwarp::detail::task_impl_base<result_type, task_type, Functor, ParentResults...>{std::forward<F>(functor), std::move(parents)...}
@@ -2327,6 +2369,8 @@ public:
 
 protected:
 
+    task_impl_proxy() = default;
+
     template<typename F>
     task_impl_proxy(F&& functor, std::shared_ptr<transwarp::task<ParentResults>>... parents)
     : transwarp::detail::task_impl_base<result_type, task_type, Functor, ParentResults...>{std::forward<F>(functor), std::move(parents)...}
@@ -2366,6 +2410,8 @@ public:
     }
 
 protected:
+
+    task_impl_proxy() = default;
 
     template<typename F>
     task_impl_proxy(F&& functor, std::shared_ptr<transwarp::task<ParentResults>>... parents)
@@ -2427,6 +2473,36 @@ public:
         return std::shared_ptr<task_t>{new task_t{std::forward<Functor_>(functor), this->shared_from_this()}};
     }
 
+    /// Clones this task
+    std::shared_ptr<transwarp::itask> clone() const override {
+        auto t = std::shared_ptr<task_impl>{new task_impl{}};
+        t->schedule_mode_ = this->schedule_mode_;
+        if (this->has_result()) {
+            try {
+                if constexpr (std::is_void_v<result_type>) {
+                    this->future_.get();
+                    t->future_ = transwarp::detail::make_ready_future();
+                } else {
+                    t->future_ = transwarp::detail::make_future_with_value<result_type>(this->future_.get());
+                }
+            } catch (...) {
+                t->future_ = transwarp::detail::make_future_with_exception<result_type>(std::current_exception());
+            }
+        }
+        t->task_count_ = this->task_count_;
+        t->node_ = this->node_->clone();
+        t->functor_ = std::unique_ptr<Functor>{new Functor{*this->functor_}};
+        t->parents_ = transwarp::detail::parents<ParentResults...>::clone(this->parents_);
+        t->visited_ = this->visited_;
+        t->executor_ = this->executor_;
+        t->listeners_ = this->listeners_;
+        return t;
+    }
+
+private:
+
+    task_impl() = default;
+
 };
 
 
@@ -2469,6 +2545,19 @@ public:
     auto then(TaskType_, Functor_&& functor) {
         using task_t = transwarp::task_impl<TaskType_, std::decay_t<Functor_>, result_type>;
         return std::shared_ptr<task_t>{new task_t{std::forward<Functor_>(functor), this->shared_from_this()}};
+    }
+
+    /// Clones this task
+    std::shared_ptr<transwarp::itask> clone() const override {
+        auto t = std::shared_ptr<value_task>{new value_task{}};
+        t->node_ = node_->clone();
+        try {
+            t->set_value(future_.get());
+        } catch (...) {
+            t->set_exception(std::current_exception());
+        }
+        t->visited_ = visited_;
+        return t;
     }
 
     /// No-op because a value task never runs
@@ -2678,6 +2767,8 @@ public:
     }
 
 private:
+
+    value_task() = default;
 
     /// Assigns the given id to the node
     void set_node_id(std::size_t id) noexcept override {
