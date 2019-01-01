@@ -382,7 +382,6 @@ class itask {
 public:
     virtual ~itask() = default;
 
-    virtual std::shared_ptr<transwarp::itask> clone() const = 0;
     virtual void set_executor(std::shared_ptr<transwarp::executor> executor) = 0;
     virtual void set_executor_all(std::shared_ptr<transwarp::executor> executor) = 0;
     virtual void remove_executor() = 0;
@@ -466,6 +465,7 @@ public:
 
     virtual ~task() = default;
 
+    virtual std::shared_ptr<task> clone() const = 0;
     virtual void set_value(const transwarp::decay_t<result_type>& value) = 0;
     virtual void set_value(transwarp::decay_t<result_type>&& value) = 0;
     virtual const std::shared_future<result_type>& future() const noexcept = 0;
@@ -480,6 +480,7 @@ public:
 
     virtual ~task() = default;
 
+    virtual std::shared_ptr<task> clone() const = 0;
     virtual void set_value(transwarp::decay_t<result_type>& value) = 0;
     virtual const std::shared_future<result_type>& future() const noexcept = 0;
     virtual transwarp::result_t<result_type> get() const = 0;
@@ -493,6 +494,7 @@ public:
 
     virtual ~task() = default;
 
+    virtual std::shared_ptr<task> clone() const = 0;
     virtual void set_value() = 0;
     virtual const std::shared_future<result_type>& future() const noexcept = 0;
     virtual result_type get() const = 0;
@@ -1400,7 +1402,7 @@ struct parents {
     }
     static type clone(const type& obj) {
         type cloned = obj;
-        transwarp::detail::apply_to_each([](auto& t) { t = std::dynamic_pointer_cast<std::decay_t<decltype(*t)>>(t->clone()); }, cloned);
+        transwarp::detail::apply_to_each([](auto& t) { t = t->clone(); }, cloned);
         return cloned;
     }
 };
@@ -1415,7 +1417,7 @@ struct parents<std::vector<std::shared_ptr<transwarp::task<ParentResultType>>>> 
     static type clone(const type& obj) {
         type cloned = obj;
         for (auto& t : cloned) {
-            t = std::dynamic_pointer_cast<transwarp::task<ParentResultType>>(t->clone());
+            t = t->clone();
         }
         return cloned;
     }
@@ -2468,7 +2470,7 @@ public:
     }
 
     /// Clones this task
-    std::shared_ptr<transwarp::itask> clone() const override {
+    std::shared_ptr<transwarp::task<result_type>> clone() const override {
         auto t = std::shared_ptr<task_impl>{new task_impl{}};
         t->schedule_mode_ = this->schedule_mode_;
         if (this->has_result()) {
@@ -2491,6 +2493,11 @@ public:
         t->executor_ = this->executor_;
         t->listeners_ = this->listeners_;
         return t;
+    }
+
+    /// Clones this task and casts the result to a ptr to task_impl
+    std::shared_ptr<task_impl> clone_cast() const {
+        return std::dynamic_pointer_cast<task_impl>(clone());
     }
 
 private:
@@ -2542,7 +2549,7 @@ public:
     }
 
     /// Clones this task
-    std::shared_ptr<transwarp::itask> clone() const override {
+    std::shared_ptr<transwarp::task<result_type>> clone() const override {
         auto t = std::shared_ptr<value_task>{new value_task{}};
         t->node_ = node_->clone();
         try {
@@ -2552,6 +2559,11 @@ public:
         }
         t->visited_ = visited_;
         return t;
+    }
+
+    /// Clones this task and casts the result to a ptr to value_task
+    std::shared_ptr<value_task> clone_cast() const {
+        return std::dynamic_pointer_cast<value_task>(clone());
     }
 
     /// No-op because a value task never runs
