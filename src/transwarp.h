@@ -683,15 +683,9 @@ private:
 
 
 /// Applies the functor to each element in the tuple
-template<typename Functor, typename... Args>
-void apply_to_each(const Functor& f, const std::tuple<Args...>& t) {
-    std::apply([&f](auto&&... arg){(..., f(std::forward<decltype(arg)>(arg)));}, t);
-}
-
-/// Applies the functor to each element in the tuple
-template<typename Functor, typename... Args>
-void apply_to_each(const Functor& f, std::tuple<Args...>& t) {
-    std::apply([&f](auto&&... arg){(..., f(std::forward<decltype(arg)>(arg)));}, t);
+template<typename Functor, typename Tuple>
+void apply_to_each(Functor&& f, Tuple&& t) {
+    std::apply([&f](auto&&... arg){(..., f(std::forward<decltype(arg)>(arg)));}, std::forward<Tuple>(t));
 }
 
 
