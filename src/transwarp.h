@@ -2885,35 +2885,16 @@ auto transform(transwarp::executor& executor, InputIt first1, InputIt last1, Out
 }
 
 
-/// A graph interface giving access to the final task as required by transwarp::graph_pool
-template<typename ResultType>
-class graph {
-public:
-    using result_type = ResultType;
-
-    virtual ~graph() = default;
-
-    /// Returns the final task of the graph
-    virtual const std::shared_ptr<transwarp::task<result_type>>& final_task() const = 0;
-};
-
-
 /// A graph pool that allows running multiple instances of the same graph in parallel.
-/// Graph must be a sub-class of transwarp::graph
-template<typename Graph>
+template<typename ResultType>
 class graph_pool {
 public:
 
-    static_assert(std::is_base_of_v<transwarp::graph<typename Graph::result_type>, Graph>,
-                  "Graph must be a sub-class of transwarp::graph");
-
-    /// Constructs a graph pool by passing a generator to create a new graph
-    /// and a minimum and maximum size of the pool. The minimum size is used as
-    /// the initial size of the pool. Graph should be a subclass of transwarp::graph
-    graph_pool(std::function<std::shared_ptr<Graph>()> generator,
+    /// Constructs a graph pool
+    graph_pool(std::shared_ptr<transwarp::task<ResultType>> task,
                std::size_t minimum_size,
                std::size_t maximum_size)
-    : generator_{std::move(generator)},
+    : task_{std::move(task)},
       minimum_{minimum_size},
       maximum_{maximum_size},
       finished_{maximum_size}
@@ -2939,7 +2920,7 @@ public:
     /// If there are no idle graphs then it will attempt to double the
     /// pool size. If that fails then it will return a nullptr. On successful
     /// retrieval of an idle graph the function will mark that graph as busy.
-    std::shared_ptr<Graph> next_idle_graph(bool maybe_resize=true) {
+    std::shared_ptr<transwarp::task<ResultType>> next_idle_graph(bool maybe_resize=true) {
         std::shared_ptr<transwarp::node> finished_node;
         {
             std::lock_guard<transwarp::detail::spinlock> lock{spinlock_};
@@ -2948,9 +2929,9 @@ public:
             }
         }
 
-        std::shared_ptr<Graph> g;
+        std::shared_ptr<transwarp::task<ResultType>> task;
         if (finished_node) {
-            g = busy_.find(finished_node)->second;
+            task = busy_.find(finished_node)->second;
         } else {
             if (maybe_resize && idle_.empty()) {
                 resize(size() * 2); // double pool size
@@ -2958,22 +2939,22 @@ public:
             if (idle_.empty()) {
                 return nullptr;
             }
-            g = idle_.front(); idle_.pop();
-            busy_.emplace(g->final_task()->node(), g);
+            task = idle_.front(); idle_.pop();
+            busy_.emplace(task->node(), task);
         }
 
-        const auto& future = g->final_task()->future();
+        const auto& future = task->future();
         if (future.valid()) {
             future.wait(); // will return immediately
         }
-        return g;
+        return task;
     }
 
     /// Just like next_idle_graph() but waits for a graph to become available.
     /// The returned graph will always be a valid pointer
-    std::shared_ptr<Graph> wait_for_next_idle_graph(bool maybe_resize=true) {
+    std::shared_ptr<transwarp::task<ResultType>> wait_for_next_idle_graph(bool maybe_resize=true) {
         for (;;) {
-            std::shared_ptr<Graph> g = next_idle_graph(maybe_resize);
+            std::shared_ptr<transwarp::task<ResultType>> g = next_idle_graph(maybe_resize);
             if (g) {
                 return g;
             }
@@ -3050,7 +3031,7 @@ private:
     public:
 
         explicit
-        finished_listener(graph_pool<Graph>& pool)
+        finished_listener(graph_pool<ResultType>& pool)
         : pool_{pool}
         {}
 
@@ -3061,22 +3042,22 @@ private:
         }
 
     private:
-        graph_pool<Graph>& pool_;
+        graph_pool<ResultType>& pool_;
     };
 
-    std::shared_ptr<Graph> generate() {
-        std::shared_ptr<Graph> graph = generator_();
-        graph->final_task()->add_listener(transwarp::event_type::after_finished, listener_);
-        return graph;
+    std::shared_ptr<transwarp::task<ResultType>> generate() {
+        std::shared_ptr<transwarp::task<ResultType>> task = task_->clone();
+        task->add_listener(transwarp::event_type::after_finished, listener_);
+        return task;
     }
 
-    std::function<std::shared_ptr<Graph>()> generator_;
+    std::shared_ptr<transwarp::task<ResultType>> task_;
     std::size_t minimum_;
     std::size_t maximum_;
     mutable transwarp::detail::spinlock spinlock_; // protecting finished_
     transwarp::detail::circular_buffer<std::shared_ptr<transwarp::node>> finished_;
-    std::queue<std::shared_ptr<Graph>> idle_;
-    std::unordered_map<std::shared_ptr<transwarp::node>, std::shared_ptr<Graph>> busy_;
+    std::queue<std::shared_ptr<transwarp::task<ResultType>>> idle_;
+    std::unordered_map<std::shared_ptr<transwarp::node>, std::shared_ptr<transwarp::task<ResultType>>> busy_;
     std::shared_ptr<transwarp::listener> listener_{new finished_listener{*this}};
 };
 

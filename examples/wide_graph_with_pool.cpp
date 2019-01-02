@@ -30,22 +30,14 @@ double mean(data_t data) {
 }
 
 
-struct graph : tw::graph<double> {
+struct graph {
     std::shared_ptr<tw::task<data_t>> input;
     std::shared_ptr<tw::task<double>> final;
-
-    graph(std::shared_ptr<tw::task<data_t>> input, std::shared_ptr<tw::task<double>> final)
-    : input(std::move(input)), final(std::move(final))
-    {}
-
-    const std::shared_ptr<transwarp::task<double>>& final_task() const override {
-        return final;
-    }
 };
 
 
 std::shared_ptr<graph> make_graph() {
-    auto input = tw::make_value_task(std::make_shared<std::vector<double>>());
+    auto input = tw::make_value_task(std::make_shared<std::vector<double>>(10));
     std::vector<std::shared_ptr<tw::task<data_t>>> parents;
     for (int i=0; i<8; ++i) {
         auto t = tw::make_task(tw::consume, copy_transform, input)->then(tw::consume, transform);
@@ -58,7 +50,7 @@ std::shared_ptr<graph> make_graph() {
                                                 }
                                                 return res / static_cast<double>(parents.size());
                                             }, parents);
-    return std::make_shared<graph>(input, final);
+    return std::make_shared<graph>(graph{input, final});
 }
 
 }
@@ -80,16 +72,17 @@ void wide_graph_with_pool(std::ostream& os, std::size_t iterations, std::size_t 
     std::uniform_int_distribution<std::size_t> dist(size, size * 10);
     std::mt19937 gen{1};
 
+    auto graph = make_graph();
+
     // Graph pool with 16 initial graphs
-    tw::graph_pool<graph> pool{make_graph, 16, 16*10};
+    tw::graph_pool<double> pool{graph->final, 16, 16*10};
 
     std::vector<std::shared_future<double>> futures;
     for (std::size_t i=0; i<iterations; ++i) {
         auto data = std::make_shared<std::vector<double>>(dist(gen), 1); // New data arrive
-        auto g = pool.wait_for_next_idle_graph(); // Get the next available graph
-        g->input->set_value(data);
-        g->final->schedule_all(exec); // Schedule the graph
-        futures.push_back(g->final->future()); // Collect the future
+        auto final = pool.wait_for_next_idle_graph(); // Get the next available graph
+        final->schedule_all(exec); // Schedule the graph
+        futures.push_back(final->future()); // Collect the future
         if (i % 10 == 0) {
             os << "pool size = " << pool.size() << std::endl;
         }
