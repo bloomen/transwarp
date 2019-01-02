@@ -1,7 +1,7 @@
 #define CATCH_CONFIG_MAIN
 #include "test.h"
 
-void make_test_one_task(std::size_t threads, tw::schedule_type type) {
+void make_test_one_task(std::size_t threads, tw::order_type type) {
     const int value = 42;
     auto f1 = [value]{ return value; };
     std::shared_ptr<tw::executor> executor;
@@ -24,7 +24,7 @@ void make_test_one_task(std::size_t threads, tw::schedule_type type) {
 }
 
 TEST_CASE("one_task_with_schedule_by_depth") {
-    auto type = tw::schedule_type::depth;
+    auto type = tw::order_type::depth;
     make_test_one_task(0, type);
     make_test_one_task(1, type);
     make_test_one_task(2, type);
@@ -33,7 +33,7 @@ TEST_CASE("one_task_with_schedule_by_depth") {
 }
 
 TEST_CASE("one_task_with_schedule_by_breadth") {
-    auto type = tw::schedule_type::breadth;
+    auto type = tw::order_type::breadth;
     make_test_one_task(0, type);
     make_test_one_task(1, type);
     make_test_one_task(2, type);
@@ -41,7 +41,7 @@ TEST_CASE("one_task_with_schedule_by_breadth") {
     make_test_one_task(4, type);
 }
 
-void make_test_three_tasks(std::size_t threads, tw::schedule_type type) {
+void make_test_three_tasks(std::size_t threads, tw::order_type type) {
     int value = 42;
 
     auto f1 = [&value]{ return value; };
@@ -123,7 +123,7 @@ void make_test_three_tasks(std::size_t threads, tw::schedule_type type) {
 }
 
 TEST_CASE("three_tasks_width_schedule_by_depth") {
-    auto type = tw::schedule_type::depth;
+    auto type = tw::order_type::depth;
     make_test_three_tasks(0, type);
     make_test_three_tasks(1, type);
     make_test_three_tasks(2, type);
@@ -132,7 +132,7 @@ TEST_CASE("three_tasks_width_schedule_by_depth") {
 }
 
 TEST_CASE("three_tasks_width_schedule_by_breadth") {
-    auto type = tw::schedule_type::breadth;
+    auto type = tw::order_type::breadth;
     make_test_three_tasks(0, type);
     make_test_three_tasks(1, type);
     make_test_three_tasks(2, type);
@@ -140,7 +140,7 @@ TEST_CASE("three_tasks_width_schedule_by_breadth") {
     make_test_three_tasks(4, type);
 }
 
-void make_test_bunch_of_tasks(std::size_t threads, tw::schedule_type type) {
+void make_test_bunch_of_tasks(std::size_t threads, tw::order_type type) {
     auto f0 = []{ return 42; };
     auto f1 = [](int a){ return 3 * a; };
     auto f2 = [](int a, int b){ return a + b; };
@@ -195,7 +195,7 @@ void make_test_bunch_of_tasks(std::size_t threads, tw::schedule_type type) {
 }
 
 TEST_CASE("bunch_of_tasks_with_schedule_by_depth") {
-    auto type = tw::schedule_type::depth;
+    auto type = tw::order_type::depth;
     make_test_bunch_of_tasks(0, type);
     make_test_bunch_of_tasks(1, type);
     make_test_bunch_of_tasks(2, type);
@@ -204,7 +204,7 @@ TEST_CASE("bunch_of_tasks_with_schedule_by_depth") {
 }
 
 TEST_CASE("bunch_of_tasks_with_schedule_by_breadth") {
-    auto type = tw::schedule_type::breadth;
+    auto type = tw::order_type::breadth;
     make_test_bunch_of_tasks(0, type);
     make_test_bunch_of_tasks(1, type);
     make_test_bunch_of_tasks(2, type);
