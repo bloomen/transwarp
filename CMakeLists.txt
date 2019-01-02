@@ -19,7 +19,6 @@ add_executable(transwarp_test
 	src/test_exceptions.cpp
 	src/test_executors.cpp
 	src/test_for_each.cpp
-	src/test_parent_count.cpp
 	src/test_task_count.cpp
 	src/test_graph_pool.cpp
 	src/test_make_task.cpp

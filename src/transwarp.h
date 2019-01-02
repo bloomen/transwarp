@@ -428,8 +428,8 @@ public:
     virtual void reset_all() = 0;
     virtual void cancel(bool enabled) noexcept = 0;
     virtual void cancel_all(bool enabled) noexcept = 0;
-    virtual std::size_t parent_count() const noexcept = 0;
-    virtual std::size_t task_count() const noexcept = 0;
+    virtual const std::vector<itask*>& tasks() = 0;
+    virtual const std::vector<itask*>& tasks(transwarp::order_type type) = 0;
     virtual std::vector<transwarp::edge> edges() const = 0;
 
 protected:
@@ -2061,14 +2061,27 @@ public:
         visit_all(visitor);
     }
 
-    /// Returns the number of direct parents of this task
-    std::size_t parent_count() const noexcept override {
-        return transwarp::detail::parents<ParentResults...>::size(parents_);
+    /// Returns all tasks in the graph in breadth order
+    const std::vector<transwarp::itask*>& tasks() override {
+        return tasks(transwarp::order_type::breadth);
     }
 
-    /// Returns the number of tasks in the graph
-    std::size_t task_count() const noexcept override {
-        return task_count_;
+    /// Returns all tasks in the graph in the given order
+    const std::vector<transwarp::itask*>& tasks(transwarp::order_type type) override {
+        switch (type) {
+        case transwarp::order_type::breadth:
+            if (breadth_tasks_.empty()) {
+                breadth_tasks_ = tasks_in_breadth_order();
+            }
+            return breadth_tasks_;
+        case transwarp::order_type::depth:
+            if (depth_tasks_.empty()) {
+                depth_tasks_ = tasks_in_depth_order();
+            }
+            return depth_tasks_;
+        default:
+            throw transwarp::invalid_parameter("schedule type");
+        }
     }
 
     /// Returns all edges in the graph. This is mainly for visualizing
@@ -2191,6 +2204,20 @@ protected:
         return tasks;
     }
 
+    /// Collects all tasks in breadth order
+    std::vector<transwarp::itask*> tasks_in_breadth_order() const {
+        std::vector<transwarp::itask*> tasks = tasks_in_depth_order();
+        auto compare = [](const transwarp::itask* const l, const transwarp::itask* const r) {
+            const std::size_t l_level = l->node()->level();
+            const std::size_t l_id = l->node()->id();
+            const std::size_t r_level = r->node()->level();
+            const std::size_t r_id = r->node()->id();
+            return std::tie(l_level, l_id) < std::tie(r_level, r_id);
+        };
+        std::sort(tasks.begin(), tasks.end(), compare);
+        return tasks;
+    }
+
     /// Visits all tasks
     template<typename Visitor>
     void visit_all(Visitor& visitor) {
@@ -2207,15 +2234,7 @@ protected:
     template<typename Visitor>
     void visit_breadth_all(Visitor& visitor) {
         if (breadth_tasks_.empty()) {
-            breadth_tasks_ = tasks_in_depth_order();
-            auto compare = [](const transwarp::itask* const l, const transwarp::itask* const r) {
-                const std::size_t l_level = l->node()->level();
-                const std::size_t l_id = l->node()->id();
-                const std::size_t r_level = r->node()->level();
-                const std::size_t r_id = r->node()->id();
-                return std::tie(l_level, l_id) < std::tie(r_level, r_id);
-            };
-            std::sort(breadth_tasks_.begin(), breadth_tasks_.end(), compare);
+            breadth_tasks_ = tasks_in_breadth_order();
         }
         for (transwarp::itask* task : breadth_tasks_) {
             visitor(*task);
@@ -2757,14 +2776,14 @@ public:
     /// No-op because a value task never runs and doesn't have parents
     void cancel_all(bool) noexcept override {}
 
-    /// Returns the number of direct parents of this task
-    std::size_t parent_count() const noexcept override {
-        return 0;
+    /// Returns all tasks in the graph in breadth order
+    const std::vector<transwarp::itask*>& tasks() override {
+        return tasks(transwarp::order_type::breadth);
     }
 
-    /// Returns the number of tasks in the graph
-    std::size_t task_count() const noexcept override {
-        return 1;
+    /// Returns all tasks in the graph in the given order
+    const std::vector<transwarp::itask*>& tasks(transwarp::order_type) override {
+        return tasks_;
     }
 
     /// Returns empty edges because a value task doesn't have parents
@@ -2800,6 +2819,7 @@ private:
     std::shared_ptr<transwarp::node> node_;
     std::shared_future<result_type> future_;
     bool visited_ = false;
+    std::vector<transwarp::itask*> tasks_{this};
 };
 
 
