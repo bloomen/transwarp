@@ -136,7 +136,7 @@ constexpr transwarp::wait_any_type wait_any{}; ///< The wait_any task tag
 /// Detail namespace for internal functionality only
 namespace detail {
 
-struct visit_depth_visitor;
+struct visit_visitor;
 struct unvisit_visitor;
 struct final_visitor;
 struct schedule_visitor;
@@ -370,13 +370,6 @@ public:
 };
 
 
-/// Determines in which order tasks are visited in the graph
-enum class order_type {
-    breadth, ///< Ordered according to a breadth-first search (default)
-    depth,   ///< Ordered according to a depth-first search
-};
-
-
 /// An interface for the task class
 class itask {
 public:
@@ -415,10 +408,6 @@ public:
     virtual void schedule_all(transwarp::executor& executor) = 0;
     virtual void schedule_all(bool reset_all) = 0;
     virtual void schedule_all(transwarp::executor& executor, bool reset_all) = 0;
-    virtual void schedule_all(transwarp::order_type type) = 0;
-    virtual void schedule_all(transwarp::executor& executor, transwarp::order_type type) = 0;
-    virtual void schedule_all(transwarp::order_type type, bool reset_all) = 0;
-    virtual void schedule_all(transwarp::executor& executor, transwarp::order_type type, bool reset_all) = 0;
     virtual void set_exception(std::exception_ptr exception) = 0;
     virtual bool was_scheduled() const noexcept = 0;
     virtual void wait() const = 0;
@@ -429,19 +418,18 @@ public:
     virtual void cancel(bool enabled) noexcept = 0;
     virtual void cancel_all(bool enabled) noexcept = 0;
     virtual const std::vector<itask*>& tasks() = 0;
-    virtual const std::vector<itask*>& tasks(transwarp::order_type type) = 0;
     virtual std::vector<transwarp::edge> edges() const = 0;
 
 protected:
     virtual void schedule_impl(bool reset, transwarp::executor* executor=nullptr) = 0;
 
 private:
-    friend struct transwarp::detail::visit_depth_visitor;
+    friend struct transwarp::detail::visit_visitor;
     friend struct transwarp::detail::unvisit_visitor;
     friend struct transwarp::detail::final_visitor;
     friend struct transwarp::detail::schedule_visitor;
 
-    virtual void visit_depth(const std::function<void(itask&)>& visitor) = 0;
+    virtual void visit(const std::function<void(itask&)>& visitor) = 0;
     virtual void unvisit() noexcept = 0;
     virtual void set_node_id(std::size_t id) noexcept = 0;
 };
@@ -1246,12 +1234,12 @@ struct remove_listeners_per_event_visitor {
 };
 
 /// Visits the given task using the visitor given in the constructor
-struct visit_depth_visitor {
-    explicit visit_depth_visitor(const std::function<void(transwarp::itask&)>& visitor) noexcept
+struct visit_visitor {
+    explicit visit_visitor(const std::function<void(transwarp::itask&)>& visitor) noexcept
     : visitor_{visitor} {}
 
     void operator()(transwarp::itask& task) const {
-        task.visit_depth(visitor_);
+        task.visit(visitor_);
     }
 
     const std::function<void(transwarp::itask&)>& visitor_;
@@ -1935,7 +1923,7 @@ public:
     /// This overload will reset the underlying futures.
     void schedule_all() override {
         ensure_task_not_running();
-        schedule_all_impl(true, transwarp::order_type::breadth);
+        schedule_all_impl(true);
     }
 
     /// Schedules all tasks in the graph for execution using the provided executor.
@@ -1943,7 +1931,7 @@ public:
     /// This overload will reset the underlying futures.
     void schedule_all(transwarp::executor& executor) override {
         ensure_task_not_running();
-        schedule_all_impl(true, transwarp::order_type::breadth, &executor);
+        schedule_all_impl(true, &executor);
     }
 
     /// Schedules all tasks in the graph for execution on the caller thread.
@@ -1952,7 +1940,7 @@ public:
     /// futures and schedule even if the futures are already present.
     void schedule_all(bool reset_all) override {
         ensure_task_not_running();
-        schedule_all_impl(reset_all, transwarp::order_type::breadth);
+        schedule_all_impl(reset_all);
     }
 
     /// Schedules all tasks in the graph for execution using the provided executor.
@@ -1961,41 +1949,7 @@ public:
     /// futures and schedule even if the futures are already present.
     void schedule_all(transwarp::executor& executor, bool reset_all) override {
         ensure_task_not_running();
-        schedule_all_impl(reset_all, transwarp::order_type::breadth, &executor);
-    }
-
-    /// Schedules all tasks in the graph for execution on the caller thread.
-    /// The task-specific executors get precedence if they exist.
-    /// This overload will reset the underlying futures.
-    void schedule_all(transwarp::order_type type) override {
-        ensure_task_not_running();
-        schedule_all_impl(true, type);
-    }
-
-    /// Schedules all tasks in the graph for execution using the provided executor.
-    /// The task-specific executors get precedence if they exist.
-    /// This overload will reset the underlying futures.
-    void schedule_all(transwarp::executor& executor, transwarp::order_type type) override {
-        ensure_task_not_running();
-        schedule_all_impl(true, type, &executor);
-    }
-
-    /// Schedules all tasks in the graph for execution on the caller thread.
-    /// The task-specific executors get precedence if they exist.
-    /// reset_all denotes whether schedule_all should reset the underlying
-    /// futures and schedule even if the futures are already present.
-    void schedule_all(transwarp::order_type type, bool reset_all) override {
-        ensure_task_not_running();
-        schedule_all_impl(reset_all, type);
-    }
-
-    /// Schedules all tasks in the graph for execution using the provided executor.
-    /// The task-specific executors get precedence if they exist.
-    /// reset_all denotes whether schedule_all should reset the underlying
-    /// futures and schedule even if the futures are already present.
-    void schedule_all(transwarp::executor& executor, transwarp::order_type type, bool reset_all) override {
-        ensure_task_not_running();
-        schedule_all_impl(reset_all, type, &executor);
+        schedule_all_impl(reset_all, &executor);
     }
 
     /// Assigns an exception to this task. Scheduling will have no effect after an exception
@@ -2063,25 +2017,7 @@ public:
 
     /// Returns all tasks in the graph in breadth order
     const std::vector<transwarp::itask*>& tasks() override {
-        return tasks(transwarp::order_type::breadth);
-    }
-
-    /// Returns all tasks in the graph in the given order
-    const std::vector<transwarp::itask*>& tasks(transwarp::order_type type) override {
-        switch (type) {
-        case transwarp::order_type::breadth:
-            if (breadth_tasks_.empty()) {
-                breadth_tasks_ = tasks_in_breadth_order();
-            }
-            return breadth_tasks_;
-        case transwarp::order_type::depth:
-            if (depth_tasks_.empty()) {
-                depth_tasks_ = tasks_in_depth_order();
-            }
-            return depth_tasks_;
-        default:
-            throw transwarp::invalid_parameter("schedule type");
-        }
+        return collect_all_tasks();
     }
 
     /// Returns all edges in the graph. This is mainly for visualizing
@@ -2090,7 +2026,7 @@ public:
     std::vector<transwarp::edge> edges() const override {
         std::vector<transwarp::edge> edges;
         transwarp::detail::edges_visitor visitor{edges};
-        const_cast<task_impl_base*>(this)->visit_depth(visitor);
+        const_cast<task_impl_base*>(this)->visit(visitor);
         const_cast<task_impl_base*>(this)->unvisit();
         return edges;
     }
@@ -2125,7 +2061,7 @@ protected:
         transwarp::detail::assign_node_if(*functor_, node_);
         transwarp::detail::call_with_each(transwarp::detail::parent_visitor(*node_), parents_);
         transwarp::detail::final_visitor visitor{task_count_};
-        visit_depth(visitor);
+        visit(visitor);
         unvisit();
     }
 
@@ -2182,80 +2118,15 @@ protected:
     /// The task-specific executors get precedence if they exist.
     /// Runs tasks on the same thread as the caller if neither the global
     /// nor a task-specific executor is found.
-    void schedule_all_impl(bool reset_all, transwarp::order_type type, transwarp::executor* executor=nullptr) {
+    void schedule_all_impl(bool reset_all, transwarp::executor* executor=nullptr) {
         transwarp::detail::schedule_visitor visitor{reset_all, executor};
-        switch (type) {
-        case transwarp::order_type::breadth:
-            visit_breadth_all(visitor);
-            break;
-        case transwarp::order_type::depth:
-            visit_depth_all(visitor);
-            break;
-        default:
-            throw transwarp::invalid_parameter("schedule type");
-        }
+        visit_all(visitor);
     }
 
-    /// Collects all tasks in depth order
-    std::vector<transwarp::itask*> tasks_in_depth_order() const {
-        std::vector<transwarp::itask*> tasks;
-        const_cast<task_impl_base*>(this)->visit_depth(transwarp::detail::push_task_visitor{tasks});
-        const_cast<task_impl_base*>(this)->unvisit();
-        return tasks;
-    }
-
-    /// Collects all tasks in breadth order
-    std::vector<transwarp::itask*> tasks_in_breadth_order() const {
-        std::vector<transwarp::itask*> tasks = tasks_in_depth_order();
-        auto compare = [](const transwarp::itask* const l, const transwarp::itask* const r) {
-            const std::size_t l_level = l->node()->level();
-            const std::size_t l_id = l->node()->id();
-            const std::size_t r_level = r->node()->level();
-            const std::size_t r_id = r->node()->id();
-            return std::tie(l_level, l_id) < std::tie(r_level, r_id);
-        };
-        std::sort(tasks.begin(), tasks.end(), compare);
-        return tasks;
-    }
-
-    /// Visits all tasks
-    template<typename Visitor>
-    void visit_all(Visitor& visitor) {
-        if (!breadth_tasks_.empty()) {
-            visit_breadth_all(visitor);
-        } else if (!depth_tasks_.empty()) {
-            visit_depth_all(visitor);
-        } else {
-            visit_breadth_all(visitor);
-        }
-    }
-
-    /// Visits all tasks in a breadth-first traversal.
-    template<typename Visitor>
-    void visit_breadth_all(Visitor& visitor) {
-        if (breadth_tasks_.empty()) {
-            breadth_tasks_ = tasks_in_breadth_order();
-        }
-        for (transwarp::itask* task : breadth_tasks_) {
-            visitor(*task);
-        }
-    }
-
-    /// Visits all tasks in a depth-first traversal.
-    template<typename Visitor>
-    void visit_depth_all(Visitor& visitor) {
-        if (depth_tasks_.empty()) {
-            depth_tasks_ = tasks_in_depth_order();
-        }
-        for (transwarp::itask* task : depth_tasks_) {
-            visitor(*task);
-        }
-    }
-
-    /// Visits each task in a depth-first traversal.
-    void visit_depth(const std::function<void(transwarp::itask&)>& visitor) override {
+    /// Visits each task in a depth-first traversal
+    void visit(const std::function<void(transwarp::itask&)>& visitor) override {
         if (!visited_) {
-            transwarp::detail::call_with_each(transwarp::detail::visit_depth_visitor{visitor}, parents_);
+            transwarp::detail::call_with_each(transwarp::detail::visit_visitor{visitor}, parents_);
             visitor(*this);
             visited_ = true;
         }
@@ -2266,6 +2137,32 @@ protected:
         if (visited_) {
             visited_ = false;
             transwarp::detail::call_with_each(transwarp::detail::unvisit_visitor{}, parents_);
+        }
+    }
+
+    /// Collects all tasks in breadth order
+    const std::vector<transwarp::itask*>& collect_all_tasks() {
+        if (tasks_.empty()) {
+            tasks_.reserve(task_count_);
+            visit(transwarp::detail::push_task_visitor{tasks_});
+            unvisit();
+            auto compare = [](const transwarp::itask* const l, const transwarp::itask* const r) {
+                const std::size_t l_level = l->node()->level();
+                const std::size_t l_id = l->node()->id();
+                const std::size_t r_level = r->node()->level();
+                const std::size_t r_id = r->node()->id();
+                return std::tie(l_level, l_id) < std::tie(r_level, r_id);
+            };
+            std::sort(tasks_.begin(), tasks_.end(), compare);
+        }
+        return tasks_;
+    }
+
+    /// Visits all tasks
+    template<typename Visitor>
+    void visit_all(Visitor& visitor) {
+        for (transwarp::itask* t : collect_all_tasks()) {
+            visitor(*t);
         }
     }
 
@@ -2301,8 +2198,7 @@ protected:
     bool visited_ = false;
     std::shared_ptr<transwarp::executor> executor_;
     std::array<std::vector<std::shared_ptr<transwarp::listener>>, static_cast<std::size_t>(transwarp::event_type::count)> listeners_;
-    std::vector<transwarp::itask*> depth_tasks_;
-    std::vector<transwarp::itask*> breadth_tasks_;
+    std::vector<transwarp::itask*> tasks_;
 };
 
 
@@ -2714,18 +2610,6 @@ public:
     /// No-op because a value task never runs and doesn't have parents
     void schedule_all(transwarp::executor&, bool) override {}
 
-    /// No-op because a value task never runs and doesn't have parents
-    void schedule_all(transwarp::order_type) override {}
-
-    /// No-op because a value task never runs and doesn't have parents
-    void schedule_all(transwarp::executor&, transwarp::order_type) override {}
-
-    /// No-op because a value task never runs and doesn't have parents
-    void schedule_all(transwarp::order_type, bool) override {}
-
-    /// No-op because a value task never runs and doesn't have parents
-    void schedule_all(transwarp::executor&, transwarp::order_type, bool) override {}
-
     /// Assigns a value to this task
     void set_value(const transwarp::decay_t<result_type>& value) override {
         future_ = transwarp::detail::make_future_with_value<result_type>(value);
@@ -2778,11 +2662,6 @@ public:
 
     /// Returns all tasks in the graph in breadth order
     const std::vector<transwarp::itask*>& tasks() override {
-        return tasks(transwarp::order_type::breadth);
-    }
-
-    /// Returns all tasks in the graph in the given order
-    const std::vector<transwarp::itask*>& tasks(transwarp::order_type) override {
         return tasks_;
     }
 
@@ -2804,7 +2683,7 @@ private:
     void schedule_impl(bool, transwarp::executor*) override {}
 
     /// Visits this task
-    void visit_depth(const std::function<void(transwarp::itask&)>& visitor) override {
+    void visit(const std::function<void(transwarp::itask&)>& visitor) override {
         if (!visited_) {
             visitor(*this);
             visited_ = true;
