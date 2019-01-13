@@ -51,6 +51,7 @@ void make_test_three_tasks(std::size_t threads) {
         task3 = tw::make_task(tw::consume, f3, task1, task2)->named("t3");
         executor = std::make_shared<tw::sequential>();
     }
+    task3->finalize();
 
     REQUIRE(0u == task1->node()->id());
     REQUIRE(0u == task1->node()->parents().size());
@@ -189,6 +190,7 @@ TEST_CASE("node") {
     auto task2 = tw::make_task(tw::root, f2);
     auto f3 = [](int v, int w) { return v + w; };
     auto task3 = tw::make_task(tw::consume, f3, task1, task2);
+    task3->finalize();
 
     // task3
     REQUIRE(2 == task3->node()->id());

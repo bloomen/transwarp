@@ -375,6 +375,7 @@ class itask {
 public:
     virtual ~itask() = default;
 
+    virtual void finalize() = 0;
     virtual void set_executor(std::shared_ptr<transwarp::executor> executor) = 0;
     virtual void set_executor_all(std::shared_ptr<transwarp::executor> executor) = 0;
     virtual void remove_executor() = 0;
@@ -418,7 +419,7 @@ public:
     virtual void cancel(bool enabled) noexcept = 0;
     virtual void cancel_all(bool enabled) noexcept = 0;
     virtual const std::vector<itask*>& tasks() = 0;
-    virtual std::vector<transwarp::edge> edges() const = 0;
+    virtual std::vector<transwarp::edge> edges() = 0;
 
 protected:
     virtual void schedule_impl(bool reset, transwarp::executor* executor=nullptr) = 0;
@@ -1023,17 +1024,17 @@ struct parent_visitor {
     transwarp::node& node_;
 };
 
-/// Applies final bookkeeping to the task
+/// Applies final bookkeeping to the task and collects the task
 struct final_visitor {
-    explicit final_visitor(std::size_t& count) noexcept
-    : count_{count} {}
+    explicit final_visitor(std::vector<transwarp::itask*>& tasks) noexcept
+    : tasks_{tasks} {}
 
     void operator()(transwarp::itask& task) noexcept {
-        ++count_;
+        tasks_.push_back(&task);
         task.set_node_id(id_++);
     }
 
-    std::size_t& count_;
+    std::vector<transwarp::itask*>& tasks_;
     std::size_t id_ = 0;
 };
 
@@ -1693,6 +1694,25 @@ public:
     /// The result type of this task
     using result_type = ResultType;
 
+    /// Can be called to explicitly finalize this task making this task
+    /// the terminal task in the graph. This is also done implicitly when
+    /// calling, e.g., any of the *_all methods. It should normally not be
+    /// necessary to call this method directly
+    void finalize() override {
+        if (tasks_.empty()) {
+            visit(transwarp::detail::final_visitor{tasks_});
+            unvisit();
+            auto compare = [](const transwarp::itask* const l, const transwarp::itask* const r) {
+                const std::size_t l_level = l->node()->level();
+                const std::size_t l_id = l->node()->id();
+                const std::size_t r_level = r->node()->level();
+                const std::size_t r_id = r->node()->id();
+                return std::tie(l_level, l_id) < std::tie(r_level, r_id);
+            };
+            std::sort(tasks_.begin(), tasks_.end(), compare);
+        }
+    }
+
     /// Assigns an executor to this task which takes precedence over
     /// the executor provided in schedule() or schedule_all()
     void set_executor(std::shared_ptr<transwarp::executor> executor) override {
@@ -2017,17 +2037,17 @@ public:
 
     /// Returns all tasks in the graph in breadth order
     const std::vector<transwarp::itask*>& tasks() override {
-        return collect_all_tasks();
+        finalize();
+        return tasks_;
     }
 
     /// Returns all edges in the graph. This is mainly for visualizing
     /// the tasks and their interdependencies. Pass the result into transwarp::to_string
     /// to retrieve a dot-style graph representation for easy viewing.
-    std::vector<transwarp::edge> edges() const override {
+    std::vector<transwarp::edge> edges() override {
         std::vector<transwarp::edge> edges;
         transwarp::detail::edges_visitor visitor{edges};
-        const_cast<task_impl_base*>(this)->visit(visitor);
-        const_cast<task_impl_base*>(this)->unvisit();
+        visit_all(visitor);
         return edges;
     }
 
@@ -2059,10 +2079,7 @@ protected:
     void init() {
         transwarp::detail::node_manip::set_type(*node_, task_type::value);
         transwarp::detail::assign_node_if(*functor_, node_);
-        transwarp::detail::call_with_each(transwarp::detail::parent_visitor(*node_), parents_);
-        transwarp::detail::final_visitor visitor{task_count_};
-        visit(visitor);
-        unvisit();
+        transwarp::detail::call_with_each(transwarp::detail::parent_visitor{*node_}, parents_);
     }
 
     /// Checks if the task is currently running and throws transwarp::control_error if it is
@@ -2140,28 +2157,11 @@ protected:
         }
     }
 
-    /// Collects all tasks in breadth order
-    const std::vector<transwarp::itask*>& collect_all_tasks() {
-        if (tasks_.empty()) {
-            tasks_.reserve(task_count_);
-            visit(transwarp::detail::push_task_visitor{tasks_});
-            unvisit();
-            auto compare = [](const transwarp::itask* const l, const transwarp::itask* const r) {
-                const std::size_t l_level = l->node()->level();
-                const std::size_t l_id = l->node()->id();
-                const std::size_t r_level = r->node()->level();
-                const std::size_t r_id = r->node()->id();
-                return std::tie(l_level, l_id) < std::tie(r_level, r_id);
-            };
-            std::sort(tasks_.begin(), tasks_.end(), compare);
-        }
-        return tasks_;
-    }
-
     /// Visits all tasks
     template<typename Visitor>
     void visit_all(Visitor& visitor) {
-        for (transwarp::itask* t : collect_all_tasks()) {
+        finalize();
+        for (transwarp::itask* t : tasks_) {
             visitor(*t);
         }
     }
@@ -2191,7 +2191,6 @@ protected:
 
     bool schedule_mode_ = true;
     std::shared_future<result_type> future_;
-    std::size_t task_count_ = 0;
     std::shared_ptr<transwarp::node> node_;
     std::unique_ptr<Functor> functor_;
     transwarp::detail::parents_t<ParentResults...> parents_;
@@ -2400,7 +2399,6 @@ public:
                 t->future_ = transwarp::detail::make_future_with_exception<result_type>(std::current_exception());
             }
         }
-        t->task_count_ = this->task_count_;
         t->node_ = this->node_->clone();
         t->functor_ = std::unique_ptr<Functor>{new Functor{*this->functor_}};
         t->parents_ = transwarp::detail::parents<ParentResults...>::clone(this->parents_);
@@ -2480,6 +2478,9 @@ public:
     std::shared_ptr<value_task> clone_cast() const {
         return std::dynamic_pointer_cast<value_task>(clone());
     }
+
+    /// Nothing to be done to finalize a value task
+    void finalize() override {}
 
     /// No-op because a value task never runs
     void set_executor(std::shared_ptr<transwarp::executor>) override {}
@@ -2666,7 +2667,7 @@ public:
     }
 
     /// Returns empty edges because a value task doesn't have parents
-    std::vector<transwarp::edge> edges() const override {
+    std::vector<transwarp::edge> edges() override {
         return {};
     }
 
@@ -2740,7 +2741,9 @@ auto for_each(InputIt first, InputIt last, UnaryOperation unary_op) {
     for (; first != last; ++first) {
         tasks.push_back(transwarp::make_task(transwarp::root, [unary_op,first]{ unary_op(*first); }));
     }
-    return transwarp::make_task(transwarp::wait, transwarp::no_op, tasks);
+    auto final = transwarp::make_task(transwarp::wait, transwarp::no_op, tasks);
+    final->finalize();
+    return final;
 }
 
 /// A function similar to std::for_each but returning a transwarp task for
@@ -2769,7 +2772,9 @@ auto transform(InputIt first1, InputIt last1, OutputIt d_first, UnaryOperation u
     for (; first1 != last1; ++first1, ++d_first) {
         tasks.push_back(transwarp::make_task(transwarp::root, [unary_op,first1,d_first]{ *d_first = unary_op(*first1); }));
     }
-    return transwarp::make_task(transwarp::wait, transwarp::no_op, tasks);
+    auto final = transwarp::make_task(transwarp::wait, transwarp::no_op, tasks);
+    final->finalize();
+    return final;
 }
 
 /// A function similar to std::transform but returning a transwarp task for
