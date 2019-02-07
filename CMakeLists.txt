@@ -13,6 +13,7 @@ add_executable(transwarp_test
 	src/test_accept_type.cpp
 	src/test_cancel.cpp
 	src/test_circular_buffer.cpp
+	src/test_clone.cpp
 	src/test_consume_type.cpp
 	src/test_events.cpp
 	src/test_examples.cpp

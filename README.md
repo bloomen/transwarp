@@ -24,7 +24,6 @@ There is also support for C++11 which is maintained on the `transwarp1.X` branch
      * [Range functions](#range-functions)
      * [Canceling tasks](#canceling-tasks)
      * [Event system](#event-system)
-     * [Graph pool](#graph-pool)
   * [Feedback](#feedback)
   * [Contributors](#contributors)
 
@@ -325,40 +324,6 @@ public:
 A listener can then be passed to the `add_listener` functions of a task
 to add a new listener or to the `remove_listener` functions to remove
 an existing listener.
-
-### Graph pool
-
-It is currently not possible to schedule the same graph again while it is still
-running. However, `tw::graph_pool` allows you to easily run multiple instances
-of the same graph in parallel. All you need to do is provide a generator function
-that returns a pointer to a graph:
-```cpp
-template<typename ResultType>
-class graph {
-public:
-    using result_type = ResultType;
-
-    virtual ~graph() = default;
-
-    // Returns the final task of the graph
-    virtual const std::shared_ptr<tw::task<result_type>>& final_task() const = 0;
-};
-```
-The graph pool's constructor looks like this:
-```cpp
-graph_pool(std::function<std::shared_ptr<Graph>()> generator,
-           std::size_t minimum_size,
-           std::size_t maximum_size);
-```
-where `Graph` denotes the user's sub-class of `tw::graph`. 
-It takes the user's generator function along with minimum and maximum size
-of the graph pool. Once constructed, the next available graph can be queried like so:
-```
-std::shared_ptr<Graph> g = pool.next_idle_graph();
-```
-`g` can now be used to schedule the current graph instance. Take a look at the 
-[wide_graph_with_pool](https://github.com/bloomen/transwarp/blob/master/examples/wide_graph_with_pool.cpp) 
-example to get a better idea of how this is working.
 
 ## Feedback
 

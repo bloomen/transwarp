@@ -115,3 +115,14 @@ TEST_CASE("graph_pool_reclaim") {
     pool.resize(2); // calls reclaim
     REQUIRE(2 == pool.size());
 }
+
+TEST_CASE("graph_pool_compute") {
+    auto t1 = tw::make_task(tw::root, []{ return 1; });
+    auto t2 = tw::make_task(tw::root, []{ return 2; });
+    auto t3 = tw::make_task(tw::consume, [](int x, int y){ return x + y; }, t1, t2);
+    tw::graph_pool<int> pool(t3, 2, 4);
+    auto g1 = pool.next_idle_graph();
+    REQUIRE(g1);
+    g1->schedule_all();
+    REQUIRE(3 == g1->get());
+}

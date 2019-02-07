@@ -159,16 +159,13 @@ public:
 
     /// Clones this node
     std::unique_ptr<node> clone() const {
+        // copies everything but parents
         auto n = std::unique_ptr<node>{new node};
         n->id_ = id_;
         n->level_ = level_;
         n->type_ = type_;
         n->name_ = name_;
         n->executor_ = executor_;
-        n->parents_ = parents_;
-        for (auto& parent : n->parents_) {
-            parent = parent->clone();
-        }
         n->priority_ = priority_;
         n->custom_data_ = custom_data_;
         n->canceled_ = canceled_.load();
@@ -446,6 +443,21 @@ template<typename T>
 using result_t = std::result_of_t<decltype(&std::shared_future<T>::get)(std::shared_future<T>)>;
 
 
+/// Clones a task
+template<typename TaskType>
+std::shared_ptr<TaskType> clone_task(std::unordered_map<std::shared_ptr<transwarp::itask>, std::shared_ptr<transwarp::itask>>& task_cache, const std::shared_ptr<TaskType>& t) {
+    const auto original_task = std::dynamic_pointer_cast<transwarp::itask>(t);
+    const auto task_cache_it = task_cache.find(original_task);
+    if (task_cache_it != task_cache.cend()) {
+        return std::dynamic_pointer_cast<TaskType>(task_cache_it->second);
+    } else {
+        auto cloned_task = t->clone_impl(task_cache);
+        task_cache[original_task] = cloned_task;
+        return std::move(cloned_task);
+    }
+}
+
+
 /// The task class
 template<typename ResultType>
 class task : public transwarp::itask {
@@ -454,11 +466,21 @@ public:
 
     virtual ~task() = default;
 
-    virtual std::shared_ptr<task> clone() const = 0;
+    std::shared_ptr<task> clone() const {
+        std::unordered_map<std::shared_ptr<transwarp::itask>, std::shared_ptr<transwarp::itask>> task_cache;
+        return clone_impl(task_cache);
+    }
+
     virtual void set_value(const transwarp::decay_t<result_type>& value) = 0;
     virtual void set_value(transwarp::decay_t<result_type>&& value) = 0;
     virtual const std::shared_future<result_type>& future() const noexcept = 0;
     virtual transwarp::result_t<result_type> get() const = 0;
+
+private:
+    template<typename T>
+    friend std::shared_ptr<T> clone_task(std::unordered_map<std::shared_ptr<transwarp::itask>, std::shared_ptr<transwarp::itask>>& task_cache, const std::shared_ptr<T>& t);
+
+    virtual std::shared_ptr<transwarp::task<result_type>> clone_impl(std::unordered_map<std::shared_ptr<transwarp::itask>, std::shared_ptr<transwarp::itask>>& task_cache) const = 0;
 };
 
 /// The task class (reference result type)
@@ -469,10 +491,20 @@ public:
 
     virtual ~task() = default;
 
-    virtual std::shared_ptr<task> clone() const = 0;
+    std::shared_ptr<task> clone() const {
+        std::unordered_map<std::shared_ptr<transwarp::itask>, std::shared_ptr<transwarp::itask>> task_cache;
+        return clone_impl(task_cache);
+    }
+
     virtual void set_value(transwarp::decay_t<result_type>& value) = 0;
     virtual const std::shared_future<result_type>& future() const noexcept = 0;
     virtual transwarp::result_t<result_type> get() const = 0;
+
+private:
+    template<typename T>
+    friend std::shared_ptr<T> clone_task(std::unordered_map<std::shared_ptr<transwarp::itask>, std::shared_ptr<transwarp::itask>>& task_cache, const std::shared_ptr<T>& t);
+
+    virtual std::shared_ptr<transwarp::task<result_type>> clone_impl(std::unordered_map<std::shared_ptr<transwarp::itask>, std::shared_ptr<transwarp::itask>>& task_cache) const = 0;
 };
 
 /// The task class (void result type)
@@ -483,10 +515,20 @@ public:
 
     virtual ~task() = default;
 
-    virtual std::shared_ptr<task> clone() const = 0;
+    std::shared_ptr<task> clone() const {
+        std::unordered_map<std::shared_ptr<transwarp::itask>, std::shared_ptr<transwarp::itask>> task_cache;
+        return clone_impl(task_cache);
+    }
+
     virtual void set_value() = 0;
     virtual const std::shared_future<result_type>& future() const noexcept = 0;
     virtual result_type get() const = 0;
+
+private:
+    template<typename T>
+    friend std::shared_ptr<T> clone_task(std::unordered_map<std::shared_ptr<transwarp::itask>, std::shared_ptr<transwarp::itask>>& task_cache, const std::shared_ptr<T>& t);
+
+    virtual std::shared_ptr<transwarp::task<result_type>> clone_impl(std::unordered_map<std::shared_ptr<transwarp::itask>, std::shared_ptr<transwarp::itask>>& task_cache) const = 0;
 };
 
 
@@ -1389,9 +1431,13 @@ struct parents {
     static std::size_t size(const type&) {
         return std::tuple_size_v<type>;
     }
-    static type clone(const type& obj) {
+    static type clone(transwarp::node& node, std::unordered_map<std::shared_ptr<transwarp::itask>, std::shared_ptr<transwarp::itask>>& task_cache, const type& obj) {
         type cloned = obj;
-        transwarp::detail::apply_to_each([](auto& t) { t = t->clone(); }, cloned);
+        transwarp::detail::apply_to_each(
+            [&node,&task_cache](auto& t) {
+                t = clone_task(task_cache, t);
+                transwarp::detail::node_manip::add_parent(node, t->node());
+            }, cloned);
         return cloned;
     }
 };
@@ -1403,10 +1449,11 @@ struct parents<std::vector<std::shared_ptr<transwarp::task<ParentResultType>>>> 
     static std::size_t size(const type& obj) {
         return obj.size();
     }
-    static type clone(const type& obj) {
+    static type clone(transwarp::node& node, std::unordered_map<std::shared_ptr<transwarp::itask>, std::shared_ptr<transwarp::itask>>& task_cache, const type& obj) {
         type cloned = obj;
         for (auto& t : cloned) {
-            t = t->clone();
+            t = clone_task(task_cache, t);
+            transwarp::detail::node_manip::add_parent(node, t->node());
         }
         return cloned;
     }
@@ -2383,9 +2430,17 @@ public:
         return std::shared_ptr<task_t>{new task_t{std::forward<Functor_>(functor), this->shared_from_this()}};
     }
 
-    /// Clones this task
-    std::shared_ptr<transwarp::task<result_type>> clone() const override {
-        auto t = std::shared_ptr<task_impl>{new task_impl{}};
+    /// Clones this task and casts the result to a ptr to task_impl
+    std::shared_ptr<task_impl> clone_cast() const {
+        return std::dynamic_pointer_cast<task_impl>(this->clone());
+    }
+
+private:
+
+    task_impl() = default;
+
+    std::shared_ptr<transwarp::task<result_type>> clone_impl(std::unordered_map<std::shared_ptr<transwarp::itask>, std::shared_ptr<transwarp::itask>>& task_cache) const override {
+        auto t = std::shared_ptr<task_impl>{new task_impl};
         t->schedule_mode_ = this->schedule_mode_;
         if (this->has_result()) {
             try {
@@ -2401,21 +2456,12 @@ public:
         }
         t->node_ = this->node_->clone();
         t->functor_ = std::unique_ptr<Functor>{new Functor{*this->functor_}};
-        t->parents_ = transwarp::detail::parents<ParentResults...>::clone(this->parents_);
+        t->parents_ = transwarp::detail::parents<ParentResults...>::clone(*(t->node_), task_cache, this->parents_);
         t->visited_ = this->visited_;
         t->executor_ = this->executor_;
         t->listeners_ = this->listeners_;
         return t;
     }
-
-    /// Clones this task and casts the result to a ptr to task_impl
-    std::shared_ptr<task_impl> clone_cast() const {
-        return std::dynamic_pointer_cast<task_impl>(clone());
-    }
-
-private:
-
-    task_impl() = default;
 
 };
 
@@ -2461,22 +2507,9 @@ public:
         return std::shared_ptr<task_t>{new task_t{std::forward<Functor_>(functor), this->shared_from_this()}};
     }
 
-    /// Clones this task
-    std::shared_ptr<transwarp::task<result_type>> clone() const override {
-        auto t = std::shared_ptr<value_task>{new value_task{}};
-        t->node_ = node_->clone();
-        try {
-            t->set_value(future_.get());
-        } catch (...) {
-            t->set_exception(std::current_exception());
-        }
-        t->visited_ = visited_;
-        return t;
-    }
-
     /// Clones this task and casts the result to a ptr to value_task
     std::shared_ptr<value_task> clone_cast() const {
-        return std::dynamic_pointer_cast<value_task>(clone());
+        return std::dynamic_pointer_cast<value_task>(this->clone());
     }
 
     /// Nothing to be done to finalize a value task
@@ -2675,6 +2708,18 @@ private:
 
     value_task() = default;
 
+    std::shared_ptr<transwarp::task<result_type>> clone_impl(std::unordered_map<std::shared_ptr<transwarp::itask>, std::shared_ptr<transwarp::itask>>&) const override {
+        auto t = std::shared_ptr<value_task>{new value_task{}};
+        t->node_ = node_->clone();
+        try {
+            t->set_value(future_.get());
+        } catch (...) {
+            t->set_exception(std::current_exception());
+        }
+        t->visited_ = visited_;
+        return t;
+    }
+
     /// Assigns the given id to the node
     void set_node_id(std::size_t id) noexcept override {
         transwarp::detail::node_manip::set_id(*node_, id);
@@ -2809,8 +2854,9 @@ public:
         if (minimum_ > maximum_) {
             throw transwarp::invalid_parameter{"minimum or maximum size"};
         }
+        task_->add_listener(transwarp::event_type::after_finished, listener_);
         for (std::size_t i=0; i<minimum_; ++i) {
-            idle_.push(generate());
+            idle_.push(task_->clone());
         }
     }
 
@@ -2901,7 +2947,7 @@ public:
                 if (size() == maximum_) {
                     break;
                 }
-                idle_.push(generate());
+                idle_.push(task_->clone());
             }
         } else if (new_size < size()) { // shrink
             const std::size_t count = size() - new_size;
@@ -2948,12 +2994,6 @@ private:
     private:
         graph_pool<ResultType>& pool_;
     };
-
-    std::shared_ptr<transwarp::task<ResultType>> generate() {
-        std::shared_ptr<transwarp::task<ResultType>> task = task_->clone();
-        task->add_listener(transwarp::event_type::after_finished, listener_);
-        return task;
-    }
 
     std::shared_ptr<transwarp::task<ResultType>> task_;
     std::size_t minimum_;

@@ -29,14 +29,7 @@ double mean(data_t data) {
     return std::accumulate(data->begin(), data->end(), 0.) / static_cast<double>(data->size());
 }
 
-
-struct graph {
-    std::shared_ptr<tw::task<data_t>> input;
-    std::shared_ptr<tw::task<double>> final;
-};
-
-
-std::shared_ptr<graph> make_graph() {
+std::shared_ptr<tw::task<double>> make_graph() {
     auto input = tw::make_value_task(std::make_shared<std::vector<double>>(10));
     std::vector<std::shared_ptr<tw::task<data_t>>> parents;
     for (int i=0; i<8; ++i) {
@@ -50,7 +43,7 @@ std::shared_ptr<graph> make_graph() {
                                                 }
                                                 return res / static_cast<double>(parents.size());
                                             }, parents);
-    return std::make_shared<graph>(graph{input, final});
+    return final;
 }
 
 }
@@ -65,22 +58,26 @@ void wide_graph_with_pool(std::ostream& os, std::size_t iterations, std::size_t 
     tw::parallel exec{8}; // thread pool with 8 threads
 
     // Output graph for visualization
-    const auto gr = make_graph()->final->edges();
+    const auto gr = make_graph()->edges();
     std::ofstream("wide_graph_with_pool.dot") << tw::to_string(gr);
 
     // This is to generate random data
     std::uniform_int_distribution<std::size_t> dist(size, size * 10);
     std::mt19937 gen{1};
 
-    auto graph = make_graph();
-
     // Graph pool with 16 initial graphs
-    tw::graph_pool<double> pool{graph->final, 16, 16*10};
+    tw::graph_pool<double> pool{make_graph(), 16, 16*10};
 
     std::vector<std::shared_future<double>> futures;
     for (std::size_t i=0; i<iterations; ++i) {
         auto data = std::make_shared<std::vector<double>>(dist(gen), 1); // New data arrive
         auto final = pool.wait_for_next_idle_graph(); // Get the next available graph
+        for (auto t : final->tasks()) {
+            if (t->node()->id() == 0) {
+                static_cast<tw::task<std::shared_ptr<std::vector<double>>>*>(t)->set_value(data);
+                break;
+            }
+        }
         final->schedule_all(exec); // Schedule the graph
         futures.push_back(final->future()); // Collect the future
         if (i % 10 == 0) {
