@@ -2,7 +2,6 @@
 
 using nm = transwarp::detail::node_manip;
 
-#if !defined(__APPLE__) // any_cast not supported on travis
 TEST_CASE("node_clone") {
     auto p1 = std::make_shared<tw::node>();
     auto p2 = std::make_shared<tw::node>();
@@ -30,13 +29,14 @@ TEST_CASE("node_clone") {
     REQUIRE("blah" == *cloned->executor());
     REQUIRE(0 == cloned->parents().size());
     REQUIRE(13 == cloned->priority());
+#if !defined(__APPLE__) // any_cast not supported on travis
     REQUIRE(53.8 == std::any_cast<double>(cloned->custom_data()));
+#endif
     REQUIRE(true == cloned->canceled());
     REQUIRE(1 == cloned->avg_idletime_us());
     REQUIRE(2 == cloned->avg_waittime_us());
     REQUIRE(3 == cloned->avg_runtime_us());
 }
-#endif
 
 TEST_CASE("task_clone") {
     auto p1 = tw::make_task(tw::root, []{ return 42; });

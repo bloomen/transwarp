@@ -37,14 +37,15 @@ TEST_CASE("value_task_with_name") {
     REQUIRE(!n->canceled());
 }
 
-#if !defined(__APPLE__) // any_cast not supported on travis
 TEST_CASE("value_task_with_priority_and_custom_data") {
     auto t = tw::make_value_task(42);
     t->set_priority(13);
     t->set_custom_data(13.5);
     auto n = t->node();
     REQUIRE(13 == n->priority());
+#if !defined(__APPLE__) // any_cast not supported on travis
     REQUIRE(13.5 == std::any_cast<double>(n->custom_data()));
+#endif
     t->remove_custom_data();
     t->reset_priority();
     REQUIRE(0 == n->priority());
@@ -57,13 +58,14 @@ TEST_CASE("value_task_with_priority_all_and_custom_data_all") {
     t->set_custom_data_all(13.5);
     auto n = t->node();
     REQUIRE(13 == n->priority());
+#if !defined(__APPLE__) // any_cast not supported on travis
     REQUIRE(13.5 == std::any_cast<double>(n->custom_data()));
+#endif
     t->remove_custom_data_all();
     t->reset_priority_all();
     REQUIRE(0 == n->priority());
     REQUIRE(!n->custom_data().has_value());
 }
-#endif
 
 TEST_CASE("value_task_in_a_graph") {
     auto t1 = tw::make_value_task(42);
