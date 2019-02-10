@@ -1,4 +1,4 @@
-#include "wide_graph_with_pool.h"
+#include "wide_graph_and_cloning.h"
 #include "../src/transwarp.h"
 #include <iostream>
 #include <fstream>
@@ -51,38 +51,38 @@ std::shared_ptr<tw::task<double>> make_graph() {
 
 namespace examples {
 
-// This example demonstrates the scheduling of an extra wide graph.
+// This example demonstrates the scheduling of an extra wide graph including
+// task cloning if the current graph is busy.
 // Increase iterations and size and observe your CPU load.
-// New data is scheduled as soon as possible by virtue of a graph pool.
-void wide_graph_with_pool(std::ostream& os, std::size_t iterations, std::size_t size) {
+void wide_graph_and_cloning(std::ostream& os, std::size_t iterations, std::size_t size) {
     tw::parallel exec{8}; // thread pool with 8 threads
 
+    auto final = make_graph();
+
     // Output graph for visualization
-    const auto gr = make_graph()->edges();
+    const auto gr = final->edges();
     std::ofstream("wide_graph_with_pool.dot") << tw::to_string(gr);
 
-    // This is to generate random data
+    // To generate random data
     std::uniform_int_distribution<std::size_t> dist(size, size * 10);
     std::mt19937 gen{1};
 
-    // Graph pool with 16 initial graphs
-    tw::graph_pool<double> pool{make_graph(), 16, 16*10};
-
     std::vector<std::shared_future<double>> futures;
+    std::vector<decltype(final)> tasks; // To keep cloned tasks alive
     for (std::size_t i=0; i<iterations; ++i) {
         auto data = std::make_shared<std::vector<double>>(dist(gen), 1); // New data arrive
-        auto final = pool.wait_for_next_idle_graph(); // Get the next available graph
-        for (auto t : final->tasks()) {
-            if (t->node()->id() == 0) {
-                static_cast<tw::task<std::shared_ptr<std::vector<double>>>*>(t)->set_value(data);
-                break;
-            }
+
+        if (!final->has_result()) { // Clone if the graph is busy
+            final = final->clone();
+            tasks.push_back(final);
         }
+
+        auto input = final->tasks()[0];
+        static_cast<tw::task<std::shared_ptr<std::vector<double>>>*>(input)->set_value(data);
+
         final->schedule_all(exec); // Schedule the graph
+
         futures.push_back(final->future()); // Collect the future
-        if (i % 10 == 0) {
-            os << "pool size = " << pool.size() << std::endl;
-        }
     }
 
     // Wait and print results
@@ -96,7 +96,7 @@ void wide_graph_with_pool(std::ostream& os, std::size_t iterations, std::size_t 
 
 #ifndef UNITTEST
 int main() {
-    std::cout << "Running example: wide_graph_with_pool ..." << std::endl;
-    examples::wide_graph_with_pool(std::cout);
+    std::cout << "Running example: wide_graph_and_cloning ..." << std::endl;
+    examples::wide_graph_and_cloning(std::cout);
 }
 #endif

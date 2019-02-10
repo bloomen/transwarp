@@ -21,7 +21,6 @@ add_executable(transwarp_test
 	src/test_executors.cpp
 	src/test_for_each.cpp
 	src/test_task_count.cpp
-	src/test_graph_pool.cpp
 	src/test_make_task.cpp
 	src/test_next.cpp
 	src/test_reset.cpp
@@ -36,7 +35,7 @@ add_executable(transwarp_test
 	examples/benchmark_statistical.cpp
 	examples/single_thread_lock_free.cpp
 	examples/statistical_key_facts.cpp
-	examples/wide_graph_with_pool.cpp)
+	examples/wide_graph_and_cloning.cpp)
 
 add_executable(basic_with_three_tasks
 	src/transwarp.h
@@ -63,10 +62,10 @@ add_executable(statistical_key_facts
 	examples/statistical_key_facts.h
 	examples/statistical_key_facts.cpp)
 
-add_executable(wide_graph_with_pool
+add_executable(wide_graph_and_cloning
 	src/transwarp.h
-	examples/wide_graph_with_pool.h
-	examples/wide_graph_with_pool.cpp)
+	examples/wide_graph_and_cloning.h
+	examples/wide_graph_and_cloning.cpp)
 
 target_compile_definitions(transwarp_test PRIVATE UNITTEST)
 
@@ -76,7 +75,7 @@ add_test(benchmark_simple benchmark_simple)
 add_test(benchmark_statistical benchmark_statistical)
 add_test(single_thread_lock_free single_thread_lock_free)
 add_test(statistical_key_facts statistical_key_facts)
-add_test(wide_graph_with_pool wide_graph_with_pool)
+add_test(wide_graph_and_cloning wide_graph_and_cloning)
 
 if (MSVC)
 	set(CMAKE_CXX_FLAGS "/std:c++17 /W4 /bigobj /EHsc /wd4503 /wd4996 /wd4702 /wd4100")
@@ -91,5 +90,5 @@ else()
 	target_link_libraries(benchmark_statistical ${CMAKE_THREAD_LIBS_INIT})
 	target_link_libraries(single_thread_lock_free ${CMAKE_THREAD_LIBS_INIT})
 	target_link_libraries(statistical_key_facts ${CMAKE_THREAD_LIBS_INIT})
-	target_link_libraries(wide_graph_with_pool ${CMAKE_THREAD_LIBS_INIT})
+	target_link_libraries(wide_graph_and_cloning ${CMAKE_THREAD_LIBS_INIT})
 endif()
