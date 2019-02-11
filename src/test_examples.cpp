@@ -4,7 +4,7 @@
 #include "../examples/benchmark_simple.h"
 #include "../examples/benchmark_statistical.h"
 #include "../examples/single_thread_lock_free.h"
-#include "../examples/wide_graph_and_cloning.h"
+#include "../examples/wide_graph_with_pool.h"
 
 TEST_CASE("example__basic_with_three_tasks") {
     std::ostringstream os;
@@ -42,8 +42,8 @@ TEST_CASE("example__single_thread_lock_free") {
     REQUIRE(os.str().size() > 0u);
 }
 
-TEST_CASE("example__wide_graph_and_cloning") {
+TEST_CASE("example__wide_graph_with_pool") {
     std::ostringstream os;
-    examples::wide_graph_and_cloning(os, 3, 1000);
+    examples::wide_graph_with_pool(os, 3, 1000);
     REQUIRE(os.str().size() > 0u);
 }
