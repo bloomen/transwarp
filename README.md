@@ -206,17 +206,6 @@ task->schedule_all(executor);
 ```
 which will run those tasks in parallel that do not depend on each other.
 
-When calling `schedule_all()` the tasks in the graph are scheduled according
-to a breadth-first search by default. Depending on the problem at hand, a depth-first
-search may be more appropriate and can be specified by passing the schedule type
-to `schedule_all()`:
-```cpp
-enum class schedule_type {
-    breadth, // Scheduling according to a breadth-first search (default)
-    depth,   // Scheduling according to a depth-first search
-};
-```
-
 ### Executors
 
 We have seen that we can pass executors to `schedule()` and `schedule_all()`.
