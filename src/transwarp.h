@@ -356,16 +356,8 @@ enum class event_type {
 };
 
 
-/// The listener interface to listen to events raised by tasks
-class listener {
-public:
-    virtual ~listener() = default;
-
-    /// This may be called from arbitrary threads depending on the event type (see transwarp::event_type).
-    /// The implementer needs to ensure that this never throws exceptions
-    virtual void handle_event(transwarp::event_type event, const std::shared_ptr<transwarp::node>& node) = 0;
-};
-
+/// Forward declaration
+class listener;
 
 /// An interface for the task class
 class itask {
@@ -430,6 +422,17 @@ private:
     virtual void visit(const std::function<void(itask&)>& visitor) = 0;
     virtual void unvisit() noexcept = 0;
     virtual void set_node_id(std::size_t id) noexcept = 0;
+};
+
+
+/// The listener interface to listen to events raised by tasks
+class listener {
+public:
+    virtual ~listener() = default;
+
+    /// This may be called from arbitrary threads depending on the event type (see transwarp::event_type).
+    /// The implementer needs to ensure that this never throws exceptions
+    virtual void handle_event(transwarp::event_type event, const transwarp::itask* task) = 0;
 };
 
 
@@ -2225,7 +2228,7 @@ protected:
     /// Raises the given event to all listeners
     void raise_event(transwarp::event_type event) const {
         for (const std::shared_ptr<transwarp::listener>& listener : listeners_[static_cast<std::size_t>(event)]) {
-            listener->handle_event(event, node_);
+            listener->handle_event(event, this);
         }
     }
 
@@ -2992,9 +2995,9 @@ private:
         {}
 
         // Called on a potentially high-priority thread
-        void handle_event(transwarp::event_type, const std::shared_ptr<transwarp::node>& node) override {
+        void handle_event(transwarp::event_type, const transwarp::itask* task) override {
             std::lock_guard<transwarp::detail::spinlock> lock{pool_.spinlock_};
-            pool_.finished_.push(node);
+            pool_.finished_.push(task->node());
         }
 
     private:
@@ -3027,40 +3030,40 @@ public:
     timer& operator=(timer&&) = delete;
 
     /// Performs the actual timing and populates the node's timing members
-    void handle_event(transwarp::event_type event, const std::shared_ptr<transwarp::node>& node) override {
+    void handle_event(transwarp::event_type event, const transwarp::itask* task) override {
         switch (event) {
         case transwarp::event_type::before_scheduled: {
             const std::chrono::time_point<std::chrono::steady_clock> now = std::chrono::steady_clock::now();
             std::lock_guard<transwarp::detail::spinlock> lock{spinlock_};
-            auto& track = tracks_[node];
+            auto& track = tracks_[task->node()];
             track.startidle = now;
         }
         break;
         case transwarp::event_type::before_started: {
             const std::chrono::time_point<std::chrono::steady_clock> now = std::chrono::steady_clock::now();
-            track_idletime(node, now);
+            track_idletime(task->node(), now);
             std::lock_guard<transwarp::detail::spinlock> lock{spinlock_};
-            auto& track = tracks_[node];
+            auto& track = tracks_[task->node()];
             track.startwait = now;
         }
         break;
         case transwarp::event_type::after_canceled: {
             const std::chrono::time_point<std::chrono::steady_clock> now = std::chrono::steady_clock::now();
-            track_waittime(node, now);
+            track_waittime(task->node(), now);
         }
         break;
         case transwarp::event_type::before_invoked: {
             const std::chrono::time_point<std::chrono::steady_clock> now = std::chrono::steady_clock::now();
-            track_waittime(node, now);
+            track_waittime(task->node(), now);
             std::lock_guard<transwarp::detail::spinlock> lock{spinlock_};
-            auto& track = tracks_[node];
+            auto& track = tracks_[task->node()];
             track.running = true;
             track.startrun = now;
         }
         break;
         case transwarp::event_type::after_finished: {
             const std::chrono::time_point<std::chrono::steady_clock> now = std::chrono::steady_clock::now();
-            track_runtime(node, now);
+            track_runtime(task->node(), now);
         }
         break;
         default: break;
