@@ -4,7 +4,7 @@ constexpr int n_events = static_cast<int>(tw::event_type::count);
 
 struct mock_listener : tw::listener {
     std::vector<tw::event_type> events;
-    void handle_event(tw::event_type event, const std::shared_ptr<tw::node>&) override {
+    void handle_event(tw::event_type event, const tw::itask*) override {
         events.push_back(event);
     }
 };
