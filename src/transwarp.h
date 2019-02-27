@@ -328,23 +328,6 @@ inline std::string to_string(const std::vector<transwarp::edge>& edges, std::str
 }
 
 
-/// The executor interface used to perform custom task execution
-class executor {
-public:
-    virtual ~executor() = default;
-
-    /// Returns the name of the executor
-    virtual std::string name() const = 0;
-
-    /// Runs a task which is wrapped by the given functor. The functor only
-    /// captures one shared pointer and can hence be copied at low cost.
-    /// node represents the task that the functor belongs to.
-    /// This function is only ever called on the thread of the caller to schedule().
-    /// The implementer needs to ensure that this never throws exceptions
-    virtual void execute(const std::function<void()>& functor, const std::shared_ptr<transwarp::node>& node) = 0;
-};
-
-
 /// The task events that can be subscribed to using the listener interface
 enum class event_type {
     before_scheduled, ///< Just before a task is scheduled (handle_event called on thread of caller to schedule())
@@ -357,6 +340,7 @@ enum class event_type {
 
 
 class listener;
+class executor;
 
 /// An interface for the task class
 class itask {
@@ -421,6 +405,23 @@ private:
     virtual void visit(const std::function<void(itask&)>& visitor) = 0;
     virtual void unvisit() noexcept = 0;
     virtual void set_node_id(std::size_t id) noexcept = 0;
+};
+
+
+/// The executor interface used to perform custom task execution
+class executor {
+public:
+    virtual ~executor() = default;
+
+    /// Returns the name of the executor
+    virtual std::string name() const = 0;
+
+    /// Runs a task which is wrapped by the given functor. The functor only
+    /// captures one shared pointer and can hence be copied at low cost.
+    /// task represents the task that the functor belongs to.
+    /// This function is only ever called on the thread of the caller to schedule().
+    /// The implementer needs to ensure that this never throws exceptions
+    virtual void execute(const std::function<void()>& functor, const transwarp::itask& task) = 0;
 };
 
 
@@ -1695,7 +1696,7 @@ public:
     }
 
     /// Runs the functor on the current thread
-    void execute(const std::function<void()>& functor, const std::shared_ptr<transwarp::node>&) override {
+    void execute(const std::function<void()>& functor, const transwarp::itask&) override {
         functor();
     }
 };
@@ -1721,7 +1722,7 @@ public:
     }
 
     /// Pushes the functor into the thread pool for asynchronous execution
-    void execute(const std::function<void()>& functor, const std::shared_ptr<transwarp::node>&) override {
+    void execute(const std::function<void()>& functor, const transwarp::itask&) override {
         pool_.push(functor);
     }
 
@@ -2173,9 +2174,9 @@ protected:
             raise_event(transwarp::event_type::before_scheduled);
             future_ = runner->future();
             if (executor_) {
-                executor_->execute([runner]{ (*runner)(); }, node_);
+                executor_->execute([runner]{ (*runner)(); }, *this);
             } else if (executor) {
-                executor->execute([runner]{ (*runner)(); }, node_);
+                executor->execute([runner]{ (*runner)(); }, *this);
             } else {
                 (*runner)();
             }

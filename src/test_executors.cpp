@@ -1,18 +1,15 @@
 #include "test.h"
 
-std::shared_ptr<tw::node> generic_node() {
-    auto node = std::make_shared<tw::node>();
-    tw::detail::node_manip::set_type(*node, tw::task_type::consume);
-    tw::detail::node_manip::set_name(*node, std::make_optional(std::string{"cool"}));
-    tw::detail::node_manip::set_id(*node, 1);
-    return node;
+std::shared_ptr<tw::itask> generic_task() {
+    auto task = tw::make_task(tw::root, []{});
+    return task;
 }
 
 TEST_CASE("sequenced") {
     tw::sequential seq;
     int value = 5;
     auto functor = [&value]{ value *= 2; };
-    seq.execute(functor, generic_node());
+    seq.execute(functor, *generic_task().get());
     REQUIRE(10 == value);
 }
 
@@ -21,7 +18,7 @@ TEST_CASE("parallel") {
     std::atomic_bool done(false);
     int value = 5;
     auto functor = [&value, &done]{ value *= 2; done = true; };
-    par.execute(functor, generic_node());
+    par.execute(functor, *generic_task().get());
     while (!done);
     REQUIRE(10 == value);
 }
@@ -67,7 +64,7 @@ struct mock_exec : tw::executor {
     std::string name() const override {
         return "mock_exec";
     }
-    void execute(const std::function<void()>& functor, const std::shared_ptr<tw::node>&) override {
+    void execute(const std::function<void()>& functor, const tw::itask&) override {
         called = true;
         functor();
     }
