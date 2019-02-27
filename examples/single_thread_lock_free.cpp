@@ -28,7 +28,7 @@ public:
         return "lock_free_executor";
     }
 
-    void execute(const std::function<void()>& functor, const std::shared_ptr<tw::node>&) override {
+    void execute(const std::function<void()>& functor, const tw::itask&) override {
         queue_.push(functor);
     }
 
