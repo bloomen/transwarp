@@ -9,7 +9,7 @@ TEST_CASE("sequenced") {
     tw::sequential seq;
     int value = 5;
     auto functor = [&value]{ value *= 2; };
-    seq.execute(functor, *generic_task().get());
+    seq.execute(functor, *generic_task());
     REQUIRE(10 == value);
 }
 
@@ -18,7 +18,7 @@ TEST_CASE("parallel") {
     std::atomic_bool done(false);
     int value = 5;
     auto functor = [&value, &done]{ value *= 2; done = true; };
-    par.execute(functor, *generic_task().get());
+    par.execute(functor, *generic_task());
     while (!done);
     REQUIRE(10 == value);
 }
