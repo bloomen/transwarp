@@ -230,12 +230,11 @@ public:
     virtual std::string name() const = 0;
     
     // Only ever called on the thread of the caller to schedule()
-    virtual void execute(const std::function<void()>& functor, const std::shared_ptr<tw::node>& node) = 0;
+    virtual void execute(const std::function<void()>& functor, const tw::itask& task) = 0;
 };
 
 ``` 
-where `functor` denotes the function to be run and `node` an object that holds 
-meta-data of the current task.
+where `functor` denotes the function to be run and `task` the task the functor belongs to.
 
 ### Range functions
 
@@ -307,7 +306,7 @@ public:
     virtual ~listener() = default;
 
     // This may be called from arbitrary threads depending on the event type
-    virtual void handle_event(tw::event_type event, const std::shared_ptr<tw::node>& node) = 0;
+    virtual void handle_event(tw::event_type event, const tw::itask& task) = 0;
 };
 ```
 A listener can then be passed to the `add_listener` functions of a task
