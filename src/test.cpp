@@ -238,9 +238,7 @@ TEST_CASE("task_custom_data") {
     REQUIRE(!t->node()->custom_data().has_value());
     auto cd = std::make_shared<int>(42);
     t->set_custom_data(cd);
-#if !defined(__APPLE__) // any_cast not supported on travis
     REQUIRE(cd.get() == std::any_cast<std::shared_ptr<int>>(t->node()->custom_data()).get());
-#endif
     t->remove_custom_data();
     REQUIRE(!t->node()->custom_data().has_value());
 }
@@ -269,10 +267,8 @@ TEST_CASE("set_custom_data_all") {
     auto t2 = tw::make_task(tw::wait, []{}, t1);
     int data = 42;
     t2->set_custom_data_all(data);
-#if !defined(__APPLE__) // any_cast not supported on travis
     REQUIRE(42 == std::any_cast<int>(t1->node()->custom_data()));
     REQUIRE(42 == std::any_cast<int>(t2->node()->custom_data()));
-#endif
 }
 
 TEST_CASE("remove_custom_data_all") {
@@ -280,10 +276,8 @@ TEST_CASE("remove_custom_data_all") {
     auto t2 = tw::make_task(tw::wait, []{}, t1);
     int data = 42;
     t2->set_custom_data_all(data);
-#if !defined(__APPLE__) // any_cast not supported on travis
     REQUIRE(42 == std::any_cast<int>(t1->node()->custom_data()));
     REQUIRE(42 == std::any_cast<int>(t2->node()->custom_data()));
-#endif
     t2->remove_custom_data_all();
     REQUIRE(!t1->node()->custom_data().has_value());
     REQUIRE(!t2->node()->custom_data().has_value());
