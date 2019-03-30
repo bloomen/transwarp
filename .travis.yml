@@ -1,10 +1,6 @@
 sudo: required
 language: cpp
 
-branches:
-  only:
-    - master
-
 matrix:
   include:
     - os: linux
@@ -26,11 +22,11 @@ matrix:
       env:
         - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7 && CONFIGURATION=Release"
     - os: osx
-      osx_image: xcode10
+      osx_image: xcode10.2
       compiler: clang++
       env: CONFIGURATION=Debug
     - os: osx
-      osx_image: xcode10
+      osx_image: xcode10.2
       compiler: clang++
       env: CONFIGURATION=Release
 
