@@ -127,11 +127,11 @@ using&#160;</td><td class="memItemRight" valign="bottom"><b>result_type</b> = Re
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a51b7d5eddbd49ea8f1a5484e3793cef0"><td class="memTemplParams" colspan="2"><a class="anchor" id="a51b7d5eddbd49ea8f1a5484e3793cef0"></a>
+<tr class="memitem:ac081b81509c65d45199ac0fd2ba2cf85"><td class="memTemplParams" colspan="2"><a class="anchor" id="ac081b81509c65d45199ac0fd2ba2cf85"></a>
 template&lt;typename T &gt; </td></tr>
-<tr class="memitem:a51b7d5eddbd49ea8f1a5484e3793cef0"><td class="memTemplItemLeft" align="right" valign="top">&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1value__task.html#a51b7d5eddbd49ea8f1a5484e3793cef0">value_task</a> (bool has_name, std::string name, T &amp;&amp;value)</td></tr>
-<tr class="memdesc:a51b7d5eddbd49ea8f1a5484e3793cef0"><td class="mdescLeft">&#160;</td><td class="mdescRight">A value task is defined by name and value. Note: Don't use this constructor directly, use <a class="el" href="namespacetranswarp.html#ab9bbbdaad5780eebc9bc6597c4b3ca59" title="A factory function to create a new value task. ">transwarp::make_value_task</a>. <br/></td></tr>
-<tr class="separator:a51b7d5eddbd49ea8f1a5484e3793cef0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac081b81509c65d45199ac0fd2ba2cf85"><td class="memTemplItemLeft" align="right" valign="top">&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1value__task.html#ac081b81509c65d45199ac0fd2ba2cf85">value_task</a> (T &amp;&amp;value)</td></tr>
+<tr class="memdesc:ac081b81509c65d45199ac0fd2ba2cf85"><td class="mdescLeft">&#160;</td><td class="mdescRight">A value task is defined a value. Note: Don't use this constructor directly, use <a class="el" href="namespacetranswarp.html#ac7b0d2b7cf23ade863a6804dbddfe91e" title="A factory function to create a new value task. ">transwarp::make_value_task</a>. <br/></td></tr>
+<tr class="separator:ac081b81509c65d45199ac0fd2ba2cf85"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3dd203b05d5cd3d7fc9daeddf3e607db"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a3dd203b05d5cd3d7fc9daeddf3e607db"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>value_task</b> (const <a class="el" href="classtranswarp_1_1value__task.html">value_task</a> &amp;)=delete</td></tr>
 <tr class="separator:a3dd203b05d5cd3d7fc9daeddf3e607db"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -144,16 +144,23 @@ template&lt;typename T &gt; </td></tr>
 <tr class="memitem:a1c3ff78adf9dde7113398924d0c025b7"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1c3ff78adf9dde7113398924d0c025b7"></a>
 <a class="el" href="classtranswarp_1_1value__task.html">value_task</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>operator=</b> (<a class="el" href="classtranswarp_1_1value__task.html">value_task</a> &amp;&amp;)=delete</td></tr>
 <tr class="separator:a1c3ff78adf9dde7113398924d0c025b7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae7eb6fd93dfe2fc9ba5a11c2ca0e8946"><td class="memTemplParams" colspan="2"><a class="anchor" id="ae7eb6fd93dfe2fc9ba5a11c2ca0e8946"></a>
+<tr class="memitem:a621ac4088cf593bacf8099e9173f7c3c"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a621ac4088cf593bacf8099e9173f7c3c"></a>
+std::shared_ptr&lt; <a class="el" href="classtranswarp_1_1value__task.html">value_task</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1value__task.html#a621ac4088cf593bacf8099e9173f7c3c">named</a> (std::string name)</td></tr>
+<tr class="memdesc:a621ac4088cf593bacf8099e9173f7c3c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Gives this task a name and returns a ptr to itself. <br/></td></tr>
+<tr class="separator:a621ac4088cf593bacf8099e9173f7c3c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2cdbbdaff27961956d15778ab2349c2c"><td class="memTemplParams" colspan="2"><a class="anchor" id="a2cdbbdaff27961956d15778ab2349c2c"></a>
 template&lt;typename TaskType_ , typename Functor_ &gt; </td></tr>
-<tr class="memitem:ae7eb6fd93dfe2fc9ba5a11c2ca0e8946"><td class="memTemplItemLeft" align="right" valign="top">auto&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1value__task.html#ae7eb6fd93dfe2fc9ba5a11c2ca0e8946">then</a> (TaskType_, std::string name, Functor_ &amp;&amp;<a class="el" href="classtranswarp_1_1functor.html">functor</a>) const </td></tr>
-<tr class="memdesc:ae7eb6fd93dfe2fc9ba5a11c2ca0e8946"><td class="mdescLeft">&#160;</td><td class="mdescRight">Creates a continuation to this task. <br/></td></tr>
-<tr class="separator:ae7eb6fd93dfe2fc9ba5a11c2ca0e8946"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a39767325bf0e4bdff8357cda998317aa"><td class="memTemplParams" colspan="2"><a class="anchor" id="a39767325bf0e4bdff8357cda998317aa"></a>
-template&lt;typename TaskType_ , typename Functor_ &gt; </td></tr>
-<tr class="memitem:a39767325bf0e4bdff8357cda998317aa"><td class="memTemplItemLeft" align="right" valign="top">auto&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1value__task.html#a39767325bf0e4bdff8357cda998317aa">then</a> (TaskType_, Functor_ &amp;&amp;<a class="el" href="classtranswarp_1_1functor.html">functor</a>) const </td></tr>
-<tr class="memdesc:a39767325bf0e4bdff8357cda998317aa"><td class="mdescLeft">&#160;</td><td class="mdescRight">Creates a continuation to this task. Overload for omitting the task name. <br/></td></tr>
-<tr class="separator:a39767325bf0e4bdff8357cda998317aa"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2cdbbdaff27961956d15778ab2349c2c"><td class="memTemplItemLeft" align="right" valign="top">auto&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1value__task.html#a2cdbbdaff27961956d15778ab2349c2c">then</a> (TaskType_, Functor_ &amp;&amp;<a class="el" href="classtranswarp_1_1functor.html">functor</a>)</td></tr>
+<tr class="memdesc:a2cdbbdaff27961956d15778ab2349c2c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Creates a continuation to this task. <br/></td></tr>
+<tr class="separator:a2cdbbdaff27961956d15778ab2349c2c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aef77259531f9884a43b546807528bdce"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aef77259531f9884a43b546807528bdce"></a>
+std::shared_ptr&lt; <a class="el" href="classtranswarp_1_1value__task.html">value_task</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1value__task.html#aef77259531f9884a43b546807528bdce">clone_cast</a> () const </td></tr>
+<tr class="memdesc:aef77259531f9884a43b546807528bdce"><td class="mdescLeft">&#160;</td><td class="mdescRight">Clones this task and casts the result to a ptr to <a class="el" href="classtranswarp_1_1value__task.html" title="A value task that stores a single value and doesn&#39;t require scheduling. Value tasks should be created...">value_task</a>. <br/></td></tr>
+<tr class="separator:aef77259531f9884a43b546807528bdce"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a89f204b0b17ad6996be1238d7dd1baf6"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a89f204b0b17ad6996be1238d7dd1baf6"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1value__task.html#a89f204b0b17ad6996be1238d7dd1baf6">finalize</a> () override</td></tr>
+<tr class="memdesc:a89f204b0b17ad6996be1238d7dd1baf6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Nothing to be done to finalize a value task. <br/></td></tr>
+<tr class="separator:a89f204b0b17ad6996be1238d7dd1baf6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6f14da6107c8bca1c4735c6f5b5c63ea"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a6f14da6107c8bca1c4735c6f5b5c63ea"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1value__task.html#a6f14da6107c8bca1c4735c6f5b5c63ea">set_executor</a> (std::shared_ptr&lt; <a class="el" href="classtranswarp_1_1executor.html">transwarp::executor</a> &gt;) override</td></tr>
 <tr class="memdesc:a6f14da6107c8bca1c4735c6f5b5c63ea"><td class="mdescLeft">&#160;</td><td class="mdescRight">No-op because a value task never runs. <br/></td></tr>
@@ -292,22 +299,6 @@ void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
 void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1value__task.html#a1c49aff6befaadf27513d0613cef1849">schedule_all</a> (<a class="el" href="classtranswarp_1_1executor.html">transwarp::executor</a> &amp;, bool) override</td></tr>
 <tr class="memdesc:a1c49aff6befaadf27513d0613cef1849"><td class="mdescLeft">&#160;</td><td class="mdescRight">No-op because a value task never runs and doesn't have parents. <br/></td></tr>
 <tr class="separator:a1c49aff6befaadf27513d0613cef1849"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aed0356ccfe05928dc55700613df6090b"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aed0356ccfe05928dc55700613df6090b"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1value__task.html#aed0356ccfe05928dc55700613df6090b">schedule_all</a> (<a class="el" href="namespacetranswarp.html#a72b57651394684c228105a54fa0932f3">transwarp::schedule_type</a>) override</td></tr>
-<tr class="memdesc:aed0356ccfe05928dc55700613df6090b"><td class="mdescLeft">&#160;</td><td class="mdescRight">No-op because a value task never runs and doesn't have parents. <br/></td></tr>
-<tr class="separator:aed0356ccfe05928dc55700613df6090b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a89f4bf2550b36020f34f424670964fc3"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a89f4bf2550b36020f34f424670964fc3"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1value__task.html#a89f4bf2550b36020f34f424670964fc3">schedule_all</a> (<a class="el" href="classtranswarp_1_1executor.html">transwarp::executor</a> &amp;, <a class="el" href="namespacetranswarp.html#a72b57651394684c228105a54fa0932f3">transwarp::schedule_type</a>) override</td></tr>
-<tr class="memdesc:a89f4bf2550b36020f34f424670964fc3"><td class="mdescLeft">&#160;</td><td class="mdescRight">No-op because a value task never runs and doesn't have parents. <br/></td></tr>
-<tr class="separator:a89f4bf2550b36020f34f424670964fc3"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a90783f1674873344c0433c107d9b2b64"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a90783f1674873344c0433c107d9b2b64"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1value__task.html#a90783f1674873344c0433c107d9b2b64">schedule_all</a> (<a class="el" href="namespacetranswarp.html#a72b57651394684c228105a54fa0932f3">transwarp::schedule_type</a>, bool) override</td></tr>
-<tr class="memdesc:a90783f1674873344c0433c107d9b2b64"><td class="mdescLeft">&#160;</td><td class="mdescRight">No-op because a value task never runs and doesn't have parents. <br/></td></tr>
-<tr class="separator:a90783f1674873344c0433c107d9b2b64"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a98748b95fa4c8e859e0c4fc8ba664f36"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a98748b95fa4c8e859e0c4fc8ba664f36"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1value__task.html#a98748b95fa4c8e859e0c4fc8ba664f36">schedule_all</a> (<a class="el" href="classtranswarp_1_1executor.html">transwarp::executor</a> &amp;, <a class="el" href="namespacetranswarp.html#a72b57651394684c228105a54fa0932f3">transwarp::schedule_type</a>, bool) override</td></tr>
-<tr class="memdesc:a98748b95fa4c8e859e0c4fc8ba664f36"><td class="mdescLeft">&#160;</td><td class="mdescRight">No-op because a value task never runs and doesn't have parents. <br/></td></tr>
-<tr class="separator:a98748b95fa4c8e859e0c4fc8ba664f36"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a79109fbab60121fa5e8f3c3347c27bc6"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a79109fbab60121fa5e8f3c3347c27bc6"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1value__task.html#a79109fbab60121fa5e8f3c3347c27bc6">set_value</a> (const <a class="el" href="namespacetranswarp.html#a080c99818d36a4878e67e45363656286">transwarp::decay_t</a>&lt; <a class="el" href="classtranswarp_1_1value__task.html#ae50370afa016049320bccf5073db808d">result_type</a> &gt; &amp;value) override</td></tr>
 <tr class="memdesc:a79109fbab60121fa5e8f3c3347c27bc6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Assigns a value to this task. <br/></td></tr>
@@ -356,18 +347,19 @@ void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
 void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1value__task.html#a60ec1f91b76950053aae992762b4a1b7">cancel_all</a> (bool) noexceptoverride</td></tr>
 <tr class="memdesc:a60ec1f91b76950053aae992762b4a1b7"><td class="mdescLeft">&#160;</td><td class="mdescRight">No-op because a value task never runs and doesn't have parents. <br/></td></tr>
 <tr class="separator:a60ec1f91b76950053aae992762b4a1b7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:adade87a4e52924442dabb820daa93900"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="adade87a4e52924442dabb820daa93900"></a>
-std::size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1value__task.html#adade87a4e52924442dabb820daa93900">parent_count</a> () const noexceptoverride</td></tr>
-<tr class="memdesc:adade87a4e52924442dabb820daa93900"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the number of direct parents of this task. <br/></td></tr>
-<tr class="separator:adade87a4e52924442dabb820daa93900"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3c8654b0fc5b11ff977fd6e78c81c66b"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a3c8654b0fc5b11ff977fd6e78c81c66b"></a>
-std::size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1value__task.html#a3c8654b0fc5b11ff977fd6e78c81c66b">task_count</a> () const noexceptoverride</td></tr>
-<tr class="memdesc:a3c8654b0fc5b11ff977fd6e78c81c66b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the number of tasks in the graph. <br/></td></tr>
-<tr class="separator:a3c8654b0fc5b11ff977fd6e78c81c66b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2b24456448f6efa41b92926d955c138b"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a2b24456448f6efa41b92926d955c138b"></a>
-std::vector&lt; <a class="el" href="classtranswarp_1_1edge.html">transwarp::edge</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1value__task.html#a2b24456448f6efa41b92926d955c138b">edges</a> () const override</td></tr>
-<tr class="memdesc:a2b24456448f6efa41b92926d955c138b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns empty edges because a value task doesn't have parents. <br/></td></tr>
-<tr class="separator:a2b24456448f6efa41b92926d955c138b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a05e70a7c4ab0a55641edef07fe1999ea"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a05e70a7c4ab0a55641edef07fe1999ea"></a>
+const std::vector<br class="typebreak"/>
+&lt; <a class="el" href="classtranswarp_1_1itask.html">transwarp::itask</a> * &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1value__task.html#a05e70a7c4ab0a55641edef07fe1999ea">tasks</a> () override</td></tr>
+<tr class="memdesc:a05e70a7c4ab0a55641edef07fe1999ea"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns all tasks in the graph in breadth order. <br/></td></tr>
+<tr class="separator:a05e70a7c4ab0a55641edef07fe1999ea"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1a193360757e8bc9f96817a1aa6fa58b"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1a193360757e8bc9f96817a1aa6fa58b"></a>
+std::vector&lt; <a class="el" href="classtranswarp_1_1edge.html">transwarp::edge</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1value__task.html#a1a193360757e8bc9f96817a1aa6fa58b">edges</a> () override</td></tr>
+<tr class="memdesc:a1a193360757e8bc9f96817a1aa6fa58b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns empty edges because a value task doesn't have parents. <br/></td></tr>
+<tr class="separator:a1a193360757e8bc9f96817a1aa6fa58b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="inherit_header pub_methods_classtranswarp_1_1task"><td colspan="2" onclick="javascript:toggleInherit('pub_methods_classtranswarp_1_1task')"><img src="closed.png" alt="-"/>&#160;Public Member Functions inherited from <a class="el" href="classtranswarp_1_1task.html">transwarp::task&lt; ResultType &gt;</a></td></tr>
+<tr class="memitem:afd32b68f655d09614422f88391a49610 inherit pub_methods_classtranswarp_1_1task"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="afd32b68f655d09614422f88391a49610"></a>
+std::shared_ptr&lt; <a class="el" href="classtranswarp_1_1task.html">task</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>clone</b> () const </td></tr>
+<tr class="separator:afd32b68f655d09614422f88391a49610 inherit pub_methods_classtranswarp_1_1task"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="inherited"></a>
 Additional Inherited Members</h2></td></tr>

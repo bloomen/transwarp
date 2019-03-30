@@ -144,7 +144,7 @@ Classes</h2></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sets parents and level of the node.  <a href="structtranswarp_1_1detail_1_1parent__visitor.html#details">More...</a><br/></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structtranswarp_1_1detail_1_1final__visitor.html">final_visitor</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Applies final bookkeeping to the task.  <a href="structtranswarp_1_1detail_1_1final__visitor.html#details">More...</a><br/></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Applies final bookkeeping to the task and collects the task.  <a href="structtranswarp_1_1detail_1_1final__visitor.html#details">More...</a><br/></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structtranswarp_1_1detail_1_1edges__visitor.html">edges_visitor</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Generates edges.  <a href="structtranswarp_1_1detail_1_1edges__visitor.html#details">More...</a><br/></td></tr>
@@ -197,8 +197,8 @@ Classes</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structtranswarp_1_1detail_1_1remove__listeners__per__event__visitor.html">remove_listeners_per_event_visitor</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Removes all listeners per event type from the given task.  <a href="structtranswarp_1_1detail_1_1remove__listeners__per__event__visitor.html#details">More...</a><br/></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structtranswarp_1_1detail_1_1visit__depth__visitor.html">visit_depth_visitor</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Visits the given task using the visitor given in the constructor.  <a href="structtranswarp_1_1detail_1_1visit__depth__visitor.html#details">More...</a><br/></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structtranswarp_1_1detail_1_1visit__visitor.html">visit_visitor</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Visits the given task using the visitor given in the constructor.  <a href="structtranswarp_1_1detail_1_1visit__visitor.html#details">More...</a><br/></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structtranswarp_1_1detail_1_1unvisit__visitor.html">unvisit_visitor</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Unvisits the given task.  <a href="structtranswarp_1_1detail_1_1unvisit__visitor.html#details">More...</a><br/></td></tr>
@@ -282,11 +282,11 @@ Functions</h2></td></tr>
 template&lt;typename F &gt; </td></tr>
 <tr class="memitem:a1732cd35aabc61f9746f1393edd59d15"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>assign_node_if</b> (F &amp;, const std::shared_ptr&lt; <a class="el" href="classtranswarp_1_1node.html">transwarp::node</a> &gt; &amp;) noexcept</td></tr>
 <tr class="separator:a1732cd35aabc61f9746f1393edd59d15"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:abdbf216eaa0f452e03f3163c9a3e9d20"><td class="memTemplParams" colspan="2"><a class="anchor" id="abdbf216eaa0f452e03f3163c9a3e9d20"></a>
-template&lt;typename Functor , typename... Args&gt; </td></tr>
-<tr class="memitem:abdbf216eaa0f452e03f3163c9a3e9d20"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacetranswarp_1_1detail.html#abdbf216eaa0f452e03f3163c9a3e9d20">apply_to_each</a> (const Functor &amp;f, const std::tuple&lt; Args...&gt; &amp;t)</td></tr>
-<tr class="memdesc:abdbf216eaa0f452e03f3163c9a3e9d20"><td class="mdescLeft">&#160;</td><td class="mdescRight">Applies the functor to each element in the tuple. <br/></td></tr>
-<tr class="separator:abdbf216eaa0f452e03f3163c9a3e9d20"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab3efd40692f72b780ba0ab70f64cbeda"><td class="memTemplParams" colspan="2"><a class="anchor" id="ab3efd40692f72b780ba0ab70f64cbeda"></a>
+template&lt;typename Functor , typename Tuple &gt; </td></tr>
+<tr class="memitem:ab3efd40692f72b780ba0ab70f64cbeda"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacetranswarp_1_1detail.html#ab3efd40692f72b780ba0ab70f64cbeda">apply_to_each</a> (Functor &amp;&amp;f, Tuple &amp;&amp;t)</td></tr>
+<tr class="memdesc:ab3efd40692f72b780ba0ab70f64cbeda"><td class="mdescLeft">&#160;</td><td class="mdescRight">Applies the functor to each element in the tuple. <br/></td></tr>
+<tr class="separator:ab3efd40692f72b780ba0ab70f64cbeda"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a98c959b597dd31da852bbca08811f873"><td class="memTemplParams" colspan="2"><a class="anchor" id="a98c959b597dd31da852bbca08811f873"></a>
 template&lt;typename... ParentResults&gt; </td></tr>
 <tr class="memitem:a98c959b597dd31da852bbca08811f873"><td class="memTemplItemLeft" align="right" valign="top">std::tuple&lt; std::shared_future<br class="typebreak"/>

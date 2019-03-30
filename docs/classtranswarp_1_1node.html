@@ -114,6 +114,10 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a11bc58306969e48be44367fa18f3a300"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a11bc58306969e48be44367fa18f3a300"></a>
 <a class="el" href="classtranswarp_1_1node.html">node</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>operator=</b> (<a class="el" href="classtranswarp_1_1node.html">node</a> &amp;&amp;)=delete</td></tr>
 <tr class="separator:a11bc58306969e48be44367fa18f3a300"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a29dd8cbbb4f1144739b9e85dc94f0241"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a29dd8cbbb4f1144739b9e85dc94f0241"></a>
+std::unique_ptr&lt; <a class="el" href="classtranswarp_1_1node.html">node</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1node.html#a29dd8cbbb4f1144739b9e85dc94f0241">clone</a> () const </td></tr>
+<tr class="memdesc:a29dd8cbbb4f1144739b9e85dc94f0241"><td class="mdescLeft">&#160;</td><td class="mdescRight">Clones this node. <br/></td></tr>
+<tr class="separator:a29dd8cbbb4f1144739b9e85dc94f0241"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8a8e0bb19fb945ef789b7d7b0facbe8f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a8a8e0bb19fb945ef789b7d7b0facbe8f"></a>
 std::size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1node.html#a8a8e0bb19fb945ef789b7d7b0facbe8f">id</a> () const noexcept</td></tr>
 <tr class="memdesc:a8a8e0bb19fb945ef789b7d7b0facbe8f"><td class="mdescLeft">&#160;</td><td class="mdescRight">The task ID. <br/></td></tr>
@@ -149,10 +153,10 @@ std::int64_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" hr
 const std::any &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1node.html#a95d09033a3e841b9e7ac08d736b2b962">custom_data</a> () const noexcept</td></tr>
 <tr class="memdesc:a95d09033a3e841b9e7ac08d736b2b962"><td class="mdescLeft">&#160;</td><td class="mdescRight">The custom task data (may not hold a value) <br/></td></tr>
 <tr class="separator:a95d09033a3e841b9e7ac08d736b2b962"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a16eddade779c9d7cd9d3b9173025fd1a"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a16eddade779c9d7cd9d3b9173025fd1a"></a>
-bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1node.html#a16eddade779c9d7cd9d3b9173025fd1a">is_canceled</a> () const noexcept</td></tr>
-<tr class="memdesc:a16eddade779c9d7cd9d3b9173025fd1a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns whether the associated task is canceled. <br/></td></tr>
-<tr class="separator:a16eddade779c9d7cd9d3b9173025fd1a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a714b92fb7a0afccea38aef952a28f7fe"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a714b92fb7a0afccea38aef952a28f7fe"></a>
+bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1node.html#a714b92fb7a0afccea38aef952a28f7fe">canceled</a> () const noexcept</td></tr>
+<tr class="memdesc:a714b92fb7a0afccea38aef952a28f7fe"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns whether the associated task is canceled. <br/></td></tr>
+<tr class="separator:a714b92fb7a0afccea38aef952a28f7fe"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1ba6ec528ddf7ad35e8e31a7700add1a"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1ba6ec528ddf7ad35e8e31a7700add1a"></a>
 std::int64_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1node.html#a1ba6ec528ddf7ad35e8e31a7700add1a">avg_idletime_us</a> () const noexcept</td></tr>
 <tr class="memdesc:a1ba6ec528ddf7ad35e8e31a7700add1a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the average idletime in microseconds (-1 if never set) <br/></td></tr>

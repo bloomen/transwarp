@@ -145,14 +145,14 @@ Classes</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1edge.html">edge</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">An edge between two nodes.  <a href="classtranswarp_1_1edge.html#details">More...</a><br/></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1itask.html">itask</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">An interface for the task class.  <a href="classtranswarp_1_1itask.html#details">More...</a><br/></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1executor.html">executor</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">The executor interface used to perform custom task execution.  <a href="classtranswarp_1_1executor.html#details">More...</a><br/></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1listener.html">listener</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">The listener interface to listen to events raised by tasks.  <a href="classtranswarp_1_1listener.html#details">More...</a><br/></td></tr>
-<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1itask.html">itask</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">An interface for the task class.  <a href="classtranswarp_1_1itask.html#details">More...</a><br/></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1task.html">task</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">The task class.  <a href="classtranswarp_1_1task.html#details">More...</a><br/></td></tr>
@@ -181,11 +181,8 @@ Classes</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1value__task.html">value_task</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">A value task that stores a single value and doesn't require scheduling. Value tasks should be created using the make_value_task factory functions.  <a href="classtranswarp_1_1value__task.html#details">More...</a><br/></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1graph.html">graph</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">A graph interface giving access to the final task as required by <a class="el" href="classtranswarp_1_1graph__pool.html" title="A graph pool that allows running multiple instances of the same graph in parallel. Graph must be a sub-class of transwarp::graph. ">transwarp::graph_pool</a>.  <a href="classtranswarp_1_1graph.html#details">More...</a><br/></td></tr>
-<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1graph__pool.html">graph_pool</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">A graph pool that allows running multiple instances of the same graph in parallel. Graph must be a sub-class of <a class="el" href="classtranswarp_1_1graph.html" title="A graph interface giving access to the final task as required by transwarp::graph_pool. ">transwarp::graph</a>.  <a href="classtranswarp_1_1graph__pool.html#details">More...</a><br/></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1task__pool.html">task_pool</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">A task pool that allows running multiple instances of the same task in parallel.  <a href="classtranswarp_1_1task__pool.html#details">More...</a><br/></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1timer.html">timer</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">A timer that tracks the average idle, wait, and run time of each task it listens to.  <a href="classtranswarp_1_1timer.html#details">More...</a><br/></td></tr>
@@ -231,11 +228,6 @@ Enumerations</h2></td></tr>
  }</td></tr>
 <tr class="memdesc:a857009a6efbb2f34495ee81664a376dc"><td class="mdescLeft">&#160;</td><td class="mdescRight">The task events that can be subscribed to using the listener interface.  <a href="namespacetranswarp.html#a857009a6efbb2f34495ee81664a376dc">More...</a><br/></td></tr>
 <tr class="separator:a857009a6efbb2f34495ee81664a376dc"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a72b57651394684c228105a54fa0932f3"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacetranswarp.html#a72b57651394684c228105a54fa0932f3">schedule_type</a> { <a class="el" href="namespacetranswarp.html#a72b57651394684c228105a54fa0932f3aa068d8104d5fed0396574ab35ccabb97">schedule_type::breadth</a>, 
-<a class="el" href="namespacetranswarp.html#a72b57651394684c228105a54fa0932f3a12a055bf01a31369fe81ac35d85c7bc1">schedule_type::depth</a>
- }</td></tr>
-<tr class="memdesc:a72b57651394684c228105a54fa0932f3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Determines in which order tasks are scheduled in the graph.  <a href="namespacetranswarp.html#a72b57651394684c228105a54fa0932f3">More...</a><br/></td></tr>
-<tr class="separator:a72b57651394684c228105a54fa0932f3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
@@ -255,35 +247,25 @@ std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" hre
 std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacetranswarp.html#adf0c63e221587c70afc83d00bf78255c">to_string</a> (const std::vector&lt; <a class="el" href="classtranswarp_1_1edge.html">transwarp::edge</a> &gt; &amp;edges, std::string_view separator=&quot;\n&quot;)</td></tr>
 <tr class="memdesc:adf0c63e221587c70afc83d00bf78255c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Creates a dot-style string from the given edges. <br/></td></tr>
 <tr class="separator:adf0c63e221587c70afc83d00bf78255c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab5bfe65a3f750dafe27d05c8b4bb2c23"><td class="memTemplParams" colspan="2"><a class="anchor" id="ab5bfe65a3f750dafe27d05c8b4bb2c23"></a>
-template&lt;typename TaskType , typename Functor , typename... Parents&gt; </td></tr>
-<tr class="memitem:ab5bfe65a3f750dafe27d05c8b4bb2c23"><td class="memTemplItemLeft" align="right" valign="top">auto&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacetranswarp.html#ab5bfe65a3f750dafe27d05c8b4bb2c23">make_task</a> (TaskType, std::string name, Functor &amp;&amp;<a class="el" href="classtranswarp_1_1functor.html">functor</a>, std::shared_ptr&lt; Parents &gt;...parents)</td></tr>
-<tr class="memdesc:ab5bfe65a3f750dafe27d05c8b4bb2c23"><td class="mdescLeft">&#160;</td><td class="mdescRight">A factory function to create a new task. <br/></td></tr>
-<tr class="separator:ab5bfe65a3f750dafe27d05c8b4bb2c23"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a69fe703519ae09851c9956120a9cb0b3"><td class="memTemplParams" colspan="2"><a class="anchor" id="a69fe703519ae09851c9956120a9cb0b3"></a>
+template&lt;typename TaskType &gt; </td></tr>
+<tr class="memitem:a69fe703519ae09851c9956120a9cb0b3"><td class="memTemplItemLeft" align="right" valign="top">std::shared_ptr&lt; TaskType &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacetranswarp.html#a69fe703519ae09851c9956120a9cb0b3">clone_task</a> (std::unordered_map&lt; std::shared_ptr&lt; <a class="el" href="classtranswarp_1_1itask.html">transwarp::itask</a> &gt;, std::shared_ptr&lt; <a class="el" href="classtranswarp_1_1itask.html">transwarp::itask</a> &gt;&gt; &amp;task_cache, const std::shared_ptr&lt; TaskType &gt; &amp;t)</td></tr>
+<tr class="memdesc:a69fe703519ae09851c9956120a9cb0b3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Clones a task. <br/></td></tr>
+<tr class="separator:a69fe703519ae09851c9956120a9cb0b3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:abb0af8abab7cb709ec6bb5b50511f7cf"><td class="memTemplParams" colspan="2"><a class="anchor" id="abb0af8abab7cb709ec6bb5b50511f7cf"></a>
 template&lt;typename TaskType , typename Functor , typename... Parents&gt; </td></tr>
 <tr class="memitem:abb0af8abab7cb709ec6bb5b50511f7cf"><td class="memTemplItemLeft" align="right" valign="top">auto&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacetranswarp.html#abb0af8abab7cb709ec6bb5b50511f7cf">make_task</a> (TaskType, Functor &amp;&amp;<a class="el" href="classtranswarp_1_1functor.html">functor</a>, std::shared_ptr&lt; Parents &gt;...parents)</td></tr>
-<tr class="memdesc:abb0af8abab7cb709ec6bb5b50511f7cf"><td class="mdescLeft">&#160;</td><td class="mdescRight">A factory function to create a new task. Overload for omitting the task name. <br/></td></tr>
+<tr class="memdesc:abb0af8abab7cb709ec6bb5b50511f7cf"><td class="mdescLeft">&#160;</td><td class="mdescRight">A factory function to create a new task. <br/></td></tr>
 <tr class="separator:abb0af8abab7cb709ec6bb5b50511f7cf"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a00d1825ade8e002a2ed76000bd312f02"><td class="memTemplParams" colspan="2"><a class="anchor" id="a00d1825ade8e002a2ed76000bd312f02"></a>
-template&lt;typename TaskType , typename Functor , typename ParentType &gt; </td></tr>
-<tr class="memitem:a00d1825ade8e002a2ed76000bd312f02"><td class="memTemplItemLeft" align="right" valign="top">auto&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacetranswarp.html#a00d1825ade8e002a2ed76000bd312f02">make_task</a> (TaskType, std::string name, Functor &amp;&amp;<a class="el" href="classtranswarp_1_1functor.html">functor</a>, std::vector&lt; ParentType &gt; parents)</td></tr>
-<tr class="memdesc:a00d1825ade8e002a2ed76000bd312f02"><td class="mdescLeft">&#160;</td><td class="mdescRight">A factory function to create a new task with vector parents. <br/></td></tr>
-<tr class="separator:a00d1825ade8e002a2ed76000bd312f02"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:acc4347dd2bdb53cd2cc4919d2e1691d6"><td class="memTemplParams" colspan="2"><a class="anchor" id="acc4347dd2bdb53cd2cc4919d2e1691d6"></a>
 template&lt;typename TaskType , typename Functor , typename ParentType &gt; </td></tr>
 <tr class="memitem:acc4347dd2bdb53cd2cc4919d2e1691d6"><td class="memTemplItemLeft" align="right" valign="top">auto&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacetranswarp.html#acc4347dd2bdb53cd2cc4919d2e1691d6">make_task</a> (TaskType, Functor &amp;&amp;<a class="el" href="classtranswarp_1_1functor.html">functor</a>, std::vector&lt; ParentType &gt; parents)</td></tr>
-<tr class="memdesc:acc4347dd2bdb53cd2cc4919d2e1691d6"><td class="mdescLeft">&#160;</td><td class="mdescRight">A factory function to create a new task with vector parents. Overload for omitting the task name. <br/></td></tr>
+<tr class="memdesc:acc4347dd2bdb53cd2cc4919d2e1691d6"><td class="mdescLeft">&#160;</td><td class="mdescRight">A factory function to create a new task with vector parents. <br/></td></tr>
 <tr class="separator:acc4347dd2bdb53cd2cc4919d2e1691d6"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab9bbbdaad5780eebc9bc6597c4b3ca59"><td class="memTemplParams" colspan="2"><a class="anchor" id="ab9bbbdaad5780eebc9bc6597c4b3ca59"></a>
-template&lt;typename Value &gt; </td></tr>
-<tr class="memitem:ab9bbbdaad5780eebc9bc6597c4b3ca59"><td class="memTemplItemLeft" align="right" valign="top">auto&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacetranswarp.html#ab9bbbdaad5780eebc9bc6597c4b3ca59">make_value_task</a> (std::string name, Value &amp;&amp;value)</td></tr>
-<tr class="memdesc:ab9bbbdaad5780eebc9bc6597c4b3ca59"><td class="mdescLeft">&#160;</td><td class="mdescRight">A factory function to create a new value task. <br/></td></tr>
-<tr class="separator:ab9bbbdaad5780eebc9bc6597c4b3ca59"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac7b0d2b7cf23ade863a6804dbddfe91e"><td class="memTemplParams" colspan="2"><a class="anchor" id="ac7b0d2b7cf23ade863a6804dbddfe91e"></a>
 template&lt;typename Value &gt; </td></tr>
 <tr class="memitem:ac7b0d2b7cf23ade863a6804dbddfe91e"><td class="memTemplItemLeft" align="right" valign="top">auto&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacetranswarp.html#ac7b0d2b7cf23ade863a6804dbddfe91e">make_value_task</a> (Value &amp;&amp;value)</td></tr>
-<tr class="memdesc:ac7b0d2b7cf23ade863a6804dbddfe91e"><td class="mdescLeft">&#160;</td><td class="mdescRight">A factory function to create a new value task. Overload for omitting the task name. <br/></td></tr>
+<tr class="memdesc:ac7b0d2b7cf23ade863a6804dbddfe91e"><td class="mdescLeft">&#160;</td><td class="mdescRight">A factory function to create a new value task. <br/></td></tr>
 <tr class="separator:ac7b0d2b7cf23ade863a6804dbddfe91e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a23fda5ef0795885ad43dcd00ab7522f8"><td class="memTemplParams" colspan="2"><a class="anchor" id="a23fda5ef0795885ad43dcd00ab7522f8"></a>
 template&lt;typename InputIt , typename UnaryOperation &gt; </td></tr>
@@ -380,36 +362,6 @@ constexpr <a class="el" href="structtranswarp_1_1no__op__functor.html">no_op_fun
 </td></tr>
 <tr><td class="fieldname"><em><a class="anchor" id="a857009a6efbb2f34495ee81664a376dcaf6627ef1a493e0fdc9965eefcf89a425"></a>after_canceled</em>&nbsp;</td><td class="fielddoc">
 <p>Just after a task was canceled (handle_event called on thread that task is run on) </p>
-</td></tr>
-</table>
-
-</div>
-</div>
-<a class="anchor" id="a72b57651394684c228105a54fa0932f3"></a>
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">enum <a class="el" href="namespacetranswarp.html#a72b57651394684c228105a54fa0932f3">transwarp::schedule_type</a></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">strong</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>Determines in which order tasks are scheduled in the graph. </p>
-<table class="fieldtable">
-<tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><em><a class="anchor" id="a72b57651394684c228105a54fa0932f3aa068d8104d5fed0396574ab35ccabb97"></a>breadth</em>&nbsp;</td><td class="fielddoc">
-<p>Scheduling according to a breadth-first search (default) </p>
-</td></tr>
-<tr><td class="fieldname"><em><a class="anchor" id="a72b57651394684c228105a54fa0932f3a12a055bf01a31369fe81ac35d85c7bc1"></a>depth</em>&nbsp;</td><td class="fielddoc">
-<p>Scheduling according to a depth-first search. </p>
 </td></tr>
 </table>
 

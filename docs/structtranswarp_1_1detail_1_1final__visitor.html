@@ -95,31 +95,31 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 </div><!--header-->
 <div class="contents">
 
-<p>Applies final bookkeeping to the task.  
+<p>Applies final bookkeeping to the task and collects the task.  
  <a href="structtranswarp_1_1detail_1_1final__visitor.html#details">More...</a></p>
 
 <p><code>#include &lt;<a class="el" href="transwarp_8h_source.html">transwarp.h</a>&gt;</code></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a7bd157161cd31905ff96e9839317c94e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a7bd157161cd31905ff96e9839317c94e"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>final_visitor</b> (std::size_t &amp;count) noexcept</td></tr>
-<tr class="separator:a7bd157161cd31905ff96e9839317c94e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a239a857fd9d4e6cd3157c804c800c44c"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a239a857fd9d4e6cd3157c804c800c44c"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>final_visitor</b> (std::vector&lt; <a class="el" href="classtranswarp_1_1itask.html">transwarp::itask</a> * &gt; &amp;tasks) noexcept</td></tr>
+<tr class="separator:a239a857fd9d4e6cd3157c804c800c44c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac82a05800077989e45644fa382ab39b7"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac82a05800077989e45644fa382ab39b7"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>operator()</b> (<a class="el" href="classtranswarp_1_1itask.html">transwarp::itask</a> &amp;<a class="el" href="classtranswarp_1_1task.html">task</a>) noexcept</td></tr>
 <tr class="separator:ac82a05800077989e45644fa382ab39b7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
-<tr class="memitem:aad447ff22647363b7338a4e20ca7089f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aad447ff22647363b7338a4e20ca7089f"></a>
-std::size_t &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>count_</b></td></tr>
-<tr class="separator:aad447ff22647363b7338a4e20ca7089f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a427ede24478186a418b7641e324b9a1c"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a427ede24478186a418b7641e324b9a1c"></a>
+std::vector&lt; <a class="el" href="classtranswarp_1_1itask.html">transwarp::itask</a> * &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>tasks_</b></td></tr>
+<tr class="separator:a427ede24478186a418b7641e324b9a1c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:abda2698ee64e3a5671dfdd06659aa1fa"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="abda2698ee64e3a5671dfdd06659aa1fa"></a>
 std::size_t&#160;</td><td class="memItemRight" valign="bottom"><b>id_</b> = 0</td></tr>
 <tr class="separator:abda2698ee64e3a5671dfdd06659aa1fa"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p>Applies final bookkeeping to the task. </p>
+<div class="textblock"><p>Applies final bookkeeping to the task and collects the task. </p>
 </div><hr/>The documentation for this struct was generated from the following file:<ul>
 <li>src/<a class="el" href="transwarp_8h_source.html">transwarp.h</a></li>
 </ul>

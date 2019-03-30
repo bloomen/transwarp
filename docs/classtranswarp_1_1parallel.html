@@ -129,10 +129,10 @@ Public Member Functions</h2></td></tr>
 std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1parallel.html#a69e983f11362c3d51084854d4dedc619">name</a> () const override</td></tr>
 <tr class="memdesc:a69e983f11362c3d51084854d4dedc619"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the name of the executor. <br/></td></tr>
 <tr class="separator:a69e983f11362c3d51084854d4dedc619"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa9f38d0ab6ca964d6d2a00ae76186d26"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa9f38d0ab6ca964d6d2a00ae76186d26"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1parallel.html#aa9f38d0ab6ca964d6d2a00ae76186d26">execute</a> (const std::function&lt; void()&gt; &amp;<a class="el" href="classtranswarp_1_1functor.html">functor</a>, const std::shared_ptr&lt; <a class="el" href="classtranswarp_1_1node.html">transwarp::node</a> &gt; &amp;) override</td></tr>
-<tr class="memdesc:aa9f38d0ab6ca964d6d2a00ae76186d26"><td class="mdescLeft">&#160;</td><td class="mdescRight">Pushes the functor into the thread pool for asynchronous execution. <br/></td></tr>
-<tr class="separator:aa9f38d0ab6ca964d6d2a00ae76186d26"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab7230e4119221509ad11cc40d2c6bb13"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ab7230e4119221509ad11cc40d2c6bb13"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1parallel.html#ab7230e4119221509ad11cc40d2c6bb13">execute</a> (const std::function&lt; void()&gt; &amp;<a class="el" href="classtranswarp_1_1functor.html">functor</a>, const <a class="el" href="classtranswarp_1_1itask.html">transwarp::itask</a> &amp;) override</td></tr>
+<tr class="memdesc:ab7230e4119221509ad11cc40d2c6bb13"><td class="mdescLeft">&#160;</td><td class="mdescRight">Pushes the functor into the thread pool for asynchronous execution. <br/></td></tr>
+<tr class="separator:ab7230e4119221509ad11cc40d2c6bb13"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Executor for parallel execution. Uses a simple thread pool. </p>

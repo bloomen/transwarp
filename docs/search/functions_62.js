@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['busy_5fcount',['busy_count',['../classtranswarp_1_1graph__pool.html#a9dfef1fd80b1f22f7cea0ed0adff8105',1,'transwarp::graph_pool']]]
+  ['busy_5fcount',['busy_count',['../classtranswarp_1_1task__pool.html#a338f04cd0945c146d842947ffb3cb0ad',1,'transwarp::task_pool']]]
 ];

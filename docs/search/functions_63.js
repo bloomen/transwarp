@@ -5,8 +5,13 @@ var searchData=
   ['cancel',['cancel',['../classtranswarp_1_1detail_1_1task__impl__base.html#a97901db218f0f9006e0cbaf1a7c4e0c1',1,'transwarp::detail::task_impl_base::cancel()'],['../classtranswarp_1_1value__task.html#a832f456ffaeae208768b83b07132d8d5',1,'transwarp::value_task::cancel()']]],
   ['cancel_5fall',['cancel_all',['../classtranswarp_1_1detail_1_1task__impl__base.html#af567fa162e353f127c778ef57e64def2',1,'transwarp::detail::task_impl_base::cancel_all()'],['../classtranswarp_1_1value__task.html#a60ec1f91b76950053aae992762b4a1b7',1,'transwarp::value_task::cancel_all()']]],
   ['cancel_5fall_5fbut_5fone',['cancel_all_but_one',['../namespacetranswarp_1_1detail.html#aacb0b50917a596777030b54bd9034028',1,'transwarp::detail::cancel_all_but_one(const std::shared_ptr&lt; transwarp::task&lt; OneResult &gt;&gt; &amp;one, const std::tuple&lt; std::shared_ptr&lt; transwarp::task&lt; ParentResults &gt;&gt;...&gt; &amp;parents)'],['../namespacetranswarp_1_1detail.html#af86bc4279f4e7356620bd8a7e0a60397',1,'transwarp::detail::cancel_all_but_one(const std::shared_ptr&lt; transwarp::task&lt; OneResult &gt;&gt; &amp;one, const std::vector&lt; std::shared_ptr&lt; transwarp::task&lt; ParentResultType &gt;&gt;&gt; &amp;parents)']]],
+  ['canceled',['canceled',['../classtranswarp_1_1node.html#a714b92fb7a0afccea38aef952a28f7fe',1,'transwarp::node']]],
   ['capacity',['capacity',['../classtranswarp_1_1detail_1_1circular__buffer.html#a3ffe6d8f29a7397b5f73cd8da1aa78dc',1,'transwarp::detail::circular_buffer']]],
+  ['check_5flistener',['check_listener',['../classtranswarp_1_1detail_1_1task__impl__base.html#ad27f43cbf62b17350930725af5d01981',1,'transwarp::detail::task_impl_base']]],
   ['child',['child',['../classtranswarp_1_1edge.html#abd4defd213ae8e41cdd15984a1e8c5ff',1,'transwarp::edge']]],
   ['circular_5fbuffer',['circular_buffer',['../classtranswarp_1_1detail_1_1circular__buffer.html#a13fa676f234b0c1ecceb40977b2cc540',1,'transwarp::detail::circular_buffer']]],
+  ['clone',['clone',['../classtranswarp_1_1node.html#a29dd8cbbb4f1144739b9e85dc94f0241',1,'transwarp::node']]],
+  ['clone_5fcast',['clone_cast',['../classtranswarp_1_1task__impl.html#a2f514389068457d6906cc01b1ce1843e',1,'transwarp::task_impl::clone_cast()'],['../classtranswarp_1_1value__task.html#aef77259531f9884a43b546807528bdce',1,'transwarp::value_task::clone_cast()']]],
+  ['clone_5ftask',['clone_task',['../namespacetranswarp.html#a69fe703519ae09851c9956120a9cb0b3',1,'transwarp']]],
   ['custom_5fdata',['custom_data',['../classtranswarp_1_1node.html#a95d09033a3e841b9e7ac08d736b2b962',1,'transwarp::node']]]
 ];
