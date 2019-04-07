@@ -99,8 +99,8 @@ inline std::string to_string(const transwarp::task_type& type) {
     case transwarp::task_type::consume_any: return "consume_any";
     case transwarp::task_type::wait: return "wait";
     case transwarp::task_type::wait_any: return "wait_any";
-    default: throw transwarp::invalid_parameter{"task type"};
     }
+    throw transwarp::invalid_parameter{"task type"};
 }
 
 
