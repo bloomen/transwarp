@@ -16,7 +16,7 @@ TEST_CASE("wait_any") {
     task3->future().wait();
     REQUIRE(43 == result);
     cont = true;
-    REQUIRE(task1->node()->canceled());
+    REQUIRE(task1->canceled());
 }
 
 TEST_CASE("wait_any_with_vector_parents") {
@@ -36,7 +36,7 @@ TEST_CASE("wait_any_with_vector_parents") {
     task3->future().wait();
     REQUIRE(43 == result);
     cont = true;
-    REQUIRE(task1->node()->canceled());
+    REQUIRE(task1->canceled());
 }
 
 TEST_CASE("wait") {

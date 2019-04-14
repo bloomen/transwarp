@@ -7,7 +7,7 @@ TEST_CASE("value_task") {
     REQUIRE(t->was_scheduled());
     REQUIRE(t->is_ready());
     REQUIRE(t->edges().empty());
-    auto n = t->node();
+    auto n = t;
     REQUIRE(0u == n->id());
     REQUIRE(tw::task_type::root == n->type());
     REQUIRE(!n->name());
@@ -26,7 +26,7 @@ TEST_CASE("value_task_with_name") {
     REQUIRE(t->was_scheduled());
     REQUIRE(t->is_ready());
     REQUIRE(t->edges().empty());
-    auto n = t->node();
+    auto n = t;
     REQUIRE(0u == n->id());
     REQUIRE(tw::task_type::root == n->type());
     REQUIRE(name == *n->name());
@@ -41,7 +41,7 @@ TEST_CASE("value_task_with_priority_and_custom_data") {
     auto t = tw::make_value_task(42);
     t->set_priority(13);
     t->set_custom_data(13.5);
-    auto n = t->node();
+    auto n = t;
     REQUIRE(13 == n->priority());
 #if !defined(__APPLE__) // any_cast not supported on travis
     REQUIRE(13.5 == std::any_cast<double>(n->custom_data()));
@@ -56,7 +56,7 @@ TEST_CASE("value_task_with_priority_all_and_custom_data_all") {
     auto t = tw::make_value_task(42);
     t->set_priority_all(13);
     t->set_custom_data_all(13.5);
-    auto n = t->node();
+    auto n = t;
     REQUIRE(13 == n->priority());
 #if !defined(__APPLE__) // any_cast not supported on travis
     REQUIRE(13.5 == std::any_cast<double>(n->custom_data()));
@@ -82,9 +82,9 @@ TEST_CASE("value_task_and_executor") {
     REQUIRE(42 == t->get());
     auto exec = std::make_shared<tw::sequential>();
     t->set_executor(exec);
-    REQUIRE(!t->node()->executor());
+    REQUIRE(!t->executor());
     t->remove_executor();
-    REQUIRE(!t->node()->executor());
+    REQUIRE(!t->executor());
     REQUIRE(42 == t->get());
 }
 
@@ -93,9 +93,9 @@ TEST_CASE("value_task_and_executor_all") {
     REQUIRE(42 == t->get());
     auto exec = std::make_shared<tw::sequential>();
     t->set_executor_all(exec);
-    REQUIRE(!t->node()->executor());
+    REQUIRE(!t->executor());
     t->remove_executor_all();
-    REQUIRE(!t->node()->executor());
+    REQUIRE(!t->executor());
     REQUIRE(42 == t->get());
 }
 
