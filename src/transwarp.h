@@ -251,80 +251,6 @@ protected:
     std::atomic<std::int64_t> avg_runtime_us_{-1};
 };
 
-/// String conversion for the node class
-inline std::string to_string(const transwarp::node& node, std::string_view separator="\n") {
-    std::string s;
-    s += '"';
-    const std::optional<std::string>& name = node.name();
-    if (name) {
-        s += std::string{"<"} + *name + std::string{">"} + separator.data();
-    }
-    s += transwarp::to_string(node.type());
-    s += std::string{" id="} + std::to_string(node.id());
-    s += std::string{" lev="} + std::to_string(node.level());
-    const std::shared_ptr<transwarp::executor>& exec = node.executor();
-    if (exec) {
-        s += separator.data() + std::string{"<"} + exec->name() + std::string{">"};
-    }
-    const std::int64_t avg_idletime_us = node.avg_idletime_us();
-    if (avg_idletime_us >= 0) {
-        s += separator.data() + std::string{"avg-idle-us="} + std::to_string(avg_idletime_us);
-    }
-    const std::int64_t avg_waittime_us = node.avg_waittime_us();
-    if (avg_waittime_us >= 0) {
-        s += separator.data() + std::string{"avg-wait-us="} + std::to_string(avg_waittime_us);
-    }
-    const std::int64_t avg_runtime_us = node.avg_runtime_us();
-    if (avg_runtime_us >= 0) {
-        s += separator.data() + std::string{"avg-run-us="} + std::to_string(avg_runtime_us);
-    }
-    return s + '"';
-}
-
-
-/// An edge between two nodes
-class edge {
-public:
-    edge(const transwarp::node& parent, const transwarp::node& child) noexcept
-    : parent_{parent}, child_{child}
-    {}
-
-    // default copy/move semantics
-    edge(const edge&) = default;
-    edge& operator=(const edge&) = default;
-    edge(edge&&) = default;
-    edge& operator=(edge&&) = default;
-
-    /// Returns the parent node
-    const transwarp::node& parent() const noexcept {
-        return parent_;
-    }
-
-    /// Returns the child node
-    const transwarp::node& child() const noexcept {
-        return child_;
-    }
-
-private:
-    const transwarp::node& parent_;
-    const transwarp::node& child_;
-};
-
-/// String conversion for the edge class
-inline std::string to_string(const transwarp::edge& edge, std::string_view separator="\n") {
-    return transwarp::to_string(edge.parent(), separator) + std::string{" -> "} + transwarp::to_string(edge.child(), separator);
-}
-
-
-/// Creates a dot-style string from the given edges
-inline std::string to_string(const std::vector<transwarp::edge>& edges, std::string_view separator="\n") {
-    std::string dot = std::string{"digraph {"} + separator.data();
-    for (const transwarp::edge& edge : edges) {
-        dot += transwarp::to_string(edge, separator) + separator.data();
-    }
-    dot += std::string{"}"};
-    return dot;
-}
 
 
 /// The task events that can be subscribed to using the listener interface
@@ -335,6 +261,37 @@ enum class event_type {
     after_finished,   ///< Just after a task has finished running (handle_event called on thread that task is run on)
     after_canceled,   ///< Just after a task was canceled (handle_event called on thread that task is run on)
     count,
+};
+
+
+class itask;
+
+/// An edge between two nodes
+class edge {
+public:
+    edge(const transwarp::itask& parent, const transwarp::itask& child) noexcept
+    : parent_{parent}, child_{child}
+    {}
+
+    // default copy/move semantics
+    edge(const edge&) = default;
+    edge& operator=(const edge&) = default;
+    edge(edge&&) = default;
+    edge& operator=(edge&&) = default;
+
+    /// Returns the parent node
+    const transwarp::itask& parent() const noexcept {
+        return parent_;
+    }
+
+    /// Returns the child node
+    const transwarp::itask& child() const noexcept {
+        return child_;
+    }
+
+private:
+    const transwarp::itask& parent_;
+    const transwarp::itask& child_;
 };
 
 
@@ -403,6 +360,54 @@ private:
     virtual void unvisit() noexcept = 0;
     virtual void set_node_id(std::size_t id) noexcept = 0;
 };
+
+
+/// String conversion for the itask class
+inline std::string to_string(const transwarp::itask& task, std::string_view separator="\n") {
+    std::string s;
+    s += '"';
+    const std::optional<std::string>& name = task.name();
+    if (name) {
+        s += std::string{"<"} + *name + std::string{">"} + separator.data();
+    }
+    s += transwarp::to_string(task.type());
+    s += std::string{" id="} + std::to_string(task.id());
+    s += std::string{" lev="} + std::to_string(task.level());
+    const std::shared_ptr<transwarp::executor>& exec = task.executor();
+    if (exec) {
+        s += separator.data() + std::string{"<"} + exec->name() + std::string{">"};
+    }
+    const std::int64_t avg_idletime_us = task.avg_idletime_us();
+    if (avg_idletime_us >= 0) {
+        s += separator.data() + std::string{"avg-idle-us="} + std::to_string(avg_idletime_us);
+    }
+    const std::int64_t avg_waittime_us = task.avg_waittime_us();
+    if (avg_waittime_us >= 0) {
+        s += separator.data() + std::string{"avg-wait-us="} + std::to_string(avg_waittime_us);
+    }
+    const std::int64_t avg_runtime_us = task.avg_runtime_us();
+    if (avg_runtime_us >= 0) {
+        s += separator.data() + std::string{"avg-run-us="} + std::to_string(avg_runtime_us);
+    }
+    return s + '"';
+}
+
+
+/// String conversion for the edge class
+inline std::string to_string(const transwarp::edge& edge, std::string_view separator="\n") {
+    return transwarp::to_string(edge.parent(), separator) + std::string{" -> "} + transwarp::to_string(edge.child(), separator);
+}
+
+
+/// Creates a dot-style string from the given edges
+inline std::string to_string(const std::vector<transwarp::edge>& edges, std::string_view separator="\n") {
+    std::string dot = std::string{"digraph {"} + separator.data();
+    for (const transwarp::edge& edge : edges) {
+        dot += transwarp::to_string(edge, separator) + separator.data();
+    }
+    dot += std::string{"}"};
+    return dot;
+}
 
 
 /// The listener interface to listen to events raised by tasks
@@ -1027,7 +1032,7 @@ void call_with_each(const Functor& f, const std::vector<std::shared_ptr<transwar
 }
 
 
-/// Sets parents and level of the node
+/// Sets level of a task
 struct parent_visitor {
     explicit parent_visitor(transwarp::node& node) noexcept
     : node_(node) {}
@@ -1063,7 +1068,7 @@ struct edges_visitor {
 
     void operator()(const transwarp::itask& task) {
         for (const transwarp::node* parent : task.parents()) {
-            edges_.emplace_back(*parent, task);
+            edges_.emplace_back(static_cast<const transwarp::itask&>(*parent), task);
         }
     }
 
