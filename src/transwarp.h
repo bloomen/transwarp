@@ -140,6 +140,7 @@ struct visit_visitor;
 struct unvisit_visitor;
 struct final_visitor;
 struct schedule_visitor;
+struct parent_visitor;
 struct node_manip;
 
 } // detail
@@ -176,16 +177,6 @@ public:
     node& operator=(const node&) = delete;
     node(node&&) = delete;
     node& operator=(node&&) = delete;
-
-    /// The task ID
-    std::size_t id() const noexcept {
-        return id_;
-    }
-
-    /// The task level
-    std::size_t level() const noexcept {
-        return level_;
-    }
 
     /// The task type
     transwarp::task_type type() const noexcept {
@@ -238,8 +229,6 @@ public:
 protected:
     friend struct transwarp::detail::node_manip;
 
-    std::size_t id_ = 0;
-    std::size_t level_ = 0;
     transwarp::task_type type_ = transwarp::task_type::root;
     std::optional<std::string> name_;
     std::shared_ptr<transwarp::executor> executor_;
@@ -303,6 +292,8 @@ public:
     virtual ~itask() = default;
 
     virtual void finalize() = 0;
+    virtual std::size_t id() const noexcept = 0;
+    virtual std::size_t level() const noexcept = 0;
     virtual void set_executor(std::shared_ptr<transwarp::executor> executor) = 0;
     virtual void set_executor_all(std::shared_ptr<transwarp::executor> executor) = 0;
     virtual void remove_executor() = 0;
@@ -355,10 +346,12 @@ private:
     friend struct transwarp::detail::unvisit_visitor;
     friend struct transwarp::detail::final_visitor;
     friend struct transwarp::detail::schedule_visitor;
+    friend struct transwarp::detail::parent_visitor;
 
     virtual void visit(const std::function<void(itask&)>& visitor) = 0;
     virtual void unvisit() noexcept = 0;
-    virtual void set_node_id(std::size_t id) noexcept = 0;
+    virtual void set_id(std::size_t id) noexcept = 0;
+    virtual void set_level(std::size_t level) noexcept = 0;
 };
 
 
@@ -526,7 +519,7 @@ private:
 namespace detail {
 
 template<typename F>
-void assign_node_if(F&, const transwarp::node&) noexcept;
+void assign_task_if(F&, const transwarp::itask&) noexcept;
 
 } // detail
 
@@ -540,24 +533,24 @@ public:
 
 protected:
 
-    /// The node associated to the task
-    const transwarp::node& transwarp_node() const noexcept {
-        return *transwarp_node_;
+    /// The associated task
+    const transwarp::itask& transwarp_task() const noexcept {
+        return *transwarp_task_;
     }
 
     /// If the associated task is canceled then this will throw transwarp::task_canceled
     /// which will stop the task while it's running
     void transwarp_cancel_point() const {
-        if (transwarp_node_->canceled()) {
-            throw transwarp::task_canceled(std::to_string(transwarp_node_->id()));
+        if (transwarp_task_->canceled()) {
+            throw transwarp::task_canceled(std::to_string(transwarp_task_->id()));
         }
     }
 
 private:
     template<typename F>
-    friend void transwarp::detail::assign_node_if(F&, const transwarp::node&) noexcept;
+    friend void transwarp::detail::assign_task_if(F&, const transwarp::itask&) noexcept;
 
-    const transwarp::node* transwarp_node_{};
+    const transwarp::itask* transwarp_task_{};
 };
 
 
@@ -567,10 +560,6 @@ namespace detail {
 
 /// Node manipulation
 struct node_manip {
-
-    static void set_level(transwarp::node& node, std::size_t level) noexcept {
-        node.level_ = level;
-    }
 
     static void set_type(transwarp::node& node, transwarp::task_type type) noexcept {
         node.type_ = type;
@@ -1034,17 +1023,17 @@ void call_with_each(const Functor& f, const std::vector<std::shared_ptr<transwar
 
 /// Sets level of a task
 struct parent_visitor {
-    explicit parent_visitor(transwarp::node& node) noexcept
-    : node_(node) {}
+    explicit parent_visitor(transwarp::itask& task) noexcept
+    : task_(task) {}
 
     void operator()(const transwarp::itask& task) const {
-        if (node_.level() <= task.level()) {
+        if (task_.level() <= task.level()) {
             /// A child's level is always larger than any of its parents' levels
-            transwarp::detail::node_manip::set_level(node_, task.level() + 1);
+            task_.set_level(task.level() + 1);
         }
     }
 
-    transwarp::node& node_;
+    transwarp::itask& task_;
 };
 
 /// Applies final bookkeeping to the task and collects the task
@@ -1054,7 +1043,7 @@ struct final_visitor {
 
     void operator()(transwarp::itask& task) noexcept {
         tasks_.push_back(&task);
-        task.set_node_id(id_++);
+        task.set_id(id_++);
     }
 
     std::vector<transwarp::itask*>& tasks_;
@@ -1370,9 +1359,9 @@ using functor_result_t = typename transwarp::detail::functor_result<TaskType, Fu
 
 /// Assigns the node to the given functor if the functor is a subclass of transwarp::functor
 template<typename Functor>
-void assign_node_if(Functor& functor, const transwarp::node& node) noexcept {
+void assign_task_if(Functor& functor, const transwarp::itask& task) noexcept {
     if constexpr (std::is_base_of_v<transwarp::functor, Functor>) {
-        functor.transwarp_node_ = &node;
+        functor.transwarp_task_ = &task;
     }
 }
 
@@ -1753,6 +1742,16 @@ public:
         }
     }
 
+    /// The task's id
+    std::size_t id() const noexcept override {
+        return id_;
+    }
+
+    /// The task's level
+    std::size_t level() const noexcept override {
+        return level_;
+    }
+
     std::vector<const transwarp::node*> parents() const override {
         return transwarp::detail::parents<ParentResults...>::nodes(parents_);
     }
@@ -2113,7 +2112,7 @@ protected:
 
     void init() {
         transwarp::detail::node_manip::set_type(*this, task_type::value);
-        transwarp::detail::assign_node_if(*functor_, *this);
+        transwarp::detail::assign_task_if(*functor_, *this);
         transwarp::detail::call_with_each(transwarp::detail::parent_visitor{*this}, parents_);
     }
 
@@ -2137,9 +2136,14 @@ protected:
     template<typename R, typename T, typename... A>
     friend R transwarp::detail::run_task(std::size_t, const std::weak_ptr<T>&, A&&...);
 
-    /// Assigns the given id to the node
-    void set_node_id(std::size_t id) noexcept override {
+    /// Assigns the given id
+    void set_id(std::size_t id) noexcept override {
         this->id_ = id;
+    }
+
+    /// Assigns the given level
+    void set_level(std::size_t level) noexcept override {
+        this->level_ = level;
     }
 
     /// Schedules this task for execution using the provided executor.
@@ -2224,6 +2228,8 @@ protected:
         }
     }
 
+    std::size_t id_ = 0;
+    std::size_t level_ = 0;
     bool schedule_mode_ = true;
     std::shared_future<result_type> future_;
     std::unique_ptr<Functor> functor_;
@@ -2510,6 +2516,17 @@ public:
     /// Nothing to be done to finalize a value task
     void finalize() override {}
 
+    /// The task's id
+    std::size_t id() const noexcept override {
+        return id_;
+    }
+
+    /// The task's level
+    std::size_t level() const noexcept override {
+        return 0;
+    }
+
+    /// Empty because a value task doesn't have parents
     std::vector<const transwarp::node*> parents() const override {
         return {};
     }
@@ -2705,7 +2722,6 @@ private:
     std::shared_ptr<transwarp::task<result_type>> clone_impl(std::unordered_map<std::shared_ptr<transwarp::itask>, std::shared_ptr<transwarp::itask>>&) const override {
         auto t = std::shared_ptr<value_task>{new value_task{}};
         t->id_ = this->id_;
-        t->level_ = this->level_;
         t->type_ = this->type_;
         t->name_ = this->name_;
         t->executor_ = this->executor_;
@@ -2724,10 +2740,13 @@ private:
         return t;
     }
 
-    /// Assigns the given id to the node
-    void set_node_id(std::size_t id) noexcept override {
+    /// Assigns the given id
+    void set_id(std::size_t id) noexcept override {
         this->id_ = id;
     }
+
+    /// Assigns the given level
+    void set_level(std::size_t) noexcept override {}
 
     /// No-op because a value task never runs
     void schedule_impl(bool, transwarp::executor*) override {}
@@ -2745,6 +2764,7 @@ private:
         visited_ = false;
     }
 
+    std::size_t id_ = 0;
     std::shared_future<result_type> future_;
     bool visited_ = false;
     std::vector<transwarp::itask*> tasks_{this};
