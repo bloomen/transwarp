@@ -89,21 +89,6 @@ public:
 };
 
 
-/// String conversion for the task_type enumeration
-inline std::string to_string(const transwarp::task_type& type) {
-    switch (type) {
-    case transwarp::task_type::root: return "root";
-    case transwarp::task_type::accept: return "accept";
-    case transwarp::task_type::accept_any: return "accept_any";
-    case transwarp::task_type::consume: return "consume";
-    case transwarp::task_type::consume_any: return "consume_any";
-    case transwarp::task_type::wait: return "wait";
-    case transwarp::task_type::wait_any: return "wait_any";
-    }
-    throw transwarp::invalid_parameter{"task type"};
-}
-
-
 /// The root type. Used for tag dispatch
 struct root_type : std::integral_constant<transwarp::task_type, transwarp::task_type::root> {};
 constexpr transwarp::root_type root{}; ///< The root task tag
@@ -175,7 +160,18 @@ enum class event_type {
 };
 
 
-class itask;
+/// The listener interface to listen to events raised by tasks
+class listener {
+public:
+    virtual ~listener() = default;
+
+    /// This may be called from arbitrary threads depending on the event type (see transwarp::event_type).
+    /// The implementer needs to ensure that this never throws exceptions. The lifetime of the task
+    /// reference is not guaranteed beyond the duration of handle_event, and listeners must not retain
+    /// a copy of the task.
+    virtual void handle_event(transwarp::event_type event, const transwarp::itask& task) = 0;
+};
+
 
 /// An edge between two tasks
 class edge {
@@ -206,7 +202,6 @@ private:
 };
 
 
-class listener;
 class timer;
 
 /// An interface for the task class
@@ -294,6 +289,21 @@ private:
 };
 
 
+/// String conversion for the task_type enumeration
+inline std::string to_string(const transwarp::task_type& type) {
+    switch (type) {
+    case transwarp::task_type::root: return "root";
+    case transwarp::task_type::accept: return "accept";
+    case transwarp::task_type::accept_any: return "accept_any";
+    case transwarp::task_type::consume: return "consume";
+    case transwarp::task_type::consume_any: return "consume_any";
+    case transwarp::task_type::wait: return "wait";
+    case transwarp::task_type::wait_any: return "wait_any";
+    }
+    throw transwarp::invalid_parameter{"task type"};
+}
+
+
 /// String conversion for the itask class
 inline std::string to_string(const transwarp::itask& task, std::string_view separator="\n") {
     std::string s;
@@ -340,19 +350,6 @@ inline std::string to_string(const std::vector<transwarp::edge>& edges, std::str
     dot += std::string{"}"};
     return dot;
 }
-
-
-/// The listener interface to listen to events raised by tasks
-class listener {
-public:
-    virtual ~listener() = default;
-
-    /// This may be called from arbitrary threads depending on the event type (see transwarp::event_type).
-    /// The implementer needs to ensure that this never throws exceptions. The lifetime of the task
-    /// reference is not guaranteed beyond the duration of handle_event, and listeners must not retain
-    /// a copy of the task.
-    virtual void handle_event(transwarp::event_type event, const transwarp::itask& task) = 0;
-};
 
 
 /// Removes reference and const from a type
@@ -2516,7 +2513,7 @@ public:
         return nullptr;
     }
 
-    /// Priority is 0 as value tasks don't run
+    /// Returns the task priority
     std::int64_t priority() const noexcept override {
         return priority_;
     }
