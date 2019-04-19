@@ -183,7 +183,7 @@ TEST_CASE("bunch_of_tasks_schedule") {
     make_test_bunch_of_tasks(4);
 }
 
-TEST_CASE("node") {
+TEST_CASE("task_properties") {
     auto f1 = [] { return 42; };
     auto task1 = tw::make_task(tw::root, f1);
     auto f2 = [] { return 13; };
