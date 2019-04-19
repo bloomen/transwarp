@@ -1,6 +1,11 @@
 2.0.0
 
-- ?
+- breaking changes!
+- switched to C++17 (retained `transwarp1.X` branch for C++11 support)
+- removed `transwarp::node` and merged its members into the task classes
+- renamed some methods and changed method signatures
+- now using `std::optional` and `std::any`
+- added ability to clone tasks and used that in the `task_pool`
 
 1.9.0
 
