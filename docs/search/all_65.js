@@ -10,5 +10,5 @@ var searchData=
   ['event_5ftype',['event_type',['../namespacetranswarp.html#a857009a6efbb2f34495ee81664a376dc',1,'transwarp']]],
   ['execute',['execute',['../classtranswarp_1_1executor.html#a9916f71901ef40f15ce9c455fb09ad8a',1,'transwarp::executor::execute()'],['../classtranswarp_1_1sequential.html#aeb04a664f998952b901571b6f80cb845',1,'transwarp::sequential::execute()'],['../classtranswarp_1_1parallel.html#ab7230e4119221509ad11cc40d2c6bb13',1,'transwarp::parallel::execute()']]],
   ['executor',['executor',['../classtranswarp_1_1executor.html',1,'transwarp']]],
-  ['executor',['executor',['../classtranswarp_1_1node.html#a70e5a56ba950a6c5239073c65d0ed9ca',1,'transwarp::node']]]
+  ['executor',['executor',['../classtranswarp_1_1detail_1_1task__impl__base.html#ae4ec3ee45459bf94cf9e13086c21a7f9',1,'transwarp::detail::task_impl_base::executor()'],['../classtranswarp_1_1value__task.html#abca0088fe4d7d6ee857af48678f738ff',1,'transwarp::value_task::executor()']]]
 ];

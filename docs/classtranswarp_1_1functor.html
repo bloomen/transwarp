@@ -95,18 +95,17 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 </div><!--header-->
 <div class="contents">
 
-<p>A base class for a user-defined functor that needs access to the node associated to the task or a cancel point to stop a task while it's running.  
+<p>A base class for a user-defined functor that needs access to the associated task or a cancel point to stop a task while it's running.  
  <a href="classtranswarp_1_1functor.html#details">More...</a></p>
 
 <p><code>#include &lt;<a class="el" href="transwarp_8h_source.html">transwarp.h</a>&gt;</code></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pro-methods"></a>
 Protected Member Functions</h2></td></tr>
-<tr class="memitem:a7ca696e224dbf18036a8dc74f1e4c666"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a7ca696e224dbf18036a8dc74f1e4c666"></a>
-const std::shared_ptr<br class="typebreak"/>
-&lt; <a class="el" href="classtranswarp_1_1node.html">transwarp::node</a> &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1functor.html#a7ca696e224dbf18036a8dc74f1e4c666">transwarp_node</a> () const noexcept</td></tr>
-<tr class="memdesc:a7ca696e224dbf18036a8dc74f1e4c666"><td class="mdescLeft">&#160;</td><td class="mdescRight">The node associated to the task. <br/></td></tr>
-<tr class="separator:a7ca696e224dbf18036a8dc74f1e4c666"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af94dc3f671a51ddc2edd4c22cce30f54"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af94dc3f671a51ddc2edd4c22cce30f54"></a>
+const <a class="el" href="classtranswarp_1_1itask.html">transwarp::itask</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1functor.html#af94dc3f671a51ddc2edd4c22cce30f54">transwarp_task</a> () const noexcept</td></tr>
+<tr class="memdesc:af94dc3f671a51ddc2edd4c22cce30f54"><td class="mdescLeft">&#160;</td><td class="mdescRight">The associated task. <br/></td></tr>
+<tr class="separator:af94dc3f671a51ddc2edd4c22cce30f54"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4bdb9b52c5fc46d7a872a25b0a5866af"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a4bdb9b52c5fc46d7a872a25b0a5866af"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1functor.html#a4bdb9b52c5fc46d7a872a25b0a5866af">transwarp_cancel_point</a> () const </td></tr>
 <tr class="memdesc:a4bdb9b52c5fc46d7a872a25b0a5866af"><td class="mdescLeft">&#160;</td><td class="mdescRight">If the associated task is canceled then this will throw <a class="el" href="classtranswarp_1_1task__canceled.html" title="Exception thrown when a task is canceled. ">transwarp::task_canceled</a> which will stop the task while it's running. <br/></td></tr>
@@ -114,13 +113,13 @@ void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="friends"></a>
 Friends</h2></td></tr>
-<tr class="memitem:a0203496500b9d1511996b01b2e8600fd"><td class="memTemplParams" colspan="2"><a class="anchor" id="a0203496500b9d1511996b01b2e8600fd"></a>
+<tr class="memitem:aaa535982b864d54fb5485114b2739504"><td class="memTemplParams" colspan="2"><a class="anchor" id="aaa535982b864d54fb5485114b2739504"></a>
 template&lt;typename F &gt; </td></tr>
-<tr class="memitem:a0203496500b9d1511996b01b2e8600fd"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>transwarp::detail::assign_node_if</b> (F &amp;, const std::shared_ptr&lt; <a class="el" href="classtranswarp_1_1node.html">transwarp::node</a> &gt; &amp;) noexcept</td></tr>
-<tr class="separator:a0203496500b9d1511996b01b2e8600fd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aaa535982b864d54fb5485114b2739504"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>transwarp::detail::assign_task_if</b> (F &amp;, const <a class="el" href="classtranswarp_1_1itask.html">transwarp::itask</a> &amp;) noexcept</td></tr>
+<tr class="separator:aaa535982b864d54fb5485114b2739504"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p>A base class for a user-defined functor that needs access to the node associated to the task or a cancel point to stop a task while it's running. </p>
+<div class="textblock"><p>A base class for a user-defined functor that needs access to the associated task or a cancel point to stop a task while it's running. </p>
 </div><hr/>The documentation for this class was generated from the following file:<ul>
 <li>src/<a class="el" href="transwarp_8h_source.html">transwarp.h</a></li>
 </ul>

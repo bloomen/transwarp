@@ -13,8 +13,8 @@ var searchData=
   ['apply_5fto_5feach',['apply_to_each',['../namespacetranswarp_1_1detail.html#ab3efd40692f72b780ba0ab70f64cbeda',1,'transwarp::detail']]],
   ['assign_5ffutures_5fimpl',['assign_futures_impl',['../structtranswarp_1_1detail_1_1assign__futures__impl.html',1,'transwarp::detail']]],
   ['assign_5ffutures_5fimpl_3c_2d1_2c_20parentresults_2e_2e_2e_3e',['assign_futures_impl&lt;-1, ParentResults...&gt;',['../structtranswarp_1_1detail_1_1assign__futures__impl_3-1_00_01ParentResults_8_8_8_4.html',1,'transwarp::detail']]],
-  ['assign_5fnode_5fif',['assign_node_if',['../namespacetranswarp_1_1detail.html#afeaf25b7d52409f826b95532b7398ecb',1,'transwarp::detail']]],
-  ['avg_5fidletime_5fus',['avg_idletime_us',['../classtranswarp_1_1node.html#a1ba6ec528ddf7ad35e8e31a7700add1a',1,'transwarp::node']]],
-  ['avg_5fruntime_5fus',['avg_runtime_us',['../classtranswarp_1_1node.html#ab23dc47ebd690f39d3451986bd70ed19',1,'transwarp::node']]],
-  ['avg_5fwaittime_5fus',['avg_waittime_us',['../classtranswarp_1_1node.html#a4d6456ce7cfe3707fd81dfa29f65fb85',1,'transwarp::node']]]
+  ['assign_5ftask_5fif',['assign_task_if',['../namespacetranswarp_1_1detail.html#a71149b6405d09907dfc7d87e86ac6468',1,'transwarp::detail']]],
+  ['avg_5fidletime_5fus',['avg_idletime_us',['../classtranswarp_1_1detail_1_1task__impl__base.html#ab67a9147cc0bb10a20df2570f2908e5c',1,'transwarp::detail::task_impl_base::avg_idletime_us()'],['../classtranswarp_1_1value__task.html#aef4f03d04973d4decc61182dd4e8d3b7',1,'transwarp::value_task::avg_idletime_us()']]],
+  ['avg_5fruntime_5fus',['avg_runtime_us',['../classtranswarp_1_1detail_1_1task__impl__base.html#a765a43f4f7f6a63711ba38f574a99f70',1,'transwarp::detail::task_impl_base::avg_runtime_us()'],['../classtranswarp_1_1value__task.html#a0328544798158b24ea6fb87e4b8083d1',1,'transwarp::value_task::avg_runtime_us()']]],
+  ['avg_5fwaittime_5fus',['avg_waittime_us',['../classtranswarp_1_1detail_1_1task__impl__base.html#ad7eba9a44f8b3e833345e221bda5a6ce',1,'transwarp::detail::task_impl_base::avg_waittime_us()'],['../classtranswarp_1_1value__task.html#a0a498351410b7bc34c548402ad92afdf',1,'transwarp::value_task::avg_waittime_us()']]]
 ];

@@ -8,5 +8,5 @@ var searchData=
   ['wait_5ffor_5fnext_5ftask',['wait_for_next_task',['../classtranswarp_1_1task__pool.html#ab16759130d189765b67679239cc84401',1,'transwarp::task_pool']]],
   ['wait_5ftype',['wait_type',['../structtranswarp_1_1wait__type.html',1,'transwarp']]],
   ['was_5fscheduled',['was_scheduled',['../classtranswarp_1_1detail_1_1task__impl__base.html#a55c8ea68e33b2d4512c47897adf2159d',1,'transwarp::detail::task_impl_base::was_scheduled()'],['../classtranswarp_1_1value__task.html#ad721da8f7bf38471ac543a6c5a1bdf37',1,'transwarp::value_task::was_scheduled()']]],
-  ['work',['work',['../structtranswarp_1_1detail_1_1call__impl_3_01transwarp_1_1consume__any__type_00_01true_00_01total_00_01n_8_8_8_4.html#ae4f3bfde0318d60edb310dee03e3dcd6',1,'transwarp::detail::call_impl&lt; transwarp::consume_any_type, true, total, n...&gt;']]]
+  ['work',['work',['../structtranswarp_1_1detail_1_1call__impl_3_01transwarp_1_1consume__any__type_00_01true_00_01total_00_01n_8_8_8_4.html#af51cd4caf484963c9b3fa05c01606b5f',1,'transwarp::detail::call_impl&lt; transwarp::consume_any_type, true, total, n...&gt;']]]
 ];

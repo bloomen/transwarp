@@ -139,20 +139,17 @@ Classes</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structtranswarp_1_1wait__any__type.html">wait_any_type</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">The wait_any type. Used for tag dispatch.  <a href="structtranswarp_1_1wait__any__type.html#details">More...</a><br/></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1node.html">node</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">A node carrying meta-data of a task.  <a href="classtranswarp_1_1node.html#details">More...</a><br/></td></tr>
-<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1edge.html">edge</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">An edge between two nodes.  <a href="classtranswarp_1_1edge.html#details">More...</a><br/></td></tr>
-<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1itask.html">itask</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">An interface for the task class.  <a href="classtranswarp_1_1itask.html#details">More...</a><br/></td></tr>
-<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1executor.html">executor</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">The executor interface used to perform custom task execution.  <a href="classtranswarp_1_1executor.html#details">More...</a><br/></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1listener.html">listener</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">The listener interface to listen to events raised by tasks.  <a href="classtranswarp_1_1listener.html#details">More...</a><br/></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1edge.html">edge</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">An edge between two tasks.  <a href="classtranswarp_1_1edge.html#details">More...</a><br/></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1itask.html">itask</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">An interface for the task class.  <a href="classtranswarp_1_1itask.html#details">More...</a><br/></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1task.html">task</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">The task class.  <a href="classtranswarp_1_1task.html#details">More...</a><br/></td></tr>
@@ -164,7 +161,7 @@ Classes</h2></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">The task class (void result type)  <a href="classtranswarp_1_1task_3_01void_01_4.html#details">More...</a><br/></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1functor.html">functor</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">A base class for a user-defined functor that needs access to the node associated to the task or a cancel point to stop a task while it's running.  <a href="classtranswarp_1_1functor.html#details">More...</a><br/></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">A base class for a user-defined functor that needs access to the associated task or a cancel point to stop a task while it's running.  <a href="classtranswarp_1_1functor.html#details">More...</a><br/></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structtranswarp_1_1no__op__functor.html">no_op_functor</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">A functor not doing nothing.  <a href="structtranswarp_1_1no__op__functor.html#details">More...</a><br/></td></tr>
@@ -235,10 +232,10 @@ Functions</h2></td></tr>
 std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacetranswarp.html#ab7cae8c7d0267dd51406f77f69697c3b">to_string</a> (const <a class="el" href="namespacetranswarp.html#a10f2b2567332cf9514d4c366c1cc5a5e">transwarp::task_type</a> &amp;type)</td></tr>
 <tr class="memdesc:ab7cae8c7d0267dd51406f77f69697c3b"><td class="mdescLeft">&#160;</td><td class="mdescRight">String conversion for the task_type enumeration. <br/></td></tr>
 <tr class="separator:ab7cae8c7d0267dd51406f77f69697c3b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae3fa01d1290f68a6b9ea72390bca087e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae3fa01d1290f68a6b9ea72390bca087e"></a>
-std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacetranswarp.html#ae3fa01d1290f68a6b9ea72390bca087e">to_string</a> (const <a class="el" href="classtranswarp_1_1node.html">transwarp::node</a> &amp;<a class="el" href="classtranswarp_1_1node.html">node</a>, std::string_view separator=&quot;\n&quot;)</td></tr>
-<tr class="memdesc:ae3fa01d1290f68a6b9ea72390bca087e"><td class="mdescLeft">&#160;</td><td class="mdescRight">String conversion for the node class. <br/></td></tr>
-<tr class="separator:ae3fa01d1290f68a6b9ea72390bca087e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8a56bc9aed3ec7f45a7f2703bf3f0593"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a8a56bc9aed3ec7f45a7f2703bf3f0593"></a>
+std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacetranswarp.html#a8a56bc9aed3ec7f45a7f2703bf3f0593">to_string</a> (const <a class="el" href="classtranswarp_1_1itask.html">transwarp::itask</a> &amp;<a class="el" href="classtranswarp_1_1task.html">task</a>, std::string_view separator=&quot;\n&quot;)</td></tr>
+<tr class="memdesc:a8a56bc9aed3ec7f45a7f2703bf3f0593"><td class="mdescLeft">&#160;</td><td class="mdescRight">String conversion for the itask class. <br/></td></tr>
+<tr class="separator:a8a56bc9aed3ec7f45a7f2703bf3f0593"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a66bc005dcf7b2d422f7dba9a71526c7f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a66bc005dcf7b2d422f7dba9a71526c7f"></a>
 std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacetranswarp.html#a66bc005dcf7b2d422f7dba9a71526c7f">to_string</a> (const <a class="el" href="classtranswarp_1_1edge.html">transwarp::edge</a> &amp;<a class="el" href="classtranswarp_1_1edge.html">edge</a>, std::string_view separator=&quot;\n&quot;)</td></tr>
 <tr class="memdesc:a66bc005dcf7b2d422f7dba9a71526c7f"><td class="mdescLeft">&#160;</td><td class="mdescRight">String conversion for the edge class. <br/></td></tr>
@@ -247,11 +244,6 @@ std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" hre
 std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacetranswarp.html#adf0c63e221587c70afc83d00bf78255c">to_string</a> (const std::vector&lt; <a class="el" href="classtranswarp_1_1edge.html">transwarp::edge</a> &gt; &amp;edges, std::string_view separator=&quot;\n&quot;)</td></tr>
 <tr class="memdesc:adf0c63e221587c70afc83d00bf78255c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Creates a dot-style string from the given edges. <br/></td></tr>
 <tr class="separator:adf0c63e221587c70afc83d00bf78255c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a69fe703519ae09851c9956120a9cb0b3"><td class="memTemplParams" colspan="2"><a class="anchor" id="a69fe703519ae09851c9956120a9cb0b3"></a>
-template&lt;typename TaskType &gt; </td></tr>
-<tr class="memitem:a69fe703519ae09851c9956120a9cb0b3"><td class="memTemplItemLeft" align="right" valign="top">std::shared_ptr&lt; TaskType &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacetranswarp.html#a69fe703519ae09851c9956120a9cb0b3">clone_task</a> (std::unordered_map&lt; std::shared_ptr&lt; <a class="el" href="classtranswarp_1_1itask.html">transwarp::itask</a> &gt;, std::shared_ptr&lt; <a class="el" href="classtranswarp_1_1itask.html">transwarp::itask</a> &gt;&gt; &amp;task_cache, const std::shared_ptr&lt; TaskType &gt; &amp;t)</td></tr>
-<tr class="memdesc:a69fe703519ae09851c9956120a9cb0b3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Clones a task. <br/></td></tr>
-<tr class="separator:a69fe703519ae09851c9956120a9cb0b3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:abb0af8abab7cb709ec6bb5b50511f7cf"><td class="memTemplParams" colspan="2"><a class="anchor" id="abb0af8abab7cb709ec6bb5b50511f7cf"></a>
 template&lt;typename TaskType , typename Functor , typename... Parents&gt; </td></tr>
 <tr class="memitem:abb0af8abab7cb709ec6bb5b50511f7cf"><td class="memTemplItemLeft" align="right" valign="top">auto&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacetranswarp.html#abb0af8abab7cb709ec6bb5b50511f7cf">make_task</a> (TaskType, Functor &amp;&amp;<a class="el" href="classtranswarp_1_1functor.html">functor</a>, std::shared_ptr&lt; Parents &gt;...parents)</td></tr>
@@ -270,22 +262,22 @@ template&lt;typename Value &gt; </td></tr>
 <tr class="memitem:a23fda5ef0795885ad43dcd00ab7522f8"><td class="memTemplParams" colspan="2"><a class="anchor" id="a23fda5ef0795885ad43dcd00ab7522f8"></a>
 template&lt;typename InputIt , typename UnaryOperation &gt; </td></tr>
 <tr class="memitem:a23fda5ef0795885ad43dcd00ab7522f8"><td class="memTemplItemLeft" align="right" valign="top">auto&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacetranswarp.html#a23fda5ef0795885ad43dcd00ab7522f8">for_each</a> (InputIt first, InputIt last, UnaryOperation unary_op)</td></tr>
-<tr class="memdesc:a23fda5ef0795885ad43dcd00ab7522f8"><td class="mdescLeft">&#160;</td><td class="mdescRight">A function similar to std::for_each but returning a transwarp task for deferred, possibly asynchronous execution. This function creates a graph with std::distance(first, last) root nodes. <br/></td></tr>
+<tr class="memdesc:a23fda5ef0795885ad43dcd00ab7522f8"><td class="mdescLeft">&#160;</td><td class="mdescRight">A function similar to std::for_each but returning a transwarp task for deferred, possibly asynchronous execution. This function creates a graph with std::distance(first, last) root tasks. <br/></td></tr>
 <tr class="separator:a23fda5ef0795885ad43dcd00ab7522f8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aabe8c7a0d53b59861f4c0beac36b9ac4"><td class="memTemplParams" colspan="2"><a class="anchor" id="aabe8c7a0d53b59861f4c0beac36b9ac4"></a>
 template&lt;typename InputIt , typename UnaryOperation &gt; </td></tr>
 <tr class="memitem:aabe8c7a0d53b59861f4c0beac36b9ac4"><td class="memTemplItemLeft" align="right" valign="top">auto&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacetranswarp.html#aabe8c7a0d53b59861f4c0beac36b9ac4">for_each</a> (<a class="el" href="classtranswarp_1_1executor.html">transwarp::executor</a> &amp;<a class="el" href="classtranswarp_1_1executor.html">executor</a>, InputIt first, InputIt last, UnaryOperation unary_op)</td></tr>
-<tr class="memdesc:aabe8c7a0d53b59861f4c0beac36b9ac4"><td class="mdescLeft">&#160;</td><td class="mdescRight">A function similar to std::for_each but returning a transwarp task for deferred, possibly asynchronous execution. This function creates a graph with std::distance(first, last) root nodes. Overload for automatic scheduling by passing an executor. <br/></td></tr>
+<tr class="memdesc:aabe8c7a0d53b59861f4c0beac36b9ac4"><td class="mdescLeft">&#160;</td><td class="mdescRight">A function similar to std::for_each but returning a transwarp task for deferred, possibly asynchronous execution. This function creates a graph with std::distance(first, last) root tasks. Overload for automatic scheduling by passing an executor. <br/></td></tr>
 <tr class="separator:aabe8c7a0d53b59861f4c0beac36b9ac4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0f7f4dfba0a5ec1498df0d40ea14c81c"><td class="memTemplParams" colspan="2"><a class="anchor" id="a0f7f4dfba0a5ec1498df0d40ea14c81c"></a>
 template&lt;typename InputIt , typename OutputIt , typename UnaryOperation &gt; </td></tr>
 <tr class="memitem:a0f7f4dfba0a5ec1498df0d40ea14c81c"><td class="memTemplItemLeft" align="right" valign="top">auto&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacetranswarp.html#a0f7f4dfba0a5ec1498df0d40ea14c81c">transform</a> (InputIt first1, InputIt last1, OutputIt d_first, UnaryOperation unary_op)</td></tr>
-<tr class="memdesc:a0f7f4dfba0a5ec1498df0d40ea14c81c"><td class="mdescLeft">&#160;</td><td class="mdescRight">A function similar to std::transform but returning a transwarp task for deferred, possibly asynchronous execution. This function creates a graph with std::distance(first1, last1) root nodes. <br/></td></tr>
+<tr class="memdesc:a0f7f4dfba0a5ec1498df0d40ea14c81c"><td class="mdescLeft">&#160;</td><td class="mdescRight">A function similar to std::transform but returning a transwarp task for deferred, possibly asynchronous execution. This function creates a graph with std::distance(first1, last1) root tasks. <br/></td></tr>
 <tr class="separator:a0f7f4dfba0a5ec1498df0d40ea14c81c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a69cbe887b76500ba89918fece72688a4"><td class="memTemplParams" colspan="2"><a class="anchor" id="a69cbe887b76500ba89918fece72688a4"></a>
 template&lt;typename InputIt , typename OutputIt , typename UnaryOperation &gt; </td></tr>
 <tr class="memitem:a69cbe887b76500ba89918fece72688a4"><td class="memTemplItemLeft" align="right" valign="top">auto&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacetranswarp.html#a69cbe887b76500ba89918fece72688a4">transform</a> (<a class="el" href="classtranswarp_1_1executor.html">transwarp::executor</a> &amp;<a class="el" href="classtranswarp_1_1executor.html">executor</a>, InputIt first1, InputIt last1, OutputIt d_first, UnaryOperation unary_op)</td></tr>
-<tr class="memdesc:a69cbe887b76500ba89918fece72688a4"><td class="mdescLeft">&#160;</td><td class="mdescRight">A function similar to std::transform but returning a transwarp task for deferred, possibly asynchronous execution. This function creates a graph with std::distance(first1, last1) root nodes. Overload for automatic scheduling by passing an executor. <br/></td></tr>
+<tr class="memdesc:a69cbe887b76500ba89918fece72688a4"><td class="mdescLeft">&#160;</td><td class="mdescRight">A function similar to std::transform but returning a transwarp task for deferred, possibly asynchronous execution. This function creates a graph with std::distance(first1, last1) root tasks. Overload for automatic scheduling by passing an executor. <br/></td></tr>
 <tr class="separator:a69cbe887b76500ba89918fece72688a4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="var-members"></a>

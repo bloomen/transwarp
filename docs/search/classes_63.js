@@ -18,7 +18,7 @@ var searchData=
   ['call_5fimpl_5fvector_3c_20transwarp_3a_3await_5ftype_20_3e',['call_impl_vector&lt; transwarp::wait_type &gt;',['../structtranswarp_1_1detail_1_1call__impl__vector_3_01transwarp_1_1wait__type_01_4.html',1,'transwarp::detail']]],
   ['cancel_5fvisitor',['cancel_visitor',['../structtranswarp_1_1detail_1_1cancel__visitor.html',1,'transwarp::detail']]],
   ['circular_5fbuffer',['circular_buffer',['../classtranswarp_1_1detail_1_1circular__buffer.html',1,'transwarp::detail']]],
-  ['circular_5fbuffer_3c_20std_3a_3ashared_5fptr_3c_20transwarp_3a_3atranswarp_3a_3anode_20_3e_20_3e',['circular_buffer&lt; std::shared_ptr&lt; transwarp::transwarp::node &gt; &gt;',['../classtranswarp_1_1detail_1_1circular__buffer.html',1,'transwarp::detail']]],
+  ['circular_5fbuffer_3c_20const_20transwarp_3a_3atranswarp_3a_3aitask_20_2a_20_3e',['circular_buffer&lt; const transwarp::transwarp::itask * &gt;',['../classtranswarp_1_1detail_1_1circular__buffer.html',1,'transwarp::detail']]],
   ['consume_5fany_5ftype',['consume_any_type',['../structtranswarp_1_1consume__any__type.html',1,'transwarp']]],
   ['consume_5ftype',['consume_type',['../structtranswarp_1_1consume__type.html',1,'transwarp']]],
   ['control_5ferror',['control_error',['../classtranswarp_1_1control__error.html',1,'transwarp']]]

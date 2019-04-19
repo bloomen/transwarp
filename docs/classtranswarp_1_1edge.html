@@ -94,16 +94,16 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 </div><!--header-->
 <div class="contents">
 
-<p>An edge between two nodes.  
+<p>An edge between two tasks.  
  <a href="classtranswarp_1_1edge.html#details">More...</a></p>
 
 <p><code>#include &lt;<a class="el" href="transwarp_8h_source.html">transwarp.h</a>&gt;</code></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:af89fc3329748cd3403b5d826be29425b"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af89fc3329748cd3403b5d826be29425b"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>edge</b> (std::shared_ptr&lt; <a class="el" href="classtranswarp_1_1node.html">transwarp::node</a> &gt; <a class="el" href="classtranswarp_1_1edge.html#a71ebd16072eac877aae1d80d12b9d18a">parent</a>, std::shared_ptr&lt; <a class="el" href="classtranswarp_1_1node.html">transwarp::node</a> &gt; <a class="el" href="classtranswarp_1_1edge.html#abd4defd213ae8e41cdd15984a1e8c5ff">child</a>) noexcept</td></tr>
-<tr class="separator:af89fc3329748cd3403b5d826be29425b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab2a8795236c8f4b4265bcab32f9af126"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ab2a8795236c8f4b4265bcab32f9af126"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>edge</b> (const <a class="el" href="classtranswarp_1_1itask.html">transwarp::itask</a> &amp;<a class="el" href="classtranswarp_1_1edge.html#af84c2f3822dd01972ace7e66666ca52c">parent</a>, const <a class="el" href="classtranswarp_1_1itask.html">transwarp::itask</a> &amp;<a class="el" href="classtranswarp_1_1edge.html#a574e9ad5294662c2a2e364a9c5c38cfa">child</a>) noexcept</td></tr>
+<tr class="separator:ab2a8795236c8f4b4265bcab32f9af126"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8a14972d319938542d09389a528b2efe"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a8a14972d319938542d09389a528b2efe"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>edge</b> (const <a class="el" href="classtranswarp_1_1edge.html">edge</a> &amp;)=default</td></tr>
 <tr class="separator:a8a14972d319938542d09389a528b2efe"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -116,19 +116,17 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:aee2af81b808d121df0c4861c16ec865a"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aee2af81b808d121df0c4861c16ec865a"></a>
 <a class="el" href="classtranswarp_1_1edge.html">edge</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>operator=</b> (<a class="el" href="classtranswarp_1_1edge.html">edge</a> &amp;&amp;)=default</td></tr>
 <tr class="separator:aee2af81b808d121df0c4861c16ec865a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a71ebd16072eac877aae1d80d12b9d18a"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a71ebd16072eac877aae1d80d12b9d18a"></a>
-const std::shared_ptr<br class="typebreak"/>
-&lt; <a class="el" href="classtranswarp_1_1node.html">transwarp::node</a> &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1edge.html#a71ebd16072eac877aae1d80d12b9d18a">parent</a> () const noexcept</td></tr>
-<tr class="memdesc:a71ebd16072eac877aae1d80d12b9d18a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the parent node. <br/></td></tr>
-<tr class="separator:a71ebd16072eac877aae1d80d12b9d18a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:abd4defd213ae8e41cdd15984a1e8c5ff"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="abd4defd213ae8e41cdd15984a1e8c5ff"></a>
-const std::shared_ptr<br class="typebreak"/>
-&lt; <a class="el" href="classtranswarp_1_1node.html">transwarp::node</a> &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1edge.html#abd4defd213ae8e41cdd15984a1e8c5ff">child</a> () const noexcept</td></tr>
-<tr class="memdesc:abd4defd213ae8e41cdd15984a1e8c5ff"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the child node. <br/></td></tr>
-<tr class="separator:abd4defd213ae8e41cdd15984a1e8c5ff"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af84c2f3822dd01972ace7e66666ca52c"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af84c2f3822dd01972ace7e66666ca52c"></a>
+const <a class="el" href="classtranswarp_1_1itask.html">transwarp::itask</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1edge.html#af84c2f3822dd01972ace7e66666ca52c">parent</a> () const noexcept</td></tr>
+<tr class="memdesc:af84c2f3822dd01972ace7e66666ca52c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the parent task. <br/></td></tr>
+<tr class="separator:af84c2f3822dd01972ace7e66666ca52c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a574e9ad5294662c2a2e364a9c5c38cfa"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a574e9ad5294662c2a2e364a9c5c38cfa"></a>
+const <a class="el" href="classtranswarp_1_1itask.html">transwarp::itask</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1edge.html#a574e9ad5294662c2a2e364a9c5c38cfa">child</a> () const noexcept</td></tr>
+<tr class="memdesc:a574e9ad5294662c2a2e364a9c5c38cfa"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the child task. <br/></td></tr>
+<tr class="separator:a574e9ad5294662c2a2e364a9c5c38cfa"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p>An edge between two nodes. </p>
+<div class="textblock"><p>An edge between two tasks. </p>
 </div><hr/>The documentation for this class was generated from the following file:<ul>
 <li>src/<a class="el" href="transwarp_8h_source.html">transwarp.h</a></li>
 </ul>

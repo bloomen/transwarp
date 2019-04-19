@@ -110,9 +110,9 @@ Inheritance diagram for transwarp::detail::runner&lt; ResultType, TaskType, Task
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a0878fc577afc91d29804600513b4a6ea"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a0878fc577afc91d29804600513b4a6ea"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>runner</b> (std::size_t node_id, const std::weak_ptr&lt; Task &gt; &amp;<a class="el" href="classtranswarp_1_1task.html">task</a>, const <a class="el" href="namespacetranswarp.html#a080c99818d36a4878e67e45363656286">transwarp::decay_t</a>&lt; Parents &gt; &amp;<a class="el" href="structtranswarp_1_1detail_1_1parents.html">parents</a>)</td></tr>
-<tr class="separator:a0878fc577afc91d29804600513b4a6ea"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0eb1193d64bde640ed7ac81a2c98e691"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a0eb1193d64bde640ed7ac81a2c98e691"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>runner</b> (std::size_t task_id, const std::weak_ptr&lt; Task &gt; &amp;<a class="el" href="classtranswarp_1_1task.html">task</a>, const <a class="el" href="namespacetranswarp.html#a080c99818d36a4878e67e45363656286">transwarp::decay_t</a>&lt; Parents &gt; &amp;<a class="el" href="structtranswarp_1_1detail_1_1parents.html">parents</a>)</td></tr>
+<tr class="separator:a0eb1193d64bde640ed7ac81a2c98e691"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aed09a8475b42ddfdc3068c47ac94a6f2"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aed09a8475b42ddfdc3068c47ac94a6f2"></a>
 std::future&lt; ResultType &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>future</b> ()</td></tr>
 <tr class="separator:aed09a8475b42ddfdc3068c47ac94a6f2"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -123,10 +123,10 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>operator()</b> ()</td
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="inherited"></a>
 Additional Inherited Members</h2></td></tr>
 <tr class="inherit_header pro_methods_classtranswarp_1_1detail_1_1base__runner"><td colspan="2" onclick="javascript:toggleInherit('pro_methods_classtranswarp_1_1detail_1_1base__runner')"><img src="closed.png" alt="-"/>&#160;Protected Member Functions inherited from <a class="el" href="classtranswarp_1_1detail_1_1base__runner.html">transwarp::detail::base_runner&lt; ResultType, TaskType &gt;</a></td></tr>
-<tr class="memitem:a73dd49421c6c0ce83e084b67d8dbbf18 inherit pro_methods_classtranswarp_1_1detail_1_1base__runner"><td class="memTemplParams" colspan="2"><a class="anchor" id="a73dd49421c6c0ce83e084b67d8dbbf18"></a>
+<tr class="memitem:a108004f6248680681dbe32c17eab6e4f inherit pro_methods_classtranswarp_1_1detail_1_1base__runner"><td class="memTemplParams" colspan="2"><a class="anchor" id="a108004f6248680681dbe32c17eab6e4f"></a>
 template&lt;typename Task , typename Parents &gt; </td></tr>
-<tr class="memitem:a73dd49421c6c0ce83e084b67d8dbbf18 inherit pro_methods_classtranswarp_1_1detail_1_1base__runner"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>call</b> (std::size_t node_id, const std::weak_ptr&lt; Task &gt; &amp;<a class="el" href="classtranswarp_1_1task.html">task</a>, const Parents &amp;<a class="el" href="structtranswarp_1_1detail_1_1parents.html">parents</a>)</td></tr>
-<tr class="separator:a73dd49421c6c0ce83e084b67d8dbbf18 inherit pro_methods_classtranswarp_1_1detail_1_1base__runner"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a108004f6248680681dbe32c17eab6e4f inherit pro_methods_classtranswarp_1_1detail_1_1base__runner"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>call</b> (std::size_t task_id, const std::weak_ptr&lt; Task &gt; &amp;<a class="el" href="classtranswarp_1_1task.html">task</a>, const Parents &amp;<a class="el" href="structtranswarp_1_1detail_1_1parents.html">parents</a>)</td></tr>
+<tr class="separator:a108004f6248680681dbe32c17eab6e4f inherit pro_methods_classtranswarp_1_1detail_1_1base__runner"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header pro_attribs_classtranswarp_1_1detail_1_1base__runner"><td colspan="2" onclick="javascript:toggleInherit('pro_attribs_classtranswarp_1_1detail_1_1base__runner')"><img src="closed.png" alt="-"/>&#160;Protected Attributes inherited from <a class="el" href="classtranswarp_1_1detail_1_1base__runner.html">transwarp::detail::base_runner&lt; ResultType, TaskType &gt;</a></td></tr>
 <tr class="memitem:a43e0a856305bcf698a6f161ae2714f42 inherit pro_attribs_classtranswarp_1_1detail_1_1base__runner"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a43e0a856305bcf698a6f161ae2714f42"></a>
 std::promise&lt; ResultType &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>promise_</b></td></tr>
