@@ -362,6 +362,9 @@ template<typename T>
 using result_t = std::result_of_t<decltype(&std::shared_future<T>::get)(std::shared_future<T>)>;
 
 
+/// Detail namespace for internal functionality only
+namespace detail {
+
 /// Clones a task
 template<typename TaskType>
 std::shared_ptr<TaskType> clone_task(std::unordered_map<std::shared_ptr<transwarp::itask>, std::shared_ptr<transwarp::itask>>& task_cache, const std::shared_ptr<TaskType>& t) {
@@ -375,6 +378,8 @@ std::shared_ptr<TaskType> clone_task(std::unordered_map<std::shared_ptr<transwar
         return std::move(cloned_task);
     }
 }
+
+} // detail
 
 
 /// The task class
@@ -397,7 +402,7 @@ public:
 
 private:
     template<typename T>
-    friend std::shared_ptr<T> clone_task(std::unordered_map<std::shared_ptr<transwarp::itask>, std::shared_ptr<transwarp::itask>>& task_cache, const std::shared_ptr<T>& t);
+    friend std::shared_ptr<T> detail::clone_task(std::unordered_map<std::shared_ptr<transwarp::itask>, std::shared_ptr<transwarp::itask>>& task_cache, const std::shared_ptr<T>& t);
 
     virtual std::shared_ptr<transwarp::task<result_type>> clone_impl(std::unordered_map<std::shared_ptr<transwarp::itask>, std::shared_ptr<transwarp::itask>>& task_cache) const = 0;
 };
@@ -421,7 +426,7 @@ public:
 
 private:
     template<typename T>
-    friend std::shared_ptr<T> clone_task(std::unordered_map<std::shared_ptr<transwarp::itask>, std::shared_ptr<transwarp::itask>>& task_cache, const std::shared_ptr<T>& t);
+    friend std::shared_ptr<T> detail::clone_task(std::unordered_map<std::shared_ptr<transwarp::itask>, std::shared_ptr<transwarp::itask>>& task_cache, const std::shared_ptr<T>& t);
 
     virtual std::shared_ptr<transwarp::task<result_type>> clone_impl(std::unordered_map<std::shared_ptr<transwarp::itask>, std::shared_ptr<transwarp::itask>>& task_cache) const = 0;
 };
@@ -445,7 +450,7 @@ public:
 
 private:
     template<typename T>
-    friend std::shared_ptr<T> clone_task(std::unordered_map<std::shared_ptr<transwarp::itask>, std::shared_ptr<transwarp::itask>>& task_cache, const std::shared_ptr<T>& t);
+    friend std::shared_ptr<T> detail::clone_task(std::unordered_map<std::shared_ptr<transwarp::itask>, std::shared_ptr<transwarp::itask>>& task_cache, const std::shared_ptr<T>& t);
 
     virtual std::shared_ptr<transwarp::task<result_type>> clone_impl(std::unordered_map<std::shared_ptr<transwarp::itask>, std::shared_ptr<transwarp::itask>>& task_cache) const = 0;
 };
@@ -1298,7 +1303,7 @@ struct parents {
         type cloned = obj;
         transwarp::detail::apply_to_each(
             [&task_cache](auto& t) {
-                t = clone_task(task_cache, t);
+                t = detail::clone_task(task_cache, t);
             }, cloned);
         return cloned;
     }
@@ -1322,7 +1327,7 @@ struct parents<std::vector<std::shared_ptr<transwarp::task<ParentResultType>>>> 
     static type clone(std::unordered_map<std::shared_ptr<transwarp::itask>, std::shared_ptr<transwarp::itask>>& task_cache, const type& obj) {
         type cloned = obj;
         for (auto& t : cloned) {
-            t = clone_task(task_cache, t);
+            t = detail::clone_task(task_cache, t);
         }
         return cloned;
     }
