@@ -956,7 +956,7 @@ struct edges_visitor {
 
     void operator()(const transwarp::itask& task) {
         for (const transwarp::itask* parent : task.parents()) {
-            edges_.emplace_back(static_cast<const transwarp::itask&>(*parent), task);
+            edges_.emplace_back(*parent, task);
         }
     }
 
