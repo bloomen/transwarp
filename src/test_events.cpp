@@ -225,3 +225,12 @@ TEST_CASE("after_custom_data_set_event") {
     REQUIRE(1 == l->events.size());
     REQUIRE(tw::event_type::after_custom_data_set == l->events[0]);
 }
+
+TEST_CASE("after_custom_data_set_event_for_value_task") {
+    auto t = tw::make_value_task(0);
+    auto l = std::make_shared<mock_listener>();
+    t->add_listener(l);
+    t->set_custom_data(std::make_any<int>(42));
+    REQUIRE(1 == l->events.size());
+    REQUIRE(tw::event_type::after_custom_data_set == l->events[0]);
+}
