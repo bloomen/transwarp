@@ -34,13 +34,13 @@ namespace transwarp {
 
 /// The possible task types
 enum class task_type {
-    root,        ///< The task has no parents
-    accept,      ///< The task's functor accepts all parent futures
-    accept_any,  ///< The task's functor accepts the first parent future that becomes ready
-    consume,     ///< The task's functor consumes all parent results
+    root, ///< The task has no parents
+    accept, ///< The task's functor accepts all parent futures
+    accept_any, ///< The task's functor accepts the first parent future that becomes ready
+    consume, ///< The task's functor consumes all parent results
     consume_any, ///< The task's functor consumes the first parent result that becomes ready
-    wait,        ///< The task's functor takes no arguments but waits for all parents to finish
-    wait_any,    ///< The task's functor takes no arguments but waits for the first parent to finish
+    wait, ///< The task's functor takes no arguments but waits for all parents to finish
+    wait_any, ///< The task's functor takes no arguments but waits for the first parent to finish
 };
 
 
@@ -152,10 +152,11 @@ public:
 /// The task events that can be subscribed to using the listener interface
 enum class event_type {
     before_scheduled, ///< Just before a task is scheduled (handle_event called on thread of caller to schedule())
-    before_started,   ///< Just before a task starts running (handle_event called on thread that task is run on)
-    before_invoked,   ///< Just before a task's functor is invoked (handle_event called on thread that task is run on)
-    after_finished,   ///< Just after a task has finished running (handle_event called on thread that task is run on)
-    after_canceled,   ///< Just after a task was canceled (handle_event called on thread that task is run on)
+    before_started, ///< Just before a task starts running (handle_event called on thread that task is run on)
+    before_invoked, ///< Just before a task's functor is invoked (handle_event called on thread that task is run on)
+    after_finished, ///< Just after a task has finished running (handle_event called on thread that task is run on)
+    after_canceled, ///< Just after a task was canceled (handle_event called on thread that task is run on)
+    after_custom_data_set, ///< Just after custom data are assigned to a task
     count,
 };
 
@@ -176,7 +177,7 @@ public:
 /// An edge between two tasks
 class edge {
 public:
-    edge(const transwarp::itask& parent, const transwarp::itask& child) noexcept
+    edge(transwarp::itask& parent, transwarp::itask& child) noexcept
     : parent_{parent}, child_{child}
     {}
 
@@ -191,14 +192,24 @@ public:
         return parent_;
     }
 
+    /// Returns the parent task
+    transwarp::itask& parent() noexcept {
+        return parent_;
+    }
+
     /// Returns the child task
     const transwarp::itask& child() const noexcept {
         return child_;
     }
 
+    /// Returns the child task
+    transwarp::itask& child() noexcept {
+        return child_;
+    }
+
 private:
-    const transwarp::itask& parent_;
-    const transwarp::itask& child_;
+    transwarp::itask& parent_;
+    transwarp::itask& child_;
 };
 
 
@@ -460,7 +471,7 @@ private:
 namespace detail {
 
 template<typename F>
-void assign_task_if(F&, const transwarp::itask&) noexcept;
+void assign_task_if(F&, transwarp::itask&) noexcept;
 
 } // detail
 
@@ -479,19 +490,24 @@ protected:
         return *transwarp_task_;
     }
 
+    /// The associated task
+    transwarp::itask& transwarp_task() noexcept {
+        return *transwarp_task_;
+    }
+
     /// If the associated task is canceled then this will throw transwarp::task_canceled
     /// which will stop the task while it's running
     void transwarp_cancel_point() const {
         if (transwarp_task_->canceled()) {
-            throw transwarp::task_canceled(std::to_string(transwarp_task_->id()));
+            throw transwarp::task_canceled{std::to_string(transwarp_task_->id())};
         }
     }
 
 private:
     template<typename F>
-    friend void transwarp::detail::assign_task_if(F&, const transwarp::itask&) noexcept;
+    friend void transwarp::detail::assign_task_if(F&, transwarp::itask&) noexcept;
 
-    const transwarp::itask* transwarp_task_{};
+    transwarp::itask* transwarp_task_{};
 };
 
 
@@ -954,8 +970,8 @@ struct edges_visitor {
     explicit edges_visitor(std::vector<transwarp::edge>& edges) noexcept
     : edges_{edges} {}
 
-    void operator()(const transwarp::itask& task) {
-        for (const transwarp::itask* parent : task.parents()) {
+    void operator()(transwarp::itask& task) {
+        for (transwarp::itask* parent : task.parents()) {
             edges_.emplace_back(*parent, task);
         }
     }
@@ -1258,7 +1274,7 @@ using functor_result_t = typename transwarp::detail::functor_result<TaskType, Fu
 
 /// Assigns the task to the given functor if the functor is a subclass of transwarp::functor
 template<typename Functor>
-void assign_task_if(Functor& functor, const transwarp::itask& task) noexcept {
+void assign_task_if(Functor& functor, transwarp::itask& task) noexcept {
     if constexpr (std::is_base_of_v<transwarp::functor, Functor>) {
         functor.transwarp_task_ = &task;
     }
@@ -1701,7 +1717,7 @@ public:
     void set_executor(std::shared_ptr<transwarp::executor> executor) override {
         ensure_task_not_running();
         if (!executor) {
-            throw transwarp::invalid_parameter("executor pointer");
+            throw transwarp::invalid_parameter{"executor pointer"};
         }
         executor_ = std::move(executor);
     }
@@ -1763,6 +1779,7 @@ public:
             throw transwarp::invalid_parameter{"custom data"};
         }
         custom_data_ = std::move(custom_data);
+        raise_event(transwarp::event_type::after_custom_data_set);
     }
 
     /// Assigns custom data to all tasks. transwarp will not directly use this.

@@ -68,7 +68,7 @@ TEST_CASE("scheduled_event") {
     auto l = std::make_shared<mock_listener>();
     t->add_listener(l);
     t->schedule();
-    REQUIRE(n_events-1 == l->events.size());
+    REQUIRE(n_events-2 == l->events.size());
     REQUIRE(tw::event_type::before_scheduled == l->events[0]);
 }
 
@@ -78,18 +78,18 @@ void test_finished_event(Functor functor) {
     auto l = std::make_shared<mock_listener>();
     t->add_listener(l);
     t->schedule();
-    REQUIRE(n_events-1 == l->events.size());
-    REQUIRE(tw::event_type::after_finished == l->events[n_events-2]);
+    REQUIRE(n_events-2 == l->events.size());
+    REQUIRE(tw::event_type::after_finished == l->events[n_events-3]);
     l->events.clear();
     auto exec = std::make_shared<tw::sequential>();
     t->schedule(*exec);
-    REQUIRE(n_events-1 == l->events.size());
-    REQUIRE(tw::event_type::after_finished == l->events[n_events-2]);
+    REQUIRE(n_events-2 == l->events.size());
+    REQUIRE(tw::event_type::after_finished == l->events[n_events-3]);
     l->events.clear();
     t->set_executor(exec);
     t->schedule();
-    REQUIRE(n_events-1 == l->events.size());
-    REQUIRE(tw::event_type::after_finished == l->events[n_events-2]);
+    REQUIRE(n_events-2 == l->events.size());
+    REQUIRE(tw::event_type::after_finished == l->events[n_events-3]);
 }
 
 TEST_CASE("finished_event") {
@@ -106,17 +106,17 @@ void test_started_event(Functor functor) {
     auto l = std::make_shared<mock_listener>();
     t->add_listener(l);
     t->schedule();
-    REQUIRE(n_events-1 == l->events.size());
+    REQUIRE(n_events-2 == l->events.size());
     REQUIRE(tw::event_type::before_started == l->events[1]);
     l->events.clear();
     auto exec = std::make_shared<tw::sequential>();
     t->schedule(*exec);
-    REQUIRE(n_events-1 == l->events.size());
+    REQUIRE(n_events-2 == l->events.size());
     REQUIRE(tw::event_type::before_started == l->events[1]);
     l->events.clear();
     t->set_executor(exec);
     t->schedule();
-    REQUIRE(n_events-1 == l->events.size());
+    REQUIRE(n_events-2 == l->events.size());
     REQUIRE(tw::event_type::before_started == l->events[1]);
 }
 
@@ -133,7 +133,7 @@ TEST_CASE("canceled_event") {
     auto l = std::make_shared<mock_listener>();
     t->add_listener(l);
     t->schedule();
-    REQUIRE(n_events == l->events.size());
+    REQUIRE(n_events-1 == l->events.size());
     REQUIRE(tw::event_type::before_scheduled == l->events[0]);
     REQUIRE(tw::event_type::before_started == l->events[1]);
     REQUIRE(tw::event_type::before_invoked == l->events[2]);
@@ -195,17 +195,17 @@ void test_invoked_event(Functor functor) {
     auto l = std::make_shared<mock_listener>();
     t->add_listener(l);
     t->schedule();
-    REQUIRE(n_events-1 == l->events.size());
+    REQUIRE(n_events-2 == l->events.size());
     REQUIRE(tw::event_type::before_invoked == l->events[2]);
     l->events.clear();
     auto exec = std::make_shared<tw::sequential>();
     t->schedule(*exec);
-    REQUIRE(n_events-1 == l->events.size());
+    REQUIRE(n_events-2 == l->events.size());
     REQUIRE(tw::event_type::before_invoked == l->events[2]);
     l->events.clear();
     t->set_executor(exec);
     t->schedule();
-    REQUIRE(n_events-1 == l->events.size());
+    REQUIRE(n_events-2 == l->events.size());
     REQUIRE(tw::event_type::before_invoked == l->events[2]);
 }
 
@@ -215,4 +215,13 @@ TEST_CASE("invoked_event") {
 
 TEST_CASE("invoked_event_with_exception") {
     test_invoked_event([]{ throw std::bad_alloc{}; });
+}
+
+TEST_CASE("after_custom_data_set_event") {
+    auto t = tw::make_task(tw::root, []{});
+    auto l = std::make_shared<mock_listener>();
+    t->add_listener(l);
+    t->set_custom_data(std::make_any<int>(42));
+    REQUIRE(1 == l->events.size());
+    REQUIRE(tw::event_type::after_custom_data_set == l->events[0]);
 }
