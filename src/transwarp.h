@@ -152,11 +152,12 @@ public:
 /// The task events that can be subscribed to using the listener interface
 enum class event_type {
     before_scheduled, ///< Just before a task is scheduled (handle_event called on thread of caller to schedule())
+    after_future_changed, ///< Just after the task's future was changed (handle_event called on thread that changed the task's future)
     before_started, ///< Just before a task starts running (handle_event called on thread that task is run on)
     before_invoked, ///< Just before a task's functor is invoked (handle_event called on thread that task is run on)
     after_finished, ///< Just after a task has finished running (handle_event called on thread that task is run on)
     after_canceled, ///< Just after a task was canceled (handle_event called on thread that task is run on)
-    after_custom_data_set, ///< Just after custom data is assigned to a task (handle_event called on thread that `set_custom_data` is called on)
+    after_custom_data_set, ///< Just after custom data was assigned (handle_event called on thread that `set_custom_data` is called on)
     count,
 };
 
@@ -1980,6 +1981,7 @@ public:
         this->ensure_task_not_running();
         this->future_ = transwarp::detail::make_future_with_exception<result_type>(exception);
         schedule_mode_ = false;
+        this->raise_event(transwarp::event_type::after_future_changed);
     }
 
     /// Returns whether the task was scheduled and not reset afterwards.
@@ -2013,6 +2015,7 @@ public:
         this->future_ = std::shared_future<result_type>{};
         cancel(false);
         schedule_mode_ = true;
+        this->raise_event(transwarp::event_type::after_future_changed);
     }
 
     /// Resets all tasks in the graph
@@ -2211,6 +2214,7 @@ protected:
             std::shared_ptr<runner_t> runner = std::shared_ptr<runner_t>{new runner_t{this->id(), self, parents_}};
             this->raise_event(transwarp::event_type::before_scheduled);
             this->future_ = runner->future();
+            this->raise_event(transwarp::event_type::after_future_changed);
             if (this->executor_) {
                 this->executor_->execute([runner]{ (*runner)(); }, *this);
             } else if (executor) {
@@ -2285,6 +2289,7 @@ public:
         this->ensure_task_not_running();
         this->future_ = transwarp::detail::make_future_with_value<result_type>(value);
         this->schedule_mode_ = false;
+        this->raise_event(transwarp::event_type::after_future_changed);
     }
 
     /// Assigns a value to this task. Scheduling will have no effect after a value
@@ -2293,6 +2298,7 @@ public:
         this->ensure_task_not_running();
         this->future_ = transwarp::detail::make_future_with_value<result_type>(std::move(value));
         this->schedule_mode_ = false;
+        this->raise_event(transwarp::event_type::after_future_changed);
     }
 
     /// Returns the result of this task. Throws any exceptions that the underlying
@@ -2335,6 +2341,7 @@ public:
         this->ensure_task_not_running();
         this->future_ = transwarp::detail::make_future_with_value<result_type>(value);
         this->schedule_mode_ = false;
+        this->raise_event(transwarp::event_type::after_future_changed);
     }
 
     /// Returns the result of this task. Throws any exceptions that the underlying
@@ -2377,6 +2384,7 @@ public:
         this->ensure_task_not_running();
         this->future_ = transwarp::detail::make_ready_future();
         this->schedule_mode_ = false;
+        this->raise_event(transwarp::event_type::after_future_changed);
     }
 
     /// Blocks until the task finishes. Throws any exceptions that the underlying
@@ -2623,16 +2631,19 @@ public:
     /// Assigns a value to this task
     void set_value(const transwarp::decay_t<result_type>& value) override {
         this->future_ = transwarp::detail::make_future_with_value<result_type>(value);
+        this->raise_event(transwarp::event_type::after_future_changed);
     }
 
     /// Assigns a value to this task
     void set_value(transwarp::decay_t<result_type>&& value) override {
         this->future_ = transwarp::detail::make_future_with_value<result_type>(std::move(value));
+        this->raise_event(transwarp::event_type::after_future_changed);
     };
 
     /// Assigns an exception to this task
     void set_exception(std::exception_ptr exception) override {
         this->future_ = transwarp::detail::make_future_with_exception<result_type>(exception);
+        this->raise_event(transwarp::event_type::after_future_changed);
     }
 
     /// Returns the value of this task. Throws an exception if this task has an exception assigned to it
