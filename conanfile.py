@@ -5,7 +5,7 @@ import os
 
 class TranswarpConan(ConanFile):
     name = "transwarp"
-    version = "2.0.0"
+    version = "2.1.0"
     description = "Conan package for bloomen/transwarp."
     url = "https://github.com/bloomen/transwarp"
     license = "MIT"
@@ -20,4 +20,4 @@ class TranswarpConan(ConanFile):
 
     def package(self):
         include_folder = "%s-%s/src" % (self.name, self.version)
-        self.copy("*.h", dst="include", src=include_folder)
+        self.copy("transwarp.h", dst="include", src=include_folder)
