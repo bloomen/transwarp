@@ -86,13 +86,13 @@ In the following we will use `tw` as a namespace alias for `transwarp`.
 
 transwarp supports seven different task types:
 ```cpp
-root,        // The task has no parents
-accept,      // The task's functor accepts all parent futures
-accept_any,  // The task's functor accepts the first parent future that becomes ready
-consume,     // The task's functor consumes all parent results
+root, // The task has no parents
+accept, // The task's functor accepts all parent futures
+accept_any, // The task's functor accepts the first parent future that becomes ready
+consume, // The task's functor consumes all parent results
 consume_any, // The task's functor consumes the first parent result that becomes ready
-wait,        // The task's functor takes no arguments but waits for all parents to finish
-wait_any,    // The task's functor takes no arguments but waits for the first parent to finish
+wait, // The task's functor takes no arguments but waits for all parents to finish
+wait_any, // The task's functor takes no arguments but waits for the first parent to finish
 ```
 The task type is passed as the first parameter to `make_task`, e.g., to create 
 a `consume` task simply do this:
@@ -230,7 +230,7 @@ public:
     virtual std::string name() const = 0;
     
     // Only ever called on the thread of the caller to schedule()
-    virtual void execute(const std::function<void()>& functor, const tw::itask& task) = 0;
+    virtual void execute(const std::function<void()>& functor, tw::itask& task) = 0;
 };
 
 ``` 
@@ -268,6 +268,9 @@ protected:
     // The associated task
     const tw::itask& transwarp_task() const noexcept;
 
+    // The associated task
+    tw::itask& transwarp_task() noexcept;
+
     // If the associated task is canceled then this will throw transwarp::task_canceled
     // which will stop the task while it's running
     void transwarp_cancel_point() const;
@@ -293,10 +296,11 @@ are enumerated in the `event_type` enum:
 ```cpp
 enum class event_type {
     before_scheduled, // Just before a task is scheduled
-    before_started,   // Just before a task starts running
-    before_invoked,   // Just before a task's functor is invoked
-    after_finished,   // Just after a task has finished running
-    after_canceled,   // Just after a task was canceled
+    before_started, // Just before a task starts running
+    before_invoked, // Just before a task's functor is invoked
+    after_finished, // Just after a task has finished running
+    after_canceled, // Just after a task was canceled
+    after_custom_data_set, // Just after custom data is assigned
 }
 ```
 Listeners are created by sub-classing from the `listener` interface:
@@ -306,7 +310,7 @@ public:
     virtual ~listener() = default;
 
     // This may be called from arbitrary threads depending on the event type
-    virtual void handle_event(tw::event_type event, const tw::itask& task) = 0;
+    virtual void handle_event(tw::event_type event, tw::itask& task) = 0;
 };
 ```
 A listener can then be passed to the `add_listener` functions of a task
