@@ -2,7 +2,8 @@
 
 - added new event: after_custom_data_set
 - make members of `functor` and `edge` mutable and add corresponding accessors
-- remove `const` from the task parameter of the `listener` and `executor` interfaces 
+- remove `const` from the task parameter of the `listener` and `executor` interfaces
+- refactored common stuff between `task_impl` and `value_task` into a new base class 
 
 2.0.0
 
