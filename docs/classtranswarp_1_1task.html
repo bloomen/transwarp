@@ -107,10 +107,11 @@ Inheritance diagram for transwarp::task&lt; ResultType &gt;:</div>
   <img src="classtranswarp_1_1task.png" usemap="#transwarp::task&lt; ResultType &gt;_map" alt=""/>
   <map id="transwarp::task&lt; ResultType &gt;_map" name="transwarp::task&lt; ResultType &gt;_map">
 <area href="classtranswarp_1_1itask.html" title="An interface for the task class. " alt="transwarp::itask" shape="rect" coords="500,0,990,24"/>
-<area href="classtranswarp_1_1detail_1_1task__impl__base.html" alt="transwarp::detail::task_impl_base&lt; ResultType, TaskType, Functor, ParentResults...&gt;" shape="rect" coords="0,112,490,136"/>
-<area href="classtranswarp_1_1detail_1_1task__impl__base.html" title="The base task class that contains the functionality that can be used with all result types (void and ..." alt="transwarp::detail::task_impl_base&lt; ResultType, TaskType, Functor, ParentResults &gt;" shape="rect" coords="500,112,990,136"/>
-<area href="classtranswarp_1_1value__task.html" title="A value task that stores a single value and doesn&#39;t require scheduling. Value tasks should be created..." alt="transwarp::value_task&lt; ResultType &gt;" shape="rect" coords="1000,112,1490,136"/>
-<area href="classtranswarp_1_1detail_1_1task__impl__proxy.html" title="A task proxy. " alt="transwarp::detail::task_impl_proxy&lt; ResultType, TaskType, Functor, ParentResults &gt;" shape="rect" coords="0,168,490,192"/>
+<area href="classtranswarp_1_1detail_1_1task__common.html" title="Common task functionality shared across task_impl and value_task " alt="transwarp::detail::task_common&lt; ResultType &gt;" shape="rect" coords="500,112,990,136"/>
+<area href="classtranswarp_1_1detail_1_1task__impl__base.html" alt="transwarp::detail::task_impl_base&lt; ResultType, TaskType, Functor, ParentResults...&gt;" shape="rect" coords="0,168,490,192"/>
+<area href="classtranswarp_1_1detail_1_1task__impl__base.html" title="The base task class that contains the functionality that can be used with all result types (void and ..." alt="transwarp::detail::task_impl_base&lt; ResultType, TaskType, Functor, ParentResults &gt;" shape="rect" coords="500,168,990,192"/>
+<area href="classtranswarp_1_1value__task.html" title="A value task that stores a single value and doesn&#39;t require scheduling. Value tasks should be created..." alt="transwarp::value_task&lt; ResultType &gt;" shape="rect" coords="1000,168,1490,192"/>
+<area href="classtranswarp_1_1detail_1_1task__impl__proxy.html" title="A task proxy. " alt="transwarp::detail::task_impl_proxy&lt; ResultType, TaskType, Functor, ParentResults &gt;" shape="rect" coords="0,224,490,248"/>
 </map>
  </div></div>
 <table class="memberdecls">
@@ -316,10 +317,10 @@ virtual std::vector<br class="typebreak"/>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="friends"></a>
 Friends</h2></td></tr>
-<tr class="memitem:a249d930595340558e8b75755ca3e34c7"><td class="memTemplParams" colspan="2"><a class="anchor" id="a249d930595340558e8b75755ca3e34c7"></a>
+<tr class="memitem:a78088c9339f66a4719ac7f91554f0a5e"><td class="memTemplParams" colspan="2"><a class="anchor" id="a78088c9339f66a4719ac7f91554f0a5e"></a>
 template&lt;typename T &gt; </td></tr>
-<tr class="memitem:a249d930595340558e8b75755ca3e34c7"><td class="memTemplItemLeft" align="right" valign="top">std::shared_ptr&lt; T &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><b>detail::clone_task</b> (std::unordered_map&lt; std::shared_ptr&lt; <a class="el" href="classtranswarp_1_1itask.html">transwarp::itask</a> &gt;, std::shared_ptr&lt; <a class="el" href="classtranswarp_1_1itask.html">transwarp::itask</a> &gt;&gt; &amp;task_cache, const std::shared_ptr&lt; T &gt; &amp;t)</td></tr>
-<tr class="separator:a249d930595340558e8b75755ca3e34c7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a78088c9339f66a4719ac7f91554f0a5e"><td class="memTemplItemLeft" align="right" valign="top">std::shared_ptr&lt; T &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><b>transwarp::detail::clone_task</b> (std::unordered_map&lt; std::shared_ptr&lt; <a class="el" href="classtranswarp_1_1itask.html">transwarp::itask</a> &gt;, std::shared_ptr&lt; <a class="el" href="classtranswarp_1_1itask.html">transwarp::itask</a> &gt;&gt; &amp;task_cache, const std::shared_ptr&lt; T &gt; &amp;t)</td></tr>
+<tr class="separator:a78088c9339f66a4719ac7f91554f0a5e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="inherited"></a>
 Additional Inherited Members</h2></td></tr>

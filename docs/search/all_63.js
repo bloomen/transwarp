@@ -24,8 +24,8 @@ var searchData=
   ['cancel_5fvisitor',['cancel_visitor',['../structtranswarp_1_1detail_1_1cancel__visitor.html',1,'transwarp::detail']]],
   ['canceled',['canceled',['../classtranswarp_1_1detail_1_1task__impl__base.html#aa9b77c211fc94478608659d104928e92',1,'transwarp::detail::task_impl_base::canceled()'],['../classtranswarp_1_1value__task.html#af201815f20dc92ea45ba223ed442f668',1,'transwarp::value_task::canceled()']]],
   ['capacity',['capacity',['../classtranswarp_1_1detail_1_1circular__buffer.html#a3ffe6d8f29a7397b5f73cd8da1aa78dc',1,'transwarp::detail::circular_buffer']]],
-  ['check_5flistener',['check_listener',['../classtranswarp_1_1detail_1_1task__impl__base.html#ad27f43cbf62b17350930725af5d01981',1,'transwarp::detail::task_impl_base']]],
-  ['child',['child',['../classtranswarp_1_1edge.html#a574e9ad5294662c2a2e364a9c5c38cfa',1,'transwarp::edge']]],
+  ['check_5flistener',['check_listener',['../classtranswarp_1_1detail_1_1task__common.html#ad8fc32106a2eef7afa841bdf81ab4900',1,'transwarp::detail::task_common']]],
+  ['child',['child',['../classtranswarp_1_1edge.html#a574e9ad5294662c2a2e364a9c5c38cfa',1,'transwarp::edge::child() const noexcept'],['../classtranswarp_1_1edge.html#a52a0c3636478fdc4ddf86bb18464f59d',1,'transwarp::edge::child() noexcept']]],
   ['circular_5fbuffer',['circular_buffer',['../classtranswarp_1_1detail_1_1circular__buffer.html',1,'transwarp::detail']]],
   ['circular_5fbuffer',['circular_buffer',['../classtranswarp_1_1detail_1_1circular__buffer.html#a13fa676f234b0c1ecceb40977b2cc540',1,'transwarp::detail::circular_buffer']]],
   ['circular_5fbuffer_3c_20const_20transwarp_3a_3atranswarp_3a_3aitask_20_2a_20_3e',['circular_buffer&lt; const transwarp::transwarp::itask * &gt;',['../classtranswarp_1_1detail_1_1circular__buffer.html',1,'transwarp::detail']]],
@@ -36,5 +36,5 @@ var searchData=
   ['consume_5fany_5ftype',['consume_any_type',['../structtranswarp_1_1consume__any__type.html',1,'transwarp']]],
   ['consume_5ftype',['consume_type',['../structtranswarp_1_1consume__type.html',1,'transwarp']]],
   ['control_5ferror',['control_error',['../classtranswarp_1_1control__error.html',1,'transwarp']]],
-  ['custom_5fdata',['custom_data',['../classtranswarp_1_1detail_1_1task__impl__base.html#af3120a518436610f92cfe468c627b026',1,'transwarp::detail::task_impl_base::custom_data()'],['../classtranswarp_1_1value__task.html#ae5f1f70457d1d77fe69a7a78b8763ed6',1,'transwarp::value_task::custom_data()']]]
+  ['custom_5fdata',['custom_data',['../classtranswarp_1_1detail_1_1task__common.html#a4da9c70c95a00d6eaeafb97489020fd2',1,'transwarp::detail::task_common']]]
 ];

@@ -108,6 +108,7 @@ Inheritance diagram for transwarp::detail::task_impl_base&lt; ResultType, TaskTy
  <div class="center">
   <img src="classtranswarp_1_1detail_1_1task__impl__base.png" usemap="#transwarp::detail::task_impl_base&lt; ResultType, TaskType, Functor, ParentResults &gt;_map" alt=""/>
   <map id="transwarp::detail::task_impl_base&lt; ResultType, TaskType, Functor, ParentResults &gt;_map" name="transwarp::detail::task_impl_base&lt; ResultType, TaskType, Functor, ParentResults &gt;_map">
+<area href="classtranswarp_1_1detail_1_1task__common.html" title="Common task functionality shared across task_impl and value_task " alt="transwarp::detail::task_common&lt; ResultType &gt;" shape="rect" coords="0,112,580,136"/>
 <area href="classtranswarp_1_1task.html" title="The task class. " alt="transwarp::task&lt; ResultType &gt;" shape="rect" coords="0,56,580,80"/>
 <area href="classtranswarp_1_1itask.html" title="An interface for the task class. " alt="transwarp::itask" shape="rect" coords="0,0,580,24"/>
 </map>
@@ -123,6 +124,11 @@ using&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cla
 using&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1detail_1_1task__impl__base.html#a9ae1931585a8304aaa172c74d06bf8f3">result_type</a> = ResultType</td></tr>
 <tr class="memdesc:a9ae1931585a8304aaa172c74d06bf8f3"><td class="mdescLeft">&#160;</td><td class="mdescRight">The result type of this task. <br/></td></tr>
 <tr class="separator:a9ae1931585a8304aaa172c74d06bf8f3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="inherit_header pub_types_classtranswarp_1_1detail_1_1task__common"><td colspan="2" onclick="javascript:toggleInherit('pub_types_classtranswarp_1_1detail_1_1task__common')"><img src="closed.png" alt="-"/>&#160;Public Types inherited from <a class="el" href="classtranswarp_1_1detail_1_1task__common.html">transwarp::detail::task_common&lt; ResultType &gt;</a></td></tr>
+<tr class="memitem:a3a0e6f882a6dd86fa2e152a2aa595f90 inherit pub_types_classtranswarp_1_1detail_1_1task__common"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a3a0e6f882a6dd86fa2e152a2aa595f90"></a>
+using&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1detail_1_1task__common.html#a3a0e6f882a6dd86fa2e152a2aa595f90">result_type</a> = ResultType</td></tr>
+<tr class="memdesc:a3a0e6f882a6dd86fa2e152a2aa595f90 inherit pub_types_classtranswarp_1_1detail_1_1task__common"><td class="mdescLeft">&#160;</td><td class="mdescRight">The result type of this task. <br/></td></tr>
+<tr class="separator:a3a0e6f882a6dd86fa2e152a2aa595f90 inherit pub_types_classtranswarp_1_1detail_1_1task__common"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header pub_types_classtranswarp_1_1task"><td colspan="2" onclick="javascript:toggleInherit('pub_types_classtranswarp_1_1task')"><img src="closed.png" alt="-"/>&#160;Public Types inherited from <a class="el" href="classtranswarp_1_1task.html">transwarp::task&lt; ResultType &gt;</a></td></tr>
 <tr class="memitem:a0d87e00f84cccbaf99e9a9e3a68e8f33 inherit pub_types_classtranswarp_1_1task"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a0d87e00f84cccbaf99e9a9e3a68e8f33"></a>
 using&#160;</td><td class="memItemRight" valign="bottom"><b>result_type</b> = ResultType</td></tr>
@@ -134,10 +140,6 @@ Public Member Functions</h2></td></tr>
 void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1detail_1_1task__impl__base.html#afeef5dc7204a4706bd694b884389ea0f">finalize</a> () override</td></tr>
 <tr class="memdesc:afeef5dc7204a4706bd694b884389ea0f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Can be called to explicitly finalize this task making this task the terminal task in the graph. This is also done implicitly when calling, e.g., any of the *_all methods. It should normally not be necessary to call this method directly. <br/></td></tr>
 <tr class="separator:afeef5dc7204a4706bd694b884389ea0f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a176677fcf1fcf269d1cbc58eec184cc7"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a176677fcf1fcf269d1cbc58eec184cc7"></a>
-std::size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1detail_1_1task__impl__base.html#a176677fcf1fcf269d1cbc58eec184cc7">id</a> () const noexceptoverride</td></tr>
-<tr class="memdesc:a176677fcf1fcf269d1cbc58eec184cc7"><td class="mdescLeft">&#160;</td><td class="mdescRight">The task's id. <br/></td></tr>
-<tr class="separator:a176677fcf1fcf269d1cbc58eec184cc7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab3bb6fe289b3bba997188bbcb7e35c5e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ab3bb6fe289b3bba997188bbcb7e35c5e"></a>
 std::size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1detail_1_1task__impl__base.html#ab3bb6fe289b3bba997188bbcb7e35c5e">level</a> () const noexceptoverride</td></tr>
 <tr class="memdesc:ab3bb6fe289b3bba997188bbcb7e35c5e"><td class="mdescLeft">&#160;</td><td class="mdescRight">The task's level. <br/></td></tr>
@@ -146,24 +148,11 @@ std::size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" hre
 <a class="el" href="namespacetranswarp.html#a10f2b2567332cf9514d4c366c1cc5a5e">transwarp::task_type</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1detail_1_1task__impl__base.html#ab39ac1ad7ec432a7ad3644665bc8787f">type</a> () const noexceptoverride</td></tr>
 <tr class="memdesc:ab39ac1ad7ec432a7ad3644665bc8787f"><td class="mdescLeft">&#160;</td><td class="mdescRight">The task's type. <br/></td></tr>
 <tr class="separator:ab39ac1ad7ec432a7ad3644665bc8787f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae980b4a04b9036e799de99826049961d"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae980b4a04b9036e799de99826049961d"></a>
-const std::optional<br class="typebreak"/>
-&lt; std::string &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1detail_1_1task__impl__base.html#ae980b4a04b9036e799de99826049961d">name</a> () const noexcept</td></tr>
-<tr class="memdesc:ae980b4a04b9036e799de99826049961d"><td class="mdescLeft">&#160;</td><td class="mdescRight">The optional task name. <br/></td></tr>
-<tr class="separator:ae980b4a04b9036e799de99826049961d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae4ec3ee45459bf94cf9e13086c21a7f9"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae4ec3ee45459bf94cf9e13086c21a7f9"></a>
 std::shared_ptr<br class="typebreak"/>
 &lt; <a class="el" href="classtranswarp_1_1executor.html">transwarp::executor</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1detail_1_1task__impl__base.html#ae4ec3ee45459bf94cf9e13086c21a7f9">executor</a> () const noexceptoverride</td></tr>
 <tr class="memdesc:ae4ec3ee45459bf94cf9e13086c21a7f9"><td class="mdescLeft">&#160;</td><td class="mdescRight">The task's executor (may be null) <br/></td></tr>
 <tr class="separator:ae4ec3ee45459bf94cf9e13086c21a7f9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7db314ea35fb6820f239517017262aa8"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a7db314ea35fb6820f239517017262aa8"></a>
-std::int64_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1detail_1_1task__impl__base.html#a7db314ea35fb6820f239517017262aa8">priority</a> () const noexceptoverride</td></tr>
-<tr class="memdesc:a7db314ea35fb6820f239517017262aa8"><td class="mdescLeft">&#160;</td><td class="mdescRight">The task priority (defaults to 0) <br/></td></tr>
-<tr class="separator:a7db314ea35fb6820f239517017262aa8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af3120a518436610f92cfe468c627b026"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af3120a518436610f92cfe468c627b026"></a>
-const std::any &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1detail_1_1task__impl__base.html#af3120a518436610f92cfe468c627b026">custom_data</a> () const noexceptoverride</td></tr>
-<tr class="memdesc:af3120a518436610f92cfe468c627b026"><td class="mdescLeft">&#160;</td><td class="mdescRight">The custom task data (may not hold a value) <br/></td></tr>
-<tr class="separator:af3120a518436610f92cfe468c627b026"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa9b77c211fc94478608659d104928e92"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa9b77c211fc94478608659d104928e92"></a>
 bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1detail_1_1task__impl__base.html#aa9b77c211fc94478608659d104928e92">canceled</a> () const noexceptoverride</td></tr>
 <tr class="memdesc:aa9b77c211fc94478608659d104928e92"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns whether the associated task is canceled. <br/></td></tr>
@@ -196,91 +185,6 @@ void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
 void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1detail_1_1task__impl__base.html#ad89fde97c3443622010ac2b8012c4d60">remove_executor_all</a> () override</td></tr>
 <tr class="memdesc:ad89fde97c3443622010ac2b8012c4d60"><td class="mdescLeft">&#160;</td><td class="mdescRight">Removes the executor from all tasks. <br/></td></tr>
 <tr class="separator:ad89fde97c3443622010ac2b8012c4d60"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af16684d1796c91aa9b1a3d55603baf76"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af16684d1796c91aa9b1a3d55603baf76"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1detail_1_1task__impl__base.html#af16684d1796c91aa9b1a3d55603baf76">set_priority</a> (std::int64_t <a class="el" href="classtranswarp_1_1detail_1_1task__impl__base.html#a7db314ea35fb6820f239517017262aa8">priority</a>) override</td></tr>
-<tr class="memdesc:af16684d1796c91aa9b1a3d55603baf76"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sets a task priority (defaults to 0). transwarp will not directly use this. This is only useful if something else is using the priority (e.g. a custom executor) <br/></td></tr>
-<tr class="separator:af16684d1796c91aa9b1a3d55603baf76"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aae35a5d62df1a4ab71a0e0a5fab28b74"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aae35a5d62df1a4ab71a0e0a5fab28b74"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1detail_1_1task__impl__base.html#aae35a5d62df1a4ab71a0e0a5fab28b74">set_priority_all</a> (std::int64_t <a class="el" href="classtranswarp_1_1detail_1_1task__impl__base.html#a7db314ea35fb6820f239517017262aa8">priority</a>) override</td></tr>
-<tr class="memdesc:aae35a5d62df1a4ab71a0e0a5fab28b74"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sets a priority to all tasks (defaults to 0). transwarp will not directly use this. This is only useful if something else is using the priority (e.g. a custom executor) <br/></td></tr>
-<tr class="separator:aae35a5d62df1a4ab71a0e0a5fab28b74"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5e43e8cafa360ce460ffeef3933dd696"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a5e43e8cafa360ce460ffeef3933dd696"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1detail_1_1task__impl__base.html#a5e43e8cafa360ce460ffeef3933dd696">reset_priority</a> () override</td></tr>
-<tr class="memdesc:a5e43e8cafa360ce460ffeef3933dd696"><td class="mdescLeft">&#160;</td><td class="mdescRight">Resets the task priority to 0. <br/></td></tr>
-<tr class="separator:a5e43e8cafa360ce460ffeef3933dd696"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3f07ac9522ba402c37597cd793922897"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a3f07ac9522ba402c37597cd793922897"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1detail_1_1task__impl__base.html#a3f07ac9522ba402c37597cd793922897">reset_priority_all</a> () override</td></tr>
-<tr class="memdesc:a3f07ac9522ba402c37597cd793922897"><td class="mdescLeft">&#160;</td><td class="mdescRight">Resets the priority of all tasks to 0. <br/></td></tr>
-<tr class="separator:a3f07ac9522ba402c37597cd793922897"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3fa6cf6dcee233b52354084522a882e5"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a3fa6cf6dcee233b52354084522a882e5"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1detail_1_1task__impl__base.html#a3fa6cf6dcee233b52354084522a882e5">set_custom_data</a> (std::any <a class="el" href="classtranswarp_1_1detail_1_1task__impl__base.html#af3120a518436610f92cfe468c627b026">custom_data</a>) override</td></tr>
-<tr class="memdesc:a3fa6cf6dcee233b52354084522a882e5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Assigns custom data to this task. transwarp will not directly use this. This is only useful if something else is using this custom data (e.g. a custom executor) <br/></td></tr>
-<tr class="separator:a3fa6cf6dcee233b52354084522a882e5"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1a0e6b388c8f1bb43e9dd22cb1c6917c"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1a0e6b388c8f1bb43e9dd22cb1c6917c"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1detail_1_1task__impl__base.html#a1a0e6b388c8f1bb43e9dd22cb1c6917c">set_custom_data_all</a> (std::any <a class="el" href="classtranswarp_1_1detail_1_1task__impl__base.html#af3120a518436610f92cfe468c627b026">custom_data</a>) override</td></tr>
-<tr class="memdesc:a1a0e6b388c8f1bb43e9dd22cb1c6917c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Assigns custom data to all tasks. transwarp will not directly use this. This is only useful if something else is using this custom data (e.g. a custom executor) <br/></td></tr>
-<tr class="separator:a1a0e6b388c8f1bb43e9dd22cb1c6917c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a92343be9926f90f7e09e6f5acc83a7e4"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a92343be9926f90f7e09e6f5acc83a7e4"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1detail_1_1task__impl__base.html#a92343be9926f90f7e09e6f5acc83a7e4">remove_custom_data</a> () override</td></tr>
-<tr class="memdesc:a92343be9926f90f7e09e6f5acc83a7e4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Removes custom data from this task. <br/></td></tr>
-<tr class="separator:a92343be9926f90f7e09e6f5acc83a7e4"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a117815bc16470c34c209c664999041d3"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a117815bc16470c34c209c664999041d3"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1detail_1_1task__impl__base.html#a117815bc16470c34c209c664999041d3">remove_custom_data_all</a> () override</td></tr>
-<tr class="memdesc:a117815bc16470c34c209c664999041d3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Removes custom data from all tasks. <br/></td></tr>
-<tr class="separator:a117815bc16470c34c209c664999041d3"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9f538ab3d79998fb315dd81500be39b4"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a9f538ab3d79998fb315dd81500be39b4"></a>
-const std::shared_future<br class="typebreak"/>
-&lt; <a class="el" href="classtranswarp_1_1detail_1_1task__impl__base.html#a9ae1931585a8304aaa172c74d06bf8f3">result_type</a> &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1detail_1_1task__impl__base.html#a9f538ab3d79998fb315dd81500be39b4">future</a> () const noexceptoverride</td></tr>
-<tr class="memdesc:a9f538ab3d79998fb315dd81500be39b4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the future associated to the underlying execution. <br/></td></tr>
-<tr class="separator:a9f538ab3d79998fb315dd81500be39b4"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3384c87d59d2df37ffbea1c384e155a1"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a3384c87d59d2df37ffbea1c384e155a1"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1detail_1_1task__impl__base.html#a3384c87d59d2df37ffbea1c384e155a1">add_listener</a> (std::shared_ptr&lt; <a class="el" href="classtranswarp_1_1listener.html">transwarp::listener</a> &gt; <a class="el" href="classtranswarp_1_1listener.html">listener</a>) override</td></tr>
-<tr class="memdesc:a3384c87d59d2df37ffbea1c384e155a1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Adds a new listener for all event types. <br/></td></tr>
-<tr class="separator:a3384c87d59d2df37ffbea1c384e155a1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0ae1ead01e9871d503da7c3a4294fb08"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a0ae1ead01e9871d503da7c3a4294fb08"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1detail_1_1task__impl__base.html#a0ae1ead01e9871d503da7c3a4294fb08">add_listener</a> (<a class="el" href="namespacetranswarp.html#a857009a6efbb2f34495ee81664a376dc">transwarp::event_type</a> event, std::shared_ptr&lt; <a class="el" href="classtranswarp_1_1listener.html">transwarp::listener</a> &gt; <a class="el" href="classtranswarp_1_1listener.html">listener</a>) override</td></tr>
-<tr class="memdesc:a0ae1ead01e9871d503da7c3a4294fb08"><td class="mdescLeft">&#160;</td><td class="mdescRight">Adds a new listener for the given event type only. <br/></td></tr>
-<tr class="separator:a0ae1ead01e9871d503da7c3a4294fb08"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a882e36d39ab3be3ffa53451ec87f0672"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a882e36d39ab3be3ffa53451ec87f0672"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1detail_1_1task__impl__base.html#a882e36d39ab3be3ffa53451ec87f0672">add_listener_all</a> (std::shared_ptr&lt; <a class="el" href="classtranswarp_1_1listener.html">transwarp::listener</a> &gt; <a class="el" href="classtranswarp_1_1listener.html">listener</a>) override</td></tr>
-<tr class="memdesc:a882e36d39ab3be3ffa53451ec87f0672"><td class="mdescLeft">&#160;</td><td class="mdescRight">Adds a new listener for all event types and for all parents. <br/></td></tr>
-<tr class="separator:a882e36d39ab3be3ffa53451ec87f0672"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a97a7a1cb3f24f2d33c28b30596b0c7fb"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a97a7a1cb3f24f2d33c28b30596b0c7fb"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1detail_1_1task__impl__base.html#a97a7a1cb3f24f2d33c28b30596b0c7fb">add_listener_all</a> (<a class="el" href="namespacetranswarp.html#a857009a6efbb2f34495ee81664a376dc">transwarp::event_type</a> event, std::shared_ptr&lt; <a class="el" href="classtranswarp_1_1listener.html">transwarp::listener</a> &gt; <a class="el" href="classtranswarp_1_1listener.html">listener</a>) override</td></tr>
-<tr class="memdesc:a97a7a1cb3f24f2d33c28b30596b0c7fb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Adds a new listener for the given event type only and for all parents. <br/></td></tr>
-<tr class="separator:a97a7a1cb3f24f2d33c28b30596b0c7fb"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad87903d77e26f66ae0164a3257bc21e9"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad87903d77e26f66ae0164a3257bc21e9"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1detail_1_1task__impl__base.html#ad87903d77e26f66ae0164a3257bc21e9">remove_listener</a> (const std::shared_ptr&lt; <a class="el" href="classtranswarp_1_1listener.html">transwarp::listener</a> &gt; &amp;<a class="el" href="classtranswarp_1_1listener.html">listener</a>) override</td></tr>
-<tr class="memdesc:ad87903d77e26f66ae0164a3257bc21e9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Removes the listener for all event types. <br/></td></tr>
-<tr class="separator:ad87903d77e26f66ae0164a3257bc21e9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4e4d49809ab20d467a6fb47dfdc3d9b7"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a4e4d49809ab20d467a6fb47dfdc3d9b7"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1detail_1_1task__impl__base.html#a4e4d49809ab20d467a6fb47dfdc3d9b7">remove_listener</a> (<a class="el" href="namespacetranswarp.html#a857009a6efbb2f34495ee81664a376dc">transwarp::event_type</a> event, const std::shared_ptr&lt; <a class="el" href="classtranswarp_1_1listener.html">transwarp::listener</a> &gt; &amp;<a class="el" href="classtranswarp_1_1listener.html">listener</a>) override</td></tr>
-<tr class="memdesc:a4e4d49809ab20d467a6fb47dfdc3d9b7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Removes the listener for the given event type only. <br/></td></tr>
-<tr class="separator:a4e4d49809ab20d467a6fb47dfdc3d9b7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a59a726d9c146ae248b6c0cd3f5e21c73"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a59a726d9c146ae248b6c0cd3f5e21c73"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1detail_1_1task__impl__base.html#a59a726d9c146ae248b6c0cd3f5e21c73">remove_listener_all</a> (const std::shared_ptr&lt; <a class="el" href="classtranswarp_1_1listener.html">transwarp::listener</a> &gt; &amp;<a class="el" href="classtranswarp_1_1listener.html">listener</a>) override</td></tr>
-<tr class="memdesc:a59a726d9c146ae248b6c0cd3f5e21c73"><td class="mdescLeft">&#160;</td><td class="mdescRight">Removes the listener for all event types and for all parents. <br/></td></tr>
-<tr class="separator:a59a726d9c146ae248b6c0cd3f5e21c73"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a16426672b7e1fedc158ae85e5550668a"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a16426672b7e1fedc158ae85e5550668a"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1detail_1_1task__impl__base.html#a16426672b7e1fedc158ae85e5550668a">remove_listener_all</a> (<a class="el" href="namespacetranswarp.html#a857009a6efbb2f34495ee81664a376dc">transwarp::event_type</a> event, const std::shared_ptr&lt; <a class="el" href="classtranswarp_1_1listener.html">transwarp::listener</a> &gt; &amp;<a class="el" href="classtranswarp_1_1listener.html">listener</a>) override</td></tr>
-<tr class="memdesc:a16426672b7e1fedc158ae85e5550668a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Removes the listener for the given event type only and for all parents. <br/></td></tr>
-<tr class="separator:a16426672b7e1fedc158ae85e5550668a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae62d3195292e9850d01a199c28bc548f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae62d3195292e9850d01a199c28bc548f"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1detail_1_1task__impl__base.html#ae62d3195292e9850d01a199c28bc548f">remove_listeners</a> () override</td></tr>
-<tr class="memdesc:ae62d3195292e9850d01a199c28bc548f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Removes all listeners. <br/></td></tr>
-<tr class="separator:ae62d3195292e9850d01a199c28bc548f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a468263bff43a2fcc59450f62e940cfb9"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a468263bff43a2fcc59450f62e940cfb9"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1detail_1_1task__impl__base.html#a468263bff43a2fcc59450f62e940cfb9">remove_listeners</a> (<a class="el" href="namespacetranswarp.html#a857009a6efbb2f34495ee81664a376dc">transwarp::event_type</a> event) override</td></tr>
-<tr class="memdesc:a468263bff43a2fcc59450f62e940cfb9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Removes all listeners for the given event type. <br/></td></tr>
-<tr class="separator:a468263bff43a2fcc59450f62e940cfb9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa4734cd0b4eb7b0ac62ebbd29ef7cb2b"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa4734cd0b4eb7b0ac62ebbd29ef7cb2b"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1detail_1_1task__impl__base.html#aa4734cd0b4eb7b0ac62ebbd29ef7cb2b">remove_listeners_all</a> () override</td></tr>
-<tr class="memdesc:aa4734cd0b4eb7b0ac62ebbd29ef7cb2b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Removes all listeners and for all parents. <br/></td></tr>
-<tr class="separator:aa4734cd0b4eb7b0ac62ebbd29ef7cb2b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8c20f81b19b8693c3144998ad178f15f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a8c20f81b19b8693c3144998ad178f15f"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1detail_1_1task__impl__base.html#a8c20f81b19b8693c3144998ad178f15f">remove_listeners_all</a> (<a class="el" href="namespacetranswarp.html#a857009a6efbb2f34495ee81664a376dc">transwarp::event_type</a> event) override</td></tr>
-<tr class="memdesc:a8c20f81b19b8693c3144998ad178f15f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Removes all listeners for the given event type and for all parents. <br/></td></tr>
-<tr class="separator:a8c20f81b19b8693c3144998ad178f15f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a088ef96722fcc2ae566d986a3b7aa126"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a088ef96722fcc2ae566d986a3b7aa126"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1detail_1_1task__impl__base.html#a088ef96722fcc2ae566d986a3b7aa126">schedule</a> () override</td></tr>
 <tr class="memdesc:a088ef96722fcc2ae566d986a3b7aa126"><td class="mdescLeft">&#160;</td><td class="mdescRight">Schedules this task for execution on the caller thread. The task-specific executor gets precedence if it exists. This overload will reset the underlying future. <br/></td></tr>
@@ -349,6 +253,46 @@ void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
 void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1detail_1_1task__impl__base.html#af567fa162e353f127c778ef57e64def2">cancel_all</a> (bool enabled) noexceptoverride</td></tr>
 <tr class="memdesc:af567fa162e353f127c778ef57e64def2"><td class="mdescLeft">&#160;</td><td class="mdescRight">If enabled then all pending tasks in the graph are canceled which will throw <a class="el" href="classtranswarp_1_1task__canceled.html" title="Exception thrown when a task is canceled. ">transwarp::task_canceled</a> when retrieving the task result. Passing false is equivalent to resume. <br/></td></tr>
 <tr class="separator:af567fa162e353f127c778ef57e64def2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aae35a5d62df1a4ab71a0e0a5fab28b74"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aae35a5d62df1a4ab71a0e0a5fab28b74"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1detail_1_1task__impl__base.html#aae35a5d62df1a4ab71a0e0a5fab28b74">set_priority_all</a> (std::int64_t <a class="el" href="classtranswarp_1_1detail_1_1task__common.html#a370a43e1569057cc63348c940cfb1562">priority</a>) override</td></tr>
+<tr class="memdesc:aae35a5d62df1a4ab71a0e0a5fab28b74"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sets a priority to all tasks (defaults to 0). transwarp will not directly use this. This is only useful if something else is using the priority (e.g. a custom executor) <br/></td></tr>
+<tr class="separator:aae35a5d62df1a4ab71a0e0a5fab28b74"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3f07ac9522ba402c37597cd793922897"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a3f07ac9522ba402c37597cd793922897"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1detail_1_1task__impl__base.html#a3f07ac9522ba402c37597cd793922897">reset_priority_all</a> () override</td></tr>
+<tr class="memdesc:a3f07ac9522ba402c37597cd793922897"><td class="mdescLeft">&#160;</td><td class="mdescRight">Resets the priority of all tasks to 0. <br/></td></tr>
+<tr class="separator:a3f07ac9522ba402c37597cd793922897"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1a0e6b388c8f1bb43e9dd22cb1c6917c"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1a0e6b388c8f1bb43e9dd22cb1c6917c"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1detail_1_1task__impl__base.html#a1a0e6b388c8f1bb43e9dd22cb1c6917c">set_custom_data_all</a> (std::any <a class="el" href="classtranswarp_1_1detail_1_1task__common.html#a4da9c70c95a00d6eaeafb97489020fd2">custom_data</a>) override</td></tr>
+<tr class="memdesc:a1a0e6b388c8f1bb43e9dd22cb1c6917c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Assigns custom data to all tasks. transwarp will not directly use this. This is only useful if something else is using this custom data (e.g. a custom executor) <br/></td></tr>
+<tr class="separator:a1a0e6b388c8f1bb43e9dd22cb1c6917c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a117815bc16470c34c209c664999041d3"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a117815bc16470c34c209c664999041d3"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1detail_1_1task__impl__base.html#a117815bc16470c34c209c664999041d3">remove_custom_data_all</a> () override</td></tr>
+<tr class="memdesc:a117815bc16470c34c209c664999041d3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Removes custom data from all tasks. <br/></td></tr>
+<tr class="separator:a117815bc16470c34c209c664999041d3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a882e36d39ab3be3ffa53451ec87f0672"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a882e36d39ab3be3ffa53451ec87f0672"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1detail_1_1task__impl__base.html#a882e36d39ab3be3ffa53451ec87f0672">add_listener_all</a> (std::shared_ptr&lt; <a class="el" href="classtranswarp_1_1listener.html">transwarp::listener</a> &gt; <a class="el" href="classtranswarp_1_1listener.html">listener</a>) override</td></tr>
+<tr class="memdesc:a882e36d39ab3be3ffa53451ec87f0672"><td class="mdescLeft">&#160;</td><td class="mdescRight">Adds a new listener for all event types and for all parents. <br/></td></tr>
+<tr class="separator:a882e36d39ab3be3ffa53451ec87f0672"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a97a7a1cb3f24f2d33c28b30596b0c7fb"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a97a7a1cb3f24f2d33c28b30596b0c7fb"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1detail_1_1task__impl__base.html#a97a7a1cb3f24f2d33c28b30596b0c7fb">add_listener_all</a> (<a class="el" href="namespacetranswarp.html#a857009a6efbb2f34495ee81664a376dc">transwarp::event_type</a> event, std::shared_ptr&lt; <a class="el" href="classtranswarp_1_1listener.html">transwarp::listener</a> &gt; <a class="el" href="classtranswarp_1_1listener.html">listener</a>) override</td></tr>
+<tr class="memdesc:a97a7a1cb3f24f2d33c28b30596b0c7fb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Adds a new listener for the given event type only and for all parents. <br/></td></tr>
+<tr class="separator:a97a7a1cb3f24f2d33c28b30596b0c7fb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a59a726d9c146ae248b6c0cd3f5e21c73"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a59a726d9c146ae248b6c0cd3f5e21c73"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1detail_1_1task__impl__base.html#a59a726d9c146ae248b6c0cd3f5e21c73">remove_listener_all</a> (const std::shared_ptr&lt; <a class="el" href="classtranswarp_1_1listener.html">transwarp::listener</a> &gt; &amp;<a class="el" href="classtranswarp_1_1listener.html">listener</a>) override</td></tr>
+<tr class="memdesc:a59a726d9c146ae248b6c0cd3f5e21c73"><td class="mdescLeft">&#160;</td><td class="mdescRight">Removes the listener for all event types and for all parents. <br/></td></tr>
+<tr class="separator:a59a726d9c146ae248b6c0cd3f5e21c73"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a16426672b7e1fedc158ae85e5550668a"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a16426672b7e1fedc158ae85e5550668a"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1detail_1_1task__impl__base.html#a16426672b7e1fedc158ae85e5550668a">remove_listener_all</a> (<a class="el" href="namespacetranswarp.html#a857009a6efbb2f34495ee81664a376dc">transwarp::event_type</a> event, const std::shared_ptr&lt; <a class="el" href="classtranswarp_1_1listener.html">transwarp::listener</a> &gt; &amp;<a class="el" href="classtranswarp_1_1listener.html">listener</a>) override</td></tr>
+<tr class="memdesc:a16426672b7e1fedc158ae85e5550668a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Removes the listener for the given event type only and for all parents. <br/></td></tr>
+<tr class="separator:a16426672b7e1fedc158ae85e5550668a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa4734cd0b4eb7b0ac62ebbd29ef7cb2b"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa4734cd0b4eb7b0ac62ebbd29ef7cb2b"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1detail_1_1task__impl__base.html#aa4734cd0b4eb7b0ac62ebbd29ef7cb2b">remove_listeners_all</a> () override</td></tr>
+<tr class="memdesc:aa4734cd0b4eb7b0ac62ebbd29ef7cb2b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Removes all listeners and for all parents. <br/></td></tr>
+<tr class="separator:aa4734cd0b4eb7b0ac62ebbd29ef7cb2b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8c20f81b19b8693c3144998ad178f15f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a8c20f81b19b8693c3144998ad178f15f"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1detail_1_1task__impl__base.html#a8c20f81b19b8693c3144998ad178f15f">remove_listeners_all</a> (<a class="el" href="namespacetranswarp.html#a857009a6efbb2f34495ee81664a376dc">transwarp::event_type</a> event) override</td></tr>
+<tr class="memdesc:a8c20f81b19b8693c3144998ad178f15f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Removes all listeners for the given event type and for all parents. <br/></td></tr>
+<tr class="separator:a8c20f81b19b8693c3144998ad178f15f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1dae043c5a73dbdea60cd7099d6a29fa"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1dae043c5a73dbdea60cd7099d6a29fa"></a>
 std::vector&lt; <a class="el" href="classtranswarp_1_1itask.html">transwarp::itask</a> * &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1detail_1_1task__impl__base.html#a1dae043c5a73dbdea60cd7099d6a29fa">parents</a> () const override</td></tr>
 <tr class="memdesc:a1dae043c5a73dbdea60cd7099d6a29fa"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the task's parents (may be empty) <br/></td></tr>
@@ -362,6 +306,69 @@ const std::vector<br class="typebreak"/>
 std::vector&lt; <a class="el" href="classtranswarp_1_1edge.html">transwarp::edge</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1detail_1_1task__impl__base.html#ab888115ac9ca1ffb1ff56c45735a838b">edges</a> () override</td></tr>
 <tr class="memdesc:ab888115ac9ca1ffb1ff56c45735a838b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns all edges in the graph. This is mainly for visualizing the tasks and their interdependencies. Pass the result into <a class="el" href="namespacetranswarp.html#ab7cae8c7d0267dd51406f77f69697c3b" title="String conversion for the task_type enumeration. ">transwarp::to_string</a> to retrieve a dot-style graph representation for easy viewing. <br/></td></tr>
 <tr class="separator:ab888115ac9ca1ffb1ff56c45735a838b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="inherit_header pub_methods_classtranswarp_1_1detail_1_1task__common"><td colspan="2" onclick="javascript:toggleInherit('pub_methods_classtranswarp_1_1detail_1_1task__common')"><img src="closed.png" alt="-"/>&#160;Public Member Functions inherited from <a class="el" href="classtranswarp_1_1detail_1_1task__common.html">transwarp::detail::task_common&lt; ResultType &gt;</a></td></tr>
+<tr class="memitem:a35c8025a7dc38caf099507ecc5e19ae1 inherit pub_methods_classtranswarp_1_1detail_1_1task__common"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a35c8025a7dc38caf099507ecc5e19ae1"></a>
+std::size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1detail_1_1task__common.html#a35c8025a7dc38caf099507ecc5e19ae1">id</a> () const noexceptoverride</td></tr>
+<tr class="memdesc:a35c8025a7dc38caf099507ecc5e19ae1 inherit pub_methods_classtranswarp_1_1detail_1_1task__common"><td class="mdescLeft">&#160;</td><td class="mdescRight">The task's id. <br/></td></tr>
+<tr class="separator:a35c8025a7dc38caf099507ecc5e19ae1 inherit pub_methods_classtranswarp_1_1detail_1_1task__common"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3cd36bb30d243453974f0b44361260b9 inherit pub_methods_classtranswarp_1_1detail_1_1task__common"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a3cd36bb30d243453974f0b44361260b9"></a>
+const std::optional<br class="typebreak"/>
+&lt; std::string &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1detail_1_1task__common.html#a3cd36bb30d243453974f0b44361260b9">name</a> () const noexcept</td></tr>
+<tr class="memdesc:a3cd36bb30d243453974f0b44361260b9 inherit pub_methods_classtranswarp_1_1detail_1_1task__common"><td class="mdescLeft">&#160;</td><td class="mdescRight">The optional task name. <br/></td></tr>
+<tr class="separator:a3cd36bb30d243453974f0b44361260b9 inherit pub_methods_classtranswarp_1_1detail_1_1task__common"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a370a43e1569057cc63348c940cfb1562 inherit pub_methods_classtranswarp_1_1detail_1_1task__common"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a370a43e1569057cc63348c940cfb1562"></a>
+std::int64_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1detail_1_1task__common.html#a370a43e1569057cc63348c940cfb1562">priority</a> () const noexceptoverride</td></tr>
+<tr class="memdesc:a370a43e1569057cc63348c940cfb1562 inherit pub_methods_classtranswarp_1_1detail_1_1task__common"><td class="mdescLeft">&#160;</td><td class="mdescRight">The task priority (defaults to 0) <br/></td></tr>
+<tr class="separator:a370a43e1569057cc63348c940cfb1562 inherit pub_methods_classtranswarp_1_1detail_1_1task__common"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4da9c70c95a00d6eaeafb97489020fd2 inherit pub_methods_classtranswarp_1_1detail_1_1task__common"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a4da9c70c95a00d6eaeafb97489020fd2"></a>
+const std::any &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1detail_1_1task__common.html#a4da9c70c95a00d6eaeafb97489020fd2">custom_data</a> () const noexceptoverride</td></tr>
+<tr class="memdesc:a4da9c70c95a00d6eaeafb97489020fd2 inherit pub_methods_classtranswarp_1_1detail_1_1task__common"><td class="mdescLeft">&#160;</td><td class="mdescRight">The custom task data (may not hold a value) <br/></td></tr>
+<tr class="separator:a4da9c70c95a00d6eaeafb97489020fd2 inherit pub_methods_classtranswarp_1_1detail_1_1task__common"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aac786819b845dad8b71060d64b494021 inherit pub_methods_classtranswarp_1_1detail_1_1task__common"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aac786819b845dad8b71060d64b494021"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1detail_1_1task__common.html#aac786819b845dad8b71060d64b494021">set_priority</a> (std::int64_t <a class="el" href="classtranswarp_1_1detail_1_1task__common.html#a370a43e1569057cc63348c940cfb1562">priority</a>) override</td></tr>
+<tr class="memdesc:aac786819b845dad8b71060d64b494021 inherit pub_methods_classtranswarp_1_1detail_1_1task__common"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sets a task priority (defaults to 0). transwarp will not directly use this. This is only useful if something else is using the priority (e.g. a custom executor) <br/></td></tr>
+<tr class="separator:aac786819b845dad8b71060d64b494021 inherit pub_methods_classtranswarp_1_1detail_1_1task__common"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af589678f1bd7d3190481ef4ee8bc3a71 inherit pub_methods_classtranswarp_1_1detail_1_1task__common"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af589678f1bd7d3190481ef4ee8bc3a71"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1detail_1_1task__common.html#af589678f1bd7d3190481ef4ee8bc3a71">reset_priority</a> () override</td></tr>
+<tr class="memdesc:af589678f1bd7d3190481ef4ee8bc3a71 inherit pub_methods_classtranswarp_1_1detail_1_1task__common"><td class="mdescLeft">&#160;</td><td class="mdescRight">Resets the task priority to 0. <br/></td></tr>
+<tr class="separator:af589678f1bd7d3190481ef4ee8bc3a71 inherit pub_methods_classtranswarp_1_1detail_1_1task__common"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2341cb876db47138901f87f757028fff inherit pub_methods_classtranswarp_1_1detail_1_1task__common"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a2341cb876db47138901f87f757028fff"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1detail_1_1task__common.html#a2341cb876db47138901f87f757028fff">set_custom_data</a> (std::any <a class="el" href="classtranswarp_1_1detail_1_1task__common.html#a4da9c70c95a00d6eaeafb97489020fd2">custom_data</a>) override</td></tr>
+<tr class="memdesc:a2341cb876db47138901f87f757028fff inherit pub_methods_classtranswarp_1_1detail_1_1task__common"><td class="mdescLeft">&#160;</td><td class="mdescRight">Assigns custom data to this task. transwarp will not directly use this. This is only useful if something else is using this custom data (e.g. a custom executor) <br/></td></tr>
+<tr class="separator:a2341cb876db47138901f87f757028fff inherit pub_methods_classtranswarp_1_1detail_1_1task__common"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a730e97aa69e1cf079198f802cb2b9a76 inherit pub_methods_classtranswarp_1_1detail_1_1task__common"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a730e97aa69e1cf079198f802cb2b9a76"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1detail_1_1task__common.html#a730e97aa69e1cf079198f802cb2b9a76">remove_custom_data</a> () override</td></tr>
+<tr class="memdesc:a730e97aa69e1cf079198f802cb2b9a76 inherit pub_methods_classtranswarp_1_1detail_1_1task__common"><td class="mdescLeft">&#160;</td><td class="mdescRight">Removes custom data from this task. <br/></td></tr>
+<tr class="separator:a730e97aa69e1cf079198f802cb2b9a76 inherit pub_methods_classtranswarp_1_1detail_1_1task__common"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8e8ba347ad00920bd7a4599e0355a0cb inherit pub_methods_classtranswarp_1_1detail_1_1task__common"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a8e8ba347ad00920bd7a4599e0355a0cb"></a>
+const std::shared_future<br class="typebreak"/>
+&lt; <a class="el" href="classtranswarp_1_1detail_1_1task__common.html#a3a0e6f882a6dd86fa2e152a2aa595f90">result_type</a> &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1detail_1_1task__common.html#a8e8ba347ad00920bd7a4599e0355a0cb">future</a> () const noexceptoverride</td></tr>
+<tr class="memdesc:a8e8ba347ad00920bd7a4599e0355a0cb inherit pub_methods_classtranswarp_1_1detail_1_1task__common"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the future associated to the underlying execution. <br/></td></tr>
+<tr class="separator:a8e8ba347ad00920bd7a4599e0355a0cb inherit pub_methods_classtranswarp_1_1detail_1_1task__common"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6da9d357b6e09ca0e597bf2370941157 inherit pub_methods_classtranswarp_1_1detail_1_1task__common"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a6da9d357b6e09ca0e597bf2370941157"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1detail_1_1task__common.html#a6da9d357b6e09ca0e597bf2370941157">add_listener</a> (std::shared_ptr&lt; <a class="el" href="classtranswarp_1_1listener.html">transwarp::listener</a> &gt; <a class="el" href="classtranswarp_1_1listener.html">listener</a>) override</td></tr>
+<tr class="memdesc:a6da9d357b6e09ca0e597bf2370941157 inherit pub_methods_classtranswarp_1_1detail_1_1task__common"><td class="mdescLeft">&#160;</td><td class="mdescRight">Adds a new listener for all event types. <br/></td></tr>
+<tr class="separator:a6da9d357b6e09ca0e597bf2370941157 inherit pub_methods_classtranswarp_1_1detail_1_1task__common"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a83255d9dd559248835e3e686f6f8fa22 inherit pub_methods_classtranswarp_1_1detail_1_1task__common"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a83255d9dd559248835e3e686f6f8fa22"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1detail_1_1task__common.html#a83255d9dd559248835e3e686f6f8fa22">add_listener</a> (<a class="el" href="namespacetranswarp.html#a857009a6efbb2f34495ee81664a376dc">transwarp::event_type</a> event, std::shared_ptr&lt; <a class="el" href="classtranswarp_1_1listener.html">transwarp::listener</a> &gt; <a class="el" href="classtranswarp_1_1listener.html">listener</a>) override</td></tr>
+<tr class="memdesc:a83255d9dd559248835e3e686f6f8fa22 inherit pub_methods_classtranswarp_1_1detail_1_1task__common"><td class="mdescLeft">&#160;</td><td class="mdescRight">Adds a new listener for the given event type only. <br/></td></tr>
+<tr class="separator:a83255d9dd559248835e3e686f6f8fa22 inherit pub_methods_classtranswarp_1_1detail_1_1task__common"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7a424473dbb98ba2e82ebb65b18ced83 inherit pub_methods_classtranswarp_1_1detail_1_1task__common"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a7a424473dbb98ba2e82ebb65b18ced83"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1detail_1_1task__common.html#a7a424473dbb98ba2e82ebb65b18ced83">remove_listener</a> (const std::shared_ptr&lt; <a class="el" href="classtranswarp_1_1listener.html">transwarp::listener</a> &gt; &amp;<a class="el" href="classtranswarp_1_1listener.html">listener</a>) override</td></tr>
+<tr class="memdesc:a7a424473dbb98ba2e82ebb65b18ced83 inherit pub_methods_classtranswarp_1_1detail_1_1task__common"><td class="mdescLeft">&#160;</td><td class="mdescRight">Removes the listener for all event types. <br/></td></tr>
+<tr class="separator:a7a424473dbb98ba2e82ebb65b18ced83 inherit pub_methods_classtranswarp_1_1detail_1_1task__common"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3bf5d3ab34b0191fe82f3686e906aac4 inherit pub_methods_classtranswarp_1_1detail_1_1task__common"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a3bf5d3ab34b0191fe82f3686e906aac4"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1detail_1_1task__common.html#a3bf5d3ab34b0191fe82f3686e906aac4">remove_listener</a> (<a class="el" href="namespacetranswarp.html#a857009a6efbb2f34495ee81664a376dc">transwarp::event_type</a> event, const std::shared_ptr&lt; <a class="el" href="classtranswarp_1_1listener.html">transwarp::listener</a> &gt; &amp;<a class="el" href="classtranswarp_1_1listener.html">listener</a>) override</td></tr>
+<tr class="memdesc:a3bf5d3ab34b0191fe82f3686e906aac4 inherit pub_methods_classtranswarp_1_1detail_1_1task__common"><td class="mdescLeft">&#160;</td><td class="mdescRight">Removes the listener for the given event type only. <br/></td></tr>
+<tr class="separator:a3bf5d3ab34b0191fe82f3686e906aac4 inherit pub_methods_classtranswarp_1_1detail_1_1task__common"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afdd70445f0088660f5a7b35c60e23b5b inherit pub_methods_classtranswarp_1_1detail_1_1task__common"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="afdd70445f0088660f5a7b35c60e23b5b"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1detail_1_1task__common.html#afdd70445f0088660f5a7b35c60e23b5b">remove_listeners</a> () override</td></tr>
+<tr class="memdesc:afdd70445f0088660f5a7b35c60e23b5b inherit pub_methods_classtranswarp_1_1detail_1_1task__common"><td class="mdescLeft">&#160;</td><td class="mdescRight">Removes all listeners. <br/></td></tr>
+<tr class="separator:afdd70445f0088660f5a7b35c60e23b5b inherit pub_methods_classtranswarp_1_1detail_1_1task__common"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a36555b7fdbbd6383080c222752e67928 inherit pub_methods_classtranswarp_1_1detail_1_1task__common"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a36555b7fdbbd6383080c222752e67928"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1detail_1_1task__common.html#a36555b7fdbbd6383080c222752e67928">remove_listeners</a> (<a class="el" href="namespacetranswarp.html#a857009a6efbb2f34495ee81664a376dc">transwarp::event_type</a> event) override</td></tr>
+<tr class="memdesc:a36555b7fdbbd6383080c222752e67928 inherit pub_methods_classtranswarp_1_1detail_1_1task__common"><td class="mdescLeft">&#160;</td><td class="mdescRight">Removes all listeners for the given event type. <br/></td></tr>
+<tr class="separator:a36555b7fdbbd6383080c222752e67928 inherit pub_methods_classtranswarp_1_1detail_1_1task__common"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header pub_methods_classtranswarp_1_1task"><td colspan="2" onclick="javascript:toggleInherit('pub_methods_classtranswarp_1_1task')"><img src="closed.png" alt="-"/>&#160;Public Member Functions inherited from <a class="el" href="classtranswarp_1_1task.html">transwarp::task&lt; ResultType &gt;</a></td></tr>
 <tr class="memitem:afd32b68f655d09614422f88391a49610 inherit pub_methods_classtranswarp_1_1task"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="afd32b68f655d09614422f88391a49610"></a>
 std::shared_ptr&lt; <a class="el" href="classtranswarp_1_1task.html">task</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>clone</b> () const </td></tr>
@@ -390,18 +397,6 @@ template&lt;typename F , typename P &gt; </td></tr>
 <tr class="memitem:ab67a89b46e9909209bbb45b954edb1d5"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ab67a89b46e9909209bbb45b954edb1d5"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>init</b> ()</td></tr>
 <tr class="separator:ab67a89b46e9909209bbb45b954edb1d5"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:afbace0d9636143558055de0889c5b7bb"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="afbace0d9636143558055de0889c5b7bb"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1detail_1_1task__impl__base.html#afbace0d9636143558055de0889c5b7bb">ensure_task_not_running</a> () const </td></tr>
-<tr class="memdesc:afbace0d9636143558055de0889c5b7bb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Checks if the task is currently running and throws <a class="el" href="classtranswarp_1_1control__error.html" title="Exception thrown when a task is used in unintended ways. ">transwarp::control_error</a> if it is. <br/></td></tr>
-<tr class="separator:afbace0d9636143558055de0889c5b7bb"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:abf6cc7251f5ef7af5a803f6f6dcbf920"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="abf6cc7251f5ef7af5a803f6f6dcbf920"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1detail_1_1task__impl__base.html#abf6cc7251f5ef7af5a803f6f6dcbf920">ensure_task_was_scheduled</a> () const </td></tr>
-<tr class="memdesc:abf6cc7251f5ef7af5a803f6f6dcbf920"><td class="mdescLeft">&#160;</td><td class="mdescRight">Checks if the task was scheduled and throws <a class="el" href="classtranswarp_1_1control__error.html" title="Exception thrown when a task is used in unintended ways. ">transwarp::control_error</a> if it's not. <br/></td></tr>
-<tr class="separator:abf6cc7251f5ef7af5a803f6f6dcbf920"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:acc86facd040e45f02397411a0dbcefd0"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="acc86facd040e45f02397411a0dbcefd0"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1detail_1_1task__impl__base.html#acc86facd040e45f02397411a0dbcefd0">set_id</a> (std::size_t <a class="el" href="classtranswarp_1_1detail_1_1task__impl__base.html#a176677fcf1fcf269d1cbc58eec184cc7">id</a>) noexceptoverride</td></tr>
-<tr class="memdesc:acc86facd040e45f02397411a0dbcefd0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Assigns the given id. <br/></td></tr>
-<tr class="separator:acc86facd040e45f02397411a0dbcefd0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac01052c298f37862e4b8660e355beff9"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac01052c298f37862e4b8660e355beff9"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1detail_1_1task__impl__base.html#ac01052c298f37862e4b8660e355beff9">set_level</a> (std::size_t <a class="el" href="classtranswarp_1_1detail_1_1task__impl__base.html#ab3bb6fe289b3bba997188bbcb7e35c5e">level</a>) noexceptoverride</td></tr>
 <tr class="memdesc:ac01052c298f37862e4b8660e355beff9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Assigns the given level. <br/></td></tr>
@@ -410,10 +405,6 @@ void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
 void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1detail_1_1task__impl__base.html#a961ed013e54364513c94b7ce772f185f">set_type</a> (<a class="el" href="namespacetranswarp.html#a10f2b2567332cf9514d4c366c1cc5a5e">transwarp::task_type</a> <a class="el" href="classtranswarp_1_1detail_1_1task__impl__base.html#ab39ac1ad7ec432a7ad3644665bc8787f">type</a>) noexceptoverride</td></tr>
 <tr class="memdesc:a961ed013e54364513c94b7ce772f185f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Assigns the given type. <br/></td></tr>
 <tr class="separator:a961ed013e54364513c94b7ce772f185f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a09fc04d4029e3ebc22a3007c83172f8b"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a09fc04d4029e3ebc22a3007c83172f8b"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1detail_1_1task__impl__base.html#a09fc04d4029e3ebc22a3007c83172f8b">set_name</a> (std::optional&lt; std::string &gt; <a class="el" href="classtranswarp_1_1detail_1_1task__impl__base.html#ae980b4a04b9036e799de99826049961d">name</a>) noexceptoverride</td></tr>
-<tr class="memdesc:a09fc04d4029e3ebc22a3007c83172f8b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Assigns the given name. <br/></td></tr>
-<tr class="separator:a09fc04d4029e3ebc22a3007c83172f8b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac4f7cd8e2e45ff4279a9d51c118a9233"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac4f7cd8e2e45ff4279a9d51c118a9233"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1detail_1_1task__impl__base.html#ac4f7cd8e2e45ff4279a9d51c118a9233">set_avg_idletime_us</a> (std::int64_t idletime) noexceptoverride</td></tr>
 <tr class="memdesc:ac4f7cd8e2e45ff4279a9d51c118a9233"><td class="mdescLeft">&#160;</td><td class="mdescRight">Assigns the given idletime. <br/></td></tr>
@@ -426,6 +417,10 @@ void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
 void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1detail_1_1task__impl__base.html#a1fc4743fd4e53a6381845ab320d1fa00">set_avg_runtime_us</a> (std::int64_t runtime) noexceptoverride</td></tr>
 <tr class="memdesc:a1fc4743fd4e53a6381845ab320d1fa00"><td class="mdescLeft">&#160;</td><td class="mdescRight">Assigns the given runtime. <br/></td></tr>
 <tr class="separator:a1fc4743fd4e53a6381845ab320d1fa00"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abf6cc7251f5ef7af5a803f6f6dcbf920"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="abf6cc7251f5ef7af5a803f6f6dcbf920"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1detail_1_1task__impl__base.html#abf6cc7251f5ef7af5a803f6f6dcbf920">ensure_task_was_scheduled</a> () const </td></tr>
+<tr class="memdesc:abf6cc7251f5ef7af5a803f6f6dcbf920"><td class="mdescLeft">&#160;</td><td class="mdescRight">Checks if the task was scheduled and throws <a class="el" href="classtranswarp_1_1control__error.html" title="Exception thrown when a task is used in unintended ways. ">transwarp::control_error</a> if it's not. <br/></td></tr>
+<tr class="separator:abf6cc7251f5ef7af5a803f6f6dcbf920"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1e765a048e7d032614d95d10601c2df1"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1e765a048e7d032614d95d10601c2df1"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1detail_1_1task__impl__base.html#a1e765a048e7d032614d95d10601c2df1">schedule_impl</a> (bool <a class="el" href="classtranswarp_1_1detail_1_1task__impl__base.html#ae9395346d257ac48c5dc807681bc0859">reset</a>, <a class="el" href="classtranswarp_1_1executor.html">transwarp::executor</a> *<a class="el" href="classtranswarp_1_1executor.html">executor</a>=nullptr) override</td></tr>
 <tr class="memdesc:a1e765a048e7d032614d95d10601c2df1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Schedules this task for execution using the provided executor. The task-specific executor gets precedence if it exists. Runs the task on the same thread as the caller if neither the global nor the task-specific executor is found. <br/></td></tr>
@@ -447,43 +442,47 @@ template&lt;typename Visitor &gt; </td></tr>
 <tr class="memitem:ab0a599980419f12e228fcfcdb28b6743"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1detail_1_1task__impl__base.html#ab0a599980419f12e228fcfcdb28b6743">visit_all</a> (Visitor &amp;visitor)</td></tr>
 <tr class="memdesc:ab0a599980419f12e228fcfcdb28b6743"><td class="mdescLeft">&#160;</td><td class="mdescRight">Visits all tasks. <br/></td></tr>
 <tr class="separator:ab0a599980419f12e228fcfcdb28b6743"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a90bff52f07b4819a606d298c2798f2aa"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a90bff52f07b4819a606d298c2798f2aa"></a>
-std::size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1detail_1_1task__impl__base.html#a90bff52f07b4819a606d298c2798f2aa">event_index</a> (<a class="el" href="namespacetranswarp.html#a857009a6efbb2f34495ee81664a376dc">transwarp::event_type</a> event) const </td></tr>
-<tr class="memdesc:a90bff52f07b4819a606d298c2798f2aa"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the index for a given event type. <br/></td></tr>
-<tr class="separator:a90bff52f07b4819a606d298c2798f2aa"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a757003007fb29e31b5f623649209b1d7"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a757003007fb29e31b5f623649209b1d7"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1detail_1_1task__impl__base.html#a757003007fb29e31b5f623649209b1d7">raise_event</a> (<a class="el" href="namespacetranswarp.html#a857009a6efbb2f34495ee81664a376dc">transwarp::event_type</a> event) const </td></tr>
-<tr class="memdesc:a757003007fb29e31b5f623649209b1d7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Raises the given event to all listeners. <br/></td></tr>
-<tr class="separator:a757003007fb29e31b5f623649209b1d7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad27f43cbf62b17350930725af5d01981"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad27f43cbf62b17350930725af5d01981"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1detail_1_1task__impl__base.html#ad27f43cbf62b17350930725af5d01981">check_listener</a> (const std::shared_ptr&lt; <a class="el" href="classtranswarp_1_1listener.html">transwarp::listener</a> &gt; &amp;<a class="el" href="classtranswarp_1_1listener.html">listener</a>) const </td></tr>
-<tr class="memdesc:ad27f43cbf62b17350930725af5d01981"><td class="mdescLeft">&#160;</td><td class="mdescRight">Check for non-null listener pointer. <br/></td></tr>
-<tr class="separator:ad27f43cbf62b17350930725af5d01981"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="inherit_header pro_methods_classtranswarp_1_1detail_1_1task__common"><td colspan="2" onclick="javascript:toggleInherit('pro_methods_classtranswarp_1_1detail_1_1task__common')"><img src="closed.png" alt="-"/>&#160;Protected Member Functions inherited from <a class="el" href="classtranswarp_1_1detail_1_1task__common.html">transwarp::detail::task_common&lt; ResultType &gt;</a></td></tr>
+<tr class="memitem:abcea9f11a02d041af017b110551fd322 inherit pro_methods_classtranswarp_1_1detail_1_1task__common"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="abcea9f11a02d041af017b110551fd322"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1detail_1_1task__common.html#abcea9f11a02d041af017b110551fd322">ensure_task_not_running</a> () const </td></tr>
+<tr class="memdesc:abcea9f11a02d041af017b110551fd322 inherit pro_methods_classtranswarp_1_1detail_1_1task__common"><td class="mdescLeft">&#160;</td><td class="mdescRight">Checks if the task is currently running and throws <a class="el" href="classtranswarp_1_1control__error.html" title="Exception thrown when a task is used in unintended ways. ">transwarp::control_error</a> if it is. <br/></td></tr>
+<tr class="separator:abcea9f11a02d041af017b110551fd322 inherit pro_methods_classtranswarp_1_1detail_1_1task__common"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a874e262ae6c66796ebddf3e56d4e989e inherit pro_methods_classtranswarp_1_1detail_1_1task__common"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a874e262ae6c66796ebddf3e56d4e989e"></a>
+std::size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1detail_1_1task__common.html#a874e262ae6c66796ebddf3e56d4e989e">event_index</a> (<a class="el" href="namespacetranswarp.html#a857009a6efbb2f34495ee81664a376dc">transwarp::event_type</a> event) const </td></tr>
+<tr class="memdesc:a874e262ae6c66796ebddf3e56d4e989e inherit pro_methods_classtranswarp_1_1detail_1_1task__common"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the index for a given event type. <br/></td></tr>
+<tr class="separator:a874e262ae6c66796ebddf3e56d4e989e inherit pro_methods_classtranswarp_1_1detail_1_1task__common"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a98d90812f2f9007f04988e5669c6260b inherit pro_methods_classtranswarp_1_1detail_1_1task__common"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a98d90812f2f9007f04988e5669c6260b"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1detail_1_1task__common.html#a98d90812f2f9007f04988e5669c6260b">raise_event</a> (<a class="el" href="namespacetranswarp.html#a857009a6efbb2f34495ee81664a376dc">transwarp::event_type</a> event)</td></tr>
+<tr class="memdesc:a98d90812f2f9007f04988e5669c6260b inherit pro_methods_classtranswarp_1_1detail_1_1task__common"><td class="mdescLeft">&#160;</td><td class="mdescRight">Raises the given event to all listeners. <br/></td></tr>
+<tr class="separator:a98d90812f2f9007f04988e5669c6260b inherit pro_methods_classtranswarp_1_1detail_1_1task__common"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad8fc32106a2eef7afa841bdf81ab4900 inherit pro_methods_classtranswarp_1_1detail_1_1task__common"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad8fc32106a2eef7afa841bdf81ab4900"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1detail_1_1task__common.html#ad8fc32106a2eef7afa841bdf81ab4900">check_listener</a> (const std::shared_ptr&lt; <a class="el" href="classtranswarp_1_1listener.html">transwarp::listener</a> &gt; &amp;<a class="el" href="classtranswarp_1_1listener.html">listener</a>) const </td></tr>
+<tr class="memdesc:ad8fc32106a2eef7afa841bdf81ab4900 inherit pro_methods_classtranswarp_1_1detail_1_1task__common"><td class="mdescLeft">&#160;</td><td class="mdescRight">Check for non-null listener pointer. <br/></td></tr>
+<tr class="separator:ad8fc32106a2eef7afa841bdf81ab4900 inherit pro_methods_classtranswarp_1_1detail_1_1task__common"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac1ffd04efa3c7f6e785bfcdc272d719a inherit pro_methods_classtranswarp_1_1detail_1_1task__common"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac1ffd04efa3c7f6e785bfcdc272d719a"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1detail_1_1task__common.html#ac1ffd04efa3c7f6e785bfcdc272d719a">set_id</a> (std::size_t <a class="el" href="classtranswarp_1_1detail_1_1task__common.html#a35c8025a7dc38caf099507ecc5e19ae1">id</a>) noexceptoverride</td></tr>
+<tr class="memdesc:ac1ffd04efa3c7f6e785bfcdc272d719a inherit pro_methods_classtranswarp_1_1detail_1_1task__common"><td class="mdescLeft">&#160;</td><td class="mdescRight">Assigns the given id. <br/></td></tr>
+<tr class="separator:ac1ffd04efa3c7f6e785bfcdc272d719a inherit pro_methods_classtranswarp_1_1detail_1_1task__common"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6e7f2387234e12051f15314983d65a63 inherit pro_methods_classtranswarp_1_1detail_1_1task__common"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a6e7f2387234e12051f15314983d65a63"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1detail_1_1task__common.html#a6e7f2387234e12051f15314983d65a63">set_name</a> (std::optional&lt; std::string &gt; <a class="el" href="classtranswarp_1_1detail_1_1task__common.html#a3cd36bb30d243453974f0b44361260b9">name</a>) noexceptoverride</td></tr>
+<tr class="memdesc:a6e7f2387234e12051f15314983d65a63 inherit pro_methods_classtranswarp_1_1detail_1_1task__common"><td class="mdescLeft">&#160;</td><td class="mdescRight">Assigns the given name. <br/></td></tr>
+<tr class="separator:a6e7f2387234e12051f15314983d65a63 inherit pro_methods_classtranswarp_1_1detail_1_1task__common"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a366db5b81b4e56aa674b15e97ee9d6bb inherit pro_methods_classtranswarp_1_1detail_1_1task__common"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a366db5b81b4e56aa674b15e97ee9d6bb"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>copy_from</b> (const <a class="el" href="classtranswarp_1_1detail_1_1task__common.html">task_common</a> &amp;<a class="el" href="classtranswarp_1_1task.html">task</a>)</td></tr>
+<tr class="separator:a366db5b81b4e56aa674b15e97ee9d6bb inherit pro_methods_classtranswarp_1_1detail_1_1task__common"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pro-attribs"></a>
 Protected Attributes</h2></td></tr>
-<tr class="memitem:a36fe940e01ec76f8b315c2e2c066a830"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a36fe940e01ec76f8b315c2e2c066a830"></a>
-std::size_t&#160;</td><td class="memItemRight" valign="bottom"><b>id_</b> = 0</td></tr>
-<tr class="separator:a36fe940e01ec76f8b315c2e2c066a830"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a10d247a77f3d6f1a4469f0a566340e7a"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a10d247a77f3d6f1a4469f0a566340e7a"></a>
 std::size_t&#160;</td><td class="memItemRight" valign="bottom"><b>level_</b> = 0</td></tr>
 <tr class="separator:a10d247a77f3d6f1a4469f0a566340e7a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0acc38b5429447b6b4bdd899989cc69e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a0acc38b5429447b6b4bdd899989cc69e"></a>
 <a class="el" href="namespacetranswarp.html#a10f2b2567332cf9514d4c366c1cc5a5e">transwarp::task_type</a>&#160;</td><td class="memItemRight" valign="bottom"><b>type_</b> = <a class="el" href="namespacetranswarp.html#a10f2b2567332cf9514d4c366c1cc5a5ea63a9f0ea7bb98050796b649e85481845">transwarp::task_type::root</a></td></tr>
 <tr class="separator:a0acc38b5429447b6b4bdd899989cc69e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a349db4d914f0e636762666ea9aeed8ca"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a349db4d914f0e636762666ea9aeed8ca"></a>
-std::optional&lt; std::string &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>name_</b></td></tr>
-<tr class="separator:a349db4d914f0e636762666ea9aeed8ca"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4f88918ca722e79eb1d91df2a92b3d49"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a4f88918ca722e79eb1d91df2a92b3d49"></a>
 std::shared_ptr<br class="typebreak"/>
 &lt; <a class="el" href="classtranswarp_1_1executor.html">transwarp::executor</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>executor_</b></td></tr>
 <tr class="separator:a4f88918ca722e79eb1d91df2a92b3d49"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae19f807d9847d1d14da0df0d0ef0c74d"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae19f807d9847d1d14da0df0d0ef0c74d"></a>
-std::int64_t&#160;</td><td class="memItemRight" valign="bottom"><b>priority_</b> = 0</td></tr>
-<tr class="separator:ae19f807d9847d1d14da0df0d0ef0c74d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8e81108248e1c7042db5a9207865bb05"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a8e81108248e1c7042db5a9207865bb05"></a>
-std::any&#160;</td><td class="memItemRight" valign="bottom"><b>custom_data_</b></td></tr>
-<tr class="separator:a8e81108248e1c7042db5a9207865bb05"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a07848bd634fd14e7ac6efbb6365be516"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a07848bd634fd14e7ac6efbb6365be516"></a>
 std::atomic&lt; bool &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>canceled_</b> {false}</td></tr>
 <tr class="separator:a07848bd634fd14e7ac6efbb6365be516"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -499,9 +498,6 @@ std::atomic&lt; std::int64_t &gt;&#160;</td><td class="memItemRight" valign="bot
 <tr class="memitem:aad8089476290c290ad7c61e347f7a84e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aad8089476290c290ad7c61e347f7a84e"></a>
 bool&#160;</td><td class="memItemRight" valign="bottom"><b>schedule_mode_</b> = true</td></tr>
 <tr class="separator:aad8089476290c290ad7c61e347f7a84e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0227fa57639313f20c579d6a503618b0"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a0227fa57639313f20c579d6a503618b0"></a>
-std::shared_future&lt; <a class="el" href="classtranswarp_1_1detail_1_1task__impl__base.html#a9ae1931585a8304aaa172c74d06bf8f3">result_type</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>future_</b></td></tr>
-<tr class="separator:a0227fa57639313f20c579d6a503618b0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a38fd832b254fd069171dfed3d68b3bda"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a38fd832b254fd069171dfed3d68b3bda"></a>
 std::unique_ptr&lt; Functor &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>functor_</b></td></tr>
 <tr class="separator:a38fd832b254fd069171dfed3d68b3bda"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -509,19 +505,35 @@ std::unique_ptr&lt; Functor &gt;&#160;</td><td class="memItemRight" valign="bott
 <a class="el" href="namespacetranswarp_1_1detail.html#ab9b242b56b7ddc566a1cbf9951e603bd">transwarp::detail::parents_t</a><br class="typebreak"/>
 &lt; ParentResults...&gt;&#160;</td><td class="memItemRight" valign="bottom"><b>parents_</b></td></tr>
 <tr class="separator:a38328fce92a549373c8da1a0bf747b5a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7874bc922f380dd1c05a2320d30ec555"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a7874bc922f380dd1c05a2320d30ec555"></a>
+<tr class="inherit_header pro_attribs_classtranswarp_1_1detail_1_1task__common"><td colspan="2" onclick="javascript:toggleInherit('pro_attribs_classtranswarp_1_1detail_1_1task__common')"><img src="closed.png" alt="-"/>&#160;Protected Attributes inherited from <a class="el" href="classtranswarp_1_1detail_1_1task__common.html">transwarp::detail::task_common&lt; ResultType &gt;</a></td></tr>
+<tr class="memitem:a6184cac2e551515a3de97da8f234c8eb inherit pro_attribs_classtranswarp_1_1detail_1_1task__common"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a6184cac2e551515a3de97da8f234c8eb"></a>
+std::size_t&#160;</td><td class="memItemRight" valign="bottom"><b>id_</b> = 0</td></tr>
+<tr class="separator:a6184cac2e551515a3de97da8f234c8eb inherit pro_attribs_classtranswarp_1_1detail_1_1task__common"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a917a968b765fe9072da8560ebaca5a3e inherit pro_attribs_classtranswarp_1_1detail_1_1task__common"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a917a968b765fe9072da8560ebaca5a3e"></a>
+std::optional&lt; std::string &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>name_</b></td></tr>
+<tr class="separator:a917a968b765fe9072da8560ebaca5a3e inherit pro_attribs_classtranswarp_1_1detail_1_1task__common"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3cdf96e89a134ac180c5eca176fabf3b inherit pro_attribs_classtranswarp_1_1detail_1_1task__common"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a3cdf96e89a134ac180c5eca176fabf3b"></a>
+std::int64_t&#160;</td><td class="memItemRight" valign="bottom"><b>priority_</b> = 0</td></tr>
+<tr class="separator:a3cdf96e89a134ac180c5eca176fabf3b inherit pro_attribs_classtranswarp_1_1detail_1_1task__common"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a26af8a00848c5cf5e2b663d5a849dba9 inherit pro_attribs_classtranswarp_1_1detail_1_1task__common"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a26af8a00848c5cf5e2b663d5a849dba9"></a>
+std::any&#160;</td><td class="memItemRight" valign="bottom"><b>custom_data_</b></td></tr>
+<tr class="separator:a26af8a00848c5cf5e2b663d5a849dba9 inherit pro_attribs_classtranswarp_1_1detail_1_1task__common"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a69363414e45265aa6fa3b75f9e8f6950 inherit pro_attribs_classtranswarp_1_1detail_1_1task__common"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a69363414e45265aa6fa3b75f9e8f6950"></a>
+std::shared_future&lt; <a class="el" href="classtranswarp_1_1detail_1_1task__common.html#a3a0e6f882a6dd86fa2e152a2aa595f90">result_type</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>future_</b></td></tr>
+<tr class="separator:a69363414e45265aa6fa3b75f9e8f6950 inherit pro_attribs_classtranswarp_1_1detail_1_1task__common"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7b7009cf0dc2c0fd22b301aa610bbb57 inherit pro_attribs_classtranswarp_1_1detail_1_1task__common"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a7b7009cf0dc2c0fd22b301aa610bbb57"></a>
 bool&#160;</td><td class="memItemRight" valign="bottom"><b>visited_</b> = false</td></tr>
-<tr class="separator:a7874bc922f380dd1c05a2320d30ec555"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1d1c8668b65855a5b3248aead3810c1f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1d1c8668b65855a5b3248aead3810c1f"></a>
+<tr class="separator:a7b7009cf0dc2c0fd22b301aa610bbb57 inherit pro_attribs_classtranswarp_1_1detail_1_1task__common"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4118147f599ef138b1f08ce954dc7784 inherit pro_attribs_classtranswarp_1_1detail_1_1task__common"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a4118147f599ef138b1f08ce954dc7784"></a>
 std::array&lt; std::vector<br class="typebreak"/>
 &lt; std::shared_ptr<br class="typebreak"/>
 &lt; <a class="el" href="classtranswarp_1_1listener.html">transwarp::listener</a> &gt;<br class="typebreak"/>
  &gt;, static_cast&lt; std::size_t &gt;<br class="typebreak"/>
 transwarp::event_type::count)&gt;&#160;</td><td class="memItemRight" valign="bottom"><b>listeners_</b></td></tr>
-<tr class="separator:a1d1c8668b65855a5b3248aead3810c1f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab26e2007fa15adbc3669209ab653319b"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ab26e2007fa15adbc3669209ab653319b"></a>
+<tr class="separator:a4118147f599ef138b1f08ce954dc7784 inherit pro_attribs_classtranswarp_1_1detail_1_1task__common"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a408e04bc397f706ecfd71be26a1b901e inherit pro_attribs_classtranswarp_1_1detail_1_1task__common"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a408e04bc397f706ecfd71be26a1b901e"></a>
 std::vector&lt; <a class="el" href="classtranswarp_1_1itask.html">transwarp::itask</a> * &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>tasks_</b></td></tr>
-<tr class="separator:ab26e2007fa15adbc3669209ab653319b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="separator:a408e04bc397f706ecfd71be26a1b901e inherit pro_attribs_classtranswarp_1_1detail_1_1task__common"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="friends"></a>
 Friends</h2></td></tr>

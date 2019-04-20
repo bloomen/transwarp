@@ -215,11 +215,13 @@ Enumerations</h2></td></tr>
 <tr class="separator:a10f2b2567332cf9514d4c366c1cc5a5e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a857009a6efbb2f34495ee81664a376dc"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacetranswarp.html#a857009a6efbb2f34495ee81664a376dc">event_type</a> { <br/>
 &#160;&#160;<a class="el" href="namespacetranswarp.html#a857009a6efbb2f34495ee81664a376dca35417532b100ce11672f583cf5d378bd">event_type::before_scheduled</a>, 
+<a class="el" href="namespacetranswarp.html#a857009a6efbb2f34495ee81664a376dcaec60b71ee73a65a76b212c32a745480d">event_type::after_future_changed</a>, 
 <a class="el" href="namespacetranswarp.html#a857009a6efbb2f34495ee81664a376dcad6e19f65753e84a061a28f9f305fe39b">event_type::before_started</a>, 
 <a class="el" href="namespacetranswarp.html#a857009a6efbb2f34495ee81664a376dcaeecb3099ae4ef4be6fc0008dacf35a2d">event_type::before_invoked</a>, 
-<a class="el" href="namespacetranswarp.html#a857009a6efbb2f34495ee81664a376dcac24f2a90b2418a40ec4eaf0c7e49a537">event_type::after_finished</a>, 
 <br/>
-&#160;&#160;<a class="el" href="namespacetranswarp.html#a857009a6efbb2f34495ee81664a376dcaf6627ef1a493e0fdc9965eefcf89a425">event_type::after_canceled</a>, 
+&#160;&#160;<a class="el" href="namespacetranswarp.html#a857009a6efbb2f34495ee81664a376dcac24f2a90b2418a40ec4eaf0c7e49a537">event_type::after_finished</a>, 
+<a class="el" href="namespacetranswarp.html#a857009a6efbb2f34495ee81664a376dcaf6627ef1a493e0fdc9965eefcf89a425">event_type::after_canceled</a>, 
+<a class="el" href="namespacetranswarp.html#a857009a6efbb2f34495ee81664a376dca46aa91fc92fdfedf990b1477e41f7606">event_type::after_custom_data_set</a>, 
 <b>count</b>
 <br/>
  }</td></tr>
@@ -343,6 +345,9 @@ constexpr <a class="el" href="structtranswarp_1_1no__op__functor.html">no_op_fun
 <tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><em><a class="anchor" id="a857009a6efbb2f34495ee81664a376dca35417532b100ce11672f583cf5d378bd"></a>before_scheduled</em>&nbsp;</td><td class="fielddoc">
 <p>Just before a task is scheduled (handle_event called on thread of caller to schedule()) </p>
 </td></tr>
+<tr><td class="fieldname"><em><a class="anchor" id="a857009a6efbb2f34495ee81664a376dcaec60b71ee73a65a76b212c32a745480d"></a>after_future_changed</em>&nbsp;</td><td class="fielddoc">
+<p>Just after the task's future was changed (handle_event called on thread that changed the task's future) </p>
+</td></tr>
 <tr><td class="fieldname"><em><a class="anchor" id="a857009a6efbb2f34495ee81664a376dcad6e19f65753e84a061a28f9f305fe39b"></a>before_started</em>&nbsp;</td><td class="fielddoc">
 <p>Just before a task starts running (handle_event called on thread that task is run on) </p>
 </td></tr>
@@ -354,6 +359,9 @@ constexpr <a class="el" href="structtranswarp_1_1no__op__functor.html">no_op_fun
 </td></tr>
 <tr><td class="fieldname"><em><a class="anchor" id="a857009a6efbb2f34495ee81664a376dcaf6627ef1a493e0fdc9965eefcf89a425"></a>after_canceled</em>&nbsp;</td><td class="fielddoc">
 <p>Just after a task was canceled (handle_event called on thread that task is run on) </p>
+</td></tr>
+<tr><td class="fieldname"><em><a class="anchor" id="a857009a6efbb2f34495ee81664a376dca46aa91fc92fdfedf990b1477e41f7606"></a>after_custom_data_set</em>&nbsp;</td><td class="fielddoc">
+<p>Just after custom data was assigned (handle_event called on thread that <code>set_custom_data</code> is called on) </p>
 </td></tr>
 </table>
 
