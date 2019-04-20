@@ -237,3 +237,29 @@ TEST_CASE("after_custom_data_set_event_for_value_task") {
     REQUIRE(1 == l->events.size());
     REQUIRE(tw::event_type::after_custom_data_set == l->events[0]);
 }
+
+TEST_CASE("after_future_changed_event") {
+    auto t = tw::make_task(tw::root, []{ return 0; });
+    auto l = std::make_shared<mock_listener>();
+    t->add_listener(l);
+    t->set_value(42);
+    REQUIRE(1 == l->events.size());
+    REQUIRE(tw::event_type::after_future_changed == l->events[0]);
+    l->events.clear();
+    t->set_exception(std::make_exception_ptr(std::bad_alloc{}));
+    REQUIRE(1 == l->events.size());
+    REQUIRE(tw::event_type::after_future_changed == l->events[0]);
+}
+
+TEST_CASE("after_future_changed_event_for_value_task") {
+    auto t = tw::make_value_task(0);
+    auto l = std::make_shared<mock_listener>();
+    t->add_listener(l);
+    t->set_value(42);
+    REQUIRE(1 == l->events.size());
+    REQUIRE(tw::event_type::after_future_changed == l->events[0]);
+    l->events.clear();
+    t->set_exception(std::make_exception_ptr(std::bad_alloc{}));
+    REQUIRE(1 == l->events.size());
+    REQUIRE(tw::event_type::after_future_changed == l->events[0]);
+}
