@@ -301,7 +301,7 @@ enum class event_type {
     before_invoked, // Just before a task's functor is invoked
     after_finished, // Just after a task has finished running
     after_canceled, // Just after a task was canceled
-    after_custom_data_set, // Just after custom data is assigned
+    after_custom_data_set, // Just after custom data was assigned
 }
 ```
 Listeners are created by sub-classing from the `listener` interface:

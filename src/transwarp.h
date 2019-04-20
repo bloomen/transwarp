@@ -157,7 +157,7 @@ enum class event_type {
     before_invoked, ///< Just before a task's functor is invoked (handle_event called on thread that task is run on)
     after_finished, ///< Just after a task has finished running (handle_event called on thread that task is run on)
     after_canceled, ///< Just after a task was canceled (handle_event called on thread that task is run on)
-    after_custom_data_set, ///< Just after custom data was assigned (handle_event called on thread that `set_custom_data` is called on)
+    after_custom_data_set, ///< Just after custom data was assigned (handle_event called on thread that custom data was set on)
     count,
 };
 
