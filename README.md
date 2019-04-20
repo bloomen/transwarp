@@ -296,6 +296,7 @@ are enumerated in the `event_type` enum:
 ```cpp
 enum class event_type {
     before_scheduled, // Just before a task is scheduled
+    after_future_changed, // Just after the task's future was changed
     before_started, // Just before a task starts running
     before_invoked, // Just before a task's functor is invoked
     after_finished, // Just after a task has finished running
