@@ -64,7 +64,7 @@ struct mock_exec : tw::executor {
     std::string name() const override {
         return "mock_exec";
     }
-    void execute(const std::function<void()>& functor, const tw::itask&) override {
+    void execute(const std::function<void()>& functor, tw::itask&) override {
         called = true;
         functor();
     }

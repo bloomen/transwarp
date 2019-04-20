@@ -145,7 +145,7 @@ public:
     /// task represents the task that the functor belongs to.
     /// This function is only ever called on the thread of the caller to schedule().
     /// The implementer needs to ensure that this never throws exceptions
-    virtual void execute(const std::function<void()>& functor, const transwarp::itask& task) = 0;
+    virtual void execute(const std::function<void()>& functor, transwarp::itask& task) = 0;
 };
 
 
@@ -167,10 +167,8 @@ public:
     virtual ~listener() = default;
 
     /// This may be called from arbitrary threads depending on the event type (see transwarp::event_type).
-    /// The implementer needs to ensure that this never throws exceptions. The lifetime of the task
-    /// reference is not guaranteed beyond the duration of handle_event, and listeners must not retain
-    /// a copy of the task.
-    virtual void handle_event(transwarp::event_type event, const transwarp::itask& task) = 0;
+    /// The implementer needs to ensure that this never throws exceptions.
+    virtual void handle_event(transwarp::event_type event, transwarp::itask& task) = 0;
 };
 
 
@@ -1588,7 +1586,7 @@ public:
     }
 
     /// Runs the functor on the current thread
-    void execute(const std::function<void()>& functor, const transwarp::itask&) override {
+    void execute(const std::function<void()>& functor, transwarp::itask&) override {
         functor();
     }
 };
@@ -1614,7 +1612,7 @@ public:
     }
 
     /// Pushes the functor into the thread pool for asynchronous execution
-    void execute(const std::function<void()>& functor, const transwarp::itask&) override {
+    void execute(const std::function<void()>& functor, transwarp::itask&) override {
         pool_.push(functor);
     }
 
@@ -2202,7 +2200,7 @@ protected:
     }
 
     /// Raises the given event to all listeners
-    void raise_event(transwarp::event_type event) const {
+    void raise_event(transwarp::event_type event) {
         for (const std::shared_ptr<transwarp::listener>& listener : listeners_[static_cast<std::size_t>(event)]) {
             listener->handle_event(event, *this);
         }
@@ -3068,9 +3066,9 @@ private:
         {}
 
         // Called on a potentially high-priority thread
-        void handle_event(transwarp::event_type, const transwarp::itask& task) override {
+        void handle_event(transwarp::event_type, transwarp::itask& task) override {
             std::lock_guard<transwarp::detail::spinlock> lock{pool_.spinlock_};
-            pool_.finished_.push(&task);
+            pool_.finished_.push(static_cast<const transwarp::itask*>(&task));
         }
 
     private:
@@ -3103,7 +3101,7 @@ public:
     timer& operator=(timer&&) = delete;
 
     /// Performs the actual timing and populates the task's timing members
-    void handle_event(transwarp::event_type event, const transwarp::itask& task) override {
+    void handle_event(transwarp::event_type event, transwarp::itask& task) override {
         switch (event) {
         case transwarp::event_type::before_scheduled: {
             const std::chrono::time_point<std::chrono::steady_clock> now = std::chrono::steady_clock::now();
@@ -3151,7 +3149,7 @@ public:
 
 private:
 
-    void track_idletime(const transwarp::itask& task, const std::chrono::time_point<std::chrono::steady_clock>& now) {
+    void track_idletime(transwarp::itask& task, const std::chrono::time_point<std::chrono::steady_clock>& now) {
         std::int64_t avg_idletime_us;
         {
             std::lock_guard<transwarp::detail::spinlock> lock{spinlock_};
@@ -3160,10 +3158,10 @@ private:
             ++track.idlecount;
             avg_idletime_us = static_cast<std::int64_t>(track.idletime / track.idlecount);
         }
-        const_cast<transwarp::itask&>(task).set_avg_idletime_us(avg_idletime_us);
+        task.set_avg_idletime_us(avg_idletime_us);
     };
 
-    void track_waittime(const transwarp::itask& task, const std::chrono::time_point<std::chrono::steady_clock>& now) {
+    void track_waittime(transwarp::itask& task, const std::chrono::time_point<std::chrono::steady_clock>& now) {
         std::int64_t avg_waittime_us;
         {
             std::lock_guard<transwarp::detail::spinlock> lock{spinlock_};
@@ -3172,10 +3170,10 @@ private:
             ++track.waitcount;
             avg_waittime_us = static_cast<std::int64_t>(track.waittime / track.waitcount);
         }
-        const_cast<transwarp::itask&>(task).set_avg_waittime_us(avg_waittime_us);
+        task.set_avg_waittime_us(avg_waittime_us);
     };
 
-    void track_runtime(const transwarp::itask& task, const std::chrono::time_point<std::chrono::steady_clock>& now) {
+    void track_runtime(transwarp::itask& task, const std::chrono::time_point<std::chrono::steady_clock>& now) {
         std::int64_t avg_runtime_us;
         {
             std::lock_guard<transwarp::detail::spinlock> lock{spinlock_};
@@ -3188,7 +3186,7 @@ private:
             ++track.runcount;
             avg_runtime_us = static_cast<std::int64_t>(track.runtime / track.runcount);
         }
-        const_cast<transwarp::itask&>(task).set_avg_runtime_us(avg_runtime_us);
+        task.set_avg_runtime_us(avg_runtime_us);
     }
 
     struct track {
