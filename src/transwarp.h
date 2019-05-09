@@ -2267,10 +2267,10 @@ protected:
     transwarp::task_type type_ = transwarp::task_type::root;
     std::shared_ptr<transwarp::executor> executor_;
     std::atomic<bool> canceled_{false};
+    bool schedule_mode_ = true;
     std::atomic<std::int64_t> avg_idletime_us_{-1};
     std::atomic<std::int64_t> avg_waittime_us_{-1};
     std::atomic<std::int64_t> avg_runtime_us_{-1};
-    bool schedule_mode_ = true;
     std::unique_ptr<Functor> functor_;
     transwarp::detail::parents_t<ParentResults...> parents_;
 };
@@ -2478,10 +2478,10 @@ private:
         t->type_ = this->type_;
         t->executor_ = this->executor_;
         t->canceled_ = this->canceled_.load();
+        t->schedule_mode_ = this->schedule_mode_;
         t->avg_idletime_us_ = this->avg_idletime_us_.load();
         t->avg_waittime_us_ = this->avg_waittime_us_.load();
         t->avg_runtime_us_ = this->avg_runtime_us_.load();
-        t->schedule_mode_ = this->schedule_mode_;
         t->functor_ = std::unique_ptr<Functor>{new Functor{*this->functor_}};
         t->parents_ = transwarp::detail::parents<ParentResults...>::clone(task_cache, this->parents_);
         t->executor_ = this->executor_;
