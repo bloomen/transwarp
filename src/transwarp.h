@@ -386,7 +386,7 @@ std::shared_ptr<TaskType> clone_task(std::unordered_map<std::shared_ptr<transwar
     } else {
         auto cloned_task = t->clone_impl(task_cache);
         task_cache[original_task] = cloned_task;
-        return std::move(cloned_task);
+        return cloned_task;
     }
 }
 
