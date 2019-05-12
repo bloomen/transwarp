@@ -1640,7 +1640,7 @@ public:
     }
 
     /// The optional task name
-    const std::optional<std::string>& name() const noexcept {
+    const std::optional<std::string>& name() const noexcept override {
         return name_;
     }
 
