@@ -28,6 +28,12 @@
 #include <utility>
 #include <vector>
 
+//TRANSWARP_DISABLE_TASK_NAMING
+//TRANSWARP_DISABLE_TASK_TIMING
+//TRANSWARP_DISABLE_TASK_PRIORITY
+//TRANSWARP_DISABLE_TASK_CUSTOM_DATA
+//TRANSWARP_MINIMAL_TASK_SIZE
+
 
 /// The transwarp namespace
 namespace transwarp {
@@ -224,7 +230,7 @@ public:
     virtual std::size_t id() const noexcept = 0;
     virtual std::size_t level() const noexcept = 0;
     virtual transwarp::task_type type() const noexcept = 0;
-    virtual const std::optional<std::string>& name() const noexcept = 0;
+    virtual std::optional<std::string> name() const noexcept = 0;
     virtual std::shared_ptr<transwarp::executor> executor() const noexcept = 0;
     virtual std::int64_t priority() const noexcept = 0;
     virtual const std::any& custom_data() const noexcept = 0;
@@ -319,7 +325,7 @@ inline std::string to_string(const transwarp::task_type& type) {
 inline std::string to_string(const transwarp::itask& task, std::string_view separator="\n") {
     std::string s;
     s += '"';
-    const std::optional<std::string>& name = task.name();
+    const std::optional<std::string> name = task.name();
     if (name) {
         s += std::string{"<"} + *name + std::string{">"} + separator.data();
     }
@@ -943,7 +949,7 @@ struct parent_visitor {
 
     void operator()(const transwarp::itask& task) const {
         if (task_.level() <= task.level()) {
-            /// A child's level is always larger than any of its parents' levels
+            // A child's level is always larger than any of its parents' levels
             task_.set_level(task.level() + 1);
         }
     }
@@ -1640,8 +1646,12 @@ public:
     }
 
     /// The optional task name
-    const std::optional<std::string>& name() const noexcept {
+    std::optional<std::string> name() const noexcept {
+#ifndef TRANSWARP_DISABLE_TASK_NAMING
         return name_;
+#else
+        return {};
+#endif
     }
 
     /// The task priority (defaults to 0)
@@ -1778,12 +1788,18 @@ protected:
 
     /// Assigns the given name
     void set_name(std::optional<std::string> name) noexcept override {
+#ifndef TRANSWARP_DISABLE_TASK_NAMING
         name_ = std::move(name);
+#else
+        (void)name;
+#endif
     }
 
     void copy_from(const task_common& task) {
         id_ = task.id_;
+#ifndef TRANSWARP_DISABLE_TASK_NAMING
         name_ = task.name_;
+#endif
         priority_ = task.priority_;
         custom_data_ = task.custom_data_;
         if (task.has_result()) {
@@ -1803,7 +1819,9 @@ protected:
     }
 
     std::size_t id_ = 0;
+#ifndef TRANSWARP_DISABLE_TASK_NAMING
     std::optional<std::string> name_;
+#endif
     std::int64_t priority_ = 0;
     std::any custom_data_;
     std::shared_future<result_type> future_;
@@ -1866,17 +1884,29 @@ public:
 
     /// Returns the average idletime in microseconds (-1 if never set)
     std::int64_t avg_idletime_us() const noexcept override {
+#ifndef TRANSWARP_DISABLE_TASK_TIMING
         return avg_idletime_us_.load();
+#else
+        return -1;
+#endif
     }
 
     /// Returns the average waittime in microseconds (-1 if never set)
     std::int64_t avg_waittime_us() const noexcept override {
+#ifndef TRANSWARP_DISABLE_TASK_TIMING
         return avg_waittime_us_.load();
+#else
+        return -1;
+#endif
     }
 
     /// Returns the average runtime in microseconds (-1 if never set)
     std::int64_t avg_runtime_us() const noexcept override {
+#ifndef TRANSWARP_DISABLE_TASK_TIMING
         return avg_runtime_us_.load();
+#else
+        return -1;
+#endif
     }
 
     /// Assigns an executor to this task which takes precedence over
@@ -2183,17 +2213,29 @@ protected:
 
     /// Assigns the given idletime
     void set_avg_idletime_us(std::int64_t idletime) noexcept override {
+#ifndef TRANSWARP_DISABLE_TASK_TIMING
         avg_idletime_us_ = idletime;
+#else
+        (void)idletime;
+#endif
     }
 
     /// Assigns the given waittime
     void set_avg_waittime_us(std::int64_t waittime) noexcept override {
+#ifndef TRANSWARP_DISABLE_TASK_TIMING
         avg_waittime_us_ = waittime;
+#else
+        (void)waittime;
+#endif
     }
 
     /// Assigns the given runtime
     void set_avg_runtime_us(std::int64_t runtime) noexcept override {
+#ifndef TRANSWARP_DISABLE_TASK_TIMING
         avg_runtime_us_ = runtime;
+#else
+        (void)runtime;
+#endif
     }
 
     /// Checks if the task was scheduled and throws transwarp::control_error if it's not
@@ -2268,9 +2310,11 @@ protected:
     std::shared_ptr<transwarp::executor> executor_;
     std::atomic<bool> canceled_{false};
     bool schedule_mode_ = true;
+#ifndef TRANSWARP_DISABLE_TASK_TIMING
     std::atomic<std::int64_t> avg_idletime_us_{-1};
     std::atomic<std::int64_t> avg_waittime_us_{-1};
     std::atomic<std::int64_t> avg_runtime_us_{-1};
+#endif
     std::unique_ptr<Functor> functor_;
     transwarp::detail::parents_t<ParentResults...> parents_;
 };
@@ -2479,9 +2523,11 @@ private:
         t->executor_ = this->executor_;
         t->canceled_ = this->canceled_.load();
         t->schedule_mode_ = this->schedule_mode_;
+#ifndef TRANSWARP_DISABLE_TASK_TIMING
         t->avg_idletime_us_ = this->avg_idletime_us_.load();
         t->avg_waittime_us_ = this->avg_waittime_us_.load();
         t->avg_runtime_us_ = this->avg_runtime_us_.load();
+#endif
         t->functor_ = std::unique_ptr<Functor>{new Functor{*this->functor_}};
         t->parents_ = transwarp::detail::parents<ParentResults...>::clone(task_cache, this->parents_);
         t->executor_ = this->executor_;
