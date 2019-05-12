@@ -36,7 +36,7 @@ TEST_CASE("add_remove_listener_all") {
 //    auto t3 = tw::make_task(tw::wait, []{}, t1, t2);
     auto t3 = tw::make_task(tw::root, []{});
     const auto n_tasks = t3->tasks().size();
-    REQUIRE(n_tasks == 0);
+    REQUIRE(n_tasks == 1);
 //    auto l1 = std::make_shared<mock_listener>();
 //    t3->add_listener_all(l1);
 //    REQUIRE(1 + 3*n_events == l1.use_count());
