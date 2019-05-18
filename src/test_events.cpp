@@ -1,8 +1,4 @@
-#define TRANSWARP_DISABLE_TASK_TIMING
-#define TRANSWARP_DISABLE_TASK_NAMING
-
 #include "test.h"
-#include <iostream>
 
 constexpr int n_events = static_cast<int>(tw::event_type::count);
 
@@ -31,17 +27,14 @@ TEST_CASE("add_remove_listener") {
 }
 
 TEST_CASE("add_remove_listener_all") {
-//    auto t1 = tw::make_task(tw::root, []{});
-//    auto t2 = tw::make_task(tw::root, []{});
-//    auto t3 = tw::make_task(tw::wait, []{}, t1, t2);
-    auto t3 = tw::make_task(tw::root, []{});
-    const auto n_tasks = t3->tasks().size();
-    REQUIRE(n_tasks == 1);
-//    auto l1 = std::make_shared<mock_listener>();
-//    t3->add_listener_all(l1);
-//    REQUIRE(1 + 3*n_events == l1.use_count());
-//    t3->remove_listener_all(l1);
-//    REQUIRE(1 == l1.use_count());
+    auto t1 = tw::make_task(tw::root, []{});
+    auto t2 = tw::make_task(tw::root, []{});
+    auto t3 = tw::make_task(tw::wait, []{}, t1, t2);
+    auto l1 = std::make_shared<mock_listener>();
+    t3->add_listener_all(l1);
+    REQUIRE(1 + 3*n_events == l1.use_count());
+    t3->remove_listener_all(l1);
+    REQUIRE(1 == l1.use_count());
 }
 
 TEST_CASE("add_remove_listener_per_event_all") {
@@ -247,7 +240,6 @@ TEST_CASE("after_custom_data_set_event_for_value_task") {
 
 TEST_CASE("after_future_changed_event") {
     auto t = tw::make_task(tw::root, []{ return 0; });
-    std::cout<<"normal task="<<sizeof(*t)<<std::endl;
     auto l = std::make_shared<mock_listener>();
     t->add_listener(l);
     t->set_value(42);
@@ -261,7 +253,6 @@ TEST_CASE("after_future_changed_event") {
 
 TEST_CASE("after_future_changed_event_for_value_task") {
     auto t = tw::make_value_task(0);
-    std::cout<<"value task="<<sizeof(*t)<<std::endl;
     auto l = std::make_shared<mock_listener>();
     t->add_listener(l);
     t->set_value(42);

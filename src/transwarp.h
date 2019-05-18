@@ -34,6 +34,17 @@
 //TRANSWARP_DISABLE_TASK_CUSTOM_DATA
 //TRANSWARP_MINIMAL_TASK_SIZE
 
+#ifdef TRANSWARP_MINIMUM_TASK_SIZE
+
+#ifndef TRANSWARP_DISABLE_TASK_NAMING
+#define TRANSWARP_DISABLE_TASK_NAMING
+#endif
+
+#ifndef TRANSWARP_DISABLE_TASK_TIMING
+#define TRANSWARP_DISABLE_TASK_TIMING
+#endif
+
+#endif
 
 /// The transwarp namespace
 namespace transwarp {
@@ -222,7 +233,7 @@ private:
 class timer;
 
 /// An interface for the task class
-class itask : public std::enable_shared_from_this<itask> {
+class itask {
 public:
     virtual ~itask() = default;
 
@@ -230,7 +241,7 @@ public:
     virtual std::size_t id() const noexcept = 0;
     virtual std::size_t level() const noexcept = 0;
     virtual transwarp::task_type type() const noexcept = 0;
-    virtual std::optional<std::string> name() const noexcept = 0;
+    virtual const std::optional<std::string>& name() const noexcept = 0;
     virtual std::shared_ptr<transwarp::executor> executor() const noexcept = 0;
     virtual std::int64_t priority() const noexcept = 0;
     virtual const std::any& custom_data() const noexcept = 0;
@@ -284,6 +295,7 @@ public:
     virtual std::vector<transwarp::edge> edges() = 0;
 
 protected:
+    virtual std::shared_ptr<itask> shared() = 0;
     virtual void schedule_impl(bool reset, transwarp::executor* executor=nullptr) = 0;
 
 private:
@@ -325,7 +337,7 @@ inline std::string to_string(const transwarp::task_type& type) {
 inline std::string to_string(const transwarp::itask& task, std::string_view separator="\n") {
     std::string s;
     s += '"';
-    const std::optional<std::string> name = task.name();
+    const std::optional<std::string>& name = task.name();
     if (name) {
         s += std::string{"<"} + *name + std::string{">"} + separator.data();
     }
@@ -1632,6 +1644,7 @@ private:
 /// Detail namespace for internal functionality only
 namespace detail {
 
+const std::optional<std::string> nullopt_string;
 
 /// Common task functionality shared across `task_impl` and `value_task`
 template<typename ResultType>
@@ -1646,11 +1659,11 @@ public:
     }
 
     /// The optional task name
-    std::optional<std::string> name() const noexcept {
+    const std::optional<std::string>& name() const noexcept {
 #ifndef TRANSWARP_DISABLE_TASK_NAMING
         return name_;
 #else
-        return {};
+        return transwarp::detail::nullopt_string;
 #endif
     }
 
@@ -1826,7 +1839,7 @@ protected:
     std::any custom_data_;
     std::shared_future<result_type> future_;
     bool visited_ = false;
-    std::unordered_map<transwarp::event_type, std::vector<std::shared_ptr<transwarp::listener>>> listeners_;
+    std::map<transwarp::event_type, std::vector<std::shared_ptr<transwarp::listener>>> listeners_;
     std::vector<transwarp::itask*> tasks_;
 };
 
@@ -2171,8 +2184,7 @@ protected:
 
     template<typename F>
     task_impl_base(F&& functor, std::shared_ptr<transwarp::task<ParentResults>>... parents)
-    : transwarp::detail::task_common<ResultType>{},
-      functor_{new Functor{std::forward<F>(functor)}},
+    : functor_{new Functor{std::forward<F>(functor)}},
       parents_{std::move(parents)...}
     {
         init();
@@ -2180,8 +2192,7 @@ protected:
 
     template<typename F, typename P>
     task_impl_base(F&& functor, std::vector<std::shared_ptr<transwarp::task<P>>> parents)
-    : transwarp::detail::task_common<ResultType>{},
-      functor_{new Functor{std::forward<F>(functor)}},
+    : functor_{new Functor{std::forward<F>(functor)}},
       parents_{std::move(parents)}
     {
         if (parents_.empty()) {
@@ -2255,7 +2266,7 @@ protected:
             if (reset) {
                 cancel(false);
             }
-            std::weak_ptr<task_impl_base> self = std::dynamic_pointer_cast<task_impl_base>(this->shared_from_this());
+            std::weak_ptr<task_impl_base> self = std::dynamic_pointer_cast<task_impl_base>(this->shared());
             using runner_t = transwarp::detail::runner<result_type, task_type, task_impl_base, decltype(parents_)>;
             std::shared_ptr<runner_t> runner = std::shared_ptr<runner_t>{new runner_t{this->id(), self, parents_}};
             this->raise_event(transwarp::event_type::before_scheduled);
@@ -2466,7 +2477,8 @@ protected:
 /// By connecting tasks a directed acyclic graph is built.
 /// Tasks should be created using the make_task factory functions.
 template<typename TaskType, typename Functor, typename... ParentResults>
-class task_impl : public transwarp::detail::task_impl_proxy<transwarp::detail::functor_result_t<TaskType, Functor, ParentResults...>, TaskType, Functor, ParentResults...> {
+class task_impl : public transwarp::detail::task_impl_proxy<transwarp::detail::functor_result_t<TaskType, Functor, ParentResults...>, TaskType, Functor, ParentResults...>,
+                  public std::enable_shared_from_this<task_impl<TaskType, Functor, ParentResults...>> {
 public:
     /// The task type
     using task_type = TaskType;
@@ -2497,14 +2509,14 @@ public:
     /// Gives this task a name and returns a ptr to itself
     std::shared_ptr<task_impl> named(std::string name) {
         this->set_name(std::make_optional(std::move(name)));
-        return std::dynamic_pointer_cast<task_impl>(this->shared_from_this());
+        return std::dynamic_pointer_cast<task_impl>(this->shared());
     }
 
     /// Creates a continuation to this task
     template<typename TaskType_, typename Functor_>
     auto then(TaskType_, Functor_&& functor) {
         using task_t = transwarp::task_impl<TaskType_, std::decay_t<Functor_>, result_type>;
-        return std::shared_ptr<task_t>{new task_t{std::forward<Functor_>(functor), std::dynamic_pointer_cast<task_impl>(this->shared_from_this())}};
+        return std::shared_ptr<task_t>{new task_t{std::forward<Functor_>(functor), std::dynamic_pointer_cast<task_impl>(this->shared())}};
     }
 
     /// Clones this task and casts the result to a ptr to task_impl
@@ -2515,6 +2527,10 @@ public:
 private:
 
     task_impl() = default;
+
+    std::shared_ptr<transwarp::itask> shared() override {
+        return std::dynamic_pointer_cast<transwarp::itask>(this->shared_from_this());
+    }
 
     std::shared_ptr<transwarp::task<result_type>> clone_impl(std::unordered_map<std::shared_ptr<transwarp::itask>, std::shared_ptr<transwarp::itask>>& task_cache) const override {
         auto t = std::shared_ptr<task_impl>{new task_impl};
@@ -2541,7 +2557,8 @@ private:
 /// A value task that stores a single value and doesn't require scheduling.
 /// Value tasks should be created using the make_value_task factory functions.
 template<typename ResultType>
-class value_task : public transwarp::detail::task_common<ResultType> {
+class value_task : public transwarp::detail::task_common<ResultType>,
+                   public std::enable_shared_from_this<value_task<ResultType>> {
 public:
     /// The task type
     using task_type = transwarp::root_type;
@@ -2574,7 +2591,7 @@ public:
     template<typename TaskType_, typename Functor_>
     auto then(TaskType_, Functor_&& functor) {
         using task_t = transwarp::task_impl<TaskType_, std::decay_t<Functor_>, result_type>;
-        return std::shared_ptr<task_t>{new task_t{std::forward<Functor_>(functor), std::dynamic_pointer_cast<value_task>(this->shared_from_this())}};
+        return std::shared_ptr<task_t>{new task_t{std::forward<Functor_>(functor), std::dynamic_pointer_cast<value_task>(this->shared())}};
     }
 
     /// Clones this task and casts the result to a ptr to value_task
@@ -2780,6 +2797,10 @@ private:
     value_task()
     {
         this->tasks_ = {this};
+    }
+
+    std::shared_ptr<itask> shared() override {
+        return std::dynamic_pointer_cast<transwarp::itask>(this->shared_from_this());
     }
 
     std::shared_ptr<transwarp::task<result_type>> clone_impl(std::unordered_map<std::shared_ptr<transwarp::itask>, std::shared_ptr<transwarp::itask>>&) const override {

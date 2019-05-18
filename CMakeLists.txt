@@ -68,6 +68,10 @@ add_executable(wide_graph_with_pool
 	examples/wide_graph_with_pool.h
 	examples/wide_graph_with_pool.cpp)
 
+add_executable(minimum_task_size
+	src/transwarp.h
+	examples/minimum_task_size.cpp)
+
 target_compile_definitions(transwarp_test PRIVATE UNITTEST)
 
 add_test(transwarp_test transwarp_test --use-colour no)
@@ -77,6 +81,7 @@ add_test(benchmark_statistical benchmark_statistical)
 add_test(single_thread_lock_free single_thread_lock_free)
 add_test(statistical_key_facts statistical_key_facts)
 add_test(wide_graph_with_pool wide_graph_with_pool)
+add_test(minimum_task_size minimum_task_size)
 
 if (MSVC)
 	set(CMAKE_CXX_FLAGS "/std:c++17 /W4 /bigobj /EHsc /wd4503 /wd4996 /wd4702 /wd4100")
@@ -92,4 +97,5 @@ else()
 	target_link_libraries(single_thread_lock_free ${CMAKE_THREAD_LIBS_INIT})
 	target_link_libraries(statistical_key_facts ${CMAKE_THREAD_LIBS_INIT})
 	target_link_libraries(wide_graph_with_pool ${CMAKE_THREAD_LIBS_INIT})
+	target_link_libraries(minimum_task_size ${CMAKE_THREAD_LIBS_INIT})
 endif()
