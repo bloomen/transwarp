@@ -6,7 +6,7 @@ include_directories(examples)
 
 find_package(Threads)
 
-add_executable(transwarp_test
+set(SOURCES
 	src/transwarp.h
 	src/test.h
 	src/test.cpp
@@ -37,6 +37,9 @@ add_executable(transwarp_test
 	examples/single_thread_lock_free.cpp
 	examples/statistical_key_facts.cpp
 	examples/wide_graph_with_pool.cpp)
+
+add_executable(transwarp_test ${SOURCES})
+add_executable(transwarp_minsize_test ${SOURCES})
 
 add_executable(basic_with_three_tasks
 	src/transwarp.h
@@ -73,8 +76,10 @@ add_executable(minimum_task_size
 	examples/minimum_task_size.cpp)
 
 target_compile_definitions(transwarp_test PRIVATE UNITTEST)
+target_compile_definitions(transwarp_minsize_test PRIVATE UNITTEST TRANSWARP_MINIMUM_TASK_SIZE)
 
 add_test(transwarp_test transwarp_test --use-colour no)
+add_test(transwarp_test transwarp_minsize_test --use-colour no)
 add_test(basic_with_three_tasks basic_with_three_tasks)
 add_test(benchmark_simple benchmark_simple)
 add_test(benchmark_statistical benchmark_statistical)
@@ -91,6 +96,7 @@ else()
 		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
 	endif()
 	target_link_libraries(transwarp_test ${CMAKE_THREAD_LIBS_INIT})
+	target_link_libraries(transwarp_minsize_test ${CMAKE_THREAD_LIBS_INIT})
 	target_link_libraries(basic_with_three_tasks ${CMAKE_THREAD_LIBS_INIT})
 	target_link_libraries(benchmark_simple ${CMAKE_THREAD_LIBS_INIT})
 	target_link_libraries(benchmark_statistical ${CMAKE_THREAD_LIBS_INIT})

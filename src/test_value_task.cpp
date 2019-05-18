@@ -29,7 +29,11 @@ TEST_CASE("value_task_with_name") {
     auto n = t;
     REQUIRE(0u == n->id());
     REQUIRE(tw::task_type::root == n->type());
+#ifndef TRANSWARP_MINIMUM_TASK_SIZE
     REQUIRE(name == *n->name());
+#else
+    REQUIRE(!n->name());
+#endif
     REQUIRE(!n->executor());
     REQUIRE(n->parents().empty());
     REQUIRE(0 == n->priority());

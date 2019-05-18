@@ -55,16 +55,28 @@ void make_test_three_tasks(std::size_t threads) {
 
     REQUIRE(0u == task1->id());
     REQUIRE(0u == task1->parents().size());
+#ifndef TRANSWARP_MINIMUM_TASK_SIZE
     REQUIRE("t1" == *task1->name());
+#else
+    REQUIRE(!task1->name());
+#endif
 
     REQUIRE(1u == task2->id());
     REQUIRE(1u == task2->parents().size());
+#ifndef TRANSWARP_MINIMUM_TASK_SIZE
     REQUIRE("t2" == *task2->name());
+#else
+    REQUIRE(!task2->name());
+#endif
     task2->set_executor(std::make_shared<tw::sequential>());
 
     REQUIRE(2u == task3->id());
     REQUIRE(2u == task3->parents().size());
+#ifndef TRANSWARP_MINIMUM_TASK_SIZE
     REQUIRE("t3" == *task3->name());
+#else
+    REQUIRE(!task3->name());
+#endif
 
     REQUIRE_FALSE(task1->was_scheduled());
     REQUIRE_FALSE(task2->was_scheduled());
@@ -98,6 +110,7 @@ void make_test_three_tasks(std::size_t threads) {
     const auto dot_graph = tw::to_string(graph);
     std::ofstream{"test.dot"} << dot_graph;
 
+#ifndef TRANSWARP_MINIMUM_TASK_SIZE
     const std::string exp_dot_graph = "digraph {\n"
 "\"<t1>\nroot "
 "id=0 lev=0\" -> \"<t2>\nconsume "
@@ -109,7 +122,19 @@ void make_test_three_tasks(std::size_t threads) {
 "id=1 lev=1\n<transwarp::sequential>\" -> \"<t3>\nconsume "
 "id=2 lev=2\"\n"
 "}";
-
+#else
+    const std::string exp_dot_graph = "digraph {\n"
+"\"root "
+"id=0 lev=0\" -> \"consume "
+"id=1 lev=1\n<transwarp::sequential>\"\n"
+"\"root "
+"id=0 lev=0\" -> \"consume "
+"id=2 lev=2\"\n"
+"\"consume "
+"id=1 lev=1\n<transwarp::sequential>\" -> \"consume "
+"id=2 lev=2\"\n"
+"}";
+#endif
     REQUIRE(exp_dot_graph == dot_graph);
 }
 

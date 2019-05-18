@@ -23,7 +23,11 @@ TEST_CASE("make_task_accept_with_vector_and_name") {
         return parents[0].get() + parents[1].get();
     }, vec)->named("task");
     t->schedule();
+#ifndef TRANSWARP_MINIMUM_TASK_SIZE
     REQUIRE("task" == *t->name());
+#else
+    REQUIRE(!t->name());
+#endif
     REQUIRE(55 == t->get());
 }
 
@@ -48,7 +52,11 @@ TEST_CASE("make_task_accept_any_with_vector_and_name") {
         return parent.get();
     }, vec)->named("task");
     t->schedule();
+#ifndef TRANSWARP_MINIMUM_TASK_SIZE
     REQUIRE("task" == *t->name());
+#else
+    REQUIRE(!t->name());
+#endif
     REQUIRE((t->get() == 42 || t->get() == 13));
 }
 
@@ -75,7 +83,11 @@ TEST_CASE("make_task_consume_with_vector_and_name") {
         return parents[0] + parents[1];
     }, vec)->named("task");
     t->schedule();
+#ifndef TRANSWARP_MINIMUM_TASK_SIZE
     REQUIRE("task" == *t->name());
+#else
+    REQUIRE(!t->name());
+#endif
     REQUIRE(55 == t->get());
 }
 
@@ -100,7 +112,11 @@ TEST_CASE("make_task_consume_with_vector_and_name_and_void_result") {
         REQUIRE(2 == parents.size());
     }, vec)->named("task");
     t->schedule();
+#ifndef TRANSWARP_MINIMUM_TASK_SIZE
     REQUIRE("task" == *t->name());
+#else
+    REQUIRE(!t->name());
+#endif
     REQUIRE(t->has_result());
 }
 
@@ -129,7 +145,11 @@ TEST_CASE("make_task_consume_with_vector_and_name_and_ref_result") {
         return res;
     }, vec)->named("task");
     t->schedule();
+#ifndef TRANSWARP_MINIMUM_TASK_SIZE
     REQUIRE("task" == *t->name());
+#else
+    REQUIRE(!t->name());
+#endif
     REQUIRE(res == t->get());
 }
 
@@ -154,7 +174,11 @@ TEST_CASE("make_task_consume_any_with_vector_and_name") {
         return parent;
     }, vec)->named("task");
     t->schedule();
+#ifndef TRANSWARP_MINIMUM_TASK_SIZE
     REQUIRE("task" == *t->name());
+#else
+    REQUIRE(!t->name());
+#endif
     REQUIRE((t->get() == 42 || t->get() == 13));
 }
 
@@ -179,7 +203,11 @@ TEST_CASE("make_task_wait_with_vector_and_name") {
         return 1;
     }, vec)->named("task");
     t->schedule();
+#ifndef TRANSWARP_MINIMUM_TASK_SIZE
     REQUIRE("task" == *t->name());
+#else
+    REQUIRE(!t->name());
+#endif
     REQUIRE(1 == t->get());
 }
 
@@ -204,7 +232,11 @@ TEST_CASE("make_task_wait_any_with_vector_and_name") {
         return 1;
     }, vec)->named("task");
     t->schedule();
+#ifndef TRANSWARP_MINIMUM_TASK_SIZE
     REQUIRE("task" == *t->name());
+#else
+    REQUIRE(!t->name());
+#endif
     REQUIRE(1 == t->get());
 }
 
