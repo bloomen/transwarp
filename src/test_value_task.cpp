@@ -46,7 +46,11 @@ TEST_CASE("value_task_with_priority_and_custom_data") {
     t->set_priority(13);
     t->set_custom_data(13.5);
     auto n = t;
+#ifndef TRANSWARP_DISABLE_TASK_PRIORITY
     REQUIRE(13 == n->priority());
+#else
+    REQUIRE(0 == n->priority());
+#endif
 #ifndef TRANSWARP_DISABLE_TASK_CUSTOM_DATA
     REQUIRE(13.5 == std::any_cast<double>(n->custom_data()));
 #else
@@ -63,7 +67,11 @@ TEST_CASE("value_task_with_priority_all_and_custom_data_all") {
     t->set_priority_all(13);
     t->set_custom_data_all(13.5);
     auto n = t;
+#ifndef TRANSWARP_DISABLE_TASK_PRIORITY
     REQUIRE(13 == n->priority());
+#else
+    REQUIRE(0 == n->priority());
+#endif
 #ifndef TRANSWARP_DISABLE_TASK_CUSTOM_DATA
     REQUIRE(13.5 == std::any_cast<double>(n->custom_data()));
 #else

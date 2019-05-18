@@ -253,7 +253,11 @@ TEST_CASE("task_priority") {
     auto t = tw::make_task(tw::root, []{});
     REQUIRE(0 == t->priority());
     t->set_priority(3);
+#ifndef TRANSWARP_DISABLE_TASK_PRIORITY
     REQUIRE(3 == t->priority());
+#else
+    REQUIRE(0 == t->priority());
+#endif
     t->reset_priority();
     REQUIRE(0 == t->priority());
 }
@@ -276,16 +280,26 @@ TEST_CASE("set_priority_all") {
     auto t1 = tw::make_task(tw::root, []{});
     auto t2 = tw::make_task(tw::wait, []{}, t1);
     t2->set_priority_all(42);
+#ifndef TRANSWARP_DISABLE_TASK_PRIORITY
     REQUIRE(t1->priority() == 42);
     REQUIRE(t2->priority() == 42);
+#else
+    REQUIRE(t1->priority() == 0);
+    REQUIRE(t2->priority() == 0);
+#endif
 }
 
 TEST_CASE("reset_priority_all") {
     auto t1 = tw::make_task(tw::root, []{});
     auto t2 = tw::make_task(tw::wait, []{}, t1);
     t2->set_priority_all(42);
+#ifndef TRANSWARP_DISABLE_TASK_PRIORITY
     REQUIRE(t1->priority() == 42);
     REQUIRE(t2->priority() == 42);
+#else
+    REQUIRE(t1->priority() == 0);
+    REQUIRE(t2->priority() == 0);
+#endif
     t2->reset_priority_all();
     REQUIRE(t1->priority() == 0);
     REQUIRE(t2->priority() == 0);

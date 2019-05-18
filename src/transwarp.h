@@ -1673,7 +1673,11 @@ public:
 
     /// The task priority (defaults to 0)
     std::int64_t priority() const noexcept override {
+#ifndef TRANSWARP_DISABLE_TASK_PRIORITY
         return priority_;
+#else
+        return 0;
+#endif
     }
 
     /// The custom task data (may not hold a value)
@@ -1688,14 +1692,20 @@ public:
     /// Sets a task priority (defaults to 0). transwarp will not directly use this.
     /// This is only useful if something else is using the priority (e.g. a custom executor)
     void set_priority(std::int64_t priority) override {
+#ifndef TRANSWARP_DISABLE_TASK_PRIORITY
         ensure_task_not_running();
         priority_ = priority;
+#else
+        (void)priority;
+#endif
     }
 
     /// Resets the task priority to 0
     void reset_priority() override {
+#ifndef TRANSWARP_DISABLE_TASK_PRIORITY
         ensure_task_not_running();
         priority_ = 0;
+#endif
     }
 
     /// Assigns custom data to this task. transwarp will not directly use this.
@@ -1827,7 +1837,9 @@ protected:
 #ifndef TRANSWARP_DISABLE_TASK_NAME
         name_ = task.name_;
 #endif
+#ifndef TRANSWARP_DISABLE_TASK_PRIORITY
         priority_ = task.priority_;
+#endif
 #ifndef TRANSWARP_DISABLE_TASK_CUSTOM_DATA
         custom_data_ = task.custom_data_;
 #endif
@@ -1851,7 +1863,9 @@ protected:
 #ifndef TRANSWARP_DISABLE_TASK_NAME
     std::optional<std::string> name_;
 #endif
+#ifndef TRANSWARP_DISABLE_TASK_PRIORITY
     std::int64_t priority_ = 0;
+#endif
 #ifndef TRANSWARP_DISABLE_TASK_CUSTOM_DATA
     std::any custom_data_;
 #endif
@@ -2106,16 +2120,22 @@ public:
     /// Sets a priority to all tasks (defaults to 0). transwarp will not directly use this.
     /// This is only useful if something else is using the priority (e.g. a custom executor)
     void set_priority_all(std::int64_t priority) override {
+#ifndef TRANSWARP_DISABLE_TASK_PRIORITY
         this->ensure_task_not_running();
         transwarp::detail::set_priority_visitor visitor{priority};
         visit_all(visitor);
+#else
+        (void)priority;
+#endif
     }
 
     /// Resets the priority of all tasks to 0
     void reset_priority_all() override {
+#ifndef TRANSWARP_DISABLE_TASK_PRIORITY
         this->ensure_task_not_running();
         transwarp::detail::reset_priority_visitor visitor;
         visit_all(visitor);
+#endif
     }
 
     /// Assigns custom data to all tasks. transwarp will not directly use this.
@@ -2678,11 +2698,17 @@ public:
     /// Sets a priority to all tasks (defaults to 0). transwarp will not directly use this.
     /// This is only useful if something else is using the priority
     void set_priority_all(std::int64_t priority) override {
+#ifndef TRANSWARP_DISABLE_TASK_PRIORITY
         this->set_priority(priority);
+#else
+        (void)priority;
+#endif
     }
     /// Resets the priority of all tasks to 0
     void reset_priority_all() override {
+#ifndef TRANSWARP_DISABLE_TASK_PRIORITY
         this->reset_priority();
+#endif
     }
 
     /// Assigns custom data to all tasks. transwarp will not directly use this.
