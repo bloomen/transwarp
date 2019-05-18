@@ -79,7 +79,7 @@ target_compile_definitions(transwarp_test PRIVATE UNITTEST)
 target_compile_definitions(transwarp_minsize_test PRIVATE UNITTEST TRANSWARP_MINIMUM_TASK_SIZE)
 
 add_test(transwarp_test transwarp_test --use-colour no)
-add_test(transwarp_test transwarp_minsize_test --use-colour no)
+add_test(transwarp_minsize_test transwarp_minsize_test --use-colour no)
 add_test(basic_with_three_tasks basic_with_three_tasks)
 add_test(benchmark_simple benchmark_simple)
 add_test(benchmark_statistical benchmark_statistical)
