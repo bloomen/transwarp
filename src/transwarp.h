@@ -396,10 +396,10 @@ namespace detail {
 /// Clones a task
 template<typename TaskType>
 std::shared_ptr<TaskType> clone_task(std::unordered_map<std::shared_ptr<transwarp::itask>, std::shared_ptr<transwarp::itask>>& task_cache, const std::shared_ptr<TaskType>& t) {
-    const auto original_task = std::dynamic_pointer_cast<transwarp::itask>(t);
+    const auto original_task = std::static_pointer_cast<transwarp::itask>(t);
     const auto task_cache_it = task_cache.find(original_task);
     if (task_cache_it != task_cache.cend()) {
-        return std::dynamic_pointer_cast<TaskType>(task_cache_it->second);
+        return std::static_pointer_cast<TaskType>(task_cache_it->second);
     } else {
         auto cloned_task = t->clone_impl(task_cache);
         task_cache[original_task] = cloned_task;
@@ -2265,7 +2265,7 @@ protected:
             if (reset) {
                 cancel(false);
             }
-            std::weak_ptr<task_impl_base> self = std::dynamic_pointer_cast<task_impl_base>(this->shared_from_this());
+            std::weak_ptr<task_impl_base> self = std::static_pointer_cast<task_impl_base>(this->shared_from_this());
             using runner_t = transwarp::detail::runner<result_type, task_type, task_impl_base, decltype(parents_)>;
             std::shared_ptr<runner_t> runner = std::shared_ptr<runner_t>{new runner_t{this->id(), self, parents_}};
             this->raise_event(transwarp::event_type::before_scheduled);
@@ -2507,19 +2507,19 @@ public:
     /// Gives this task a name and returns a ptr to itself
     std::shared_ptr<task_impl> named(std::string name) {
         this->set_name(std::make_optional(std::move(name)));
-        return std::dynamic_pointer_cast<task_impl>(this->shared_from_this());
+        return std::static_pointer_cast<task_impl>(this->shared_from_this());
     }
 
     /// Creates a continuation to this task
     template<typename TaskType_, typename Functor_>
     auto then(TaskType_, Functor_&& functor) {
         using task_t = transwarp::task_impl<TaskType_, std::decay_t<Functor_>, result_type>;
-        return std::shared_ptr<task_t>{new task_t{std::forward<Functor_>(functor), std::dynamic_pointer_cast<task_impl>(this->shared_from_this())}};
+        return std::shared_ptr<task_t>{new task_t{std::forward<Functor_>(functor), std::static_pointer_cast<task_impl>(this->shared_from_this())}};
     }
 
     /// Clones this task and casts the result to a ptr to task_impl
     std::shared_ptr<task_impl> clone_cast() const {
-        return std::dynamic_pointer_cast<task_impl>(this->clone());
+        return std::static_pointer_cast<task_impl>(this->clone());
     }
 
 private:
@@ -2577,19 +2577,19 @@ public:
     /// Gives this task a name and returns a ptr to itself
     std::shared_ptr<value_task> named(std::string name) {
         this->set_name(std::make_optional(std::move(name)));
-        return std::dynamic_pointer_cast<value_task>(this->shared_from_this());
+        return std::static_pointer_cast<value_task>(this->shared_from_this());
     }
 
     /// Creates a continuation to this task
     template<typename TaskType_, typename Functor_>
     auto then(TaskType_, Functor_&& functor) {
         using task_t = transwarp::task_impl<TaskType_, std::decay_t<Functor_>, result_type>;
-        return std::shared_ptr<task_t>{new task_t{std::forward<Functor_>(functor), std::dynamic_pointer_cast<value_task>(this->shared_from_this())}};
+        return std::shared_ptr<task_t>{new task_t{std::forward<Functor_>(functor), std::static_pointer_cast<value_task>(this->shared_from_this())}};
     }
 
     /// Clones this task and casts the result to a ptr to value_task
     std::shared_ptr<value_task> clone_cast() const {
-        return std::dynamic_pointer_cast<value_task>(this->clone());
+        return std::static_pointer_cast<value_task>(this->clone());
     }
 
     /// Nothing to be done to finalize a value task
