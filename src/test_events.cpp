@@ -225,8 +225,12 @@ TEST_CASE("after_custom_data_set_event") {
     auto l = std::make_shared<mock_listener>();
     t->add_listener(l);
     t->set_custom_data(std::make_any<int>(42));
+#ifndef TRANSWARP_DISABLE_TASK_CUSTOM_DATA
     REQUIRE(1 == l->events.size());
     REQUIRE(tw::event_type::after_custom_data_set == l->events[0]);
+#else
+    REQUIRE(0 == l->events.size());
+#endif
 }
 
 TEST_CASE("after_custom_data_set_event_for_value_task") {
@@ -234,8 +238,12 @@ TEST_CASE("after_custom_data_set_event_for_value_task") {
     auto l = std::make_shared<mock_listener>();
     t->add_listener(l);
     t->set_custom_data(std::make_any<int>(42));
+#ifndef TRANSWARP_DISABLE_TASK_CUSTOM_DATA
     REQUIRE(1 == l->events.size());
     REQUIRE(tw::event_type::after_custom_data_set == l->events[0]);
+#else
+    REQUIRE(0 == l->events.size());
+#endif
 }
 
 TEST_CASE("after_future_changed_event") {

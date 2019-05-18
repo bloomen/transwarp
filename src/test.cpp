@@ -263,7 +263,11 @@ TEST_CASE("task_custom_data") {
     REQUIRE(!t->custom_data().has_value());
     auto cd = std::make_shared<int>(42);
     t->set_custom_data(cd);
+#ifndef TRANSWARP_DISABLE_TASK_CUSTOM_DATA
     REQUIRE(cd.get() == std::any_cast<std::shared_ptr<int>>(t->custom_data()).get());
+#else
+    REQUIRE(!t->custom_data().has_value());
+#endif
     t->remove_custom_data();
     REQUIRE(!t->custom_data().has_value());
 }
@@ -292,8 +296,13 @@ TEST_CASE("set_custom_data_all") {
     auto t2 = tw::make_task(tw::wait, []{}, t1);
     int data = 42;
     t2->set_custom_data_all(data);
+#ifndef TRANSWARP_DISABLE_TASK_CUSTOM_DATA
     REQUIRE(42 == std::any_cast<int>(t1->custom_data()));
     REQUIRE(42 == std::any_cast<int>(t2->custom_data()));
+#else
+    REQUIRE(!t1->custom_data().has_value());
+    REQUIRE(!t2->custom_data().has_value());
+#endif
 }
 
 TEST_CASE("remove_custom_data_all") {
@@ -301,8 +310,13 @@ TEST_CASE("remove_custom_data_all") {
     auto t2 = tw::make_task(tw::wait, []{}, t1);
     int data = 42;
     t2->set_custom_data_all(data);
+#ifndef TRANSWARP_DISABLE_TASK_CUSTOM_DATA
     REQUIRE(42 == std::any_cast<int>(t1->custom_data()));
     REQUIRE(42 == std::any_cast<int>(t2->custom_data()));
+#else
+    REQUIRE(!t1->custom_data().has_value());
+    REQUIRE(!t2->custom_data().has_value());
+#endif
     t2->remove_custom_data_all();
     REQUIRE(!t1->custom_data().has_value());
     REQUIRE(!t2->custom_data().has_value());

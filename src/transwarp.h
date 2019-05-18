@@ -28,22 +28,27 @@
 #include <utility>
 #include <vector>
 
-//TRANSWARP_DISABLE_TASK_NAMING
-//TRANSWARP_DISABLE_TASK_TIMING
-//TRANSWARP_DISABLE_TASK_PRIORITY
-//TRANSWARP_DISABLE_TASK_CUSTOM_DATA
 
 #ifdef TRANSWARP_MINIMUM_TASK_SIZE
 
-#ifndef TRANSWARP_DISABLE_TASK_NAMING
-#define TRANSWARP_DISABLE_TASK_NAMING
+#ifndef TRANSWARP_DISABLE_TASK_CUSTOM_DATA
+#define TRANSWARP_DISABLE_TASK_CUSTOM_DATA
 #endif
 
-#ifndef TRANSWARP_DISABLE_TASK_TIMING
-#define TRANSWARP_DISABLE_TASK_TIMING
+#ifndef TRANSWARP_DISABLE_TASK_NAME
+#define TRANSWARP_DISABLE_TASK_NAME
+#endif
+
+#ifndef TRANSWARP_DISABLE_TASK_PRIORITY
+#define TRANSWARP_DISABLE_TASK_PRIORITY
+#endif
+
+#ifndef TRANSWARP_DISABLE_TASK_TIME
+#define TRANSWARP_DISABLE_TASK_TIME
 #endif
 
 #endif
+
 
 /// The transwarp namespace
 namespace transwarp {
@@ -1643,6 +1648,7 @@ private:
 namespace detail {
 
 const std::optional<std::string> nullopt_string;
+const std::any any_empty;
 
 /// Common task functionality shared across `task_impl` and `value_task`
 template<typename ResultType>
@@ -1658,7 +1664,7 @@ public:
 
     /// The optional task name
     const std::optional<std::string>& name() const noexcept {
-#ifndef TRANSWARP_DISABLE_TASK_NAMING
+#ifndef TRANSWARP_DISABLE_TASK_NAME
         return name_;
 #else
         return transwarp::detail::nullopt_string;
@@ -1672,7 +1678,11 @@ public:
 
     /// The custom task data (may not hold a value)
     const std::any& custom_data() const noexcept override {
+#ifndef TRANSWARP_DISABLE_TASK_CUSTOM_DATA
         return custom_data_;
+#else
+        return transwarp::detail::any_empty;
+#endif
     }
 
     /// Sets a task priority (defaults to 0). transwarp will not directly use this.
@@ -1691,19 +1701,25 @@ public:
     /// Assigns custom data to this task. transwarp will not directly use this.
     /// This is only useful if something else is using this custom data (e.g. a custom executor)
     void set_custom_data(std::any custom_data) override {
+#ifndef TRANSWARP_DISABLE_TASK_CUSTOM_DATA
         ensure_task_not_running();
         if (!custom_data.has_value()) {
             throw transwarp::invalid_parameter{"custom data"};
         }
         custom_data_ = std::move(custom_data);
         raise_event(transwarp::event_type::after_custom_data_set);
+#else
+        (void)custom_data;
+#endif
     }
 
     /// Removes custom data from this task
     void remove_custom_data() override {
+#ifndef TRANSWARP_DISABLE_TASK_CUSTOM_DATA
         ensure_task_not_running();
         custom_data_ = {};
         raise_event(transwarp::event_type::after_custom_data_set);
+#endif
     }
 
     /// Returns the future associated to the underlying execution
@@ -1799,7 +1815,7 @@ protected:
 
     /// Assigns the given name
     void set_name(std::optional<std::string> name) noexcept override {
-#ifndef TRANSWARP_DISABLE_TASK_NAMING
+#ifndef TRANSWARP_DISABLE_TASK_NAME
         name_ = std::move(name);
 #else
         (void)name;
@@ -1808,11 +1824,13 @@ protected:
 
     void copy_from(const task_common& task) {
         id_ = task.id_;
-#ifndef TRANSWARP_DISABLE_TASK_NAMING
+#ifndef TRANSWARP_DISABLE_TASK_NAME
         name_ = task.name_;
 #endif
         priority_ = task.priority_;
+#ifndef TRANSWARP_DISABLE_TASK_CUSTOM_DATA
         custom_data_ = task.custom_data_;
+#endif
         if (task.has_result()) {
             try {
                 if constexpr (std::is_void_v<result_type>) {
@@ -1830,11 +1848,13 @@ protected:
     }
 
     std::size_t id_ = 0;
-#ifndef TRANSWARP_DISABLE_TASK_NAMING
+#ifndef TRANSWARP_DISABLE_TASK_NAME
     std::optional<std::string> name_;
 #endif
     std::int64_t priority_ = 0;
+#ifndef TRANSWARP_DISABLE_TASK_CUSTOM_DATA
     std::any custom_data_;
+#endif
     std::shared_future<result_type> future_;
     bool visited_ = false;
     std::map<transwarp::event_type, std::vector<std::shared_ptr<transwarp::listener>>> listeners_;
@@ -1894,7 +1914,7 @@ public:
 
     /// Returns the average idletime in microseconds (-1 if never set)
     std::int64_t avg_idletime_us() const noexcept override {
-#ifndef TRANSWARP_DISABLE_TASK_TIMING
+#ifndef TRANSWARP_DISABLE_TASK_TIME
         return avg_idletime_us_.load();
 #else
         return -1;
@@ -1903,7 +1923,7 @@ public:
 
     /// Returns the average waittime in microseconds (-1 if never set)
     std::int64_t avg_waittime_us() const noexcept override {
-#ifndef TRANSWARP_DISABLE_TASK_TIMING
+#ifndef TRANSWARP_DISABLE_TASK_TIME
         return avg_waittime_us_.load();
 #else
         return -1;
@@ -1912,7 +1932,7 @@ public:
 
     /// Returns the average runtime in microseconds (-1 if never set)
     std::int64_t avg_runtime_us() const noexcept override {
-#ifndef TRANSWARP_DISABLE_TASK_TIMING
+#ifndef TRANSWARP_DISABLE_TASK_TIME
         return avg_runtime_us_.load();
 #else
         return -1;
@@ -2101,16 +2121,22 @@ public:
     /// Assigns custom data to all tasks. transwarp will not directly use this.
     /// This is only useful if something else is using this custom data (e.g. a custom executor)
     void set_custom_data_all(std::any custom_data) override {
+#ifndef TRANSWARP_DISABLE_TASK_CUSTOM_DATA
         this->ensure_task_not_running();
         transwarp::detail::set_custom_data_visitor visitor{std::move(custom_data)};
         visit_all(visitor);
+#else
+        (void)custom_data;
+#endif
     }
 
     /// Removes custom data from all tasks
     void remove_custom_data_all() override {
+#ifndef TRANSWARP_DISABLE_TASK_CUSTOM_DATA
         this->ensure_task_not_running();
         transwarp::detail::remove_custom_data_visitor visitor;
         visit_all(visitor);
+#endif
     }
 
     /// Adds a new listener for all event types and for all parents
@@ -2223,7 +2249,7 @@ protected:
 
     /// Assigns the given idletime
     void set_avg_idletime_us(std::int64_t idletime) noexcept override {
-#ifndef TRANSWARP_DISABLE_TASK_TIMING
+#ifndef TRANSWARP_DISABLE_TASK_TIME
         avg_idletime_us_ = idletime;
 #else
         (void)idletime;
@@ -2232,7 +2258,7 @@ protected:
 
     /// Assigns the given waittime
     void set_avg_waittime_us(std::int64_t waittime) noexcept override {
-#ifndef TRANSWARP_DISABLE_TASK_TIMING
+#ifndef TRANSWARP_DISABLE_TASK_TIME
         avg_waittime_us_ = waittime;
 #else
         (void)waittime;
@@ -2241,7 +2267,7 @@ protected:
 
     /// Assigns the given runtime
     void set_avg_runtime_us(std::int64_t runtime) noexcept override {
-#ifndef TRANSWARP_DISABLE_TASK_TIMING
+#ifndef TRANSWARP_DISABLE_TASK_TIME
         avg_runtime_us_ = runtime;
 #else
         (void)runtime;
@@ -2320,7 +2346,7 @@ protected:
     std::shared_ptr<transwarp::executor> executor_;
     std::atomic<bool> canceled_{false};
     bool schedule_mode_ = true;
-#ifndef TRANSWARP_DISABLE_TASK_TIMING
+#ifndef TRANSWARP_DISABLE_TASK_TIME
     std::atomic<std::int64_t> avg_idletime_us_{-1};
     std::atomic<std::int64_t> avg_waittime_us_{-1};
     std::atomic<std::int64_t> avg_runtime_us_{-1};
@@ -2505,7 +2531,11 @@ public:
 
     /// Gives this task a name and returns a ptr to itself
     std::shared_ptr<task_impl> named(std::string name) {
+#ifndef TRANSWARP_DISABLE_TASK_NAME
         this->set_name(std::make_optional(std::move(name)));
+#else
+        (void)name;
+#endif
         return std::static_pointer_cast<task_impl>(this->shared_from_this());
     }
 
@@ -2533,7 +2563,7 @@ private:
         t->executor_ = this->executor_;
         t->canceled_ = this->canceled_.load();
         t->schedule_mode_ = this->schedule_mode_;
-#ifndef TRANSWARP_DISABLE_TASK_TIMING
+#ifndef TRANSWARP_DISABLE_TASK_TIME
         t->avg_idletime_us_ = this->avg_idletime_us_.load();
         t->avg_waittime_us_ = this->avg_waittime_us_.load();
         t->avg_runtime_us_ = this->avg_runtime_us_.load();
@@ -2575,7 +2605,11 @@ public:
 
     /// Gives this task a name and returns a ptr to itself
     std::shared_ptr<value_task> named(std::string name) {
+#ifndef TRANSWARP_DISABLE_TASK_NAME
         this->set_name(std::make_optional(std::move(name)));
+#else
+        (void)name;
+#endif
         return std::static_pointer_cast<value_task>(this->shared_from_this());
     }
 
@@ -2654,12 +2688,18 @@ public:
     /// Assigns custom data to all tasks. transwarp will not directly use this.
     /// This is only useful if something else is using this custom data
     void set_custom_data_all(std::any custom_data) override {
+#ifndef TRANSWARP_DISABLE_TASK_CUSTOM_DATA
         this->set_custom_data(std::move(custom_data));
+#else
+        (void)custom_data;
+#endif
     }
 
     /// Removes custom data from all tasks
     void remove_custom_data_all() override {
+#ifndef TRANSWARP_DISABLE_TASK_CUSTOM_DATA
         this->remove_custom_data();
+#endif
     }
 
     /// No-op because a value task never runs

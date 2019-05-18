@@ -47,8 +47,10 @@ TEST_CASE("value_task_with_priority_and_custom_data") {
     t->set_custom_data(13.5);
     auto n = t;
     REQUIRE(13 == n->priority());
-#if !defined(__APPLE__) // any_cast not supported on travis
+#ifndef TRANSWARP_DISABLE_TASK_CUSTOM_DATA
     REQUIRE(13.5 == std::any_cast<double>(n->custom_data()));
+#else
+    REQUIRE(!n->custom_data().has_value());
 #endif
     t->remove_custom_data();
     t->reset_priority();
@@ -62,8 +64,10 @@ TEST_CASE("value_task_with_priority_all_and_custom_data_all") {
     t->set_custom_data_all(13.5);
     auto n = t;
     REQUIRE(13 == n->priority());
-#if !defined(__APPLE__) // any_cast not supported on travis
+#ifndef TRANSWARP_DISABLE_TASK_CUSTOM_DATA
     REQUIRE(13.5 == std::any_cast<double>(n->custom_data()));
+#else
+    REQUIRE(!n->custom_data().has_value());
 #endif
     t->remove_custom_data_all();
     t->reset_priority_all();
