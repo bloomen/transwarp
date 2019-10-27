@@ -3055,7 +3055,7 @@ public:
     }
 
     /// Just like next_task() but waits for a task to become available.
-    /// The returned graph will always be a valid pointer
+    /// The returned task will always be a valid pointer
     std::shared_ptr<transwarp::task<ResultType>> wait_for_next_task(bool maybe_resize=true) {
         for (;;) {
             std::shared_ptr<transwarp::task<ResultType>> g = next_task(maybe_resize);
@@ -3233,7 +3233,7 @@ private:
             avg_idletime_us = static_cast<std::int64_t>(track.idletime / track.idlecount);
         }
         task.set_avg_idletime_us(avg_idletime_us);
-    };
+    }
 
     void track_waittime(transwarp::itask& task, const std::chrono::time_point<std::chrono::steady_clock>& now) {
         std::int64_t avg_waittime_us;
@@ -3245,7 +3245,7 @@ private:
             avg_waittime_us = static_cast<std::int64_t>(track.waittime / track.waitcount);
         }
         task.set_avg_waittime_us(avg_waittime_us);
-    };
+    }
 
     void track_runtime(transwarp::itask& task, const std::chrono::time_point<std::chrono::steady_clock>& now) {
         std::int64_t avg_runtime_us;

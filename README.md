@@ -24,6 +24,8 @@ There is also support for C++11 which is maintained on the `transwarp1.X` branch
      * [Range functions](#range-functions)
      * [Canceling tasks](#canceling-tasks)
      * [Event system](#event-system)
+     * [Task pool](#task-pool)
+     * [Timing tasks](#timing-tasks)
      * [Optimizing Efficiency](#optimizing-efficiency)
   * [Feedback](#feedback)
   * [Contributors](#contributors)
@@ -318,6 +320,37 @@ public:
 A listener can then be passed to the `add_listener` functions of a task
 to add a new listener or to the `remove_listener` functions to remove
 an existing listener.
+
+### Task pool
+
+A task pool is useful when one wants to run the same graph in parallel. For this purpose,
+transwarp provides a `task_pool` which manages a pool of tasks from which
+one can request an idle task for parallel graph execution. For example:
+```cpp
+tw::parallel exec{4};
+
+auto my_task = make_graph();
+tw::task_pool<double> pool{my_task};
+
+for (;;) {
+    auto task = pool.next_task(); // task may be null if the pool size is exhausted
+    if (task) {
+        task->schedule_all(exec);
+    }
+}
+```
+
+### Timing tasks
+
+In order to identify bottlenecks it's often useful to know how much time spent
+in which task. transwarp provides a `timer` listener that will automatically
+time the tasks it listens to:
+```cpp
+auto task = make_graph();
+task->add_listener_all(std::make_shared<tw::timer>()); // assigns the timer listener to all tasks
+task->schedule_all();
+std::ofstream{"graph.dot"} << tw::to_string(task->edges()); // the dot file now contains timing info
+```
 
 ### Optimizing Efficiency
 
