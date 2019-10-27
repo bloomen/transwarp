@@ -26,7 +26,7 @@ There is also support for C++11 which is maintained on the `transwarp1.X` branch
      * [Event system](#event-system)
      * [Task pool](#task-pool)
      * [Timing tasks](#timing-tasks)
-     * [Optimizing Efficiency](#optimizing-efficiency)
+     * [Optimizing efficiency](#optimizing-efficiency)
   * [Feedback](#feedback)
   * [Contributors](#contributors)
 
@@ -352,7 +352,7 @@ task->schedule_all();
 std::ofstream{"graph.dot"} << tw::to_string(task->edges()); // the dot file now contains timing info
 ```
 
-### Optimizing Efficiency
+### Optimizing efficiency
 
 By default, transwarp provides its full functionality to its client. However,
 in many cases not all of that is actually required and so transwarp provides
