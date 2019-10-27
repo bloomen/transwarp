@@ -2239,10 +2239,10 @@ protected:
     : functor_{new Functor{std::forward<F>(functor)}},
       parents_{std::move(parents)}
     {
-        if (parents_.empty()) {
-            throw transwarp::invalid_parameter{"parents are empty"};
-        }
         init();
+        if (parents_.empty()) {
+            set_type(transwarp::task_type::root);
+        }
     }
 
     void init() {

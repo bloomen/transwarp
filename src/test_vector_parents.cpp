@@ -242,5 +242,16 @@ TEST_CASE("make_task_wait_any_with_vector_and_name") {
 
 TEST_CASE("make_task_with_empty_vector_parents") {
     const std::vector<std::shared_ptr<tw::task<int>>> vec = {};
-    REQUIRE_THROWS_AS(tw::make_task(tw::wait, []{}, vec), tw::invalid_parameter);
+    auto t_accept = tw::make_task(tw::accept, [](auto){}, vec);
+    REQUIRE(tw::task_type::root == t_accept->type());
+    auto t_accept_any = tw::make_task(tw::accept_any, [](auto){}, vec);
+    REQUIRE(tw::task_type::root == t_accept_any->type());
+    auto t_consume = tw::make_task(tw::consume, [](auto){}, vec);
+    REQUIRE(tw::task_type::root == t_consume->type());
+    auto t_consume_any = tw::make_task(tw::consume_any, [](auto){}, vec);
+    REQUIRE(tw::task_type::root == t_consume_any->type());
+    auto t_wait = tw::make_task(tw::wait, [](){}, vec);
+    REQUIRE(tw::task_type::root == t_wait->type());
+    auto t_wait_any = tw::make_task(tw::wait_any, [](){}, vec);
+    REQUIRE(tw::task_type::root == t_wait_any->type());
 }
