@@ -7,7 +7,15 @@ TEST_CASE("timer_schedule_once") {
     });
     t->add_listener(std::make_shared<tw::timer>());
     t->schedule();
+#ifdef TRANSWARP_DISABLE_TASK_TIME
+    REQUIRE(t->avg_idletime_us() == -1);
+    REQUIRE(t->avg_waittime_us() == -1);
+    REQUIRE(t->avg_runtime_us() == -1);
+#else
+    REQUIRE(t->avg_idletime_us() >= 0);
+    REQUIRE(t->avg_waittime_us() >= 0);
     REQUIRE(t->avg_runtime_us() > 0);
+#endif
 }
 
 TEST_CASE("timer_schedule_twice") {
@@ -17,7 +25,15 @@ TEST_CASE("timer_schedule_twice") {
     t->add_listener(std::make_shared<tw::timer>());
     t->schedule();
     t->schedule();
+#ifdef TRANSWARP_DISABLE_TASK_TIME
+    REQUIRE(t->avg_idletime_us() == -1);
+    REQUIRE(t->avg_waittime_us() == -1);
+    REQUIRE(t->avg_runtime_us() == -1);
+#else
+    REQUIRE(t->avg_idletime_us() >= 0);
+    REQUIRE(t->avg_waittime_us() >= 0);
     REQUIRE(t->avg_runtime_us() > 0);
+#endif
 }
 
 TEST_CASE("timer_schedule_once_but_task_canceled") {
@@ -27,7 +43,15 @@ TEST_CASE("timer_schedule_once_but_task_canceled") {
     t->add_listener(std::make_shared<tw::timer>());
     t->cancel(true);
     t->schedule();
+#ifdef TRANSWARP_DISABLE_TASK_TIME
+    REQUIRE(t->avg_idletime_us() == -1);
+    REQUIRE(t->avg_waittime_us() == -1);
+    REQUIRE(t->avg_runtime_us() == -1);
+#else
+    REQUIRE(t->avg_idletime_us() >= 0);
+    REQUIRE(t->avg_waittime_us() >= 0);
     REQUIRE(t->avg_runtime_us() >= 0);
+#endif
 }
 
 TEST_CASE("timer_schedule_twice_but_task_canceled") {
@@ -38,5 +62,13 @@ TEST_CASE("timer_schedule_twice_but_task_canceled") {
     t->schedule();
     t->cancel(true);
     t->schedule();
+#ifdef TRANSWARP_DISABLE_TASK_TIME
+    REQUIRE(t->avg_idletime_us() == -1);
+    REQUIRE(t->avg_waittime_us() == -1);
+    REQUIRE(t->avg_runtime_us() == -1);
+#else
+    REQUIRE(t->avg_idletime_us() >= 0);
+    REQUIRE(t->avg_waittime_us() >= 0);
     REQUIRE(t->avg_runtime_us() > 0);
+#endif
 }
