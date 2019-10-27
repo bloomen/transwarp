@@ -22,6 +22,7 @@ set(SOURCES
 	src/test_for_each.cpp
 	src/test_task_count.cpp
 	src/test_task_pool.cpp
+	src/test_timer.cpp
 	src/test_make_task.cpp
 	src/test_next.cpp
 	src/test_reset.cpp
