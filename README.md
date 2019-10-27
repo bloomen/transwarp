@@ -24,6 +24,7 @@ There is also support for C++11 which is maintained on the `transwarp1.X` branch
      * [Range functions](#range-functions)
      * [Canceling tasks](#canceling-tasks)
      * [Event system](#event-system)
+     * [Optimizing Efficiency](#optimizing-efficiency)
   * [Feedback](#feedback)
   * [Contributors](#contributors)
 
@@ -317,6 +318,25 @@ public:
 A listener can then be passed to the `add_listener` functions of a task
 to add a new listener or to the `remove_listener` functions to remove
 an existing listener.
+
+### Optimizing Efficiency
+
+By default, transwarp provides its full functionality to its client. However,
+in many cases not all of that is actually required and so transwarp provides
+a few compile time switches to reduce the task size along with a few related computations.
+These switches are:
+```
+TRANSWARP_DISABLE_TASK_CUSTOM_DATA
+TRANSWARP_DISABLE_TASK_NAME
+TRANSWARP_DISABLE_TASK_PRIORITY
+TRANSWARP_DISABLE_TASK_TIME
+```
+
+To get the minimal task size with a single switch one can define
+```
+TRANSWARP_MINIMUM_TASK_SIZE
+```
+at build time.
 
 ## Feedback
 
