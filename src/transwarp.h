@@ -140,6 +140,9 @@ struct wait_any_type : std::integral_constant<transwarp::task_type, transwarp::t
 constexpr transwarp::wait_any_type wait_any{}; ///< The wait_any task tag
 
 
+class itask;
+
+
 /// Detail namespace for internal functionality only
 namespace detail {
 
@@ -148,11 +151,11 @@ struct unvisit_visitor;
 struct final_visitor;
 struct schedule_visitor;
 struct parent_visitor;
+struct increment_refcount_visitor;
+void decrement_parent_refcount(const std::shared_ptr<transwarp::itask>&);
 
 } // detail
 
-
-class itask;
 
 /// The executor interface used to perform custom task execution
 class executor {
@@ -179,6 +182,7 @@ enum class event_type {
     before_invoked, ///< Just before a task's functor is invoked (handle_event called on thread that task is run on)
     after_finished, ///< Just after a task has finished running (handle_event called on thread that task is run on)
     after_canceled, ///< Just after a task was canceled (handle_event called on thread that task is run on)
+    after_satisfied, ///< Just after a task has satisfied all its children with results (todo)
     after_custom_data_set, ///< Just after custom data was assigned (handle_event called on thread that custom data was set on)
     count,
 };
@@ -235,6 +239,7 @@ private:
 
 
 class timer;
+class releaser;
 
 /// An interface for the task class
 class itask : public std::enable_shared_from_this<itask> {
@@ -307,7 +312,10 @@ private:
     friend struct transwarp::detail::final_visitor;
     friend struct transwarp::detail::schedule_visitor;
     friend struct transwarp::detail::parent_visitor;
+    friend struct transwarp::detail::increment_refcount_visitor;
     friend class transwarp::timer;
+    friend class transwarp::releaser;
+    friend void transwarp::detail::decrement_parent_refcount(const std::shared_ptr<transwarp::itask>&);
 
     virtual void visit(const std::function<void(itask&)>& visitor) = 0;
     virtual void unvisit() noexcept = 0;
@@ -318,6 +326,9 @@ private:
     virtual void set_avg_idletime_us(std::int64_t idletime) noexcept = 0;
     virtual void set_avg_waittime_us(std::int64_t waittime) noexcept = 0;
     virtual void set_avg_runtime_us(std::int64_t runtime) noexcept = 0;
+    virtual void increment_refcount() noexcept = 0;
+    virtual void decrement_refcount() noexcept = 0;
+    virtual void reset_future() = 0;
 };
 
 
@@ -736,7 +747,7 @@ std::shared_ptr<transwarp::task<ParentResultType>> wait_for_any(const std::vecto
 /// Cancels all tasks but one
 template<typename OneResult, typename... ParentResults>
 void cancel_all_but_one(const std::shared_ptr<transwarp::task<OneResult>>& one, const std::tuple<std::shared_ptr<transwarp::task<ParentResults>>...>& parents) {
-    auto callable = [&one](auto& parent) {
+    auto callable = [&one](const auto& parent) {
         if (one != parent) {
             parent->cancel(true);
         }
@@ -752,6 +763,32 @@ void cancel_all_but_one(const std::shared_ptr<transwarp::task<OneResult>>& one, 
         if (one != parent) {
             parent->cancel(true);
         }
+    }
+}
+
+
+/// Decrements refcount
+inline
+void decrement_parent_refcount(const std::shared_ptr<transwarp::itask>& parent) {
+    parent->decrement_refcount();
+}
+
+
+/// Decrements the refcount of all parents
+template<typename... ParentResults>
+void decrement_refcount(const std::tuple<std::shared_ptr<transwarp::task<ParentResults>>...>& parents) {
+    auto callable = [](const auto& parent) {
+        decrement_parent_refcount(parent);
+    };
+    transwarp::detail::apply_to_each(callable, parents);
+}
+
+
+/// Decrements the refcount of all parents
+template<typename ParentResultType>
+void decrement_refcount(const std::vector<std::shared_ptr<transwarp::task<ParentResultType>>>& parents) {
+    for (const std::shared_ptr<transwarp::task<ParentResultType>>& parent : parents) {
+        decrement_parent_refcount(parent);
     }
 }
 
@@ -790,6 +827,7 @@ struct call_impl<transwarp::accept_type, true, total, n...> {
     static Result work(std::size_t task_id, const Task& task, const std::tuple<std::shared_ptr<transwarp::task<ParentResults>>...>& parents) {
         transwarp::detail::wait_for_all(parents);
         const std::tuple<std::shared_future<ParentResults>...> futures = transwarp::detail::get_futures(parents);
+        transwarp::detail::decrement_refcount(parents);
         return transwarp::detail::run_task<Result>(task_id, task, std::get<n>(futures)...);
     }
 };
@@ -799,7 +837,9 @@ struct call_impl_vector<transwarp::accept_type> {
     template<typename Result, typename Task, typename ParentResultType>
     static Result work(std::size_t task_id, const Task& task, const std::vector<std::shared_ptr<transwarp::task<ParentResultType>>>& parents) {
         transwarp::detail::wait_for_all(parents);
-        return transwarp::detail::run_task<Result>(task_id, task, transwarp::detail::get_futures(parents));
+        std::vector<std::shared_future<ParentResultType>> futures = transwarp::detail::get_futures(parents);
+        transwarp::detail::decrement_refcount(parents);
+        return transwarp::detail::run_task<Result>(task_id, task, std::move(futures));
     }
 };
 
@@ -810,7 +850,9 @@ struct call_impl<transwarp::accept_any_type, true, total, n...> {
         using parent_t = std::remove_reference_t<decltype(std::get<0>(parents))>; // Use first type as reference
         parent_t parent = transwarp::detail::wait_for_any<parent_t>(std::get<n>(parents)...);
         transwarp::detail::cancel_all_but_one(parent, parents);
-        return transwarp::detail::run_task<Result>(task_id, task, parent->future());
+        auto future = parent->future();
+        transwarp::detail::decrement_refcount(parents);
+        return transwarp::detail::run_task<Result>(task_id, task, std::move(future));
     }
 };
 
@@ -820,7 +862,9 @@ struct call_impl_vector<transwarp::accept_any_type> {
     static Result work(std::size_t task_id, const Task& task, const std::vector<std::shared_ptr<transwarp::task<ParentResultType>>>& parents) {
         std::shared_ptr<transwarp::task<ParentResultType>> parent = transwarp::detail::wait_for_any(parents);
         transwarp::detail::cancel_all_but_one(parent, parents);
-        return transwarp::detail::run_task<Result>(task_id, task, parent->future());
+        auto future = parent->future();
+        transwarp::detail::decrement_refcount(parents);
+        return transwarp::detail::run_task<Result>(task_id, task, std::move(future));
     }
 };
 
@@ -829,7 +873,9 @@ struct call_impl<transwarp::consume_type, true, total, n...> {
     template<typename Result, typename Task, typename... ParentResults>
     static Result work(std::size_t task_id, const Task& task, const std::tuple<std::shared_ptr<transwarp::task<ParentResults>>...>& parents) {
         transwarp::detail::wait_for_all(parents);
-        return transwarp::detail::run_task<Result>(task_id, task, std::get<n>(parents)->future().get()...);
+        const std::tuple<std::shared_future<ParentResults>...> futures = transwarp::detail::get_futures(parents);
+        transwarp::detail::decrement_refcount(parents);
+        return transwarp::detail::run_task<Result>(task_id, task, std::get<n>(futures).get()...);
     }
 };
 
@@ -838,10 +884,12 @@ struct call_impl_vector<transwarp::consume_type> {
     template<typename Result, typename Task, typename ParentResultType>
     static Result work(std::size_t task_id, const Task& task, const std::vector<std::shared_ptr<transwarp::task<ParentResultType>>>& parents) {
         transwarp::detail::wait_for_all(parents);
+        const std::vector<std::shared_future<ParentResultType>> futures = transwarp::detail::get_futures(parents);
+        transwarp::detail::decrement_refcount(parents);
         std::vector<ParentResultType> results;
-        results.reserve(parents.size());
-        for (const std::shared_ptr<transwarp::task<ParentResultType>>& parent : parents) {
-            results.emplace_back(parent->future().get());
+        results.reserve(futures.size());
+        for (const std::shared_future<ParentResultType>& future : futures) {
+            results.emplace_back(future.get());
         }
         return transwarp::detail::run_task<Result>(task_id, task, std::move(results));
     }
@@ -854,7 +902,9 @@ struct call_impl<transwarp::consume_any_type, true, total, n...> {
         using parent_t = std::remove_reference_t<decltype(std::get<0>(parents))>; /// Use first type as reference
         parent_t parent = transwarp::detail::wait_for_any<parent_t>(std::get<n>(parents)...);
         transwarp::detail::cancel_all_but_one(parent, parents);
-        return transwarp::detail::run_task<Result>(task_id, task, parent->future().get());
+        const auto future = parent->future();
+        transwarp::detail::decrement_refcount(parents);
+        return transwarp::detail::run_task<Result>(task_id, task, future.get());
     }
 };
 
@@ -864,7 +914,9 @@ struct call_impl_vector<transwarp::consume_any_type> {
     static Result work(std::size_t task_id, const Task& task, const std::vector<std::shared_ptr<transwarp::task<ParentResultType>>>& parents) {
         std::shared_ptr<transwarp::task<ParentResultType>> parent = transwarp::detail::wait_for_any(parents);
         transwarp::detail::cancel_all_but_one(parent, parents);
-        return transwarp::detail::run_task<Result>(task_id, task, parent->future().get());
+        const auto future = parent->future();
+        transwarp::detail::decrement_refcount(parents);
+        return transwarp::detail::run_task<Result>(task_id, task, future.get());
     }
 };
 
@@ -873,7 +925,9 @@ struct call_impl<transwarp::wait_type, true, total, n...> {
     template<typename Result, typename Task, typename... ParentResults>
     static Result work(std::size_t task_id, const Task& task, const std::tuple<std::shared_ptr<transwarp::task<ParentResults>>...>& parents) {
         transwarp::detail::wait_for_all(parents);
-        transwarp::detail::apply_to_each([](auto& p){ p->future().get(); }, parents); // Ensures that exceptions are propagated
+        const std::tuple<std::shared_future<ParentResults>...> futures = transwarp::detail::get_futures(parents);
+        transwarp::detail::decrement_refcount(parents);
+        transwarp::detail::apply_to_each([](const auto& f){ f.get(); }, futures); // Ensures that exceptions are propagated
         return transwarp::detail::run_task<Result>(task_id, task);
     }
 };
@@ -883,8 +937,10 @@ struct call_impl_vector<transwarp::wait_type> {
     template<typename Result, typename Task, typename ParentResultType>
     static Result work(std::size_t task_id, const Task& task, const std::vector<std::shared_ptr<transwarp::task<ParentResultType>>>& parents) {
         transwarp::detail::wait_for_all(parents);
-        for (const std::shared_ptr<transwarp::task<ParentResultType>>& parent : parents) {
-            parent->future().get(); // Ensures that exceptions are propagated
+        const std::vector<std::shared_future<ParentResultType>> futures = transwarp::detail::get_futures(parents);
+        transwarp::detail::decrement_refcount(parents);
+        for (const std::shared_future<ParentResultType>& future : futures) {
+            future.get(); // Ensures that exceptions are propagated
         }
         return transwarp::detail::run_task<Result>(task_id, task);
     }
@@ -897,7 +953,9 @@ struct call_impl<transwarp::wait_any_type, true, total, n...> {
         using parent_t = std::remove_reference_t<decltype(std::get<0>(parents))>; // Use first type as reference
         parent_t parent = transwarp::detail::wait_for_any<parent_t>(std::get<n>(parents)...);
         transwarp::detail::cancel_all_but_one(parent, parents);
-        parent->future().get(); // Ensures that exceptions are propagated
+        const auto future = parent->future();
+        transwarp::detail::decrement_refcount(parents);
+        future.get(); // Ensures that exceptions are propagated
         return transwarp::detail::run_task<Result>(task_id, task);
     }
 };
@@ -908,7 +966,9 @@ struct call_impl_vector<transwarp::wait_any_type> {
     static Result work(std::size_t task_id, const Task& task, const std::vector<std::shared_ptr<transwarp::task<ParentResultType>>>& parents) {
         std::shared_ptr<transwarp::task<ParentResultType>> parent = transwarp::detail::wait_for_any(parents);
         transwarp::detail::cancel_all_but_one(parent, parents);
-        parent->future().get(); // Ensures that exceptions are propagated
+        const auto future = parent->future();
+        transwarp::detail::decrement_refcount(parents);
+        future.get(); // Ensures that exceptions are propagated
         return transwarp::detail::run_task<Result>(task_id, task);
     }
 };
@@ -1011,6 +1071,14 @@ struct schedule_visitor {
 
     bool reset_;
     transwarp::executor* executor_;
+};
+
+/// Increments the refcount
+struct increment_refcount_visitor {
+
+    void operator()(transwarp::itask& task) const noexcept {
+        task.increment_refcount();
+    }
 };
 
 /// Resets the given task
@@ -1797,7 +1865,7 @@ protected:
     /// Checks if the task is currently running and throws transwarp::control_error if it is
     void ensure_task_not_running() const {
         if (future_.valid() && future_.wait_for(std::chrono::seconds{0}) != std::future_status::ready) {
-            throw transwarp::control_error("task currently running: " + transwarp::to_string(*this, " "));
+            throw transwarp::control_error{"task currently running: " + transwarp::to_string(*this, " ")};
         }
     }
 
@@ -1859,6 +1927,23 @@ protected:
         listeners_ = task.listeners_;
     }
 
+    void increment_refcount() noexcept override {
+        ++refcount_;
+    }
+
+    void decrement_refcount() noexcept override {
+        --refcount_;
+        if (refcount_ == 0) {
+            // todo: may be raised more than once
+            raise_event(transwarp::event_type::after_satisfied);
+        }
+    }
+
+    void reset_future() override {
+        future_ = std::shared_future<result_type>{};
+        raise_event(transwarp::event_type::after_future_changed);
+    }
+
     std::size_t id_ = 0;
 #ifndef TRANSWARP_DISABLE_TASK_NAME
     std::optional<std::string> name_;
@@ -1873,6 +1958,7 @@ protected:
     bool visited_ = false;
     std::map<transwarp::event_type, std::vector<std::shared_ptr<transwarp::listener>>> listeners_;
     std::vector<transwarp::itask*> tasks_;
+    std::atomic<int> refcount_{0};
 };
 
 
@@ -2089,9 +2175,9 @@ public:
     /// Resets this task
     void reset() override {
         this->ensure_task_not_running();
-        this->future_ = std::shared_future<result_type>{};
         cancel(false);
         schedule_mode_ = true;
+        this->future_ = std::shared_future<result_type>{};
         this->raise_event(transwarp::event_type::after_future_changed);
     }
 
@@ -2313,6 +2399,7 @@ protected:
             std::weak_ptr<task_impl_base> self = std::static_pointer_cast<task_impl_base>(this->shared_from_this());
             using runner_t = transwarp::detail::runner<result_type, task_type, task_impl_base, decltype(parents_)>;
             std::shared_ptr<runner_t> runner = std::shared_ptr<runner_t>{new runner_t{this->id(), self, parents_}};
+            transwarp::detail::call_with_each(transwarp::detail::increment_refcount_visitor{}, parents_);
             this->raise_event(transwarp::event_type::before_scheduled);
             this->future_ = runner->future();
             this->raise_event(transwarp::event_type::after_future_changed);
@@ -3175,7 +3262,7 @@ public:
     timer& operator=(timer&&) = delete;
 
     /// Performs the actual timing and populates the task's timing members
-    void handle_event(transwarp::event_type event, transwarp::itask& task) override {
+    void handle_event(const transwarp::event_type event, transwarp::itask& task) override {
         switch (event) {
         case transwarp::event_type::before_scheduled: {
             const std::chrono::time_point<std::chrono::steady_clock> now = std::chrono::steady_clock::now();
@@ -3278,6 +3365,40 @@ private:
 
     transwarp::detail::spinlock spinlock_; // protecting tracks_
     std::unordered_map<const transwarp::itask*, track> tracks_;
+};
+
+
+/// The releaser will reset a task when the task's `after_satisfied` event was received.
+/// Hence, this listener can be used to free the task's memory after
+/// all its children have been satisfied by the task's result.
+class releaser : public transwarp::listener {
+public:
+    releaser() = default;
+
+    /// The executor gives control over where a task's future is released
+    explicit releaser(std::shared_ptr<transwarp::executor> executor)
+    : executor_{std::move(executor)}
+    {}
+
+    // delete copy/move semantics
+    releaser(const releaser&) = delete;
+    releaser& operator=(const releaser&) = delete;
+    releaser(releaser&&) = delete;
+    releaser& operator=(releaser&&) = delete;
+
+    void handle_event(const transwarp::event_type event, transwarp::itask& task) override {
+        if (event == transwarp::event_type::after_satisfied) {
+            // todo: the future could be assigned to on another thread at the same time?
+            if (executor_) {
+                executor_->execute([&task]{ task.reset_future(); }, task);
+            } else {
+                task.reset_future();
+            }
+        }
+    }
+
+private:
+    std::shared_ptr<transwarp::executor> executor_;
 };
 
 

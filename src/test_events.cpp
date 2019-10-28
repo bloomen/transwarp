@@ -68,7 +68,7 @@ TEST_CASE("scheduled_event") {
     auto l = std::make_shared<mock_listener>();
     t->add_listener(l);
     t->schedule();
-    REQUIRE(n_events-2 == l->events.size());
+    REQUIRE(n_events-3 == l->events.size());
     REQUIRE(tw::event_type::before_scheduled == l->events[0]);
 }
 
@@ -78,18 +78,18 @@ void test_finished_event(Functor functor) {
     auto l = std::make_shared<mock_listener>();
     t->add_listener(l);
     t->schedule();
-    REQUIRE(n_events-2 == l->events.size());
-    REQUIRE(tw::event_type::after_finished == l->events[n_events-3]);
+    REQUIRE(n_events-3 == l->events.size());
+    REQUIRE(tw::event_type::after_finished == l->events[n_events-4]);
     l->events.clear();
     auto exec = std::make_shared<tw::sequential>();
     t->schedule(*exec);
-    REQUIRE(n_events-2 == l->events.size());
-    REQUIRE(tw::event_type::after_finished == l->events[n_events-3]);
+    REQUIRE(n_events-3 == l->events.size());
+    REQUIRE(tw::event_type::after_finished == l->events[n_events-4]);
     l->events.clear();
     t->set_executor(exec);
     t->schedule();
-    REQUIRE(n_events-2 == l->events.size());
-    REQUIRE(tw::event_type::after_finished == l->events[n_events-3]);
+    REQUIRE(n_events-3 == l->events.size());
+    REQUIRE(tw::event_type::after_finished == l->events[n_events-4]);
 }
 
 TEST_CASE("finished_event") {
@@ -106,17 +106,17 @@ void test_started_event(Functor functor) {
     auto l = std::make_shared<mock_listener>();
     t->add_listener(l);
     t->schedule();
-    REQUIRE(n_events-2 == l->events.size());
+    REQUIRE(n_events-3 == l->events.size());
     REQUIRE(tw::event_type::before_started == l->events[2]);
     l->events.clear();
     auto exec = std::make_shared<tw::sequential>();
     t->schedule(*exec);
-    REQUIRE(n_events-2 == l->events.size());
+    REQUIRE(n_events-3 == l->events.size());
     REQUIRE(tw::event_type::before_started == l->events[2]);
     l->events.clear();
     t->set_executor(exec);
     t->schedule();
-    REQUIRE(n_events-2 == l->events.size());
+    REQUIRE(n_events-3 == l->events.size());
     REQUIRE(tw::event_type::before_started == l->events[2]);
 }
 
@@ -133,7 +133,7 @@ TEST_CASE("canceled_event") {
     auto l = std::make_shared<mock_listener>();
     t->add_listener(l);
     t->schedule();
-    REQUIRE(n_events-1 == l->events.size());
+    REQUIRE(n_events-2 == l->events.size());
     REQUIRE(tw::event_type::before_scheduled == l->events[0]);
     REQUIRE(tw::event_type::after_future_changed == l->events[1]);
     REQUIRE(tw::event_type::before_started == l->events[2]);
@@ -198,17 +198,17 @@ void test_invoked_event(Functor functor) {
     auto l = std::make_shared<mock_listener>();
     t->add_listener(l);
     t->schedule();
-    REQUIRE(n_events-2 == l->events.size());
+    REQUIRE(n_events-3 == l->events.size());
     REQUIRE(tw::event_type::before_invoked == l->events[3]);
     l->events.clear();
     auto exec = std::make_shared<tw::sequential>();
     t->schedule(*exec);
-    REQUIRE(n_events-2 == l->events.size());
+    REQUIRE(n_events-3 == l->events.size());
     REQUIRE(tw::event_type::before_invoked == l->events[3]);
     l->events.clear();
     t->set_executor(exec);
     t->schedule();
-    REQUIRE(n_events-2 == l->events.size());
+    REQUIRE(n_events-3 == l->events.size());
     REQUIRE(tw::event_type::before_invoked == l->events[3]);
 }
 
@@ -270,4 +270,80 @@ TEST_CASE("after_future_changed_event_for_value_task") {
     t->set_exception(std::make_exception_ptr(std::bad_alloc{}));
     REQUIRE(1 == l->events.size());
     REQUIRE(tw::event_type::after_future_changed == l->events[0]);
+}
+
+TEST_CASE("after_satisfied_event_for_accept_task") {
+    auto l = std::make_shared<mock_listener>();
+    auto p = tw::make_task(tw::root, []{ return 42; });
+    auto t = tw::make_task(tw::accept, [](auto){}, p);
+    t->add_listener_all(l);
+    t->schedule_all();
+    REQUIRE((n_events-2)*2 - 1  == l->events.size()); // final task doesn't get satisfied event
+}
+
+TEST_CASE("after_satisfied_event_for_accept_any_task") {
+    auto l = std::make_shared<mock_listener>();
+    auto p = tw::make_task(tw::root, []{ return 42; });
+    auto t = tw::make_task(tw::accept_any, [](auto){}, p);
+    t->add_listener_all(l);
+    t->schedule_all();
+    REQUIRE((n_events-2)*2 - 1  == l->events.size()); // final task doesn't get satisfied event
+}
+
+TEST_CASE("after_satisfied_event_for_consume_task") {
+    auto l = std::make_shared<mock_listener>();
+    auto p = tw::make_task(tw::root, []{ return 42; });
+    auto t = tw::make_task(tw::consume, [](auto){}, p);
+    t->add_listener_all(l);
+    t->schedule_all();
+    REQUIRE((n_events-2)*2 - 1  == l->events.size()); // final task doesn't get satisfied event
+}
+
+TEST_CASE("after_satisfied_event_for_consume_any_task") {
+    auto l = std::make_shared<mock_listener>();
+    auto p = tw::make_task(tw::root, []{ return 42; });
+    auto t = tw::make_task(tw::consume_any, [](auto){}, p);
+    t->add_listener_all(l);
+    t->schedule_all();
+    REQUIRE((n_events-2)*2 - 1  == l->events.size()); // final task doesn't get satisfied event
+}
+
+TEST_CASE("after_satisfied_event_for_wait_task") {
+    auto l = std::make_shared<mock_listener>();
+    auto p = tw::make_task(tw::root, []{ return 42; });
+    auto t = tw::make_task(tw::wait, []{}, p);
+    t->add_listener_all(l);
+    t->schedule_all();
+    REQUIRE((n_events-2)*2 - 1  == l->events.size()); // final task doesn't get satisfied event
+}
+
+TEST_CASE("after_satisfied_event_for_wait_any_task") {
+    auto l = std::make_shared<mock_listener>();
+    auto p = tw::make_task(tw::root, []{ return 42; });
+    auto t = tw::make_task(tw::wait_any, []{}, p);
+    t->add_listener_all(l);
+    t->schedule_all();
+    REQUIRE((n_events-2)*2 - 1  == l->events.size()); // final task doesn't get satisfied event
+}
+
+TEST_CASE("after_satisfied_event_using_releaser") {
+    auto l = std::make_shared<tw::releaser>();
+    auto p = tw::make_task(tw::root, []{ return 42; });
+    auto t = tw::make_task(tw::wait, []{}, p);
+    t->add_listener_all(l);
+    t->schedule_all();
+    REQUIRE(!p->future().valid());
+    REQUIRE(t->future().valid());
+}
+
+TEST_CASE("after_satisfied_event_using_releaser_with_two_parents") {
+    auto l = std::make_shared<tw::releaser>();
+    auto p1 = tw::make_task(tw::root, []{ return 42; });
+    auto p2 = tw::make_task(tw::root, []{ return 13; });
+    auto t = tw::make_task(tw::wait, []{}, p1, p2);
+    t->add_listener_all(l);
+    t->schedule_all();
+    REQUIRE(!p1->future().valid());
+    REQUIRE(!p2->future().valid());
+    REQUIRE(t->future().valid());
 }
