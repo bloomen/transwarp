@@ -3366,9 +3366,10 @@ private:
 };
 
 
-/// The releaser will reset a task when the task's `after_satisfied` event was received.
-/// Hence, this listener can be used to free the task's memory after
-/// all its children have been satisfied by the task's result.
+/// The releaser will release a task's future when the task's `after_satisfied`
+/// event was received which happens when all children received the task's result.
+/// The releaser should be used in cases where the task's result is only needed
+/// for consumption by its children and can then be discarded.
 class releaser : public transwarp::listener {
 public:
     releaser() = default;
