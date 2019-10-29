@@ -182,7 +182,7 @@ enum class event_type {
     before_invoked, ///< Just before a task's functor is invoked (handle_event called on thread that task is run on)
     after_finished, ///< Just after a task has finished running (handle_event called on thread that task is run on)
     after_canceled, ///< Just after a task was canceled (handle_event called on thread that task is run on)
-    after_satisfied, ///< Just after a task has satisfied all its children with results (todo)
+    after_satisfied, ///< Just after a task has satisfied all its children with results (handle_event called on thread where the last child is satisfied)
     after_custom_data_set, ///< Just after custom data was assigned (handle_event called on thread that custom data was set on)
     count,
 };
@@ -327,7 +327,7 @@ private:
     virtual void set_avg_waittime_us(std::int64_t waittime) noexcept = 0;
     virtual void set_avg_runtime_us(std::int64_t runtime) noexcept = 0;
     virtual void increment_refcount() noexcept = 0;
-    virtual void decrement_refcount() noexcept = 0;
+    virtual void decrement_refcount() = 0;
     virtual void reset_future() = 0;
 };
 
@@ -440,7 +440,7 @@ public:
 
     virtual void set_value(const transwarp::decay_t<result_type>& value) = 0;
     virtual void set_value(transwarp::decay_t<result_type>&& value) = 0;
-    virtual const std::shared_future<result_type>& future() const noexcept = 0;
+    virtual std::shared_future<result_type> future() const noexcept = 0;
     virtual transwarp::result_t<result_type> get() const = 0;
 
 private:
@@ -464,7 +464,7 @@ public:
     }
 
     virtual void set_value(transwarp::decay_t<result_type>& value) = 0;
-    virtual const std::shared_future<result_type>& future() const noexcept = 0;
+    virtual std::shared_future<result_type> future() const noexcept = 0;
     virtual transwarp::result_t<result_type> get() const = 0;
 
 private:
@@ -488,7 +488,7 @@ public:
     }
 
     virtual void set_value() = 0;
-    virtual const std::shared_future<result_type>& future() const noexcept = 0;
+    virtual std::shared_future<result_type> future() const noexcept = 0;
     virtual result_type get() const = 0;
 
 private:
@@ -1801,7 +1801,7 @@ public:
     }
 
     /// Returns the future associated to the underlying execution
-    const std::shared_future<result_type>& future() const noexcept override {
+    std::shared_future<result_type> future() const noexcept override {
         return future_;
     }
 
@@ -1931,10 +1931,8 @@ protected:
         ++refcount_;
     }
 
-    void decrement_refcount() noexcept override {
-        --refcount_;
-        if (refcount_ == 0) {
-            // todo: may be raised more than once
+    void decrement_refcount() override {
+        if (--refcount_ == 0) {
             raise_event(transwarp::event_type::after_satisfied);
         }
     }
@@ -2175,9 +2173,9 @@ public:
     /// Resets this task
     void reset() override {
         this->ensure_task_not_running();
+        this->future_ = std::shared_future<result_type>{};
         cancel(false);
         schedule_mode_ = true;
-        this->future_ = std::shared_future<result_type>{};
         this->raise_event(transwarp::event_type::after_future_changed);
     }
 
@@ -3134,7 +3132,7 @@ public:
             busy_.emplace(task.get(), task);
         }
 
-        const auto& future = task->future();
+        auto future = task->future();
         if (future.valid()) {
             future.wait(); // will return immediately
         }
@@ -3388,7 +3386,6 @@ public:
 
     void handle_event(const transwarp::event_type event, transwarp::itask& task) override {
         if (event == transwarp::event_type::after_satisfied) {
-            // todo: the future could be assigned to on another thread at the same time?
             if (executor_) {
                 executor_->execute([&task]{ task.reset_future(); }, task);
             } else {
