@@ -1,3 +1,9 @@
+2.2.0
+
+- added compile time switches to control the task size
+- added the `releaser` listener to allow releasing intermediate results
+- improved documentation and tests
+
 2.1.0
 
 - added new events: `after_future_changed`, `after_custom_data_set`
