@@ -151,7 +151,6 @@ struct unvisit_visitor;
 struct final_visitor;
 struct schedule_visitor;
 struct parent_visitor;
-struct increment_refcount_visitor;
 void decrement_parent_refcount(const std::shared_ptr<transwarp::itask>&);
 
 } // detail
@@ -312,7 +311,6 @@ private:
     friend struct transwarp::detail::final_visitor;
     friend struct transwarp::detail::schedule_visitor;
     friend struct transwarp::detail::parent_visitor;
-    friend struct transwarp::detail::increment_refcount_visitor;
     friend class transwarp::timer;
     friend class transwarp::releaser;
     friend void transwarp::detail::decrement_parent_refcount(const std::shared_ptr<transwarp::itask>&);
@@ -326,7 +324,7 @@ private:
     virtual void set_avg_idletime_us(std::int64_t idletime) noexcept = 0;
     virtual void set_avg_waittime_us(std::int64_t waittime) noexcept = 0;
     virtual void set_avg_runtime_us(std::int64_t runtime) noexcept = 0;
-    virtual void increment_refcount() noexcept = 0;
+    virtual void increment_childcount() noexcept = 0;
     virtual void decrement_refcount() = 0;
     virtual void reset_future() = 0;
 };
@@ -1017,16 +1015,17 @@ void call_with_each(const Functor& f, const std::vector<std::shared_ptr<transwar
 }
 
 
-/// Sets level of a task
+/// Sets level of a task and increments the child count
 struct parent_visitor {
     explicit parent_visitor(transwarp::itask& task) noexcept
     : task_(task) {}
 
-    void operator()(const transwarp::itask& task) const {
+    void operator()(transwarp::itask& task) const {
         if (task_.level() <= task.level()) {
             // A child's level is always larger than any of its parents' levels
             task_.set_level(task.level() + 1);
         }
+        task.increment_childcount();
     }
 
     transwarp::itask& task_;
@@ -1071,14 +1070,6 @@ struct schedule_visitor {
 
     bool reset_;
     transwarp::executor* executor_;
-};
-
-/// Increments the refcount
-struct increment_refcount_visitor {
-
-    void operator()(transwarp::itask& task) const noexcept {
-        task.increment_refcount();
-    }
 };
 
 /// Resets the given task
@@ -1927,21 +1918,6 @@ protected:
         listeners_ = task.listeners_;
     }
 
-    void increment_refcount() noexcept override {
-        ++refcount_;
-    }
-
-    void decrement_refcount() override {
-        if (--refcount_ == 0) {
-            raise_event(transwarp::event_type::after_satisfied);
-        }
-    }
-
-    void reset_future() override {
-        future_ = std::shared_future<result_type>{};
-        raise_event(transwarp::event_type::after_future_changed);
-    }
-
     std::size_t id_ = 0;
 #ifndef TRANSWARP_DISABLE_TASK_NAME
     std::optional<std::string> name_;
@@ -1956,7 +1932,6 @@ protected:
     bool visited_ = false;
     std::map<transwarp::event_type, std::vector<std::shared_ptr<transwarp::listener>>> listeners_;
     std::vector<transwarp::itask*> tasks_;
-    std::atomic<int> refcount_{0};
 };
 
 
@@ -2176,6 +2151,7 @@ public:
         this->future_ = std::shared_future<result_type>{};
         cancel(false);
         schedule_mode_ = true;
+        refcount_ = childcount_;
         this->raise_event(transwarp::event_type::after_future_changed);
     }
 
@@ -2394,10 +2370,10 @@ protected:
             if (reset) {
                 cancel(false);
             }
+            refcount_ = childcount_;
             std::weak_ptr<task_impl_base> self = std::static_pointer_cast<task_impl_base>(this->shared_from_this());
             using runner_t = transwarp::detail::runner<result_type, task_type, task_impl_base, decltype(parents_)>;
             std::shared_ptr<runner_t> runner = std::shared_ptr<runner_t>{new runner_t{this->id(), self, parents_}};
-            transwarp::detail::call_with_each(transwarp::detail::increment_refcount_visitor{}, parents_);
             this->raise_event(transwarp::event_type::before_scheduled);
             this->future_ = runner->future();
             this->raise_event(transwarp::event_type::after_future_changed);
@@ -2446,6 +2422,21 @@ protected:
         }
     }
 
+    void increment_childcount() noexcept override {
+        ++childcount_;
+    }
+
+    void decrement_refcount() override {
+        if (--refcount_ == 0) {
+            this->raise_event(transwarp::event_type::after_satisfied);
+        }
+    }
+
+    void reset_future() override {
+        this->future_ = std::shared_future<result_type>{};
+        this->raise_event(transwarp::event_type::after_future_changed);
+    }
+
     std::size_t level_ = 0;
     transwarp::task_type type_ = transwarp::task_type::root;
     std::shared_ptr<transwarp::executor> executor_;
@@ -2458,6 +2449,8 @@ protected:
 #endif
     std::unique_ptr<Functor> functor_;
     transwarp::detail::parents_t<ParentResults...> parents_;
+    std::size_t childcount_ = 0;
+    std::atomic<std::size_t> refcount_{0};
 };
 
 
@@ -2789,6 +2782,7 @@ public:
         (void)priority;
 #endif
     }
+
     /// Resets the priority of all tasks to 0
     void reset_priority_all() override {
 #ifndef TRANSWARP_DISABLE_TASK_PRIORITY
@@ -2847,7 +2841,7 @@ public:
     void set_value(transwarp::decay_t<result_type>&& value) override {
         this->future_ = transwarp::detail::make_future_with_value<result_type>(std::move(value));
         this->raise_event(transwarp::event_type::after_future_changed);
-    };
+    }
 
     /// Assigns an exception to this task
     void set_exception(std::exception_ptr exception) override {
@@ -2978,6 +2972,13 @@ private:
     void unvisit() noexcept override {
         this->visited_ = false;
     }
+
+    void increment_childcount() noexcept override {}
+
+    void decrement_refcount() override {}
+
+    void reset_future() override {}
+
 };
 
 

@@ -336,11 +336,71 @@ TEST_CASE("after_satisfied_event_using_releaser") {
     REQUIRE(t->future().valid());
 }
 
-TEST_CASE("after_satisfied_event_using_releaser_with_two_parents") {
+TEST_CASE("after_satisfied_event_for_accept_task_using_releaser_with_two_parents") {
+    auto l = std::make_shared<tw::releaser>();
+    auto p1 = tw::make_task(tw::root, []{ return 42; });
+    auto p2 = tw::make_task(tw::root, []{ return 13; });
+    auto t = tw::make_task(tw::accept, [](auto...){}, p1, p2);
+    t->add_listener_all(l);
+    t->schedule_all();
+    REQUIRE(!p1->future().valid());
+    REQUIRE(!p2->future().valid());
+    REQUIRE(t->future().valid());
+}
+
+TEST_CASE("after_satisfied_event_for_accept_any_task_using_releaser_with_two_parents") {
+    auto l = std::make_shared<tw::releaser>();
+    auto p1 = tw::make_task(tw::root, []{ return 42; });
+    auto p2 = tw::make_task(tw::root, []{ return 13; });
+    auto t = tw::make_task(tw::accept_any, [](auto){}, p1, p2);
+    t->add_listener_all(l);
+    t->schedule_all();
+    REQUIRE(!p1->future().valid());
+    REQUIRE(!p2->future().valid());
+    REQUIRE(t->future().valid());
+}
+
+TEST_CASE("after_satisfied_event_for_consume_task_using_releaser_with_two_parents") {
+    auto l = std::make_shared<tw::releaser>();
+    auto p1 = tw::make_task(tw::root, []{ return 42; });
+    auto p2 = tw::make_task(tw::root, []{ return 13; });
+    auto t = tw::make_task(tw::consume, [](auto...){}, p1, p2);
+    t->add_listener_all(l);
+    t->schedule_all();
+    REQUIRE(!p1->future().valid());
+    REQUIRE(!p2->future().valid());
+    REQUIRE(t->future().valid());
+}
+
+TEST_CASE("after_satisfied_event_for_consume_any_task_using_releaser_with_two_parents") {
+    auto l = std::make_shared<tw::releaser>();
+    auto p1 = tw::make_task(tw::root, []{ return 42; });
+    auto p2 = tw::make_task(tw::root, []{ return 13; });
+    auto t = tw::make_task(tw::consume_any, [](auto){}, p1, p2);
+    t->add_listener_all(l);
+    t->schedule_all();
+    REQUIRE(!p1->future().valid());
+    REQUIRE(!p2->future().valid());
+    REQUIRE(t->future().valid());
+}
+
+TEST_CASE("after_satisfied_event_for_wait_task_using_releaser_with_two_parents") {
     auto l = std::make_shared<tw::releaser>();
     auto p1 = tw::make_task(tw::root, []{ return 42; });
     auto p2 = tw::make_task(tw::root, []{ return 13; });
     auto t = tw::make_task(tw::wait, []{}, p1, p2);
+    t->add_listener_all(l);
+    t->schedule_all();
+    REQUIRE(!p1->future().valid());
+    REQUIRE(!p2->future().valid());
+    REQUIRE(t->future().valid());
+}
+
+TEST_CASE("after_satisfied_event_for_wait_any_task_using_releaser_with_two_parents") {
+    auto l = std::make_shared<tw::releaser>();
+    auto p1 = tw::make_task(tw::root, []{ return 42; });
+    auto p2 = tw::make_task(tw::root, []{ return 13; });
+    auto t = tw::make_task(tw::wait_any, []{}, p1, p2);
     t->add_listener_all(l);
     t->schedule_all();
     REQUIRE(!p1->future().valid());

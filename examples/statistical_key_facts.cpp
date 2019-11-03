@@ -118,12 +118,15 @@ void statistical_key_facts(std::ostream& os, std::size_t sample_size, bool paral
     // Adds a timer to all tasks in the graph
     final_task->add_listener_all(std::make_shared<tw::timer>());
 
+    // Adds a releaser to all tasks in the graph
+    final_task->add_listener_all(std::make_shared<tw::releaser>());
+
     // Creating the executor
-    std::shared_ptr<tw::executor> executor;
+    std::unique_ptr<tw::executor> executor;
     if (parallel) {
-        executor = std::make_shared<tw::parallel>(4);
+        executor = std::make_unique<tw::parallel>(4);
     } else {
-        executor = std::make_shared<tw::sequential>();
+        executor = std::make_unique<tw::sequential>();
     }
 
     // Now we start calculating stuff ...
