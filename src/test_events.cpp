@@ -347,3 +347,15 @@ TEST_CASE("after_satisfied_event_using_releaser_with_two_parents") {
     REQUIRE(!p2->future().valid());
     REQUIRE(t->future().valid());
 }
+
+TEST_CASE("after_satisfied_event_using_releaser_with_value_task") {
+    auto l = std::make_shared<tw::releaser>();
+    auto p1 = tw::make_task(tw::root, []{ return 42; });
+    auto p2 = tw::make_value_task(13);
+    auto t = tw::make_task(tw::wait, []{}, p1, p2);
+    t->add_listener_all(l);
+    t->schedule_all();
+    REQUIRE(!p1->future().valid());
+    REQUIRE(p2->future().valid());
+    REQUIRE(t->future().valid());
+}
