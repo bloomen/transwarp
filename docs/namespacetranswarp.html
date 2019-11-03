@@ -184,6 +184,9 @@ Classes</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1timer.html">timer</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">A timer that tracks the average idle, wait, and run time of each task it listens to.  <a href="classtranswarp_1_1timer.html#details">More...</a><br/></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1releaser.html">releaser</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">The releaser will release a task's future when the task's <code>after_satisfied</code> event was received which happens when all children received the task's result. The releaser should be used in cases where the task's result is only needed for consumption by its children and can then be discarded.  <a href="classtranswarp_1_1releaser.html#details">More...</a><br/></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="typedef-members"></a>
 Typedefs</h2></td></tr>
@@ -221,8 +224,10 @@ Enumerations</h2></td></tr>
 <br/>
 &#160;&#160;<a class="el" href="namespacetranswarp.html#a857009a6efbb2f34495ee81664a376dcac24f2a90b2418a40ec4eaf0c7e49a537">event_type::after_finished</a>, 
 <a class="el" href="namespacetranswarp.html#a857009a6efbb2f34495ee81664a376dcaf6627ef1a493e0fdc9965eefcf89a425">event_type::after_canceled</a>, 
+<a class="el" href="namespacetranswarp.html#a857009a6efbb2f34495ee81664a376dca01b7c5d10d321a4e101d5a389a67ade3">event_type::after_satisfied</a>, 
 <a class="el" href="namespacetranswarp.html#a857009a6efbb2f34495ee81664a376dca46aa91fc92fdfedf990b1477e41f7606">event_type::after_custom_data_set</a>, 
-<b>count</b>
+<br/>
+&#160;&#160;<b>count</b>
 <br/>
  }</td></tr>
 <tr class="memdesc:a857009a6efbb2f34495ee81664a376dc"><td class="mdescLeft">&#160;</td><td class="mdescRight">The task events that can be subscribed to using the listener interface.  <a href="namespacetranswarp.html#a857009a6efbb2f34495ee81664a376dc">More...</a><br/></td></tr>
@@ -359,6 +364,9 @@ constexpr <a class="el" href="structtranswarp_1_1no__op__functor.html">no_op_fun
 </td></tr>
 <tr><td class="fieldname"><em><a class="anchor" id="a857009a6efbb2f34495ee81664a376dcaf6627ef1a493e0fdc9965eefcf89a425"></a>after_canceled</em>&nbsp;</td><td class="fielddoc">
 <p>Just after a task was canceled (handle_event called on thread that task is run on) </p>
+</td></tr>
+<tr><td class="fieldname"><em><a class="anchor" id="a857009a6efbb2f34495ee81664a376dca01b7c5d10d321a4e101d5a389a67ade3"></a>after_satisfied</em>&nbsp;</td><td class="fielddoc">
+<p>Just after a task has satisfied all its children with results (handle_event called on thread where the last child is satisfied) </p>
 </td></tr>
 <tr><td class="fieldname"><em><a class="anchor" id="a857009a6efbb2f34495ee81664a376dca46aa91fc92fdfedf990b1477e41f7606"></a>after_custom_data_set</em>&nbsp;</td><td class="fielddoc">
 <p>Just after custom data was assigned (handle_event called on thread that custom data was set on) </p>

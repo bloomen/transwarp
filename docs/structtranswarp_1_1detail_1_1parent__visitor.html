@@ -95,7 +95,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 </div><!--header-->
 <div class="contents">
 
-<p>Sets level of a task.  
+<p>Sets level of a task and increments the child count.  
  <a href="structtranswarp_1_1detail_1_1parent__visitor.html#details">More...</a></p>
 
 <p><code>#include &lt;<a class="el" href="transwarp_8h_source.html">transwarp.h</a>&gt;</code></p>
@@ -105,8 +105,9 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:afdf1649631671258f33edda520597dab"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="afdf1649631671258f33edda520597dab"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>parent_visitor</b> (<a class="el" href="classtranswarp_1_1itask.html">transwarp::itask</a> &amp;<a class="el" href="classtranswarp_1_1task.html">task</a>) noexcept</td></tr>
 <tr class="separator:afdf1649631671258f33edda520597dab"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a954691688aab78bdb8bec4dd2007586d"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structtranswarp_1_1detail_1_1parent__visitor.html#a954691688aab78bdb8bec4dd2007586d">operator()</a> (const <a class="el" href="classtranswarp_1_1itask.html">transwarp::itask</a> &amp;<a class="el" href="classtranswarp_1_1task.html">task</a>) const </td></tr>
-<tr class="separator:a954691688aab78bdb8bec4dd2007586d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acac6ac927f789954b8e24ebc5de21a81"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="acac6ac927f789954b8e24ebc5de21a81"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>operator()</b> (<a class="el" href="classtranswarp_1_1itask.html">transwarp::itask</a> &amp;<a class="el" href="classtranswarp_1_1task.html">task</a>) const </td></tr>
+<tr class="separator:acac6ac927f789954b8e24ebc5de21a81"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
@@ -115,34 +116,8 @@ Public Attributes</h2></td></tr>
 <tr class="separator:ab9fa6724b3100cd61ee43e6ec35916ef"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p>Sets level of a task. </p>
-</div><h2 class="groupheader">Member Function Documentation</h2>
-<a class="anchor" id="a954691688aab78bdb8bec4dd2007586d"></a>
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">void transwarp::detail::parent_visitor::operator() </td>
-          <td>(</td>
-          <td class="paramtype">const <a class="el" href="classtranswarp_1_1itask.html">transwarp::itask</a> &amp;&#160;</td>
-          <td class="paramname"><em>task</em></td><td>)</td>
-          <td> const</td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-<p>A child's level is always larger than any of its parents' levels </p>
-
-</div>
-</div>
-<hr/>The documentation for this struct was generated from the following file:<ul>
+<div class="textblock"><p>Sets level of a task and increments the child count. </p>
+</div><hr/>The documentation for this struct was generated from the following file:<ul>
 <li>src/<a class="el" href="transwarp_8h_source.html">transwarp.h</a></li>
 </ul>
 </div><!-- contents -->

@@ -106,10 +106,10 @@ Inheritance diagram for transwarp::task&lt; ResultType &amp; &gt;:</div>
  <div class="center">
   <img src="classtranswarp_1_1task_3_01ResultType_01_6_01_4.png" usemap="#transwarp::task&lt; ResultType &amp; &gt;_map" alt=""/>
   <map id="transwarp::task&lt; ResultType &amp; &gt;_map" name="transwarp::task&lt; ResultType &amp; &gt;_map">
-<area href="classtranswarp_1_1itask.html" title="An interface for the task class. " alt="transwarp::itask" shape="rect" coords="0,0,509,24"/>
-<area href="classtranswarp_1_1detail_1_1task__common.html" alt="transwarp::detail::task_common&lt; ResultType &amp; &gt;" shape="rect" coords="0,112,509,136"/>
-<area href="classtranswarp_1_1detail_1_1task__impl__base.html" alt="transwarp::detail::task_impl_base&lt; ResultType &amp;, TaskType, Functor, ParentResults...&gt;" shape="rect" coords="0,168,509,192"/>
-<area href="classtranswarp_1_1detail_1_1task__impl__proxy_3_01ResultType_01_6_00_01TaskType_00_01Functor_00_01ParentResults_8_8_8_4.html" title="A task proxy for reference result type. " alt="transwarp::detail::task_impl_proxy&lt; ResultType &amp;, TaskType, Functor, ParentResults...&gt;" shape="rect" coords="0,224,509,248"/>
+<area href="classtranswarp_1_1itask.html" title="An interface for the task class. " alt="transwarp::itask" shape="rect" coords="0,56,509,80"/>
+<area href="classtranswarp_1_1detail_1_1task__common.html" alt="transwarp::detail::task_common&lt; ResultType &amp; &gt;" shape="rect" coords="0,168,509,192"/>
+<area href="classtranswarp_1_1detail_1_1task__impl__base.html" alt="transwarp::detail::task_impl_base&lt; ResultType &amp;, TaskType, Functor, ParentResults...&gt;" shape="rect" coords="0,224,509,248"/>
+<area href="classtranswarp_1_1detail_1_1task__impl__proxy_3_01ResultType_01_6_00_01TaskType_00_01Functor_00_01ParentResults_8_8_8_4.html" title="A task proxy for reference result type. " alt="transwarp::detail::task_impl_proxy&lt; ResultType &amp;, TaskType, Functor, ParentResults...&gt;" shape="rect" coords="0,280,509,304"/>
 </map>
  </div></div>
 <table class="memberdecls">
@@ -127,11 +127,10 @@ std::shared_ptr&lt; <a class="el" href="classtranswarp_1_1task.html">task</a> &g
 <tr class="memitem:a4f00e39c5ff68660936403d0a8002c86"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a4f00e39c5ff68660936403d0a8002c86"></a>
 virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>set_value</b> (<a class="el" href="namespacetranswarp.html#a080c99818d36a4878e67e45363656286">transwarp::decay_t</a>&lt; result_type &gt; &amp;value)=0</td></tr>
 <tr class="separator:a4f00e39c5ff68660936403d0a8002c86"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a53ddcae566cd832b74d0643f2c22db9b"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a53ddcae566cd832b74d0643f2c22db9b"></a>
-virtual const <br class="typebreak"/>
-std::shared_future<br class="typebreak"/>
-&lt; result_type &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>future</b> () const noexcept=0</td></tr>
-<tr class="separator:a53ddcae566cd832b74d0643f2c22db9b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adef146addd3f588c089d90a2cf8ebc9d"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="adef146addd3f588c089d90a2cf8ebc9d"></a>
+virtual std::shared_future<br class="typebreak"/>
+&lt; result_type &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>future</b> () const noexcept=0</td></tr>
+<tr class="separator:adef146addd3f588c089d90a2cf8ebc9d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a966ea737e68956cd7e7e7d8eaed39c00"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a966ea737e68956cd7e7e7d8eaed39c00"></a>
 virtual <a class="el" href="namespacetranswarp.html#aa636472d53db0071fabe34fbca820db6">transwarp::result_t</a><br class="typebreak"/>
 &lt; result_type &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>get</b> () const =0</td></tr>

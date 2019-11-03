@@ -106,12 +106,12 @@ Inheritance diagram for transwarp::task&lt; ResultType &gt;:</div>
  <div class="center">
   <img src="classtranswarp_1_1task.png" usemap="#transwarp::task&lt; ResultType &gt;_map" alt=""/>
   <map id="transwarp::task&lt; ResultType &gt;_map" name="transwarp::task&lt; ResultType &gt;_map">
-<area href="classtranswarp_1_1itask.html" title="An interface for the task class. " alt="transwarp::itask" shape="rect" coords="500,0,990,24"/>
-<area href="classtranswarp_1_1detail_1_1task__common.html" title="Common task functionality shared across task_impl and value_task " alt="transwarp::detail::task_common&lt; ResultType &gt;" shape="rect" coords="500,112,990,136"/>
-<area href="classtranswarp_1_1detail_1_1task__impl__base.html" alt="transwarp::detail::task_impl_base&lt; ResultType, TaskType, Functor, ParentResults...&gt;" shape="rect" coords="0,168,490,192"/>
-<area href="classtranswarp_1_1detail_1_1task__impl__base.html" title="The base task class that contains the functionality that can be used with all result types (void and ..." alt="transwarp::detail::task_impl_base&lt; ResultType, TaskType, Functor, ParentResults &gt;" shape="rect" coords="500,168,990,192"/>
-<area href="classtranswarp_1_1value__task.html" title="A value task that stores a single value and doesn&#39;t require scheduling. Value tasks should be created..." alt="transwarp::value_task&lt; ResultType &gt;" shape="rect" coords="1000,168,1490,192"/>
-<area href="classtranswarp_1_1detail_1_1task__impl__proxy.html" title="A task proxy. " alt="transwarp::detail::task_impl_proxy&lt; ResultType, TaskType, Functor, ParentResults &gt;" shape="rect" coords="0,224,490,248"/>
+<area href="classtranswarp_1_1itask.html" title="An interface for the task class. " alt="transwarp::itask" shape="rect" coords="500,56,990,80"/>
+<area href="classtranswarp_1_1detail_1_1task__common.html" title="Common task functionality shared across task_impl and value_task " alt="transwarp::detail::task_common&lt; ResultType &gt;" shape="rect" coords="500,168,990,192"/>
+<area href="classtranswarp_1_1detail_1_1task__impl__base.html" alt="transwarp::detail::task_impl_base&lt; ResultType, TaskType, Functor, ParentResults...&gt;" shape="rect" coords="0,224,490,248"/>
+<area href="classtranswarp_1_1detail_1_1task__impl__base.html" title="The base task class that contains the functionality that can be used with all result types (void and ..." alt="transwarp::detail::task_impl_base&lt; ResultType, TaskType, Functor, ParentResults &gt;" shape="rect" coords="500,224,990,248"/>
+<area href="classtranswarp_1_1value__task.html" title="A value task that stores a single value and doesn&#39;t require scheduling. Value tasks should be created..." alt="transwarp::value_task&lt; ResultType &gt;" shape="rect" coords="1000,224,1490,248"/>
+<area href="classtranswarp_1_1detail_1_1task__impl__proxy.html" title="A task proxy. " alt="transwarp::detail::task_impl_proxy&lt; ResultType, TaskType, Functor, ParentResults &gt;" shape="rect" coords="0,280,490,304"/>
 </map>
  </div></div>
 <table class="memberdecls">
@@ -132,11 +132,10 @@ virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>set_value</b>
 <tr class="memitem:ad008ce41a3f1f0c0a54b0626ed10a63a"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad008ce41a3f1f0c0a54b0626ed10a63a"></a>
 virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>set_value</b> (<a class="el" href="namespacetranswarp.html#a080c99818d36a4878e67e45363656286">transwarp::decay_t</a>&lt; result_type &gt; &amp;&amp;value)=0</td></tr>
 <tr class="separator:ad008ce41a3f1f0c0a54b0626ed10a63a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a93d305dee3311dfba80f13cee7945099"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a93d305dee3311dfba80f13cee7945099"></a>
-virtual const <br class="typebreak"/>
-std::shared_future<br class="typebreak"/>
-&lt; result_type &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>future</b> () const noexcept=0</td></tr>
-<tr class="separator:a93d305dee3311dfba80f13cee7945099"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a57708eb42767ab2797a1cc577fb2e2b2"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a57708eb42767ab2797a1cc577fb2e2b2"></a>
+virtual std::shared_future<br class="typebreak"/>
+&lt; result_type &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>future</b> () const noexcept=0</td></tr>
+<tr class="separator:a57708eb42767ab2797a1cc577fb2e2b2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af34e28abfeec3debb27041165fe78918"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af34e28abfeec3debb27041165fe78918"></a>
 virtual <a class="el" href="namespacetranswarp.html#aa636472d53db0071fabe34fbca820db6">transwarp::result_t</a><br class="typebreak"/>
 &lt; result_type &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>get</b> () const =0</td></tr>

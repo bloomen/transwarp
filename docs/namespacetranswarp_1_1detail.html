@@ -87,7 +87,8 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
   <div class="summary">
 <a href="#nested-classes">Classes</a> &#124;
 <a href="#typedef-members">Typedefs</a> &#124;
-<a href="#func-members">Functions</a>  </div>
+<a href="#func-members">Functions</a> &#124;
+<a href="#var-members">Variables</a>  </div>
   <div class="headertitle">
 <div class="title">transwarp::detail Namespace Reference</div>  </div>
 </div><!--header-->
@@ -138,7 +139,7 @@ Classes</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structtranswarp_1_1detail_1_1call__impl__vector_3_01transwarp_1_1wait__any__type_01_4.html">call_impl_vector&lt; transwarp::wait_any_type &gt;</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structtranswarp_1_1detail_1_1parent__visitor.html">parent_visitor</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sets level of a task.  <a href="structtranswarp_1_1detail_1_1parent__visitor.html#details">More...</a><br/></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sets level of a task and increments the child count.  <a href="structtranswarp_1_1detail_1_1parent__visitor.html#details">More...</a><br/></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structtranswarp_1_1detail_1_1final__visitor.html">final_visitor</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Applies final bookkeeping to the task and collects the task.  <a href="structtranswarp_1_1detail_1_1final__visitor.html#details">More...</a><br/></td></tr>
@@ -278,6 +279,10 @@ template&lt;typename... ParentResults&gt; </td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
+<tr class="memitem:a5321fef708ae6ddc0c7b643fa25ce854"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a5321fef708ae6ddc0c7b643fa25ce854"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacetranswarp_1_1detail.html#a5321fef708ae6ddc0c7b643fa25ce854">decrement_parent_refcount</a> (const std::shared_ptr&lt; <a class="el" href="classtranswarp_1_1itask.html">transwarp::itask</a> &gt; &amp;parent)</td></tr>
+<tr class="memdesc:a5321fef708ae6ddc0c7b643fa25ce854"><td class="mdescLeft">&#160;</td><td class="mdescRight">Decrements refcount. <br/></td></tr>
+<tr class="separator:a5321fef708ae6ddc0c7b643fa25ce854"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af2b25afbee15978b692c068724cb99f5"><td class="memTemplParams" colspan="2"><a class="anchor" id="af2b25afbee15978b692c068724cb99f5"></a>
 template&lt;typename TaskType &gt; </td></tr>
 <tr class="memitem:af2b25afbee15978b692c068724cb99f5"><td class="memTemplItemLeft" align="right" valign="top">std::shared_ptr&lt; TaskType &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacetranswarp_1_1detail.html#af2b25afbee15978b692c068724cb99f5">clone_task</a> (std::unordered_map&lt; std::shared_ptr&lt; <a class="el" href="classtranswarp_1_1itask.html">transwarp::itask</a> &gt;, std::shared_ptr&lt; <a class="el" href="classtranswarp_1_1itask.html">transwarp::itask</a> &gt;&gt; &amp;task_cache, const std::shared_ptr&lt; TaskType &gt; &amp;t)</td></tr>
@@ -350,6 +355,16 @@ template&lt;typename OneResult , typename ParentResultType &gt; </td></tr>
 <tr class="memitem:af86bc4279f4e7356620bd8a7e0a60397"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacetranswarp_1_1detail.html#af86bc4279f4e7356620bd8a7e0a60397">cancel_all_but_one</a> (const std::shared_ptr&lt; <a class="el" href="classtranswarp_1_1task.html">transwarp::task</a>&lt; OneResult &gt;&gt; &amp;one, const std::vector&lt; std::shared_ptr&lt; <a class="el" href="classtranswarp_1_1task.html">transwarp::task</a>&lt; ParentResultType &gt;&gt;&gt; &amp;<a class="el" href="structtranswarp_1_1detail_1_1parents.html">parents</a>)</td></tr>
 <tr class="memdesc:af86bc4279f4e7356620bd8a7e0a60397"><td class="mdescLeft">&#160;</td><td class="mdescRight">Cancels all tasks but one. <br/></td></tr>
 <tr class="separator:af86bc4279f4e7356620bd8a7e0a60397"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afeeabb8fa46fd1ebc4c04ce22de8b662"><td class="memTemplParams" colspan="2"><a class="anchor" id="afeeabb8fa46fd1ebc4c04ce22de8b662"></a>
+template&lt;typename... ParentResults&gt; </td></tr>
+<tr class="memitem:afeeabb8fa46fd1ebc4c04ce22de8b662"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacetranswarp_1_1detail.html#afeeabb8fa46fd1ebc4c04ce22de8b662">decrement_refcount</a> (const std::tuple&lt; std::shared_ptr&lt; <a class="el" href="classtranswarp_1_1task.html">transwarp::task</a>&lt; ParentResults &gt;&gt;...&gt; &amp;<a class="el" href="structtranswarp_1_1detail_1_1parents.html">parents</a>)</td></tr>
+<tr class="memdesc:afeeabb8fa46fd1ebc4c04ce22de8b662"><td class="mdescLeft">&#160;</td><td class="mdescRight">Decrements the refcount of all parents. <br/></td></tr>
+<tr class="separator:afeeabb8fa46fd1ebc4c04ce22de8b662"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8bf2e1f4fa629aa54a31effc442dde98"><td class="memTemplParams" colspan="2"><a class="anchor" id="a8bf2e1f4fa629aa54a31effc442dde98"></a>
+template&lt;typename ParentResultType &gt; </td></tr>
+<tr class="memitem:a8bf2e1f4fa629aa54a31effc442dde98"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacetranswarp_1_1detail.html#a8bf2e1f4fa629aa54a31effc442dde98">decrement_refcount</a> (const std::vector&lt; std::shared_ptr&lt; <a class="el" href="classtranswarp_1_1task.html">transwarp::task</a>&lt; ParentResultType &gt;&gt;&gt; &amp;<a class="el" href="structtranswarp_1_1detail_1_1parents.html">parents</a>)</td></tr>
+<tr class="memdesc:a8bf2e1f4fa629aa54a31effc442dde98"><td class="mdescLeft">&#160;</td><td class="mdescRight">Decrements the refcount of all parents. <br/></td></tr>
+<tr class="separator:a8bf2e1f4fa629aa54a31effc442dde98"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:acb60d0795db9b619884a6f9e579e1073"><td class="memTemplParams" colspan="2"><a class="anchor" id="acb60d0795db9b619884a6f9e579e1073"></a>
 template&lt;typename TaskType , typename Result , typename Task , typename... ParentResults&gt; </td></tr>
 <tr class="memitem:acb60d0795db9b619884a6f9e579e1073"><td class="memTemplItemLeft" align="right" valign="top">Result&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacetranswarp_1_1detail.html#acb60d0795db9b619884a6f9e579e1073">call</a> (std::size_t task_id, const Task &amp;<a class="el" href="classtranswarp_1_1task.html">task</a>, const std::tuple&lt; std::shared_ptr&lt; <a class="el" href="classtranswarp_1_1task.html">transwarp::task</a>&lt; ParentResults &gt;&gt;...&gt; &amp;<a class="el" href="structtranswarp_1_1detail_1_1parents.html">parents</a>)</td></tr>
@@ -389,6 +404,15 @@ template&lt;typename ResultType &gt; </td></tr>
 <tr class="memitem:a34c09a6639f52048a1e4642d32520783"><td class="memTemplItemLeft" align="right" valign="top">std::shared_future&lt; ResultType &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacetranswarp_1_1detail.html#a34c09a6639f52048a1e4642d32520783">make_future_with_exception</a> (std::exception_ptr exception)</td></tr>
 <tr class="memdesc:a34c09a6639f52048a1e4642d32520783"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns a ready future with the given exception as its state. <br/></td></tr>
 <tr class="separator:a34c09a6639f52048a1e4642d32520783"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="var-members"></a>
+Variables</h2></td></tr>
+<tr class="memitem:aaef65914e9c67b2574f04be5c193daeb"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aaef65914e9c67b2574f04be5c193daeb"></a>
+const std::optional&lt; std::string &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>nullopt_string</b></td></tr>
+<tr class="separator:aaef65914e9c67b2574f04be5c193daeb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:accb34510b16225c4317ada84ee4db8ec"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="accb34510b16225c4317ada84ee4db8ec"></a>
+const std::any&#160;</td><td class="memItemRight" valign="bottom"><b>any_empty</b></td></tr>
+<tr class="separator:accb34510b16225c4317ada84ee4db8ec"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Detail namespace for internal functionality only. </p>

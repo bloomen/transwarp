@@ -106,10 +106,10 @@ Inheritance diagram for transwarp::task&lt; void &gt;:</div>
  <div class="center">
   <img src="classtranswarp_1_1task_3_01void_01_4.png" usemap="#transwarp::task&lt; void &gt;_map" alt=""/>
   <map id="transwarp::task&lt; void &gt;_map" name="transwarp::task&lt; void &gt;_map">
-<area href="classtranswarp_1_1itask.html" title="An interface for the task class. " alt="transwarp::itask" shape="rect" coords="0,0,457,24"/>
-<area href="classtranswarp_1_1detail_1_1task__common.html" alt="transwarp::detail::task_common&lt; void &gt;" shape="rect" coords="0,112,457,136"/>
-<area href="classtranswarp_1_1detail_1_1task__impl__base.html" alt="transwarp::detail::task_impl_base&lt; void, TaskType, Functor, ParentResults...&gt;" shape="rect" coords="0,168,457,192"/>
-<area href="classtranswarp_1_1detail_1_1task__impl__proxy_3_01void_00_01TaskType_00_01Functor_00_01ParentResults_8_8_8_4.html" title="A task proxy for void result type. " alt="transwarp::detail::task_impl_proxy&lt; void, TaskType, Functor, ParentResults...&gt;" shape="rect" coords="0,224,457,248"/>
+<area href="classtranswarp_1_1itask.html" title="An interface for the task class. " alt="transwarp::itask" shape="rect" coords="0,56,457,80"/>
+<area href="classtranswarp_1_1detail_1_1task__common.html" alt="transwarp::detail::task_common&lt; void &gt;" shape="rect" coords="0,168,457,192"/>
+<area href="classtranswarp_1_1detail_1_1task__impl__base.html" alt="transwarp::detail::task_impl_base&lt; void, TaskType, Functor, ParentResults...&gt;" shape="rect" coords="0,224,457,248"/>
+<area href="classtranswarp_1_1detail_1_1task__impl__proxy_3_01void_00_01TaskType_00_01Functor_00_01ParentResults_8_8_8_4.html" title="A task proxy for void result type. " alt="transwarp::detail::task_impl_proxy&lt; void, TaskType, Functor, ParentResults...&gt;" shape="rect" coords="0,280,457,304"/>
 </map>
  </div></div>
 <table class="memberdecls">
@@ -127,11 +127,10 @@ std::shared_ptr&lt; <a class="el" href="classtranswarp_1_1task.html">task</a> &g
 <tr class="memitem:ae66cefd2552af58610edb50932ad2cc3"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae66cefd2552af58610edb50932ad2cc3"></a>
 virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>set_value</b> ()=0</td></tr>
 <tr class="separator:ae66cefd2552af58610edb50932ad2cc3"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac1d5e4c49c8375796a263b1b61c2b972"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac1d5e4c49c8375796a263b1b61c2b972"></a>
-virtual const <br class="typebreak"/>
-std::shared_future<br class="typebreak"/>
-&lt; result_type &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>future</b> () const noexcept=0</td></tr>
-<tr class="separator:ac1d5e4c49c8375796a263b1b61c2b972"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0c84fe07b337bd2367cdc0d465070889"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a0c84fe07b337bd2367cdc0d465070889"></a>
+virtual std::shared_future<br class="typebreak"/>
+&lt; result_type &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>future</b> () const noexcept=0</td></tr>
+<tr class="separator:a0c84fe07b337bd2367cdc0d465070889"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a693a36a251957e93ee9b4c484b840d9a"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a693a36a251957e93ee9b4c484b840d9a"></a>
 virtual result_type&#160;</td><td class="memItemRight" valign="bottom"><b>get</b> () const =0</td></tr>
 <tr class="separator:a693a36a251957e93ee9b4c484b840d9a"><td class="memSeparator" colspan="2">&#160;</td></tr>

@@ -4,7 +4,7 @@
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.5"/>
-<title>transwarp: transwarp::timer Class Reference</title>
+<title>transwarp: transwarp::releaser Class Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -82,63 +82,57 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 
 <div id="nav-path" class="navpath">
   <ul>
-<li class="navelem"><a class="el" href="namespacetranswarp.html">transwarp</a></li><li class="navelem"><a class="el" href="classtranswarp_1_1timer.html">timer</a></li>  </ul>
+<li class="navelem"><a class="el" href="namespacetranswarp.html">transwarp</a></li><li class="navelem"><a class="el" href="classtranswarp_1_1releaser.html">releaser</a></li>  </ul>
 </div>
 </div><!-- top -->
 <div class="header">
   <div class="summary">
-<a href="#nested-classes">Classes</a> &#124;
 <a href="#pub-methods">Public Member Functions</a> &#124;
-<a href="classtranswarp_1_1timer-members.html">List of all members</a>  </div>
+<a href="classtranswarp_1_1releaser-members.html">List of all members</a>  </div>
   <div class="headertitle">
-<div class="title">transwarp::timer Class Reference</div>  </div>
+<div class="title">transwarp::releaser Class Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
 
-<p>A timer that tracks the average idle, wait, and run time of each task it listens to.  
- <a href="classtranswarp_1_1timer.html#details">More...</a></p>
+<p>The releaser will release a task's future when the task's <code>after_satisfied</code> event was received which happens when all children received the task's result. The releaser should be used in cases where the task's result is only needed for consumption by its children and can then be discarded.  
+ <a href="classtranswarp_1_1releaser.html#details">More...</a></p>
 
 <p><code>#include &lt;<a class="el" href="transwarp_8h_source.html">transwarp.h</a>&gt;</code></p>
 <div class="dynheader">
-Inheritance diagram for transwarp::timer:</div>
+Inheritance diagram for transwarp::releaser:</div>
 <div class="dyncontent">
  <div class="center">
-  <img src="classtranswarp_1_1timer.png" usemap="#transwarp::timer_map" alt=""/>
-  <map id="transwarp::timer_map" name="transwarp::timer_map">
-<area href="classtranswarp_1_1listener.html" title="The listener interface to listen to events raised by tasks. " alt="transwarp::listener" shape="rect" coords="0,0,115,24"/>
+  <img src="classtranswarp_1_1releaser.png" usemap="#transwarp::releaser_map" alt=""/>
+  <map id="transwarp::releaser_map" name="transwarp::releaser_map">
+<area href="classtranswarp_1_1listener.html" title="The listener interface to listen to events raised by tasks. " alt="transwarp::listener" shape="rect" coords="0,0,121,24"/>
 </map>
  </div></div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a58e9ea7600ed0597ce3b68aa5a779595"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a58e9ea7600ed0597ce3b68aa5a779595"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>timer</b> (const <a class="el" href="classtranswarp_1_1timer.html">timer</a> &amp;)=delete</td></tr>
-<tr class="separator:a58e9ea7600ed0597ce3b68aa5a779595"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac187e494fe0c7ade69b135e1b347b327"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac187e494fe0c7ade69b135e1b347b327"></a>
-<a class="el" href="classtranswarp_1_1timer.html">timer</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>operator=</b> (const <a class="el" href="classtranswarp_1_1timer.html">timer</a> &amp;)=delete</td></tr>
-<tr class="separator:ac187e494fe0c7ade69b135e1b347b327"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7fb8d9acd1e46ea8493f1d40e22d7434"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a7fb8d9acd1e46ea8493f1d40e22d7434"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>timer</b> (<a class="el" href="classtranswarp_1_1timer.html">timer</a> &amp;&amp;)=delete</td></tr>
-<tr class="separator:a7fb8d9acd1e46ea8493f1d40e22d7434"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a05982717b77fe6848b9c9550f7097464"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a05982717b77fe6848b9c9550f7097464"></a>
-<a class="el" href="classtranswarp_1_1timer.html">timer</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>operator=</b> (<a class="el" href="classtranswarp_1_1timer.html">timer</a> &amp;&amp;)=delete</td></tr>
-<tr class="separator:a05982717b77fe6848b9c9550f7097464"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a60a2233e5f40cc07f3b2ac5bd6391e75"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a60a2233e5f40cc07f3b2ac5bd6391e75"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1timer.html#a60a2233e5f40cc07f3b2ac5bd6391e75">handle_event</a> (const <a class="el" href="namespacetranswarp.html#a857009a6efbb2f34495ee81664a376dc">transwarp::event_type</a> event, <a class="el" href="classtranswarp_1_1itask.html">transwarp::itask</a> &amp;<a class="el" href="classtranswarp_1_1task.html">task</a>) override</td></tr>
-<tr class="memdesc:a60a2233e5f40cc07f3b2ac5bd6391e75"><td class="mdescLeft">&#160;</td><td class="mdescRight">Performs the actual timing and populates the task's timing members. <br/></td></tr>
-<tr class="separator:a60a2233e5f40cc07f3b2ac5bd6391e75"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8dccb75290dfe52e3f64bc06989e5738"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a8dccb75290dfe52e3f64bc06989e5738"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1timer.html#a8dccb75290dfe52e3f64bc06989e5738">reset</a> ()</td></tr>
-<tr class="memdesc:a8dccb75290dfe52e3f64bc06989e5738"><td class="mdescLeft">&#160;</td><td class="mdescRight">Resets all timing information. <br/></td></tr>
-<tr class="separator:a8dccb75290dfe52e3f64bc06989e5738"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abf69985d4b6dd365599f3a32d273002e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="abf69985d4b6dd365599f3a32d273002e"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1releaser.html#abf69985d4b6dd365599f3a32d273002e">releaser</a> (std::shared_ptr&lt; <a class="el" href="classtranswarp_1_1executor.html">transwarp::executor</a> &gt; <a class="el" href="classtranswarp_1_1executor.html">executor</a>)</td></tr>
+<tr class="memdesc:abf69985d4b6dd365599f3a32d273002e"><td class="mdescLeft">&#160;</td><td class="mdescRight">The executor gives control over where a task's future is released. <br/></td></tr>
+<tr class="separator:abf69985d4b6dd365599f3a32d273002e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad2334a94096617d9de01eb2ddd85e185"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad2334a94096617d9de01eb2ddd85e185"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>releaser</b> (const <a class="el" href="classtranswarp_1_1releaser.html">releaser</a> &amp;)=delete</td></tr>
+<tr class="separator:ad2334a94096617d9de01eb2ddd85e185"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1351b0d7e093a081942bb988c8cb907f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1351b0d7e093a081942bb988c8cb907f"></a>
+<a class="el" href="classtranswarp_1_1releaser.html">releaser</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>operator=</b> (const <a class="el" href="classtranswarp_1_1releaser.html">releaser</a> &amp;)=delete</td></tr>
+<tr class="separator:a1351b0d7e093a081942bb988c8cb907f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a623bebfe6afa0adb43b361e026a13f5b"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a623bebfe6afa0adb43b361e026a13f5b"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>releaser</b> (<a class="el" href="classtranswarp_1_1releaser.html">releaser</a> &amp;&amp;)=delete</td></tr>
+<tr class="separator:a623bebfe6afa0adb43b361e026a13f5b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4e384e599e04ad6339a71c27e1c3d020"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a4e384e599e04ad6339a71c27e1c3d020"></a>
+<a class="el" href="classtranswarp_1_1releaser.html">releaser</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>operator=</b> (<a class="el" href="classtranswarp_1_1releaser.html">releaser</a> &amp;&amp;)=delete</td></tr>
+<tr class="separator:a4e384e599e04ad6339a71c27e1c3d020"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac4967872e7536cb4a8dfa406d642d26e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac4967872e7536cb4a8dfa406d642d26e"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtranswarp_1_1releaser.html#ac4967872e7536cb4a8dfa406d642d26e">handle_event</a> (const <a class="el" href="namespacetranswarp.html#a857009a6efbb2f34495ee81664a376dc">transwarp::event_type</a> event, <a class="el" href="classtranswarp_1_1itask.html">transwarp::itask</a> &amp;<a class="el" href="classtranswarp_1_1task.html">task</a>) override</td></tr>
+<tr class="memdesc:ac4967872e7536cb4a8dfa406d642d26e"><td class="mdescLeft">&#160;</td><td class="mdescRight">This may be called from arbitrary threads depending on the event type (see <a class="el" href="namespacetranswarp.html#a857009a6efbb2f34495ee81664a376dc" title="The task events that can be subscribed to using the listener interface. ">transwarp::event_type</a>). The implementer needs to ensure that this never throws exceptions. <br/></td></tr>
+<tr class="separator:ac4967872e7536cb4a8dfa406d642d26e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p>A timer that tracks the average idle, wait, and run time of each task it listens to. </p>
-<ul>
-<li>idle = time between scheduling and starting the task (executor dependent)</li>
-<li>wait = time between starting and invoking the task's functor, i.e. wait for parent tasks to finish</li>
-<li>run = time between invoking and finishing the task's computations </li>
-</ul>
+<div class="textblock"><p>The releaser will release a task's future when the task's <code>after_satisfied</code> event was received which happens when all children received the task's result. The releaser should be used in cases where the task's result is only needed for consumption by its children and can then be discarded. </p>
 </div><hr/>The documentation for this class was generated from the following file:<ul>
 <li>src/<a class="el" href="transwarp_8h_source.html">transwarp.h</a></li>
 </ul>

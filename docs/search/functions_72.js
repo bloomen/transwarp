@@ -2,6 +2,7 @@ var searchData=
 [
   ['raise_5fevent',['raise_event',['../classtranswarp_1_1detail_1_1task__common.html#a98d90812f2f9007f04988e5669c6260b',1,'transwarp::detail::task_common']]],
   ['reclaim',['reclaim',['../classtranswarp_1_1task__pool.html#a8b4688d6d2387834b033084a00fe632e',1,'transwarp::task_pool']]],
+  ['releaser',['releaser',['../classtranswarp_1_1releaser.html#abf69985d4b6dd365599f3a32d273002e',1,'transwarp::releaser']]],
   ['remove_5fcustom_5fdata',['remove_custom_data',['../classtranswarp_1_1detail_1_1task__common.html#a730e97aa69e1cf079198f802cb2b9a76',1,'transwarp::detail::task_common']]],
   ['remove_5fcustom_5fdata_5fall',['remove_custom_data_all',['../classtranswarp_1_1detail_1_1task__impl__base.html#a117815bc16470c34c209c664999041d3',1,'transwarp::detail::task_impl_base::remove_custom_data_all()'],['../classtranswarp_1_1value__task.html#a400101758f70367698224c83ede43f10',1,'transwarp::value_task::remove_custom_data_all()']]],
   ['remove_5fexecutor',['remove_executor',['../classtranswarp_1_1detail_1_1task__impl__base.html#a9a195cd09889aa2008c840cb667b8147',1,'transwarp::detail::task_impl_base::remove_executor()'],['../classtranswarp_1_1value__task.html#ab14e491ebc0b22e48283bb3f3b6c54c0',1,'transwarp::value_task::remove_executor()']]],

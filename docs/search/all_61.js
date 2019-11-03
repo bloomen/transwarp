@@ -12,6 +12,7 @@ var searchData=
   ['after_5fcustom_5fdata_5fset',['after_custom_data_set',['../namespacetranswarp.html#a857009a6efbb2f34495ee81664a376dca46aa91fc92fdfedf990b1477e41f7606',1,'transwarp']]],
   ['after_5ffinished',['after_finished',['../namespacetranswarp.html#a857009a6efbb2f34495ee81664a376dcac24f2a90b2418a40ec4eaf0c7e49a537',1,'transwarp']]],
   ['after_5ffuture_5fchanged',['after_future_changed',['../namespacetranswarp.html#a857009a6efbb2f34495ee81664a376dcaec60b71ee73a65a76b212c32a745480d',1,'transwarp']]],
+  ['after_5fsatisfied',['after_satisfied',['../namespacetranswarp.html#a857009a6efbb2f34495ee81664a376dca01b7c5d10d321a4e101d5a389a67ade3',1,'transwarp']]],
   ['apply_5fto_5feach',['apply_to_each',['../namespacetranswarp_1_1detail.html#ab3efd40692f72b780ba0ab70f64cbeda',1,'transwarp::detail']]],
   ['assign_5ffutures_5fimpl',['assign_futures_impl',['../structtranswarp_1_1detail_1_1assign__futures__impl.html',1,'transwarp::detail']]],
   ['assign_5ffutures_5fimpl_3c_2d1_2c_20parentresults_2e_2e_2e_3e',['assign_futures_impl&lt;-1, ParentResults...&gt;',['../structtranswarp_1_1detail_1_1assign__futures__impl_3-1_00_01ParentResults_8_8_8_4.html',1,'transwarp::detail']]],

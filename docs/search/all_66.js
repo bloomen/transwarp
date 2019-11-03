@@ -21,5 +21,5 @@ var searchData=
   ['functor_5fresult_3c_20transwarp_3a_3await_5ftype_2c_20functor_2c_20parentresults_2e_2e_2e_3e',['functor_result&lt; transwarp::wait_type, Functor, ParentResults...&gt;',['../structtranswarp_1_1detail_1_1functor__result_3_01transwarp_1_1wait__type_00_01Functor_00_01ParentResults_8_8_8_4.html',1,'transwarp::detail']]],
   ['functor_5fresult_3c_20transwarp_3a_3await_5ftype_2c_20functor_2c_20std_3a_3avector_3c_20std_3a_3ashared_5fptr_3c_20transwarp_3a_3atask_3c_20parentresulttype_20_3e_20_3e_20_3e_20_3e',['functor_result&lt; transwarp::wait_type, Functor, std::vector&lt; std::shared_ptr&lt; transwarp::task&lt; ParentResultType &gt; &gt; &gt; &gt;',['../structtranswarp_1_1detail_1_1functor__result_3_01transwarp_1_1wait__type_00_01Functor_00_01std_1bccd0232fdad0c11932775468f51acf5.html',1,'transwarp::detail']]],
   ['functor_5fresult_5ft',['functor_result_t',['../namespacetranswarp_1_1detail.html#a163390d86abafecaccdc82c10f889dc4',1,'transwarp::detail']]],
-  ['future',['future',['../classtranswarp_1_1detail_1_1task__common.html#a8e8ba347ad00920bd7a4599e0355a0cb',1,'transwarp::detail::task_common']]]
+  ['future',['future',['../classtranswarp_1_1detail_1_1task__common.html#a9e341705b8597d354758c4812a8d902c',1,'transwarp::detail::task_common']]]
 ];

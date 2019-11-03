@@ -1,5 +1,6 @@
 var searchData=
 [
+  ['releaser',['releaser',['../classtranswarp_1_1releaser.html',1,'transwarp']]],
   ['remove_5fcustom_5fdata_5fvisitor',['remove_custom_data_visitor',['../structtranswarp_1_1detail_1_1remove__custom__data__visitor.html',1,'transwarp::detail']]],
   ['remove_5fexecutor_5fvisitor',['remove_executor_visitor',['../structtranswarp_1_1detail_1_1remove__executor__visitor.html',1,'transwarp::detail']]],
   ['remove_5flistener_5fper_5fevent_5fvisitor',['remove_listener_per_event_visitor',['../structtranswarp_1_1detail_1_1remove__listener__per__event__visitor.html',1,'transwarp::detail']]],
