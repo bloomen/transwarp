@@ -354,6 +354,8 @@ std::ofstream{"graph.dot"} << tw::to_string(task->edges()); // the dot file now 
 
 ### Optimizing efficiency
 
+**Compile time switches**
+
 By default, transwarp provides its full functionality to its client. However,
 in many cases not all of that is actually required and so transwarp provides
 a few compile time switches to reduce the task size along with a few related computations.
@@ -370,6 +372,22 @@ To get the minimal task size with a single switch one can define
 TRANSWARP_MINIMUM_TASK_SIZE
 ```
 at build time.
+
+**Releasing unused memory**
+
+By default, every task in a graph will keep its result until rescheduling or
+a manual reset of the task results. The `releaser` listener allows you to
+release a task result after that task's children have consumed the result.
+For example:
+```cpp
+auto task = make_graph();
+task->add_listener_all(std::make_shared<tw::releaser>()); // assigns the releaser listener to all tasks
+task->schedule_all();
+// All intermediate task results are now released (i.e. futures are invalid)
+auto result = task->get(); // The final task's result remains valid
+```
+The `releaser` also accepts an executor that gives control over _where_ a task's
+result is released.
 
 ## Feedback
 
