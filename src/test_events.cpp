@@ -278,7 +278,11 @@ TEST_CASE("after_satisfied_event_for_accept_task") {
     auto t = tw::make_task(tw::accept, [](auto){}, p);
     t->add_listener_all(l);
     t->schedule_all();
-    REQUIRE((n_events-2)*2 - 1  == l->events.size()); // final task doesn't get satisfied event
+#ifndef TRANSWARP_DISABLE_TASK_REFCOUNT
+    REQUIRE((n_events-2)*2 - 1 == l->events.size()); // final task doesn't get satisfied event
+#else
+    REQUIRE((n_events-3)*2 == l->events.size());
+#endif
 }
 
 TEST_CASE("after_satisfied_event_for_accept_any_task") {
@@ -287,7 +291,11 @@ TEST_CASE("after_satisfied_event_for_accept_any_task") {
     auto t = tw::make_task(tw::accept_any, [](auto){}, p);
     t->add_listener_all(l);
     t->schedule_all();
-    REQUIRE((n_events-2)*2 - 1  == l->events.size()); // final task doesn't get satisfied event
+#ifndef TRANSWARP_DISABLE_TASK_REFCOUNT
+    REQUIRE((n_events-2)*2 - 1 == l->events.size()); // final task doesn't get satisfied event
+#else
+    REQUIRE((n_events-3)*2 == l->events.size());
+#endif
 }
 
 TEST_CASE("after_satisfied_event_for_consume_task") {
@@ -296,7 +304,11 @@ TEST_CASE("after_satisfied_event_for_consume_task") {
     auto t = tw::make_task(tw::consume, [](auto){}, p);
     t->add_listener_all(l);
     t->schedule_all();
-    REQUIRE((n_events-2)*2 - 1  == l->events.size()); // final task doesn't get satisfied event
+#ifndef TRANSWARP_DISABLE_TASK_REFCOUNT
+    REQUIRE((n_events-2)*2 - 1 == l->events.size()); // final task doesn't get satisfied event
+#else
+    REQUIRE((n_events-3)*2 == l->events.size());
+#endif
 }
 
 TEST_CASE("after_satisfied_event_for_consume_any_task") {
@@ -305,7 +317,11 @@ TEST_CASE("after_satisfied_event_for_consume_any_task") {
     auto t = tw::make_task(tw::consume_any, [](auto){}, p);
     t->add_listener_all(l);
     t->schedule_all();
-    REQUIRE((n_events-2)*2 - 1  == l->events.size()); // final task doesn't get satisfied event
+#ifndef TRANSWARP_DISABLE_TASK_REFCOUNT
+    REQUIRE((n_events-2)*2 - 1 == l->events.size()); // final task doesn't get satisfied event
+#else
+    REQUIRE((n_events-3)*2 == l->events.size());
+#endif
 }
 
 TEST_CASE("after_satisfied_event_for_wait_task") {
@@ -314,7 +330,11 @@ TEST_CASE("after_satisfied_event_for_wait_task") {
     auto t = tw::make_task(tw::wait, []{}, p);
     t->add_listener_all(l);
     t->schedule_all();
-    REQUIRE((n_events-2)*2 - 1  == l->events.size()); // final task doesn't get satisfied event
+#ifndef TRANSWARP_DISABLE_TASK_REFCOUNT
+    REQUIRE((n_events-2)*2 - 1 == l->events.size()); // final task doesn't get satisfied event
+#else
+    REQUIRE((n_events-3)*2 == l->events.size());
+#endif
 }
 
 TEST_CASE("after_satisfied_event_for_wait_any_task") {
@@ -323,7 +343,11 @@ TEST_CASE("after_satisfied_event_for_wait_any_task") {
     auto t = tw::make_task(tw::wait_any, []{}, p);
     t->add_listener_all(l);
     t->schedule_all();
+#ifndef TRANSWARP_DISABLE_TASK_REFCOUNT
     REQUIRE((n_events-2)*2 - 1  == l->events.size()); // final task doesn't get satisfied event
+#else
+    REQUIRE((n_events-3)*2 == l->events.size());
+#endif
 }
 
 TEST_CASE("after_satisfied_event_using_releaser") {
@@ -332,7 +356,11 @@ TEST_CASE("after_satisfied_event_using_releaser") {
     auto t = tw::make_task(tw::wait, []{}, p);
     t->add_listener_all(l);
     t->schedule_all();
+#ifndef TRANSWARP_DISABLE_TASK_REFCOUNT
     REQUIRE(!p->future().valid());
+#else
+    REQUIRE(p->future().valid());
+#endif
     REQUIRE(t->future().valid());
 }
 
@@ -343,8 +371,13 @@ TEST_CASE("after_satisfied_event_for_accept_task_using_releaser_with_two_parents
     auto t = tw::make_task(tw::accept, [](auto...){}, p1, p2);
     t->add_listener_all(l);
     t->schedule_all();
+#ifndef TRANSWARP_DISABLE_TASK_REFCOUNT
     REQUIRE(!p1->future().valid());
     REQUIRE(!p2->future().valid());
+#else
+    REQUIRE(p1->future().valid());
+    REQUIRE(p2->future().valid());
+#endif
     REQUIRE(t->future().valid());
 }
 
@@ -355,8 +388,13 @@ TEST_CASE("after_satisfied_event_for_accept_any_task_using_releaser_with_two_par
     auto t = tw::make_task(tw::accept_any, [](auto){}, p1, p2);
     t->add_listener_all(l);
     t->schedule_all();
+#ifndef TRANSWARP_DISABLE_TASK_REFCOUNT
     REQUIRE(!p1->future().valid());
     REQUIRE(!p2->future().valid());
+#else
+    REQUIRE(p1->future().valid());
+    REQUIRE(p2->future().valid());
+#endif
     REQUIRE(t->future().valid());
 }
 
@@ -367,8 +405,13 @@ TEST_CASE("after_satisfied_event_for_consume_task_using_releaser_with_two_parent
     auto t = tw::make_task(tw::consume, [](auto...){}, p1, p2);
     t->add_listener_all(l);
     t->schedule_all();
+#ifndef TRANSWARP_DISABLE_TASK_REFCOUNT
     REQUIRE(!p1->future().valid());
     REQUIRE(!p2->future().valid());
+#else
+    REQUIRE(p1->future().valid());
+    REQUIRE(p2->future().valid());
+#endif
     REQUIRE(t->future().valid());
 }
 
@@ -379,8 +422,13 @@ TEST_CASE("after_satisfied_event_for_consume_any_task_using_releaser_with_two_pa
     auto t = tw::make_task(tw::consume_any, [](auto){}, p1, p2);
     t->add_listener_all(l);
     t->schedule_all();
+#ifndef TRANSWARP_DISABLE_TASK_REFCOUNT
     REQUIRE(!p1->future().valid());
     REQUIRE(!p2->future().valid());
+#else
+    REQUIRE(p1->future().valid());
+    REQUIRE(p2->future().valid());
+#endif
     REQUIRE(t->future().valid());
 }
 
@@ -391,8 +439,13 @@ TEST_CASE("after_satisfied_event_for_wait_task_using_releaser_with_two_parents")
     auto t = tw::make_task(tw::wait, []{}, p1, p2);
     t->add_listener_all(l);
     t->schedule_all();
+#ifndef TRANSWARP_DISABLE_TASK_REFCOUNT
     REQUIRE(!p1->future().valid());
     REQUIRE(!p2->future().valid());
+#else
+    REQUIRE(p1->future().valid());
+    REQUIRE(p2->future().valid());
+#endif
     REQUIRE(t->future().valid());
 }
 
@@ -403,8 +456,13 @@ TEST_CASE("after_satisfied_event_for_wait_any_task_using_releaser_with_two_paren
     auto t = tw::make_task(tw::wait_any, []{}, p1, p2);
     t->add_listener_all(l);
     t->schedule_all();
+#ifndef TRANSWARP_DISABLE_TASK_REFCOUNT
     REQUIRE(!p1->future().valid());
     REQUIRE(!p2->future().valid());
+#else
+    REQUIRE(p1->future().valid());
+    REQUIRE(p2->future().valid());
+#endif
     REQUIRE(t->future().valid());
 }
 
@@ -415,7 +473,11 @@ TEST_CASE("after_satisfied_event_using_releaser_with_value_task") {
     auto t = tw::make_task(tw::wait, []{}, p1, p2);
     t->add_listener_all(l);
     t->schedule_all();
+#ifndef TRANSWARP_DISABLE_TASK_REFCOUNT
     REQUIRE(!p1->future().valid());
+#else
+    REQUIRE(p1->future().valid());
+#endif
     REQUIRE(p2->future().valid());
     REQUIRE(t->future().valid());
 }

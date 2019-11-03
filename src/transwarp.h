@@ -47,6 +47,10 @@
 #define TRANSWARP_DISABLE_TASK_TIME
 #endif
 
+#ifndef TRANSWARP_DISABLE_TASK_REFCOUNT
+#define TRANSWARP_DISABLE_TASK_REFCOUNT
+#endif
+
 #endif
 
 
@@ -2151,7 +2155,9 @@ public:
         this->future_ = std::shared_future<result_type>{};
         cancel(false);
         schedule_mode_ = true;
+#ifndef TRANSWARP_DISABLE_TASK_REFCOUNT
         refcount_ = childcount_;
+#endif
         this->raise_event(transwarp::event_type::after_future_changed);
     }
 
@@ -2370,7 +2376,9 @@ protected:
             if (reset) {
                 cancel(false);
             }
+#ifndef TRANSWARP_DISABLE_TASK_REFCOUNT
             refcount_ = childcount_;
+#endif
             std::weak_ptr<task_impl_base> self = std::static_pointer_cast<task_impl_base>(this->shared_from_this());
             using runner_t = transwarp::detail::runner<result_type, task_type, task_impl_base, decltype(parents_)>;
             std::shared_ptr<runner_t> runner = std::shared_ptr<runner_t>{new runner_t{this->id(), self, parents_}};
@@ -2423,13 +2431,17 @@ protected:
     }
 
     void increment_childcount() noexcept override {
+#ifndef TRANSWARP_DISABLE_TASK_REFCOUNT
         ++childcount_;
+#endif
     }
 
     void decrement_refcount() override {
+#ifndef TRANSWARP_DISABLE_TASK_REFCOUNT
         if (--refcount_ == 0) {
             this->raise_event(transwarp::event_type::after_satisfied);
         }
+#endif
     }
 
     void reset_future() override {
@@ -2449,8 +2461,10 @@ protected:
 #endif
     std::unique_ptr<Functor> functor_;
     transwarp::detail::parents_t<ParentResults...> parents_;
+#ifndef TRANSWARP_DISABLE_TASK_REFCOUNT
     std::size_t childcount_ = 0;
     std::atomic<std::size_t> refcount_{0};
+#endif
 };
 
 
