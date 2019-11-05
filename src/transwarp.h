@@ -155,7 +155,7 @@ struct unvisit_visitor;
 struct final_visitor;
 struct schedule_visitor;
 struct parent_visitor;
-void decrement_parent_refcount(const std::shared_ptr<transwarp::itask>&);
+void decrement_refcount(transwarp::itask&);
 
 } // detail
 
@@ -317,7 +317,7 @@ private:
     friend struct transwarp::detail::parent_visitor;
     friend class transwarp::timer;
     friend class transwarp::releaser;
-    friend void transwarp::detail::decrement_parent_refcount(const std::shared_ptr<transwarp::itask>&);
+    friend void transwarp::detail::decrement_refcount(transwarp::itask&);
 
     virtual void visit(const std::function<void(itask&)>& visitor) = 0;
     virtual void unvisit() noexcept = 0;
@@ -771,18 +771,17 @@ void cancel_all_but_one(const std::shared_ptr<transwarp::task<OneResult>>& one, 
 
 /// Decrements refcount
 inline
-void decrement_parent_refcount(const std::shared_ptr<transwarp::itask>& parent) {
-    parent->decrement_refcount();
+void decrement_refcount(transwarp::itask& task) {
+    task.decrement_refcount();
 }
 
 
 /// Decrements the refcount of all parents
 template<typename... ParentResults>
 void decrement_refcount(const std::tuple<std::shared_ptr<transwarp::task<ParentResults>>...>& parents) {
-    auto callable = [](const auto& parent) {
-        decrement_parent_refcount(parent);
-    };
-    transwarp::detail::apply_to_each(callable, parents);
+    transwarp::detail::apply_to_each([](const auto& parent) {
+                                         decrement_refcount(*parent);
+                                     }, parents);
 }
 
 
@@ -790,7 +789,7 @@ void decrement_refcount(const std::tuple<std::shared_ptr<transwarp::task<ParentR
 template<typename ParentResultType>
 void decrement_refcount(const std::vector<std::shared_ptr<transwarp::task<ParentResultType>>>& parents) {
     for (const std::shared_ptr<transwarp::task<ParentResultType>>& parent : parents) {
-        decrement_parent_refcount(parent);
+        decrement_refcount(*parent);
     }
 }
 
