@@ -2683,6 +2683,9 @@ private:
         t->functor_ = std::unique_ptr<Functor>{new Functor{*this->functor_}};
         t->parents_ = transwarp::detail::parents<ParentResults...>::clone(task_cache, this->parents_);
         t->executor_ = this->executor_;
+#ifndef TRANSWARP_DISABLE_TASK_REFCOUNT
+        t->childcount_ = this->childcount_;
+#endif
         return t;
     }
 
