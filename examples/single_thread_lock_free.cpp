@@ -1,11 +1,12 @@
 #include "single_thread_lock_free.h"
 #include "../src/transwarp.h"
-#include <fstream>
-#include <iostream>
 #include <array>
-#include <random>
+#include <iostream>
+#include <fstream>
+#include <functional>
 #include <numeric>
-#include <boost/lockfree/spsc_queue.hpp>
+#include <queue>
+#include <random>
 
 namespace tw = transwarp;
 
@@ -17,7 +18,8 @@ namespace {
 class lock_free_executor : public tw::executor {
 public:
     lock_free_executor()
-    : done_(false), queue_(1000), thread_(&lock_free_executor::worker, this) {}
+    : done_{false}, thread_{&lock_free_executor::worker, this}
+    {}
 
     ~lock_free_executor() {
         done_ = true;
@@ -29,27 +31,29 @@ public:
     }
 
     void execute(const std::function<void()>& functor, tw::itask&) override {
+        std::lock_guard lock{mutex_};
         queue_.push(functor);
     }
 
 private:
 
     void worker() {
-        for (;;) {
-            std::function<void()> functor;
-            bool success = false;
-            while (!success && !done_) {
-                success = queue_.pop(functor);
+        while (!done_) {
+            decltype(queue_) queue;
+            {
+                std::lock_guard lock{mutex_};
+                queue_.swap(queue);
             }
-            if (!success && done_) {
-                break;
+            while (!queue.empty()) {
+                queue.front()();
+                queue.pop();
             }
-            functor();
         }
     }
 
     std::atomic_bool done_;
-    boost::lockfree::spsc_queue<std::function<void()>> queue_;
+    std::mutex mutex_; // wouldn't need this if queue_ was lock-free
+    std::queue<std::function<void()>> queue_; // this could be a lock-free queue in the real world
     std::thread thread_;
 };
 
@@ -99,7 +103,7 @@ std::shared_ptr<tw::task<result>> build_graph(data_t& buffer) {
 }
 
 // This example demonstrates how tasks can be scheduled for execution using
-// a lock-free, single-thread executor. In addition, it is shown that a stack
+// a potentially lock-free, single-thread executor. In addition, it is shown that a stack
 // allocated buffer can be used as input into the graph.
 void single_thread_lock_free(std::ostream& os, std::size_t sample_size) {
     os.precision(3);
@@ -113,7 +117,7 @@ void single_thread_lock_free(std::ostream& os, std::size_t sample_size) {
     // Output the graph for visualization
     std::ofstream("single_thread_lock_free.dot") << tw::to_string(task->edges());
 
-    // The lock-free, single-thread executor
+    // The single-thread executor
     lock_free_executor executor;
 
     std::size_t count = 0;
