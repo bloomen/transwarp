@@ -15,13 +15,13 @@ namespace examples {
 namespace {
 
 
-class lock_free_executor : public tw::executor {
+class executor : public tw::executor {
 public:
-    lock_free_executor()
-    : done_{false}, thread_{&lock_free_executor::worker, this}
+    executor()
+    : done_{false}, thread_{&executor::worker, this}
     {}
 
-    ~lock_free_executor() {
+    ~executor() {
         done_ = true;
         thread_.join();
     }
@@ -53,7 +53,7 @@ private:
 
     std::atomic_bool done_;
     std::mutex mutex_; // wouldn't need this if queue_ was lock-free
-    std::queue<std::function<void()>> queue_; // this could be a lock-free queue in the real world
+    std::queue<std::function<void()>> queue_; // this could be a lock-free queue (e.g. boost::spsc_queue)
     std::thread thread_;
 };
 
@@ -118,11 +118,11 @@ void single_thread_lock_free(std::ostream& os, std::size_t sample_size) {
     std::ofstream("single_thread_lock_free.dot") << tw::to_string(task->edges());
 
     // The single-thread executor
-    lock_free_executor executor;
+    executor exec;
 
     std::size_t count = 0;
     while (count < sample_size) {
-        task->schedule_all(executor);
+        task->schedule_all(exec);
         os << task->get() << std::endl;
         ++count;
     }
