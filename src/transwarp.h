@@ -335,7 +335,8 @@ private:
 
 
 /// String conversion for the task_type enumeration
-inline std::string to_string(const transwarp::task_type& type) {
+inline
+std::string to_string(const transwarp::task_type& type) {
     switch (type) {
     case transwarp::task_type::root: return "root";
     case transwarp::task_type::accept: return "accept";
@@ -350,7 +351,8 @@ inline std::string to_string(const transwarp::task_type& type) {
 
 
 /// String conversion for the itask class
-inline std::string to_string(const transwarp::itask& task, std::string_view separator="\n") {
+inline
+std::string to_string(const transwarp::itask& task, std::string_view separator="\n") {
     std::string s;
     s += '"';
     const std::optional<std::string>& name = task.name();
@@ -381,13 +383,15 @@ inline std::string to_string(const transwarp::itask& task, std::string_view sepa
 
 
 /// String conversion for the edge class
-inline std::string to_string(const transwarp::edge& edge, std::string_view separator="\n") {
+inline
+std::string to_string(const transwarp::edge& edge, std::string_view separator="\n") {
     return transwarp::to_string(edge.parent(), separator) + std::string{" -> "} + transwarp::to_string(edge.child(), separator);
 }
 
 
 /// Creates a dot-style string from the given edges
-inline std::string to_string(const std::vector<transwarp::edge>& edges, std::string_view separator="\n") {
+inline
+std::string to_string(const std::vector<transwarp::edge>& edges, std::string_view separator="\n") {
     std::string dot = std::string{"digraph {"} + separator.data();
     for (const transwarp::edge& edge : edges) {
         dot += transwarp::to_string(edge, separator) + separator.data();
@@ -1373,7 +1377,8 @@ std::shared_future<ResultType> make_future_with_value(Value&& value) {
 }
 
 /// Returns a ready future
-inline std::shared_future<void> make_ready_future() {
+inline
+std::shared_future<void> make_ready_future() {
     std::promise<void> promise;
     promise.set_value();
     return promise.get_future();
