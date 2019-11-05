@@ -342,7 +342,7 @@ for (;;) {
 
 ### Timing tasks
 
-In order to identify bottlenecks it's often useful to know how much time spent
+In order to identify bottlenecks it's often useful to know how much time is spent
 in which task. transwarp provides a `timer` listener that will automatically
 time the tasks it listens to:
 ```cpp
@@ -358,14 +358,14 @@ std::ofstream{"graph.dot"} << tw::to_string(task->edges()); // the dot file now 
 
 By default, transwarp provides its full functionality to its client. However,
 in many cases not all of that is actually required and so transwarp provides
-a few compile time switches to reduce the task size along with a few related computations.
+a few compile time switches to reduce the task size.
 These switches are:
 ```
 TRANSWARP_DISABLE_TASK_CUSTOM_DATA
 TRANSWARP_DISABLE_TASK_NAME
 TRANSWARP_DISABLE_TASK_PRIORITY
-TRANSWARP_DISABLE_TASK_TIME
 TRANSWARP_DISABLE_TASK_REFCOUNT
+TRANSWARP_DISABLE_TASK_TIME
 ```
 
 To get the minimal task size with a single switch one can define
@@ -377,7 +377,7 @@ at build time.
 **Releasing unused memory**
 
 By default, every task in a graph will keep its result until rescheduling or
-a manual reset of the task results. The `releaser` listener allows you to
+a manual task reset. The `releaser` listener allows you to automatically
 release a task result after that task's children have consumed the result.
 For example:
 ```cpp
