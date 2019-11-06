@@ -72,11 +72,11 @@ void wide_graph_with_pool(std::ostream& os, std::size_t iterations, std::size_t 
     std::vector<std::shared_future<double>> futures;
     for (std::size_t i=0; i<iterations; ++i) {
         auto data = std::make_shared<std::vector<double>>(dist(gen), 1); // New data arrive
-        auto final = pool.next_task(); // Get the next available task
-        auto input = final->tasks()[0];
+        auto task = pool.next_task(); // Get the next available task
+        auto input = task->tasks()[0];
         static_cast<tw::task<std::shared_ptr<std::vector<double>>>*>(input)->set_value(data);
-        final->schedule_all(exec); // Schedule the graph
-        futures.push_back(final->future()); // Collect the future
+        task->schedule_all(exec); // Schedule the graph
+        futures.push_back(task->future()); // Collect the future
         if (i % 10 == 0) {
             os << "pool size = " << pool.size() << std::endl;
         }
