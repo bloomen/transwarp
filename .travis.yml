@@ -16,7 +16,6 @@ matrix:
       env: CONFIGURATION=Release
 
 script:
-    - g++ --version
     - mkdir build && cd build
     - cmake -DCMAKE_BUILD_TYPE=$CONFIGURATION ..
     - make -j4
