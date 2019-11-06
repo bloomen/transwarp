@@ -1,3 +1,4 @@
+dist: bionic
 sudo: false
 language: cpp
 
@@ -8,8 +9,10 @@ matrix:
     - os: linux
       env: CONFIGURATION=Release
     - os: osx
+      osx_image: xcode10.2
       env: CONFIGURATION=Debug
     - os: osx
+      osx_image: xcode10.2
       env: CONFIGURATION=Release
 
 script:
