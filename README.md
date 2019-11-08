@@ -304,6 +304,7 @@ enum class event_type {
     before_invoked, // Just before a task's functor is invoked
     after_finished, // Just after a task has finished running
     after_canceled, // Just after a task was canceled
+    after_satisfied, ///< Just after a task has satisfied all its children with results
     after_custom_data_set, // Just after custom data was assigned
 }
 ```
