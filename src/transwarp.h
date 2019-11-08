@@ -206,7 +206,7 @@ public:
 class edge {
 public:
     edge(transwarp::itask& parent, transwarp::itask& child) noexcept
-    : parent_{parent}, child_{child}
+    : parent_{&parent}, child_{&child}
     {}
 
     // default copy/move semantics
@@ -217,27 +217,27 @@ public:
 
     /// Returns the parent task
     const transwarp::itask& parent() const noexcept {
-        return parent_;
+        return *parent_;
     }
 
     /// Returns the parent task
     transwarp::itask& parent() noexcept {
-        return parent_;
+        return *parent_;
     }
 
     /// Returns the child task
     const transwarp::itask& child() const noexcept {
-        return child_;
+        return *child_;
     }
 
     /// Returns the child task
     transwarp::itask& child() noexcept {
-        return child_;
+        return *child_;
     }
 
 private:
-    transwarp::itask& parent_;
-    transwarp::itask& child_;
+    transwarp::itask* parent_;
+    transwarp::itask* child_;
 };
 
 
