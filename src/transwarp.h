@@ -523,18 +523,18 @@ public:
 
 protected:
 
-    /// The associated task (only to be called when the task is running)
+    /// The associated task (only to be called after the task was constructed)
     const transwarp::itask& transwarp_task() const noexcept {
         return *transwarp_task_;
     }
 
-    /// The associated task (only to be called when the task is running)
+    /// The associated task (only to be called after the task was constructed)
     transwarp::itask& transwarp_task() noexcept {
         return *transwarp_task_;
     }
 
     /// If the associated task is canceled then this will throw transwarp::task_canceled
-    /// which will stop the task while it's running (only to be called when the task is running)
+    /// which will stop the task while it's running (only to be called after the task was constructed)
     void transwarp_cancel_point() const {
         if (transwarp_task_->canceled()) {
             throw transwarp::task_canceled{std::to_string(transwarp_task_->id())};
