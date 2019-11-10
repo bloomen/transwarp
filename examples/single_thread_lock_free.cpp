@@ -58,7 +58,41 @@ private:
 };
 
 
-using data_t = std::array<double, 1024>;
+class data_t {
+    using array_t = std::array<double, 1024>;
+
+public:
+    data_t() = default;
+
+    data_t(const data_t&) = delete;
+    data_t& operator=(const data_t&) = delete;
+    data_t(data_t&&) = delete;
+    data_t& operator=(data_t&&) = delete;
+
+    array_t::iterator begin() {
+        return array_.begin();
+    }
+
+    array_t::iterator end() {
+        return array_.end();
+    }
+
+    array_t::const_iterator begin() const {
+        return array_.begin();
+    }
+
+    array_t::const_iterator end() const {
+        return array_.end();
+    }
+
+    std::size_t size() const {
+        return array_.size();
+    }
+
+private:
+    array_t array_;
+};
+
 
 const data_t& generate_data(data_t& data, std::shared_ptr<std::mt19937> gen) {
     std::uniform_real_distribution<double> dist;
