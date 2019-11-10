@@ -562,11 +562,14 @@ public:
         if (n_threads == 0) {
             throw transwarp::invalid_parameter{"number of threads"};
         }
-        const std::size_t n_target = threads_.size() + n_threads;
-        while (threads_.size() < n_target) {
+        for (std::size_t i = 0; i < n_threads; ++i) {
+            {
+                std::lock_guard<std::mutex> lock{mutex_};
+                ups_.push_back(false);
+            }
             std::thread thread;
             try {
-                thread = std::thread(&thread_pool::worker, this);
+                thread = std::thread(&thread_pool::worker, this, i);
             } catch (...) {
                 shutdown();
                 throw;
@@ -578,6 +581,15 @@ public:
                 thread.join();
                 throw;
             }
+        }
+        for (;;) {
+            {
+                std::lock_guard<std::mutex> lock{mutex_};
+                if (std::all_of(ups_.begin(), ups_.end(), [](const bool x){ return x; })) {
+                    break;
+                }
+            }
+            std::this_thread::yield();
         }
     }
 
@@ -601,11 +613,14 @@ public:
 
 private:
 
-    void worker() {
+    void worker(const std::size_t index) {
         for (;;) {
             std::function<void()> functor;
             {
                 std::unique_lock<std::mutex> lock{mutex_};
+                if (!ups_[index]) {
+                    ups_[index] = true;
+                }
                 cond_var_.wait(lock, [this]{
                     return done_ || !functors_.empty();
                 });
@@ -628,11 +643,13 @@ private:
         for (std::thread& thread : threads_) {
             thread.join();
         }
+        ups_.clear();
         threads_.clear();
     }
 
     bool done_ = false;
     std::vector<std::thread> threads_;
+    std::vector<bool> ups_;
     std::queue<std::function<void()>> functors_;
     std::condition_variable cond_var_;
     std::mutex mutex_;
@@ -1406,7 +1423,7 @@ struct parents {
     static type clone(std::unordered_map<std::shared_ptr<transwarp::itask>, std::shared_ptr<transwarp::itask>>& task_cache, const type& obj) {
         type cloned = obj;
         transwarp::detail::apply_to_each(
-            [&task_cache](const auto& t) {
+            [&task_cache](auto& t) {
                 t = detail::clone_task(task_cache, t);
             }, cloned);
         return cloned;
@@ -1414,7 +1431,7 @@ struct parents {
     static std::vector<transwarp::itask*> tasks(const type& parents) {
         std::vector<transwarp::itask*> tasks;
         transwarp::detail::apply_to_each(
-            [&tasks](const auto& t) {
+            [&tasks](auto& t) {
                 tasks.push_back(t.get());
             }, parents);
         return tasks;
@@ -1430,14 +1447,14 @@ struct parents<std::vector<std::shared_ptr<transwarp::task<ParentResultType>>>> 
     }
     static type clone(std::unordered_map<std::shared_ptr<transwarp::itask>, std::shared_ptr<transwarp::itask>>& task_cache, const type& obj) {
         type cloned = obj;
-        for (const auto& t : cloned) {
+        for (auto& t : cloned) {
             t = detail::clone_task(task_cache, t);
         }
         return cloned;
     }
     static std::vector<transwarp::itask*> tasks(const type& parents) {
         std::vector<transwarp::itask*> tasks;
-        for (const auto& t : parents) {
+        for (auto& t : parents) {
             tasks.push_back(t.get());
         }
         return tasks;
