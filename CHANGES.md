@@ -2,6 +2,7 @@
 
 - added compile time switches to control the task size
 - added the `releaser` listener to allow releasing intermediate results
+- added a callback to the parallel executor to do something on thread start (like thread naming)
 - improved documentation and tests
 
 2.1.0
