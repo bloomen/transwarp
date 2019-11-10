@@ -557,7 +557,9 @@ namespace detail {
 class thread_pool {
 public:
 
-    explicit thread_pool(std::size_t n_threads)
+    explicit thread_pool(const std::size_t n_threads,
+                         std::function<void(std::size_t thread_index)> on_thread_started = nullptr)
+    : on_thread_started_{std::move(on_thread_started)}
     {
         if (n_threads == 0) {
             throw transwarp::invalid_parameter{"number of threads"};
@@ -614,6 +616,9 @@ public:
 private:
 
     void worker(const std::size_t index) {
+        if (on_thread_started_) {
+            on_thread_started_(index);
+        }
         for (;;) {
             std::function<void()> functor;
             {
@@ -648,6 +653,7 @@ private:
     }
 
     bool done_ = false;
+    std::function<void(std::size_t)> on_thread_started_;
     std::vector<std::thread> threads_;
     std::vector<bool> ups_;
     std::queue<std::function<void()>> functors_;
@@ -1703,8 +1709,9 @@ public:
 class parallel : public transwarp::executor {
 public:
 
-    explicit parallel(std::size_t n_threads)
-    : pool_{n_threads}
+    explicit parallel(const std::size_t n_threads,
+                      std::function<void(std::size_t thread_index)> on_thread_started = nullptr)
+    : pool_{n_threads, std::move(on_thread_started)}
     {}
 
     // delete copy/move semantics
