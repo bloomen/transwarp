@@ -697,7 +697,7 @@ Result run_task(std::size_t task_id, const std::weak_ptr<Task>& task, Args&&... 
 /// Waits for all parents to finish
 template<typename... ParentResults>
 void wait_for_all(const std::tuple<std::shared_ptr<transwarp::task<ParentResults>>...>& parents) {
-    transwarp::detail::apply_to_each([](auto& p){ p->future().wait(); }, parents);
+    transwarp::detail::apply_to_each([](const auto& p){ p->future().wait(); }, parents);
 }
 
 
@@ -1406,7 +1406,7 @@ struct parents {
     static type clone(std::unordered_map<std::shared_ptr<transwarp::itask>, std::shared_ptr<transwarp::itask>>& task_cache, const type& obj) {
         type cloned = obj;
         transwarp::detail::apply_to_each(
-            [&task_cache](auto& t) {
+            [&task_cache](const auto& t) {
                 t = detail::clone_task(task_cache, t);
             }, cloned);
         return cloned;
@@ -1414,7 +1414,7 @@ struct parents {
     static std::vector<transwarp::itask*> tasks(const type& parents) {
         std::vector<transwarp::itask*> tasks;
         transwarp::detail::apply_to_each(
-            [&tasks](auto& t) {
+            [&tasks](const auto& t) {
                 tasks.push_back(t.get());
             }, parents);
         return tasks;
@@ -1430,14 +1430,14 @@ struct parents<std::vector<std::shared_ptr<transwarp::task<ParentResultType>>>> 
     }
     static type clone(std::unordered_map<std::shared_ptr<transwarp::itask>, std::shared_ptr<transwarp::itask>>& task_cache, const type& obj) {
         type cloned = obj;
-        for (auto& t : cloned) {
+        for (const auto& t : cloned) {
             t = detail::clone_task(task_cache, t);
         }
         return cloned;
     }
     static std::vector<transwarp::itask*> tasks(const type& parents) {
         std::vector<transwarp::itask*> tasks;
-        for (auto& t : parents) {
+        for (const auto& t : parents) {
             tasks.push_back(t.get());
         }
         return tasks;
