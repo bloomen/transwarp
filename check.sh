@@ -7,6 +7,11 @@ else
     echo "Compiler: "$CXX
 fi
 
+use_cpp11=0
+if [ "$1" = "cpp11" ];then
+    use_cpp11=1
+fi
+
 modes='Debug Release'
 
 function run_many_times() {
@@ -26,7 +31,7 @@ for mode in $modes; do
     mkdir $dir
     cd $dir
     echo "Building ..."
-    cmake -DCMAKE_BUILD_TYPE=$mode .. > /dev/null
+    cmake -DCMAKE_BUILD_TYPE=$mode -DUSE_CPP11=$use_cpp11 .. > /dev/null
     make -j4 > /dev/null
     echo "Running ..."
     ctest --verbose
