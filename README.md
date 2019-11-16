@@ -10,7 +10,7 @@ asynchronously. transwarp is written in C++17 and only depends on the standard
 library. Just copy `src/transwarp.h` to your project and off you go!
 Tested with GCC, Clang, and Visual Studio.
 
-There is also support for C++11 which is maintained on the `transwarp1.X` branch.
+C++11 support can be enabled by defining `TRANSWARP_CPP11` at compile time.
 
 **Important:** Only use tagged releases of transwarp in production code!
 
