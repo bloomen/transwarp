@@ -20,6 +20,11 @@ script:
     - cmake -DCMAKE_BUILD_TYPE=$CONFIGURATION ..
     - make -j4
     - ctest --verbose
+    - cd ..
+    - mkdir build_cpp11 && cd build_cpp11
+    - cmake -DCMAKE_BUILD_TYPE=$CONFIGURATION -DUSE_CPP11=1 ..
+    - make -j4
+    - ctest --verbose
 
 notifications:
   email:
