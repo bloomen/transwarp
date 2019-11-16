@@ -14,7 +14,7 @@ TEST_CASE("value_task") {
     REQUIRE(!n->executor());
     REQUIRE(n->parents().empty());
     REQUIRE(0 == n->priority());
-    REQUIRE(!n->custom_data().has_value());
+    REQUIRE(!any_data_ok(n->custom_data()));
     REQUIRE(!n->canceled());
 }
 
@@ -37,14 +37,15 @@ TEST_CASE("value_task_with_name") {
     REQUIRE(!n->executor());
     REQUIRE(n->parents().empty());
     REQUIRE(0 == n->priority());
-    REQUIRE(!n->custom_data().has_value());
+    REQUIRE(!any_data_ok(n->custom_data()));
     REQUIRE(!n->canceled());
 }
 
 TEST_CASE("value_task_with_priority_and_custom_data") {
     auto t = tw::make_value_task(42);
     t->set_priority(13);
-    t->set_custom_data(13.5);
+    auto data = std::make_shared<double>(13.5);
+    t->set_custom_data(data);
     auto n = t;
 #ifndef TRANSWARP_DISABLE_TASK_PRIORITY
     REQUIRE(13 == n->priority());
@@ -52,20 +53,21 @@ TEST_CASE("value_task_with_priority_and_custom_data") {
     REQUIRE(0 == n->priority());
 #endif
 #ifndef TRANSWARP_DISABLE_TASK_CUSTOM_DATA
-    REQUIRE(13.5 == std::any_cast<double>(n->custom_data()));
+    REQUIRE(13.5 == *get_any_data<std::shared_ptr<double>>(n->custom_data()));
 #else
-    REQUIRE(!n->custom_data().has_value());
+    REQUIRE(!any_data_ok(n->custom_data()));
 #endif
     t->remove_custom_data();
     t->reset_priority();
     REQUIRE(0 == n->priority());
-    REQUIRE(!n->custom_data().has_value());
+    REQUIRE(!any_data_ok(n->custom_data()));
 }
 
 TEST_CASE("value_task_with_priority_all_and_custom_data_all") {
     auto t = tw::make_value_task(42);
     t->set_priority_all(13);
-    t->set_custom_data_all(13.5);
+    auto data = std::make_shared<double>(13.5);
+    t->set_custom_data_all(data);
     auto n = t;
 #ifndef TRANSWARP_DISABLE_TASK_PRIORITY
     REQUIRE(13 == n->priority());
@@ -73,14 +75,14 @@ TEST_CASE("value_task_with_priority_all_and_custom_data_all") {
     REQUIRE(0 == n->priority());
 #endif
 #ifndef TRANSWARP_DISABLE_TASK_CUSTOM_DATA
-    REQUIRE(13.5 == std::any_cast<double>(n->custom_data()));
+    REQUIRE(13.5 == *get_any_data<std::shared_ptr<double>>(n->custom_data()));
 #else
-    REQUIRE(!n->custom_data().has_value());
+    REQUIRE(!any_data_ok(n->custom_data()));
 #endif
     t->remove_custom_data_all();
     t->reset_priority_all();
     REQUIRE(0 == n->priority());
-    REQUIRE(!n->custom_data().has_value());
+    REQUIRE(!any_data_ok(n->custom_data()));
 }
 
 TEST_CASE("value_task_in_a_graph") {

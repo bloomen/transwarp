@@ -224,7 +224,8 @@ TEST_CASE("after_custom_data_set_event") {
     auto t = tw::make_task(tw::root, []{});
     auto l = std::make_shared<mock_listener>();
     t->add_listener(l);
-    t->set_custom_data(std::make_any<int>(42));
+    auto data = std::make_shared<int>(42);
+    t->set_custom_data(data);
 #ifndef TRANSWARP_DISABLE_TASK_CUSTOM_DATA
     REQUIRE(1 == l->events.size());
     REQUIRE(tw::event_type::after_custom_data_set == l->events[0]);
@@ -237,7 +238,8 @@ TEST_CASE("after_custom_data_set_event_for_value_task") {
     auto t = tw::make_value_task(0);
     auto l = std::make_shared<mock_listener>();
     t->add_listener(l);
-    t->set_custom_data(std::make_any<int>(42));
+    auto data = std::make_shared<int>(42);
+    t->set_custom_data(data);
 #ifndef TRANSWARP_DISABLE_TASK_CUSTOM_DATA
     REQUIRE(1 == l->events.size());
     REQUIRE(tw::event_type::after_custom_data_set == l->events[0]);
@@ -275,7 +277,7 @@ TEST_CASE("after_future_changed_event_for_value_task") {
 TEST_CASE("after_satisfied_event_for_accept_task") {
     auto l = std::make_shared<mock_listener>();
     auto p = tw::make_task(tw::root, []{ return 42; });
-    auto t = tw::make_task(tw::accept, [](auto){}, p);
+    auto t = tw::make_task(tw::accept, no_op_func{}, p);
     t->add_listener_all(l);
     t->schedule_all();
 #ifndef TRANSWARP_DISABLE_TASK_REFCOUNT
@@ -288,7 +290,7 @@ TEST_CASE("after_satisfied_event_for_accept_task") {
 TEST_CASE("after_satisfied_event_for_accept_any_task") {
     auto l = std::make_shared<mock_listener>();
     auto p = tw::make_task(tw::root, []{ return 42; });
-    auto t = tw::make_task(tw::accept_any, [](auto){}, p);
+    auto t = tw::make_task(tw::accept_any, no_op_func{}, p);
     t->add_listener_all(l);
     t->schedule_all();
 #ifndef TRANSWARP_DISABLE_TASK_REFCOUNT
@@ -301,7 +303,7 @@ TEST_CASE("after_satisfied_event_for_accept_any_task") {
 TEST_CASE("after_satisfied_event_for_consume_task") {
     auto l = std::make_shared<mock_listener>();
     auto p = tw::make_task(tw::root, []{ return 42; });
-    auto t = tw::make_task(tw::consume, [](auto){}, p);
+    auto t = tw::make_task(tw::consume, no_op_func{}, p);
     t->add_listener_all(l);
     t->schedule_all();
 #ifndef TRANSWARP_DISABLE_TASK_REFCOUNT
@@ -314,7 +316,7 @@ TEST_CASE("after_satisfied_event_for_consume_task") {
 TEST_CASE("after_satisfied_event_for_consume_any_task") {
     auto l = std::make_shared<mock_listener>();
     auto p = tw::make_task(tw::root, []{ return 42; });
-    auto t = tw::make_task(tw::consume_any, [](auto){}, p);
+    auto t = tw::make_task(tw::consume_any, no_op_func{}, p);
     t->add_listener_all(l);
     t->schedule_all();
 #ifndef TRANSWARP_DISABLE_TASK_REFCOUNT
@@ -368,7 +370,7 @@ TEST_CASE("after_satisfied_event_for_accept_task_using_releaser_with_two_parents
     auto l = std::make_shared<tw::releaser>();
     auto p1 = tw::make_task(tw::root, []{ return 42; });
     auto p2 = tw::make_task(tw::root, []{ return 13; });
-    auto t = tw::make_task(tw::accept, [](auto...){}, p1, p2);
+    auto t = tw::make_task(tw::accept, no_op_func{}, p1, p2);
     t->add_listener_all(l);
     t->schedule_all();
 #ifndef TRANSWARP_DISABLE_TASK_REFCOUNT
@@ -385,7 +387,7 @@ TEST_CASE("after_satisfied_event_for_accept_any_task_using_releaser_with_two_par
     auto l = std::make_shared<tw::releaser>();
     auto p1 = tw::make_task(tw::root, []{ return 42; });
     auto p2 = tw::make_task(tw::root, []{ return 13; });
-    auto t = tw::make_task(tw::accept_any, [](auto){}, p1, p2);
+    auto t = tw::make_task(tw::accept_any, no_op_func{}, p1, p2);
     t->add_listener_all(l);
     t->schedule_all();
 #ifndef TRANSWARP_DISABLE_TASK_REFCOUNT
@@ -402,7 +404,7 @@ TEST_CASE("after_satisfied_event_for_consume_task_using_releaser_with_two_parent
     auto l = std::make_shared<tw::releaser>();
     auto p1 = tw::make_task(tw::root, []{ return 42; });
     auto p2 = tw::make_task(tw::root, []{ return 13; });
-    auto t = tw::make_task(tw::consume, [](auto...){}, p1, p2);
+    auto t = tw::make_task(tw::consume, no_op_func{}, p1, p2);
     t->add_listener_all(l);
     t->schedule_all();
 #ifndef TRANSWARP_DISABLE_TASK_REFCOUNT
@@ -419,7 +421,7 @@ TEST_CASE("after_satisfied_event_for_consume_any_task_using_releaser_with_two_pa
     auto l = std::make_shared<tw::releaser>();
     auto p1 = tw::make_task(tw::root, []{ return 42; });
     auto p2 = tw::make_task(tw::root, []{ return 13; });
-    auto t = tw::make_task(tw::consume_any, [](auto){}, p1, p2);
+    auto t = tw::make_task(tw::consume_any, no_op_func{}, p1, p2);
     t->add_listener_all(l);
     t->schedule_all();
 #ifndef TRANSWARP_DISABLE_TASK_REFCOUNT

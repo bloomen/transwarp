@@ -124,9 +124,9 @@ void statistical_key_facts(std::ostream& os, std::size_t sample_size, bool paral
     // Creating the executor
     std::unique_ptr<tw::executor> executor;
     if (parallel) {
-        executor = std::make_unique<tw::parallel>(4);
+        executor = std::unique_ptr<tw::parallel>{new tw::parallel{4}};
     } else {
-        executor = std::make_unique<tw::sequential>();
+        executor = std::unique_ptr<tw::sequential>{new tw::sequential};
     }
 
     // Now we start calculating stuff ...
