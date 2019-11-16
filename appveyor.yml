@@ -8,15 +8,13 @@ platform:
 
 environment:
   MSVC_DEFAULT_OPTIONS: ON
+  matrix:
+    - USE_CPP11: 1
+    - USE_CPP11: 0
 
 configuration:
   - Debug
   - Release
-
-environment:
-  matrix:
-    - use_cpp11: 1
-    - use_cpp11: 0
 
 init:
   - cmd: cmake --version
@@ -30,7 +28,7 @@ before_build:
   - cmd: cd build
   - cmd: if "%platform%"=="Win32" set CMAKE_GENERATOR_NAME=Visual Studio 15 2017
   - cmd: if "%platform%"=="x64"   set CMAKE_GENERATOR_NAME=Visual Studio 15 2017 Win64
-  - cmd: cmake -G "%CMAKE_GENERATOR_NAME%" -DUSE_CPP11=%use_cpp11% ..
+  - cmd: cmake -G "%CMAKE_GENERATOR_NAME%" -DUSE_CPP11=%USE_CPP11% ..
 
 build:
   project: C:\projects\transwarp\build\transwarp.sln
