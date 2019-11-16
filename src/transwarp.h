@@ -1519,8 +1519,8 @@ struct clone_task_functor {
 };
 
 
-struct push_back_functor {
-    explicit push_back_functor(std::vector<transwarp::itask*>& tasks) noexcept
+struct push_task_functor {
+    explicit push_task_functor(std::vector<transwarp::itask*>& tasks) noexcept
     : tasks_(tasks) {}
 
     template<typename T>
@@ -1546,7 +1546,7 @@ struct parents {
     }
     static std::vector<transwarp::itask*> tasks(const type& parents) {
         std::vector<transwarp::itask*> tasks;
-        transwarp::detail::apply_to_each(transwarp::detail::push_back_functor{tasks}, parents);
+        transwarp::detail::apply_to_each(transwarp::detail::push_task_functor{tasks}, parents);
         return tasks;
     }
 };
@@ -1565,7 +1565,7 @@ struct parents<std::vector<std::shared_ptr<transwarp::task<ParentResultType>>>> 
     }
     static std::vector<transwarp::itask*> tasks(const type& parents) {
         std::vector<transwarp::itask*> tasks;
-        transwarp::detail::apply_to_each(transwarp::detail::push_back_functor{tasks}, parents);
+        transwarp::detail::apply_to_each(transwarp::detail::push_task_functor{tasks}, parents);
         return tasks;
     }
 };
