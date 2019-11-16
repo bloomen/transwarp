@@ -31,7 +31,7 @@ public:
     }
 
     void execute(const std::function<void()>& functor, tw::itask&) override {
-        std::lock_guard lock{mutex_};
+        std::lock_guard<std::mutex> lock{mutex_};
         queue_.push(functor);
     }
 
@@ -41,7 +41,7 @@ private:
         while (!done_) {
             decltype(queue_) queue;
             {
-                std::lock_guard lock{mutex_};
+                std::lock_guard<std::mutex> lock{mutex_};
                 queue_.swap(queue);
             }
             while (!queue.empty()) {

@@ -264,16 +264,16 @@ TEST_CASE("task_priority") {
 
 TEST_CASE("task_custom_data") {
     auto t = tw::make_task(tw::root, []{});
-    REQUIRE(!t->custom_data().has_value());
+    REQUIRE(!any_data_ok(t->custom_data()));
     auto cd = std::make_shared<int>(42);
     t->set_custom_data(cd);
 #ifndef TRANSWARP_DISABLE_TASK_CUSTOM_DATA
-    REQUIRE(cd.get() == std::any_cast<std::shared_ptr<int>>(t->custom_data()).get());
+    REQUIRE(cd.get() == get_any_data<std::shared_ptr<int>>(t->custom_data()).get());
 #else
-    REQUIRE(!t->custom_data().has_value());
+    REQUIRE(!any_data_ok(t->custom_data()));
 #endif
     t->remove_custom_data();
-    REQUIRE(!t->custom_data().has_value());
+    REQUIRE(!any_data_ok(t->custom_data()));
 }
 
 TEST_CASE("set_priority_all") {
@@ -308,30 +308,30 @@ TEST_CASE("reset_priority_all") {
 TEST_CASE("set_custom_data_all") {
     auto t1 = tw::make_task(tw::root, []{});
     auto t2 = tw::make_task(tw::wait, []{}, t1);
-    int data = 42;
+    auto data = std::make_shared<int>(42);
     t2->set_custom_data_all(data);
 #ifndef TRANSWARP_DISABLE_TASK_CUSTOM_DATA
-    REQUIRE(42 == std::any_cast<int>(t1->custom_data()));
-    REQUIRE(42 == std::any_cast<int>(t2->custom_data()));
+    REQUIRE(42 == *get_any_data<std::shared_ptr<int>>(t1->custom_data()));
+    REQUIRE(42 == *get_any_data<std::shared_ptr<int>>(t2->custom_data()));
 #else
-    REQUIRE(!t1->custom_data().has_value());
-    REQUIRE(!t2->custom_data().has_value());
+    REQUIRE(!any_data_ok(t1->custom_data()));
+    REQUIRE(!any_data_ok(t2->custom_data()));
 #endif
 }
 
 TEST_CASE("remove_custom_data_all") {
     auto t1 = tw::make_task(tw::root, []{});
     auto t2 = tw::make_task(tw::wait, []{}, t1);
-    int data = 42;
+    auto data = std::make_shared<int>(42);
     t2->set_custom_data_all(data);
 #ifndef TRANSWARP_DISABLE_TASK_CUSTOM_DATA
-    REQUIRE(42 == std::any_cast<int>(t1->custom_data()));
-    REQUIRE(42 == std::any_cast<int>(t2->custom_data()));
+    REQUIRE(42 == *get_any_data<std::shared_ptr<int>>(t1->custom_data()));
+    REQUIRE(42 == *get_any_data<std::shared_ptr<int>>(t2->custom_data()));
 #else
-    REQUIRE(!t1->custom_data().has_value());
-    REQUIRE(!t2->custom_data().has_value());
+    REQUIRE(!any_data_ok(t1->custom_data()));
+    REQUIRE(!any_data_ok(t2->custom_data()));
 #endif
     t2->remove_custom_data_all();
-    REQUIRE(!t1->custom_data().has_value());
-    REQUIRE(!t2->custom_data().has_value());
+    REQUIRE(!any_data_ok(t1->custom_data()));
+    REQUIRE(!any_data_ok(t2->custom_data()));
 }
