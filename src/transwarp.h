@@ -842,7 +842,7 @@ std::shared_ptr<transwarp::task<ParentResultType>> wait_for_any(const std::vecto
 template<typename OneResult>
 struct cancel_all_but_one_functor {
     explicit cancel_all_but_one_functor(const std::shared_ptr<transwarp::task<OneResult>>& one) noexcept
-    : one_{one} {}
+    : one_(one) {}
 
     template<typename T>
     void operator()(const T& parent) const {
@@ -2442,16 +2442,16 @@ protected:
 
     template<typename F>
     task_impl_base(F&& functor, std::shared_ptr<transwarp::task<ParentResults>>... parents)
-    : functor_{new Functor{std::forward<F>(functor)}},
-      parents_{std::move(parents)...}
+    : functor_(new Functor(std::forward<F>(functor))),
+      parents_(std::move(parents)...)
     {
         init();
     }
 
     template<typename F, typename P>
     task_impl_base(F&& functor, std::vector<std::shared_ptr<transwarp::task<P>>> parents)
-    : functor_{new Functor{std::forward<F>(functor)}},
-      parents_{std::move(parents)}
+    : functor_(new Functor(std::forward<F>(functor))),
+      parents_(std::move(parents))
     {
         init();
         if (parents_.empty()) {
@@ -2832,7 +2832,7 @@ private:
         t->avg_waittime_us_ = this->avg_waittime_us_.load();
         t->avg_runtime_us_ = this->avg_runtime_us_.load();
 #endif
-        t->functor_ = std::unique_ptr<Functor>{new Functor{*this->functor_}};
+        t->functor_ = std::unique_ptr<Functor>(new Functor(*this->functor_));
         t->parents_ = transwarp::detail::parents<ParentResults...>::clone(task_cache, this->parents_);
         t->executor_ = this->executor_;
 #ifndef TRANSWARP_DISABLE_TASK_REFCOUNT
