@@ -2558,7 +2558,7 @@ protected:
 #endif
             std::weak_ptr<task_impl_base> self = std::static_pointer_cast<task_impl_base>(this->shared_from_this());
             using runner_t = transwarp::detail::runner<result_type, task_type, task_impl_base, decltype(parents_)>;
-            std::shared_ptr<runner_t> runner = std::shared_ptr<runner_t>{new runner_t{this->id(), self, parents_}};
+            std::shared_ptr<runner_t> runner = std::shared_ptr<runner_t>(new runner_t(this->id(), self, parents_));
             this->raise_event(transwarp::event_type::before_scheduled);
             this->future_ = runner->future();
             this->raise_event(transwarp::event_type::after_future_changed);
@@ -2836,7 +2836,7 @@ public:
     template<typename TaskType_, typename Functor_>
     auto then(TaskType_, Functor_&& functor) -> std::shared_ptr<transwarp::task_impl<TaskType_, typename std::decay<Functor_>::type, result_type>> {
         using task_t = transwarp::task_impl<TaskType_, typename std::decay<Functor_>::type, result_type>;
-        return std::shared_ptr<task_t>{new task_t{std::forward<Functor_>(functor), std::static_pointer_cast<task_impl>(this->shared_from_this())}};
+        return std::shared_ptr<task_t>(new task_t(std::forward<Functor_>(functor), std::static_pointer_cast<task_impl>(this->shared_from_this())));
     }
 
     /// Clones this task and casts the result to a ptr to task_impl
@@ -2861,7 +2861,7 @@ private:
         t->avg_waittime_us_ = this->avg_waittime_us_.load();
         t->avg_runtime_us_ = this->avg_runtime_us_.load();
 #endif
-        t->functor_ = std::unique_ptr<Functor>(new Functor(*this->functor_));
+        t->functor_.reset(new Functor(*this->functor_));
         t->parents_ = transwarp::detail::parents<ParentResults...>::clone(task_cache, this->parents_);
         t->executor_ = this->executor_;
 #ifndef TRANSWARP_DISABLE_TASK_REFCOUNT
@@ -2917,7 +2917,7 @@ public:
     template<typename TaskType_, typename Functor_>
     auto then(TaskType_, Functor_&& functor) -> std::shared_ptr<transwarp::task_impl<TaskType_, typename std::decay<Functor_>::type, result_type>> {
         using task_t = transwarp::task_impl<TaskType_, typename std::decay<Functor_>::type, result_type>;
-        return std::shared_ptr<task_t>{new task_t{std::forward<Functor_>(functor), std::static_pointer_cast<value_task>(this->shared_from_this())}};
+        return std::shared_ptr<task_t>(new task_t(std::forward<Functor_>(functor), std::static_pointer_cast<value_task>(this->shared_from_this())));
     }
 
     /// Clones this task and casts the result to a ptr to value_task
@@ -3139,7 +3139,7 @@ private:
     }
 
     std::shared_ptr<transwarp::task<result_type>> clone_impl(std::unordered_map<std::shared_ptr<transwarp::itask>, std::shared_ptr<transwarp::itask>>&) const override {
-        auto t = std::shared_ptr<value_task>{new value_task{}};
+        auto t = std::shared_ptr<value_task>(new value_task);
         t->copy_from(*this);
         return t;
     }
@@ -3188,7 +3188,7 @@ private:
 template<typename TaskType, typename Functor, typename... Parents>
 auto make_task(TaskType, Functor&& functor, std::shared_ptr<Parents>... parents) -> std::shared_ptr<transwarp::task_impl<TaskType, typename std::decay<Functor>::type, typename Parents::result_type...>> {
     using task_t = transwarp::task_impl<TaskType, typename std::decay<Functor>::type, typename Parents::result_type...>;
-    return std::shared_ptr<task_t>{new task_t{std::forward<Functor>(functor), std::move(parents)...}};
+    return std::shared_ptr<task_t>(new task_t(std::forward<Functor>(functor), std::move(parents)...));
 }
 
 
@@ -3196,7 +3196,7 @@ auto make_task(TaskType, Functor&& functor, std::shared_ptr<Parents>... parents)
 template<typename TaskType, typename Functor, typename ParentType>
 auto make_task(TaskType, Functor&& functor, std::vector<ParentType> parents) -> std::shared_ptr<transwarp::task_impl<TaskType, typename std::decay<Functor>::type, std::vector<ParentType>>> {
     using task_t = transwarp::task_impl<TaskType, typename std::decay<Functor>::type, std::vector<ParentType>>;
-    return std::shared_ptr<task_t>{new task_t{std::forward<Functor>(functor), std::move(parents)}};
+    return std::shared_ptr<task_t>(new task_t(std::forward<Functor>(functor), std::move(parents)));
 }
 
 
@@ -3204,7 +3204,7 @@ auto make_task(TaskType, Functor&& functor, std::vector<ParentType> parents) -> 
 template<typename Value>
 auto make_value_task(Value&& value) -> std::shared_ptr<transwarp::value_task<typename transwarp::decay<Value>::type>> {
     using task_t = transwarp::value_task<typename transwarp::decay<Value>::type>;
-    return std::shared_ptr<task_t>{new task_t{std::forward<Value>(value)}};
+    return std::shared_ptr<task_t>(new task_t(std::forward<Value>(value)));
 }
 
 
@@ -3440,7 +3440,7 @@ private:
     transwarp::detail::circular_buffer<const transwarp::itask*> finished_;
     std::queue<std::shared_ptr<transwarp::task<ResultType>>> idle_;
     std::unordered_map<const transwarp::itask*, std::shared_ptr<transwarp::task<ResultType>>> busy_;
-    std::shared_ptr<transwarp::listener> listener_{new finished_listener{*this}};
+    std::shared_ptr<transwarp::listener> listener_{new finished_listener(*this)};
 };
 
 
