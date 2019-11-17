@@ -2025,6 +2025,7 @@ public:
 protected:
 
     using listeners_t = std::map<transwarp::event_type, std::vector<std::shared_ptr<transwarp::listener>>>;
+    using tasks_t = std::vector<transwarp::itask*>;
 
     /// Checks if the task is currently running and throws transwarp::control_error if it is
     void ensure_task_not_running() const {
@@ -2055,7 +2056,7 @@ protected:
 
     void ensure_listeners_object() {
         if (!listeners_) {
-            listeners_ = std::unique_ptr<listeners_t>(new listeners_t);
+            listeners_.reset(new listeners_t);
         }
     }
 
@@ -2092,7 +2093,9 @@ protected:
             }
         }
         visited_ = task.visited_;
-        listeners_.reset(new listeners_t(*task.listeners_));
+        if (task.listeners_) {
+            listeners_.reset(new listeners_t(*task.listeners_));
+        }
     }
 
     std::size_t id_ = 0;
@@ -2108,7 +2111,7 @@ protected:
     std::shared_future<result_type> future_;
     bool visited_ = false;
     std::unique_ptr<listeners_t> listeners_;
-    std::vector<transwarp::itask*> tasks_;
+    std::unique_ptr<tasks_t> tasks_;
 };
 
 
@@ -2128,8 +2131,9 @@ public:
     /// calling, e.g., any of the *_all methods. It should normally not be
     /// necessary to call this method directly
     void finalize() override {
-        if (this->tasks_.empty()) {
-            visit(transwarp::detail::final_visitor{this->tasks_});
+        if (!this->tasks_) {
+            this->tasks_.reset(new typename transwarp::detail::task_common<result_type>::tasks_t);
+            visit(transwarp::detail::final_visitor{*this->tasks_});
             unvisit();
             auto compare = [](const transwarp::itask* const l, const transwarp::itask* const r) {
                 const std::size_t l_level = l->level();
@@ -2138,7 +2142,7 @@ public:
                 const std::size_t r_id = r->id();
                 return std::tie(l_level, l_id) < std::tie(r_level, r_id);
             };
-            std::sort(this->tasks_.begin(), this->tasks_.end(), compare);
+            std::sort(this->tasks_->begin(), this->tasks_->end(), compare);
         }
     }
 
@@ -2448,7 +2452,7 @@ public:
     /// Returns all tasks in the graph in breadth order
     const std::vector<transwarp::itask*>& tasks() override {
         finalize();
-        return this->tasks_;
+        return *this->tasks_;
     }
 
     /// Returns all edges in the graph. This is mainly for visualizing
@@ -2598,7 +2602,7 @@ protected:
     template<typename Visitor>
     void visit_all(Visitor& visitor) {
         finalize();
-        for (transwarp::itask* t : this->tasks_) {
+        for (transwarp::itask* t : *this->tasks_) {
             visitor(*t);
         }
     }
@@ -2886,7 +2890,7 @@ public:
     value_task(T&& value)
     {
         this->future_ = transwarp::detail::make_future_with_value<result_type>(std::forward<T>(value));
-        this->tasks_ = {this};
+        this->tasks_.reset(new typename transwarp::detail::task_common<result_type>::tasks_t{this});
     }
 
     // delete copy/move semantics
@@ -3119,7 +3123,7 @@ public:
 
     /// Returns all tasks in the graph in breadth order
     const std::vector<transwarp::itask*>& tasks() override {
-        return this->tasks_;
+        return *this->tasks_;
     }
 
     /// Returns empty edges because a value task doesn't have parents
@@ -3131,7 +3135,7 @@ private:
 
     value_task()
     {
-        this->tasks_ = {this};
+        this->tasks_.reset(new typename transwarp::detail::task_common<result_type>::tasks_t{this});
     }
 
     std::shared_ptr<transwarp::task<result_type>> clone_impl(std::unordered_map<std::shared_ptr<transwarp::itask>, std::shared_ptr<transwarp::itask>>&) const override {
