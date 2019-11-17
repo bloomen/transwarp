@@ -221,7 +221,7 @@ public:
 class edge {
 public:
     edge(transwarp::itask& parent, transwarp::itask& child) noexcept
-    : parent_{&parent}, child_{&child}
+    : parent_(&parent), child_(&child)
     {}
 
     // default copy/move semantics
@@ -1168,7 +1168,7 @@ struct edges_visitor {
 /// Schedules using the given executor
 struct schedule_visitor {
     schedule_visitor(bool reset, transwarp::executor* executor) noexcept
-    : reset_{reset}, executor_{executor} {}
+    : reset_(reset), executor_(executor) {}
 
     void operator()(transwarp::itask& task) {
         task.schedule_impl(reset_, executor_);
@@ -1273,7 +1273,7 @@ struct push_task_visitor {
 /// Adds a new listener to the given task
 struct add_listener_visitor {
     explicit add_listener_visitor(std::shared_ptr<transwarp::listener> listener)
-    : listener_{std::move(listener)}
+    : listener_(std::move(listener))
     {}
 
     void operator()(transwarp::itask& task) {
@@ -1286,7 +1286,7 @@ struct add_listener_visitor {
 /// Adds a new listener per event type to the given task
 struct add_listener_per_event_visitor {
     add_listener_per_event_visitor(transwarp::event_type event, std::shared_ptr<transwarp::listener> listener)
-    : event_{event}, listener_{std::move(listener)}
+    : event_(event), listener_(std::move(listener))
     {}
 
     void operator()(transwarp::itask& task) {
@@ -1300,7 +1300,7 @@ struct add_listener_per_event_visitor {
 /// Removes a listener from the given task
 struct remove_listener_visitor {
     explicit remove_listener_visitor(std::shared_ptr<transwarp::listener> listener)
-    : listener_{std::move(listener)}
+    : listener_(std::move(listener))
     {}
 
     void operator()(transwarp::itask& task) {
@@ -1313,7 +1313,7 @@ struct remove_listener_visitor {
 /// Removes a listener per event type from the given task
 struct remove_listener_per_event_visitor {
     remove_listener_per_event_visitor(transwarp::event_type event, std::shared_ptr<transwarp::listener> listener)
-    : event_{event}, listener_{std::move(listener)}
+    : event_(event), listener_(std::move(listener))
     {}
 
     void operator()(transwarp::itask& task) {
@@ -1336,7 +1336,7 @@ struct remove_listeners_visitor {
 /// Removes all listeners per event type from the given task
 struct remove_listeners_per_event_visitor {
     explicit remove_listeners_per_event_visitor(transwarp::event_type event)
-    : event_{event}
+    : event_(event)
     {}
 
     void operator()(transwarp::itask& task) {
@@ -1608,8 +1608,8 @@ public:
     runner(std::size_t task_id,
            const std::weak_ptr<Task>& task,
            const typename transwarp::decay<Parents>::type& parents)
-    : task_id_{task_id},
-      task_{task},
+    : task_id_(task_id),
+      task_(task),
       parents_(parents)
     {}
 
@@ -2687,12 +2687,12 @@ protected:
 
     template<typename F>
     task_impl_proxy(F&& functor, std::shared_ptr<transwarp::task<ParentResults>>... parents)
-    : transwarp::detail::task_impl_base<result_type, task_type, Functor, ParentResults...>{std::forward<F>(functor), std::move(parents)...}
+    : transwarp::detail::task_impl_base<result_type, task_type, Functor, ParentResults...>(std::forward<F>(functor), std::move(parents)...)
     {}
 
     template<typename F, typename P>
     task_impl_proxy(F&& functor, std::vector<std::shared_ptr<transwarp::task<P>>> parents)
-    : transwarp::detail::task_impl_base<result_type, task_type, Functor, ParentResults...>{std::forward<F>(functor), std::move(parents)}
+    : transwarp::detail::task_impl_base<result_type, task_type, Functor, ParentResults...>(std::forward<F>(functor), std::move(parents))
     {}
 
 };
@@ -2730,12 +2730,12 @@ protected:
 
     template<typename F>
     task_impl_proxy(F&& functor, std::shared_ptr<transwarp::task<ParentResults>>... parents)
-    : transwarp::detail::task_impl_base<result_type, task_type, Functor, ParentResults...>{std::forward<F>(functor), std::move(parents)...}
+    : transwarp::detail::task_impl_base<result_type, task_type, Functor, ParentResults...>(std::forward<F>(functor), std::move(parents)...)
     {}
 
     template<typename F, typename P>
     task_impl_proxy(F&& functor, std::vector<std::shared_ptr<transwarp::task<P>>> parents)
-    : transwarp::detail::task_impl_base<result_type, task_type, Functor, ParentResults...>{std::forward<F>(functor), std::move(parents)}
+    : transwarp::detail::task_impl_base<result_type, task_type, Functor, ParentResults...>(std::forward<F>(functor), std::move(parents))
     {}
 
 };
@@ -2773,12 +2773,12 @@ protected:
 
     template<typename F>
     task_impl_proxy(F&& functor, std::shared_ptr<transwarp::task<ParentResults>>... parents)
-    : transwarp::detail::task_impl_base<result_type, task_type, Functor, ParentResults...>{std::forward<F>(functor), std::move(parents)...}
+    : transwarp::detail::task_impl_base<result_type, task_type, Functor, ParentResults...>(std::forward<F>(functor), std::move(parents)...)
     {}
 
     template<typename F, typename P>
     task_impl_proxy(F&& functor, std::vector<std::shared_ptr<transwarp::task<P>>> parents)
-    : transwarp::detail::task_impl_base<result_type, task_type, Functor, ParentResults...>{std::forward<F>(functor), std::move(parents)}
+    : transwarp::detail::task_impl_base<result_type, task_type, Functor, ParentResults...>(std::forward<F>(functor), std::move(parents))
     {}
 
 };
@@ -2802,14 +2802,14 @@ public:
     /// Note: Don't use this constructor directly, use transwarp::make_task
     template<typename F>
     task_impl(F&& functor, std::shared_ptr<transwarp::task<ParentResults>>... parents)
-    : transwarp::detail::task_impl_proxy<result_type, task_type, Functor, ParentResults...>{std::forward<F>(functor), std::move(parents)...}
+    : transwarp::detail::task_impl_proxy<result_type, task_type, Functor, ParentResults...>(std::forward<F>(functor), std::move(parents)...)
     {}
 
     /// A task is defined by functor and parent tasks.
     /// Note: Don't use this constructor directly, use transwarp::make_task
     template<typename F, typename P>
     task_impl(F&& functor, std::vector<std::shared_ptr<transwarp::task<P>>> parents)
-    : transwarp::detail::task_impl_proxy<result_type, task_type, Functor, ParentResults...>{std::forward<F>(functor), std::move(parents)}
+    : transwarp::detail::task_impl_proxy<result_type, task_type, Functor, ParentResults...>(std::forward<F>(functor), std::move(parents))
     {}
 
     // delete copy/move semantics
@@ -3273,12 +3273,12 @@ public:
 
     /// Constructs a task pool
     task_pool(std::shared_ptr<transwarp::task<ResultType>> task,
-               std::size_t minimum_size,
-               std::size_t maximum_size)
-    : task_{std::move(task)},
-      minimum_{minimum_size},
-      maximum_{maximum_size},
-      finished_{maximum_size}
+              std::size_t minimum_size,
+              std::size_t maximum_size)
+    : task_(std::move(task)),
+      minimum_(minimum_size),
+      maximum_(maximum_size),
+      finished_(maximum_size)
     {
         if (minimum_ < 1) {
             throw transwarp::invalid_parameter{"minimum size"};
@@ -3295,7 +3295,7 @@ public:
     /// Constructs a task pool with reasonable defaults for minimum and maximum
     explicit
     task_pool(std::shared_ptr<transwarp::task<ResultType>> task)
-    : task_pool{std::move(task), 32, 65536}
+    : task_pool(std::move(task), 32, 65536)
     {}
 
     // delete copy/move semantics
@@ -3575,7 +3575,7 @@ public:
 
     /// The executor gives control over where a task's future is released
     explicit releaser(std::shared_ptr<transwarp::executor> executor)
-    : executor_{std::move(executor)}
+    : executor_(std::move(executor))
     {}
 
     // delete copy/move semantics
