@@ -1957,8 +1957,9 @@ public:
     void add_listener(std::shared_ptr<transwarp::listener> listener) override {
         ensure_task_not_running();
         check_listener(listener);
+        ensure_listeners_object();
         for (int i=0; i<static_cast<int>(transwarp::event_type::count); ++i) {
-            listeners_[static_cast<transwarp::event_type>(i)].push_back(listener);
+            (*listeners_)[static_cast<transwarp::event_type>(i)].push_back(listener);
         }
     }
 
@@ -1966,16 +1967,20 @@ public:
     void add_listener(transwarp::event_type event, std::shared_ptr<transwarp::listener> listener) override {
         ensure_task_not_running();
         check_listener(listener);
-        listeners_[event].push_back(std::move(listener));
+        ensure_listeners_object();
+        (*listeners_)[event].push_back(std::move(listener));
     }
 
     /// Removes the listener for all event types
     void remove_listener(const std::shared_ptr<transwarp::listener>& listener) override {
         ensure_task_not_running();
         check_listener(listener);
+        if (!listeners_) {
+            return;
+        }
         for (int i=0; i<static_cast<int>(transwarp::event_type::count); ++i) {
-            auto listeners_pair = listeners_.find(static_cast<transwarp::event_type>(i));
-            if (listeners_pair != listeners_.end()) {
+            auto listeners_pair = listeners_->find(static_cast<transwarp::event_type>(i));
+            if (listeners_pair != listeners_->end()) {
                 std::vector<std::shared_ptr<transwarp::listener>>& l = listeners_pair->second;
                 l.erase(std::remove(l.begin(), l.end(), listener), l.end());
             }
@@ -1986,8 +1991,11 @@ public:
     void remove_listener(transwarp::event_type event, const std::shared_ptr<transwarp::listener>& listener) override {
         ensure_task_not_running();
         check_listener(listener);
-        auto listeners_pair = listeners_.find(event);
-        if (listeners_pair != listeners_.end()) {
+        if (!listeners_) {
+            return;
+        }
+        auto listeners_pair = listeners_->find(event);
+        if (listeners_pair != listeners_->end()) {
             std::vector<std::shared_ptr<transwarp::listener>>& l = listeners_pair->second;
             l.erase(std::remove(l.begin(), l.end(), listener), l.end());
         }
@@ -1996,19 +2004,27 @@ public:
     /// Removes all listeners
     void remove_listeners() override {
         ensure_task_not_running();
-        listeners_.clear();
+        if (!listeners_) {
+            return;
+        }
+        listeners_->clear();
     }
 
     /// Removes all listeners for the given event type
     void remove_listeners(transwarp::event_type event) override {
         ensure_task_not_running();
-        auto listeners_pair = listeners_.find(event);
-        if (listeners_pair != listeners_.end()) {
+        if (!listeners_) {
+            return;
+        }
+        auto listeners_pair = listeners_->find(event);
+        if (listeners_pair != listeners_->end()) {
             listeners_pair->second.clear();
         }
     }
 
 protected:
+
+    using listeners_t = std::map<transwarp::event_type, std::vector<std::shared_ptr<transwarp::listener>>>;
 
     /// Checks if the task is currently running and throws transwarp::control_error if it is
     void ensure_task_not_running() const {
@@ -2019,8 +2035,11 @@ protected:
 
     /// Raises the given event to all listeners
     void raise_event(transwarp::event_type event) {
-        auto listeners_pair = listeners_.find(event);
-        if (listeners_pair != listeners_.end()) {
+        if (!listeners_) {
+            return;
+        }
+        auto listeners_pair = listeners_->find(event);
+        if (listeners_pair != listeners_->end()) {
             for (const std::shared_ptr<transwarp::listener>& listener : listeners_pair->second) {
                 listener->handle_event(event, *this);
             }
@@ -2031,6 +2050,12 @@ protected:
     void check_listener(const std::shared_ptr<transwarp::listener>& listener) const {
         if (!listener) {
             throw transwarp::invalid_parameter{"listener pointer"};
+        }
+    }
+
+    void ensure_listeners_object() {
+        if (!listeners_) {
+            listeners_ = std::unique_ptr<listeners_t>(new listeners_t);
         }
     }
 
@@ -2067,7 +2092,7 @@ protected:
             }
         }
         visited_ = task.visited_;
-        listeners_ = task.listeners_;
+        listeners_.reset(new listeners_t(*task.listeners_));
     }
 
     std::size_t id_ = 0;
@@ -2082,7 +2107,7 @@ protected:
 #endif
     std::shared_future<result_type> future_;
     bool visited_ = false;
-    std::map<transwarp::event_type, std::vector<std::shared_ptr<transwarp::listener>>> listeners_;
+    std::unique_ptr<listeners_t> listeners_;
     std::vector<transwarp::itask*> tasks_;
 };
 
