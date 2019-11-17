@@ -64,11 +64,11 @@ namespace transwarp {
 
 #ifdef TRANSWARP_CPP11
 using any_data = std::shared_ptr<void>;
-using optional_string = std::shared_ptr<std::string>;
+using option_str = std::shared_ptr<std::string>;
 using str_view = const std::string&;
 #else
 using any_data = std::any;
-using optional_string = std::optional<std::string>;
+using option_str = std::optional<std::string>;
 using str_view = std::string_view;
 #endif
 
@@ -268,7 +268,7 @@ public:
     virtual std::size_t id() const noexcept = 0;
     virtual std::size_t level() const noexcept = 0;
     virtual transwarp::task_type type() const noexcept = 0;
-    virtual const transwarp::optional_string& name() const noexcept = 0;
+    virtual const transwarp::option_str& name() const noexcept = 0;
     virtual std::shared_ptr<transwarp::executor> executor() const noexcept = 0;
     virtual std::int64_t priority() const noexcept = 0;
     virtual const transwarp::any_data& custom_data() const noexcept = 0;
@@ -339,7 +339,7 @@ private:
     virtual void set_id(std::size_t id) noexcept = 0;
     virtual void set_level(std::size_t level) noexcept = 0;
     virtual void set_type(transwarp::task_type type) noexcept = 0;
-    virtual void set_name(transwarp::optional_string name) noexcept = 0;
+    virtual void set_name(transwarp::option_str name) noexcept = 0;
     virtual void set_avg_idletime_us(std::int64_t idletime) noexcept = 0;
     virtual void set_avg_waittime_us(std::int64_t waittime) noexcept = 0;
     virtual void set_avg_runtime_us(std::int64_t runtime) noexcept = 0;
@@ -370,7 +370,7 @@ inline
 std::string to_string(const transwarp::itask& task, transwarp::str_view separator="\n") {
     std::string s;
     s += '"';
-    const transwarp::optional_string& name = task.name();
+    const transwarp::option_str& name = task.name();
     if (name) {
         s += std::string{"<"} + *name + std::string{">"} + separator.data();
     }
@@ -1837,7 +1837,7 @@ private:
 /// Detail namespace for internal functionality only
 namespace detail {
 
-const transwarp::optional_string nullopt_string;
+const transwarp::option_str nullopt_string;
 const transwarp::any_data any_empty;
 
 
@@ -1875,7 +1875,7 @@ public:
     }
 
     /// The optional task name
-    const transwarp::optional_string& name() const noexcept override {
+    const transwarp::option_str& name() const noexcept override {
 #ifndef TRANSWARP_DISABLE_TASK_NAME
         return name_;
 #else
@@ -2040,7 +2040,7 @@ protected:
     }
 
     /// Assigns the given name
-    void set_name(transwarp::optional_string name) noexcept override {
+    void set_name(transwarp::option_str name) noexcept override {
 #ifndef TRANSWARP_DISABLE_TASK_NAME
         name_ = std::move(name);
 #else
@@ -2072,7 +2072,7 @@ protected:
 
     std::size_t id_ = 0;
 #ifndef TRANSWARP_DISABLE_TASK_NAME
-    transwarp::optional_string name_;
+    transwarp::option_str name_;
 #endif
 #ifndef TRANSWARP_DISABLE_TASK_PRIORITY
     std::int64_t priority_ = 0;
