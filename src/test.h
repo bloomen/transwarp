@@ -5,26 +5,21 @@
 namespace tw = transwarp;
 
 #ifdef TRANSWARP_CPP11
-inline
-bool any_data_ok(const transwarp::any_data& d) {
-    return d != nullptr;
-}
-
 template<typename T>
 T get_any_data(const transwarp::any_data& d) {
-    return std::static_pointer_cast<typename T::element_type>(d);
+    return d.get<T>();
 }
 #else
-inline
-bool any_data_ok(const transwarp::any_data& d) {
-    return d.has_value();
-}
-
 template<typename T>
 T get_any_data(const transwarp::any_data& d) {
     return std::any_cast<T>(d);
 }
 #endif
+
+inline
+bool any_data_ok(const transwarp::any_data& d) {
+    return d.has_value();
+}
 
 struct no_op_func {
     template<typename... Args>

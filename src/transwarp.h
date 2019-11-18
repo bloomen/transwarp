@@ -63,12 +63,12 @@ namespace transwarp {
 
 
 #ifdef TRANSWARP_CPP11
-// A simple, read-only value class that optionally holds a string
+/// A simple, read-only value class that optionally holds a string
 class option_str {
 public:
     option_str() = default;
 
-    explicit option_str(std::string str)
+    option_str(std::string str)
     : str_(std::move(str)),
       valid_(true)
     {}
@@ -92,7 +92,115 @@ private:
     bool valid_ = false;
 };
 
-using any_data = std::shared_ptr<void>;
+/// Detail namespace for internal functionality only
+namespace detail {
+
+class storage {
+public:
+    virtual ~storage() = default;
+    virtual std::unique_ptr<storage> clone() const = 0;
+    virtual void destroy(void* data) const noexcept = 0;
+    virtual void copy(const void* src, void*& dest) const = 0;
+    virtual void move(void*& src, void*& dest) const noexcept = 0;
+};
+
+template<typename T>
+class storage_impl : public transwarp::detail::storage {
+public:
+    std::unique_ptr<transwarp::detail::storage> clone() const override {
+        return std::unique_ptr<transwarp::detail::storage>(new storage_impl);
+    }
+    void destroy(void* data) const noexcept override {
+        delete reinterpret_cast<T*>(data);
+    }
+    void copy(const void* src, void*& dest) const override {
+        dest = new T(*reinterpret_cast<const T*>(src));
+    }
+    void move(void*& src, void*& dest) const noexcept override {
+        dest = src;
+        src = nullptr;
+    }
+};
+
+} // detail
+
+/// A simple, read-only value class that can hold any value
+class any_data {
+public:
+    any_data()
+    : data_(nullptr)
+    {}
+
+    template<typename T>
+    any_data(T&& value)
+    : storage_(new transwarp::detail::storage_impl<typename std::decay<T>::type>),
+      data_(new typename std::decay<T>::type(std::forward<T>(value)))
+    {}
+
+    any_data(const any_data& other)
+    : storage_(other.storage_ ? other.storage_->clone() : nullptr)
+    {
+        if (other.data_) {
+            storage_->copy(other.data_, data_);
+        } else {
+            data_ = nullptr;
+        }
+    }
+
+    any_data& operator=(const any_data& other) {
+        if (this != &other) {
+            storage_ = other.storage_ ? other.storage_->clone() : nullptr;
+            if (other.data_) {
+                storage_->copy(other.data_, data_);
+            } else {
+                data_ = nullptr;
+            }
+        }
+        return *this;
+    }
+
+    any_data(any_data&& other)
+    : storage_(std::move(other.storage_))
+    {
+        if (other.data_) {
+            storage_->move(other.data_, data_);
+        } else {
+            data_ = nullptr;
+        }
+    }
+
+    any_data& operator=(any_data&& other) {
+        if (this != &other) {
+            storage_ = std::move(other.storage_);
+            if (other.data_) {
+                storage_->move(other.data_, data_);
+            } else {
+                data_ = nullptr;
+            }
+        }
+        return *this;
+    }
+
+    ~any_data() {
+        if (data_) {
+            storage_->destroy(data_);
+        }
+    }
+
+    bool has_value() const noexcept {
+        return data_ != nullptr;
+    }
+
+    template<typename T>
+    const T& get() const {
+        return *reinterpret_cast<const T*>(data_);
+    }
+
+private:
+    std::unique_ptr<transwarp::detail::storage> storage_;
+    void* data_;
+};
+
 using str_view = const std::string&;
 #else
 using any_data = std::any;
@@ -1953,11 +2061,7 @@ public:
     void set_custom_data(transwarp::any_data custom_data) override {
 #ifndef TRANSWARP_DISABLE_TASK_CUSTOM_DATA
         ensure_task_not_running();
-#ifdef TRANSWARP_CPP11
-        if (!custom_data) {
-#else
         if (!custom_data.has_value()) {
-#endif
             throw transwarp::invalid_parameter{"custom data"};
         }
         custom_data_ = std::move(custom_data);
