@@ -63,8 +63,36 @@ namespace transwarp {
 
 
 #ifdef TRANSWARP_CPP11
+// A simple, read-only value class that optionally holds a string
+class option_str {
+public:
+    option_str() = default;
+
+    explicit option_str(std::string str)
+    : str_(std::move(str)),
+      valid_(true)
+    {}
+
+    // default copy/move semantics
+    option_str(const option_str&) = default;
+    option_str& operator=(const option_str&) = default;
+    option_str(option_str&&) = default;
+    option_str& operator=(option_str&&) = default;
+
+    operator bool() const noexcept {
+        return valid_;
+    }
+
+    const std::string& operator*() const noexcept {
+        return str_;
+    }
+
+private:
+    std::string str_;
+    bool valid_ = false;
+};
+
 using any_data = std::shared_ptr<void>;
-using option_str = std::shared_ptr<std::string>;
 using str_view = const std::string&;
 #else
 using any_data = std::any;
@@ -2822,7 +2850,7 @@ public:
     std::shared_ptr<task_impl> named(std::string name) {
 #ifndef TRANSWARP_DISABLE_TASK_NAME
 #ifdef TRANSWARP_CPP11
-        this->set_name(std::make_shared<std::string>(std::move(name)));
+        this->set_name(transwarp::option_str{std::move(name)});
 #else
         this->set_name(std::make_optional(std::move(name)));
 #endif
@@ -2903,7 +2931,7 @@ public:
     std::shared_ptr<value_task> named(std::string name) {
 #ifndef TRANSWARP_DISABLE_TASK_NAME
 #ifdef TRANSWARP_CPP11
-        this->set_name(std::make_shared<std::string>(std::move(name)));
+        this->set_name(transwarp::option_str{std::move(name)});
 #else
         this->set_name(std::make_optional(std::move(name)));
 #endif
