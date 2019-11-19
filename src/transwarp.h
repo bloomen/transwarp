@@ -66,7 +66,7 @@ namespace transwarp {
 /// A simple value class that optionally holds a string
 class option_str {
 public:
-    option_str() = default;
+    option_str() {}
 
     option_str(std::string str)
     : str_(std::move(str)),
