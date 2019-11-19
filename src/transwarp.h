@@ -63,7 +63,7 @@ namespace transwarp {
 
 
 #ifdef TRANSWARP_CPP11
-/// A simple, read-only value class that optionally holds a string
+/// A simple value class that optionally holds a string
 class option_str {
 public:
     option_str() = default;
@@ -95,6 +95,7 @@ private:
 /// Detail namespace for internal functionality only
 namespace detail {
 
+/// Used to handle data storage for a type-erased object
 class storage {
 public:
     virtual ~storage() = default;
@@ -104,6 +105,7 @@ public:
     virtual void move(void*& src, void*& dest) const noexcept = 0;
 };
 
+/// Used to handle data storage for a type-erased object
 template<typename T>
 class storage_impl : public transwarp::detail::storage {
 public:
@@ -124,7 +126,7 @@ public:
 
 } // detail
 
-/// A simple, read-only value class that can hold any value
+/// A simple value class that can hold any value
 class any_data {
 public:
     any_data()
@@ -149,6 +151,9 @@ public:
 
     any_data& operator=(const any_data& other) {
         if (this != &other) {
+            if (storage_) {
+                storage_->destroy(data_);
+            }
             storage_ = other.storage_ ? other.storage_->clone() : nullptr;
             if (other.data_) {
                 storage_->copy(other.data_, data_);
@@ -171,6 +176,9 @@ public:
 
     any_data& operator=(any_data&& other) {
         if (this != &other) {
+            if (storage_) {
+                storage_->destroy(data_);
+            }
             storage_ = std::move(other.storage_);
             if (other.data_) {
                 storage_->move(other.data_, data_);

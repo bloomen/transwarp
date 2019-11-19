@@ -335,3 +335,87 @@ TEST_CASE("remove_custom_data_all") {
     REQUIRE(!any_data_ok(t1->custom_data()));
     REQUIRE(!any_data_ok(t2->custom_data()));
 }
+
+#ifdef TRANSWARP_CPP11
+TEST_CASE("option_str_valid") {
+    tw::option_str str{"sweet"};
+    REQUIRE(str);
+    REQUIRE("sweet" == *str);
+}
+
+TEST_CASE("option_str_invalid") {
+    tw::option_str str;
+    REQUIRE(!str);
+}
+
+TEST_CASE("any_data_valid") {
+    tw::any_data data{42};
+    REQUIRE(data.has_value());
+    REQUIRE(42 == data.get<int>());
+}
+
+TEST_CASE("any_data_invalid") {
+    tw::any_data data;
+    REQUIRE(!data.has_value());
+}
+
+TEST_CASE("any_data_copy_constructor") {
+    const tw::any_data data{42};
+    tw::any_data data2(data);
+    REQUIRE(data2.has_value());
+    REQUIRE(42 == data2.get<int>());
+}
+
+TEST_CASE("any_data_copy_constructor_from_invalid") {
+    const tw::any_data data;
+    tw::any_data data2(data);
+    REQUIRE(!data2.has_value());
+}
+
+TEST_CASE("any_data_copy_assignment") {
+    const tw::any_data data{42};
+    tw::any_data data2;
+    data2 = data;
+    REQUIRE(data2.has_value());
+    REQUIRE(42 == data2.get<int>());
+}
+
+TEST_CASE("any_data_copy_assignment_from_invalid") {
+    const tw::any_data data;
+    tw::any_data data2;
+    data2 = data;
+    REQUIRE(!data2.has_value());
+}
+
+TEST_CASE("any_data_move_constructor") {
+    tw::any_data data{42};
+    tw::any_data data2(std::move(data));
+    REQUIRE(data2.has_value());
+    REQUIRE(42 == data2.get<int>());
+    REQUIRE(!data.has_value());
+}
+
+TEST_CASE("any_data_move_constructor_from_invalid") {
+    tw::any_data data;
+    tw::any_data data2(std::move(data));
+    REQUIRE(!data2.has_value());
+    REQUIRE(!data.has_value());
+}
+
+TEST_CASE("any_data_move_assignment") {
+    tw::any_data data{42};
+    tw::any_data data2;
+    data2 = std::move(data);
+    REQUIRE(data2.has_value());
+    REQUIRE(42 == data2.get<int>());
+    REQUIRE(!data.has_value());
+}
+
+TEST_CASE("any_data_move_assignment_from_invalid") {
+    tw::any_data data;
+    tw::any_data data2;
+    data2 = std::move(data);
+    REQUIRE(!data2.has_value());
+    REQUIRE(!data.has_value());
+}
+#endif
