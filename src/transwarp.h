@@ -728,10 +728,6 @@ public:
             throw transwarp::invalid_parameter{"number of threads"};
         }
         for (std::size_t i = 0; i < n_threads; ++i) {
-            {
-                std::lock_guard<std::mutex> lock{mutex_};
-                ups_.push_back(false);
-            }
             std::thread thread;
             try {
                 thread = std::thread(&thread_pool::worker, this, i);
@@ -746,15 +742,6 @@ public:
                 thread.join();
                 throw;
             }
-        }
-        for (;;) {
-            {
-                std::lock_guard<std::mutex> lock{mutex_};
-                if (std::all_of(ups_.begin(), ups_.end(), [](const bool x){ return x; })) {
-                    break;
-                }
-            }
-            std::this_thread::yield();
         }
     }
 
@@ -786,16 +773,13 @@ private:
             std::function<void()> functor;
             {
                 std::unique_lock<std::mutex> lock{mutex_};
-                if (!ups_[index]) {
-                    ups_[index] = true;
-                }
                 cond_var_.wait(lock, [this]{
                     return done_ || !functors_.empty();
                 });
                 if (done_ && functors_.empty()) {
                     break;
                 }
-                functor = functors_.front();
+                functor = std::move(functors_.front());
                 functors_.pop();
             }
             functor();
@@ -811,14 +795,12 @@ private:
         for (std::thread& thread : threads_) {
             thread.join();
         }
-        ups_.clear();
         threads_.clear();
     }
 
     bool done_ = false;
     std::function<void(std::size_t)> on_thread_started_;
     std::vector<std::thread> threads_;
-    std::vector<bool> ups_;
     std::queue<std::function<void()>> functors_;
     std::condition_variable cond_var_;
     std::mutex mutex_;

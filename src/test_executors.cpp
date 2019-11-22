@@ -139,6 +139,8 @@ TEST_CASE("remove_executor_all") {
 
 TEST_CASE("parallel_exec_with_on_thread_started") {
     std::atomic<std::size_t> count{0};
-    tw::parallel exec{4, [&count](const std::size_t index){ count += index; }};
-    REQUIRE(6 == count);
+    {
+        tw::parallel exec{4, [&count](const std::size_t index){ count += index; }};
+    }
+    REQUIRE(6 == count.load());
 }
