@@ -12,5 +12,5 @@ var searchData=
   ['circular_5fbuffer',['circular_buffer',['../classtranswarp_1_1detail_1_1circular__buffer.html#a13fa676f234b0c1ecceb40977b2cc540',1,'transwarp::detail::circular_buffer']]],
   ['clone_5fcast',['clone_cast',['../classtranswarp_1_1task__impl.html#a2f514389068457d6906cc01b1ce1843e',1,'transwarp::task_impl::clone_cast()'],['../classtranswarp_1_1value__task.html#aef77259531f9884a43b546807528bdce',1,'transwarp::value_task::clone_cast()']]],
   ['clone_5ftask',['clone_task',['../namespacetranswarp_1_1detail.html#af2b25afbee15978b692c068724cb99f5',1,'transwarp::detail']]],
-  ['custom_5fdata',['custom_data',['../classtranswarp_1_1detail_1_1task__common.html#a4da9c70c95a00d6eaeafb97489020fd2',1,'transwarp::detail::task_common']]]
+  ['custom_5fdata',['custom_data',['../classtranswarp_1_1detail_1_1task__common.html#a0d4e89e036615dd7ad6125fa6de1a0db',1,'transwarp::detail::task_common']]]
 ];

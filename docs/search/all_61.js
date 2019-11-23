@@ -13,10 +13,12 @@ var searchData=
   ['after_5ffinished',['after_finished',['../namespacetranswarp.html#a857009a6efbb2f34495ee81664a376dcac24f2a90b2418a40ec4eaf0c7e49a537',1,'transwarp']]],
   ['after_5ffuture_5fchanged',['after_future_changed',['../namespacetranswarp.html#a857009a6efbb2f34495ee81664a376dcaec60b71ee73a65a76b212c32a745480d',1,'transwarp']]],
   ['after_5fsatisfied',['after_satisfied',['../namespacetranswarp.html#a857009a6efbb2f34495ee81664a376dca01b7c5d10d321a4e101d5a389a67ade3',1,'transwarp']]],
-  ['apply_5fto_5feach',['apply_to_each',['../namespacetranswarp_1_1detail.html#ab3efd40692f72b780ba0ab70f64cbeda',1,'transwarp::detail']]],
   ['assign_5ffutures_5fimpl',['assign_futures_impl',['../structtranswarp_1_1detail_1_1assign__futures__impl.html',1,'transwarp::detail']]],
   ['assign_5ffutures_5fimpl_3c_2d1_2c_20parentresults_2e_2e_2e_3e',['assign_futures_impl&lt;-1, ParentResults...&gt;',['../structtranswarp_1_1detail_1_1assign__futures__impl_3-1_00_01ParentResults_8_8_8_4.html',1,'transwarp::detail']]],
   ['assign_5ftask_5fif',['assign_task_if',['../namespacetranswarp_1_1detail.html#a78065b0eb08749fd5dac80f2af33670a',1,'transwarp::detail']]],
+  ['assign_5ftask_5fif_5fimpl',['assign_task_if_impl',['../structtranswarp_1_1detail_1_1assign__task__if__impl.html',1,'transwarp::detail']]],
+  ['assign_5ftask_5fif_5fimpl_3c_20false_20_3e',['assign_task_if_impl&lt; false &gt;',['../structtranswarp_1_1detail_1_1assign__task__if__impl_3_01false_01_4.html',1,'transwarp::detail']]],
+  ['assign_5ftask_5fif_5fimpl_3c_20true_20_3e',['assign_task_if_impl&lt; true &gt;',['../structtranswarp_1_1detail_1_1assign__task__if__impl_3_01true_01_4.html',1,'transwarp::detail']]],
   ['avg_5fidletime_5fus',['avg_idletime_us',['../classtranswarp_1_1detail_1_1task__impl__base.html#ab67a9147cc0bb10a20df2570f2908e5c',1,'transwarp::detail::task_impl_base::avg_idletime_us()'],['../classtranswarp_1_1value__task.html#aef4f03d04973d4decc61182dd4e8d3b7',1,'transwarp::value_task::avg_idletime_us()']]],
   ['avg_5fruntime_5fus',['avg_runtime_us',['../classtranswarp_1_1detail_1_1task__impl__base.html#a765a43f4f7f6a63711ba38f574a99f70',1,'transwarp::detail::task_impl_base::avg_runtime_us()'],['../classtranswarp_1_1value__task.html#a0328544798158b24ea6fb87e4b8083d1',1,'transwarp::value_task::avg_runtime_us()']]],
   ['avg_5fwaittime_5fus',['avg_waittime_us',['../classtranswarp_1_1detail_1_1task__impl__base.html#ad7eba9a44f8b3e833345e221bda5a6ce',1,'transwarp::detail::task_impl_base::avg_waittime_us()'],['../classtranswarp_1_1value__task.html#a0a498351410b7bc34c548402ad92afdf',1,'transwarp::value_task::avg_waittime_us()']]]
