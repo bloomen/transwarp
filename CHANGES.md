@@ -1,3 +1,7 @@
+2.2.1
+
+- added support for C++11 via TRANSWARP_CPP11
+
 2.2.0
 
 - added compile time switches to control the task size
