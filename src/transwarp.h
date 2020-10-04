@@ -570,7 +570,7 @@ struct decay {
 /// Returns the result type of a std::shared_future<T>
 template<typename T>
 struct result {
-    using type = typename std::result_of<decltype(&std::shared_future<T>::get)(std::shared_future<T>)>::type;
+    using type = decltype(std::shared_future<T>{}.get());
 };
 
 
