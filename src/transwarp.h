@@ -939,6 +939,20 @@ Parent wait_for_any_impl(const std::shared_ptr<transwarp::task<ParentResult>>& p
     return transwarp::detail::wait_for_any_impl<Parent>(parents...);
 }
 
+/// Used for wait_for_any
+int wait_for_any_impl(int i){
+    return -1;
+}
+
+template <typename ParentResult, typename... ParentResults>
+int wait_for_any_impl(int i, const std::shared_ptr<transwarp::task<ParentResult>> &parent, const std::shared_ptr<transwarp::task<ParentResults>> &... parents) {
+    const std::future_status status = parent->future().wait_for(std::chrono::microseconds(1));
+    if (status == std::future_status::ready){
+        return i;
+    }
+    return transwarp::detail::wait_for_any_impl(i + 1, parents...);
+}
+
 /// Waits for the first parent to finish
 template<typename Parent, typename... ParentResults>
 Parent wait_for_any(const std::shared_ptr<transwarp::task<ParentResults>>& ...parents) {
@@ -950,6 +964,17 @@ Parent wait_for_any(const std::shared_ptr<transwarp::task<ParentResults>>& ...pa
     }
 }
 
+/// Waits for the first parent to finish
+/// Used for wait_for_any beacause of indeterminate return value
+template <typename... ParentResults>
+int wait_for_any(const std::shared_ptr<transwarp::task<ParentResults>> &... parents){
+    for (;;){
+        int parent = transwarp::detail::wait_for_any_impl(0, parents...);
+        if (parent >= 0){
+            return parent;
+        }
+    }
+}
 
 /// Waits for the first parent to finish
 template<typename ParentResultType>
@@ -964,15 +989,47 @@ std::shared_ptr<transwarp::task<ParentResultType>> wait_for_any(const std::vecto
     }
 }
 
+/// Index tuple at runtime
+template <size_t I>
+struct visit_impl{
+    template <typename T, typename F>
+    static void visit(T &tup, size_t idx, F handle){
+        if (idx == I - 1)
+            handle(std::get<I - 1>(tup));
+        else
+            visit_impl<I - 1>::visit(tup, idx, handle);
+    }
+};
+
+template <>
+struct visit_impl<0>{
+    template <typename T, typename F>
+    static void visit(T &tup, size_t idx, F handle) {}
+};
+
+template <typename... ParentResults, typename F>
+void visit_at(const std::tuple<std::shared_ptr<transwarp::task<ParentResults>>...> &tup, size_t idx, F handle){
+    visit_impl<sizeof...(ParentResults)>::visit(tup, idx, handle);
+}
+
+template <typename... ParentResults, typename F>
+void visit_at(std::tuple<std::shared_ptr<transwarp::task<ParentResults>>...> &tup, size_t idx, F handle){
+    visit_impl<sizeof...(ParentResults)>::visit(tup, idx, handle);
+}
 
 template<typename OneResult>
 struct cancel_all_but_one_functor {
     explicit cancel_all_but_one_functor(const std::shared_ptr<transwarp::task<OneResult>>& one) noexcept
     : one_(one) {}
 
-    template<typename T>
-    void operator()(const T& parent) const {
-        if (one_ != parent) {
+    /// Only the same type can be compared
+    template <typename T>
+    void operator()(const T &parent) const {
+        parent->cancel(true);
+    }
+
+    void operator()(const std::shared_ptr<transwarp::task<OneResult>> &parent) const {
+        if (one_ != parent){
             parent->cancel(true);
         }
     }
@@ -1012,6 +1069,22 @@ void decrement_refcount(const std::vector<std::shared_ptr<transwarp::task<Parent
     transwarp::detail::apply_to_each(transwarp::detail::decrement_refcount_functor{}, parents);
 }
 
+/// Used for wait_for_any
+template <typename... ParentResults>
+struct after_wait_one_functor{
+    using Pack = std::tuple<std::shared_ptr<transwarp::task<ParentResults>>...>;
+    Pack parents_;
+    
+    explicit after_wait_one_functor(const Pack &parents) : parents_(parents) {}
+
+    template <typename Result>
+    void operator()(Result &parent){
+        transwarp::detail::cancel_all_but_one(parent, parents_);
+        const auto future = parent->future();
+        transwarp::detail::decrement_refcount(parents_);
+        future.get(); // Ensures that exceptions are propagated
+    }
+};
 
 template<typename TaskType, bool done, int total, int... n>
 struct call_impl {
@@ -1175,12 +1248,14 @@ template<int total, int... n>
 struct call_impl<transwarp::wait_any_type, true, total, n...> {
     template<typename Result, typename Task, typename... ParentResults>
     static Result work(std::size_t task_id, const Task& task, const std::tuple<std::shared_ptr<transwarp::task<ParentResults>>...>& parents) {
-        using parent_t = typename std::remove_reference<decltype(std::get<0>(parents))>::type; // Use first type as reference
-        parent_t parent = transwarp::detail::wait_for_any<parent_t>(std::get<n>(parents)...);
-        transwarp::detail::cancel_all_but_one(parent, parents);
-        const auto future = parent->future();
-        transwarp::detail::decrement_refcount(parents);
-        future.get(); // Ensures that exceptions are propagated
+        int result = transwarp::detail::wait_for_any(std::get<n>(parents)...);
+        transwarp::detail::visit_at(parents, result, transwarp::detail::after_wait_one_functor<ParentResults...>(parents));
+        // using parent_t = typename std::remove_reference<decltype(std::get<0>(parents))>::type; // Use first type as reference
+        // parent_t parent = transwarp::detail::wait_for_any<parent_t>(std::get<n>(parents)...);
+        // transwarp::detail::cancel_all_but_one(parent, parents);
+        // const auto future = parent->future();
+        // transwarp::detail::decrement_refcount(parents);
+        // future.get(); // Ensures that exceptions are propagated
         return transwarp::detail::run_task<Result>(task_id, task);
     }
 };

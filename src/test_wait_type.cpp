@@ -39,6 +39,19 @@ TEST_CASE("wait_any_with_vector_parents") {
     REQUIRE(task1->canceled());
 }
 
+TEST_CASE("make_task_wait_any_with_different_types") {
+    int result = 0;
+    auto t1 = tw::make_value_task(42);
+    auto t2 = tw::make_value_task(42.0);
+    auto t3 = tw::make_task(tw::wait_any, [&result]{
+        result = 42;
+    }, t1, t2);
+    tw::parallel exec{2};
+    t3->schedule_all(exec);
+    t3->future().wait();
+    REQUIRE(42 == result);
+}
+
 TEST_CASE("wait") {
     int result1 = 0;
     int result2 = 0;
