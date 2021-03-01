@@ -41,6 +41,10 @@ set(SOURCES
 	examples/statistical_key_facts.cpp
 	examples/wide_graph_with_pool.cpp)
 
+add_library(transwarp INTERFACE)
+set_target_properties(transwarp PROPERTIES PUBLIC_HEADER src/transwarp.h)
+install(TARGETS transwarp PUBLIC_HEADER DESTINATION include)
+
 add_executable(transwarp_test ${SOURCES})
 add_executable(transwarp_minsize_test ${SOURCES})
 
