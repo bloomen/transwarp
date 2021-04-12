@@ -1,0 +1,28 @@
+var searchData=
+[
+  ['call_5fimpl_258',['call_impl',['../structtranswarp_1_1detail_1_1call__impl.html',1,'transwarp::detail']]],
+  ['call_5fimpl_3c_20transwarp_3a_3aaccept_5fany_5ftype_2c_20true_2c_20total_2c_20n_2e_2e_2e_20_3e_259',['call_impl&lt; transwarp::accept_any_type, true, total, n... &gt;',['../structtranswarp_1_1detail_1_1call__impl_3_01transwarp_1_1accept__any__type_00_01true_00_01total_00_01n_8_8_8_01_4.html',1,'transwarp::detail']]],
+  ['call_5fimpl_3c_20transwarp_3a_3aaccept_5ftype_2c_20true_2c_20total_2c_20n_2e_2e_2e_20_3e_260',['call_impl&lt; transwarp::accept_type, true, total, n... &gt;',['../structtranswarp_1_1detail_1_1call__impl_3_01transwarp_1_1accept__type_00_01true_00_01total_00_01n_8_8_8_01_4.html',1,'transwarp::detail']]],
+  ['call_5fimpl_3c_20transwarp_3a_3aconsume_5fany_5ftype_2c_20true_2c_20total_2c_20n_2e_2e_2e_20_3e_261',['call_impl&lt; transwarp::consume_any_type, true, total, n... &gt;',['../structtranswarp_1_1detail_1_1call__impl_3_01transwarp_1_1consume__any__type_00_01true_00_01total_00_01n_8_8_8_01_4.html',1,'transwarp::detail']]],
+  ['call_5fimpl_3c_20transwarp_3a_3aconsume_5ftype_2c_20true_2c_20total_2c_20n_2e_2e_2e_20_3e_262',['call_impl&lt; transwarp::consume_type, true, total, n... &gt;',['../structtranswarp_1_1detail_1_1call__impl_3_01transwarp_1_1consume__type_00_01true_00_01total_00_01n_8_8_8_01_4.html',1,'transwarp::detail']]],
+  ['call_5fimpl_3c_20transwarp_3a_3aroot_5ftype_2c_20true_2c_20total_2c_20n_2e_2e_2e_20_3e_263',['call_impl&lt; transwarp::root_type, true, total, n... &gt;',['../structtranswarp_1_1detail_1_1call__impl_3_01transwarp_1_1root__type_00_01true_00_01total_00_01n_8_8_8_01_4.html',1,'transwarp::detail']]],
+  ['call_5fimpl_3c_20transwarp_3a_3await_5fany_5ftype_2c_20true_2c_20total_2c_20n_2e_2e_2e_20_3e_264',['call_impl&lt; transwarp::wait_any_type, true, total, n... &gt;',['../structtranswarp_1_1detail_1_1call__impl_3_01transwarp_1_1wait__any__type_00_01true_00_01total_00_01n_8_8_8_01_4.html',1,'transwarp::detail']]],
+  ['call_5fimpl_3c_20transwarp_3a_3await_5ftype_2c_20true_2c_20total_2c_20n_2e_2e_2e_20_3e_265',['call_impl&lt; transwarp::wait_type, true, total, n... &gt;',['../structtranswarp_1_1detail_1_1call__impl_3_01transwarp_1_1wait__type_00_01true_00_01total_00_01n_8_8_8_01_4.html',1,'transwarp::detail']]],
+  ['call_5fimpl_5fvector_266',['call_impl_vector',['../structtranswarp_1_1detail_1_1call__impl__vector.html',1,'transwarp::detail']]],
+  ['call_5fimpl_5fvector_3c_20transwarp_3a_3aaccept_5fany_5ftype_20_3e_267',['call_impl_vector&lt; transwarp::accept_any_type &gt;',['../structtranswarp_1_1detail_1_1call__impl__vector_3_01transwarp_1_1accept__any__type_01_4.html',1,'transwarp::detail']]],
+  ['call_5fimpl_5fvector_3c_20transwarp_3a_3aaccept_5ftype_20_3e_268',['call_impl_vector&lt; transwarp::accept_type &gt;',['../structtranswarp_1_1detail_1_1call__impl__vector_3_01transwarp_1_1accept__type_01_4.html',1,'transwarp::detail']]],
+  ['call_5fimpl_5fvector_3c_20transwarp_3a_3aconsume_5fany_5ftype_20_3e_269',['call_impl_vector&lt; transwarp::consume_any_type &gt;',['../structtranswarp_1_1detail_1_1call__impl__vector_3_01transwarp_1_1consume__any__type_01_4.html',1,'transwarp::detail']]],
+  ['call_5fimpl_5fvector_3c_20transwarp_3a_3aconsume_5ftype_20_3e_270',['call_impl_vector&lt; transwarp::consume_type &gt;',['../structtranswarp_1_1detail_1_1call__impl__vector_3_01transwarp_1_1consume__type_01_4.html',1,'transwarp::detail']]],
+  ['call_5fimpl_5fvector_3c_20transwarp_3a_3aroot_5ftype_20_3e_271',['call_impl_vector&lt; transwarp::root_type &gt;',['../structtranswarp_1_1detail_1_1call__impl__vector_3_01transwarp_1_1root__type_01_4.html',1,'transwarp::detail']]],
+  ['call_5fimpl_5fvector_3c_20transwarp_3a_3await_5fany_5ftype_20_3e_272',['call_impl_vector&lt; transwarp::wait_any_type &gt;',['../structtranswarp_1_1detail_1_1call__impl__vector_3_01transwarp_1_1wait__any__type_01_4.html',1,'transwarp::detail']]],
+  ['call_5fimpl_5fvector_3c_20transwarp_3a_3await_5ftype_20_3e_273',['call_impl_vector&lt; transwarp::wait_type &gt;',['../structtranswarp_1_1detail_1_1call__impl__vector_3_01transwarp_1_1wait__type_01_4.html',1,'transwarp::detail']]],
+  ['call_5fwith_5feach_5ffunctor_274',['call_with_each_functor',['../structtranswarp_1_1detail_1_1call__with__each__functor.html',1,'transwarp::detail']]],
+  ['cancel_5fall_5fbut_5fone_5ffunctor_275',['cancel_all_but_one_functor',['../structtranswarp_1_1detail_1_1cancel__all__but__one__functor.html',1,'transwarp::detail']]],
+  ['cancel_5fvisitor_276',['cancel_visitor',['../structtranswarp_1_1detail_1_1cancel__visitor.html',1,'transwarp::detail']]],
+  ['circular_5fbuffer_277',['circular_buffer',['../classtranswarp_1_1detail_1_1circular__buffer.html',1,'transwarp::detail']]],
+  ['circular_5fbuffer_3c_20const_20transwarp_3a_3aitask_20_2a_20_3e_278',['circular_buffer&lt; const transwarp::itask * &gt;',['../classtranswarp_1_1detail_1_1circular__buffer.html',1,'transwarp::detail']]],
+  ['clone_5ftask_5ffunctor_279',['clone_task_functor',['../structtranswarp_1_1detail_1_1clone__task__functor.html',1,'transwarp::detail']]],
+  ['consume_5fany_5ftype_280',['consume_any_type',['../structtranswarp_1_1consume__any__type.html',1,'transwarp']]],
+  ['consume_5ftype_281',['consume_type',['../structtranswarp_1_1consume__type.html',1,'transwarp']]],
+  ['control_5ferror_282',['control_error',['../classtranswarp_1_1control__error.html',1,'transwarp']]]
+];

@@ -1,0 +1,27 @@
+var searchData=
+[
+  ['task_338',['task',['../classtranswarp_1_1task.html',1,'transwarp']]],
+  ['task_3c_20resulttype_20_26_20_3e_339',['task&lt; ResultType &amp; &gt;',['../classtranswarp_1_1task_3_01ResultType_01_6_01_4.html',1,'transwarp']]],
+  ['task_3c_20transwarp_3a_3adetail_3a_3afunctor_5fresult_3c_20tasktype_2c_20functor_2c_20parentresults_2e_2e_2e_20_3e_3a_3atype_20_3e_340',['task&lt; transwarp::detail::functor_result&lt; TaskType, Functor, ParentResults... &gt;::type &gt;',['../classtranswarp_1_1task.html',1,'transwarp']]],
+  ['task_3c_20void_20_3e_341',['task&lt; void &gt;',['../classtranswarp_1_1task_3_01void_01_4.html',1,'transwarp']]],
+  ['task_5fcanceled_342',['task_canceled',['../classtranswarp_1_1task__canceled.html',1,'transwarp']]],
+  ['task_5fcommon_343',['task_common',['../classtranswarp_1_1detail_1_1task__common.html',1,'transwarp::detail']]],
+  ['task_5fcommon_3c_20resulttype_20_26_20_3e_344',['task_common&lt; ResultType &amp; &gt;',['../classtranswarp_1_1detail_1_1task__common.html',1,'transwarp::detail']]],
+  ['task_5fcommon_3c_20transwarp_3a_3adetail_3a_3afunctor_5fresult_3c_20tasktype_2c_20functor_2c_20parentresults_2e_2e_2e_20_3e_3a_3atype_20_3e_345',['task_common&lt; transwarp::detail::functor_result&lt; TaskType, Functor, ParentResults... &gt;::type &gt;',['../classtranswarp_1_1detail_1_1task__common.html',1,'transwarp::detail']]],
+  ['task_5fcommon_3c_20void_20_3e_346',['task_common&lt; void &gt;',['../classtranswarp_1_1detail_1_1task__common.html',1,'transwarp::detail']]],
+  ['task_5fdestroyed_347',['task_destroyed',['../classtranswarp_1_1task__destroyed.html',1,'transwarp']]],
+  ['task_5fimpl_348',['task_impl',['../classtranswarp_1_1task__impl.html',1,'transwarp']]],
+  ['task_5fimpl_5fbase_349',['task_impl_base',['../classtranswarp_1_1detail_1_1task__impl__base.html',1,'transwarp::detail']]],
+  ['task_5fimpl_5fbase_3c_20resulttype_20_26_2c_20tasktype_2c_20functor_2c_20parentresults_2e_2e_2e_20_3e_350',['task_impl_base&lt; ResultType &amp;, TaskType, Functor, ParentResults... &gt;',['../classtranswarp_1_1detail_1_1task__impl__base.html',1,'transwarp::detail']]],
+  ['task_5fimpl_5fbase_3c_20resulttype_2c_20tasktype_2c_20functor_2c_20parentresults_2e_2e_2e_20_3e_351',['task_impl_base&lt; ResultType, TaskType, Functor, ParentResults... &gt;',['../classtranswarp_1_1detail_1_1task__impl__base.html',1,'transwarp::detail']]],
+  ['task_5fimpl_5fbase_3c_20transwarp_3a_3adetail_3a_3afunctor_5fresult_3c_20tasktype_2c_20functor_2c_20parentresults_2e_2e_2e_20_3e_3a_3atype_2c_20tasktype_2c_20functor_2c_20parentresults_2e_2e_2e_20_3e_352',['task_impl_base&lt; transwarp::detail::functor_result&lt; TaskType, Functor, ParentResults... &gt;::type, TaskType, Functor, ParentResults... &gt;',['../classtranswarp_1_1detail_1_1task__impl__base.html',1,'transwarp::detail']]],
+  ['task_5fimpl_5fbase_3c_20void_2c_20tasktype_2c_20functor_2c_20parentresults_2e_2e_2e_20_3e_353',['task_impl_base&lt; void, TaskType, Functor, ParentResults... &gt;',['../classtranswarp_1_1detail_1_1task__impl__base.html',1,'transwarp::detail']]],
+  ['task_5fimpl_5fproxy_354',['task_impl_proxy',['../classtranswarp_1_1detail_1_1task__impl__proxy.html',1,'transwarp::detail']]],
+  ['task_5fimpl_5fproxy_3c_20resulttype_20_26_2c_20tasktype_2c_20functor_2c_20parentresults_2e_2e_2e_20_3e_355',['task_impl_proxy&lt; ResultType &amp;, TaskType, Functor, ParentResults... &gt;',['../classtranswarp_1_1detail_1_1task__impl__proxy_3_01ResultType_01_6_00_01TaskType_00_01Functor_00_01ParentResults_8_8_8_01_4.html',1,'transwarp::detail']]],
+  ['task_5fimpl_5fproxy_3c_20transwarp_3a_3adetail_3a_3afunctor_5fresult_3c_20tasktype_2c_20functor_2c_20parentresults_2e_2e_2e_20_3e_3a_3atype_2c_20tasktype_2c_20functor_2c_20parentresults_2e_2e_2e_20_3e_356',['task_impl_proxy&lt; transwarp::detail::functor_result&lt; TaskType, Functor, ParentResults... &gt;::type, TaskType, Functor, ParentResults... &gt;',['../classtranswarp_1_1detail_1_1task__impl__proxy.html',1,'transwarp::detail']]],
+  ['task_5fimpl_5fproxy_3c_20void_2c_20tasktype_2c_20functor_2c_20parentresults_2e_2e_2e_20_3e_357',['task_impl_proxy&lt; void, TaskType, Functor, ParentResults... &gt;',['../classtranswarp_1_1detail_1_1task__impl__proxy_3_01void_00_01TaskType_00_01Functor_00_01ParentResults_8_8_8_01_4.html',1,'transwarp::detail']]],
+  ['task_5fpool_358',['task_pool',['../classtranswarp_1_1task__pool.html',1,'transwarp']]],
+  ['thread_5fpool_359',['thread_pool',['../classtranswarp_1_1detail_1_1thread__pool.html',1,'transwarp::detail']]],
+  ['timer_360',['timer',['../classtranswarp_1_1timer.html',1,'transwarp']]],
+  ['transwarp_5ferror_361',['transwarp_error',['../classtranswarp_1_1transwarp__error.html',1,'transwarp']]]
+];
