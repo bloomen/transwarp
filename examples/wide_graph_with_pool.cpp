@@ -1,5 +1,5 @@
 #include "wide_graph_with_pool.h"
-#include "../src/transwarp.h"
+#include <transwarp.h>
 #include <iostream>
 #include <fstream>
 #include <random>

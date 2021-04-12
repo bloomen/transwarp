@@ -5,29 +5,29 @@ language: cpp
 matrix:
   include:
     - os: linux
-      env: CONFIGURATION=Debug USE_CPP11=1
+      env: CONFIGURATION=Debug USE_CPP11=ON
     - os: linux
-      env: CONFIGURATION=Debug USE_CPP11=0
+      env: CONFIGURATION=Debug USE_CPP11=OFF
     - os: linux
-      env: CONFIGURATION=Release USE_CPP11=1
+      env: CONFIGURATION=Release USE_CPP11=ON
     - os: linux
-      env: CONFIGURATION=Release USE_CPP11=0
+      env: CONFIGURATION=Release USE_CPP11=OFF
     - os: osx
       osx_image: xcode10.2
-      env: CONFIGURATION=Debug USE_CPP11=1
+      env: CONFIGURATION=Debug USE_CPP11=ON
     - os: osx
       osx_image: xcode10.2
-      env: CONFIGURATION=Debug USE_CPP11=0
+      env: CONFIGURATION=Debug USE_CPP11=OFF
     - os: osx
       osx_image: xcode10.2
-      env: CONFIGURATION=Release USE_CPP11=1
+      env: CONFIGURATION=Release USE_CPP11=ON
     - os: osx
       osx_image: xcode10.2
-      env: CONFIGURATION=Release USE_CPP11=0
+      env: CONFIGURATION=Release USE_CPP11=OFF
 
 script:
     - mkdir build && cd build
-    - cmake -DCMAKE_BUILD_TYPE=$CONFIGURATION -DUSE_CPP11=$USE_CPP11 ..
+    - cmake -DCMAKE_BUILD_TYPE=$CONFIGURATION -Dtranswarp_build_tests=ON -Dtranswarp_use_cpp11=$USE_CPP11 ..
     - make -j4
     - ctest --verbose
 

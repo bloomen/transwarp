@@ -1,5 +1,5 @@
 #include "benchmark_statistical.h"
-#include "../src/transwarp.h"
+#include <transwarp.h>
 #include <chrono>
 #include <fstream>
 #include <random>

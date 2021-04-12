@@ -1,5 +1,5 @@
 #include "statistical_key_facts.h"
-#include "../src/transwarp.h"
+#include <transwarp.h>
 #include <fstream>
 #include <iostream>
 #include <random>

@@ -7,9 +7,9 @@ else
     echo "Compiler: "$CXX
 fi
 
-use_cpp11=0
+use_cpp11='OFF'
 if [ "$1" = "cpp11" ];then
-    use_cpp11=1
+    use_cpp11='ON'
 fi
 
 modes='Debug Release'
@@ -31,7 +31,7 @@ for mode in $modes; do
     mkdir $dir
     cd $dir
     echo "Building ..."
-    cmake -DCMAKE_BUILD_TYPE=$mode -DUSE_CPP11=$use_cpp11 .. > /dev/null
+    cmake -DCMAKE_BUILD_TYPE=$mode -Dtranswarp_build_tests=ON -Dtranswarp_use_cpp11=$use_cpp11 .. > /dev/null
     make -j4 > /dev/null
     echo "Running ..."
     ctest --verbose

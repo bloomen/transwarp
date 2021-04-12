@@ -1,5 +1,5 @@
 #include "single_thread_lock_free.h"
-#include "../src/transwarp.h"
+#include <transwarp.h>
 #include <array>
 #include <iostream>
 #include <fstream>

@@ -1,5 +1,5 @@
 #include "benchmark_simple.h"
-#include "../src/transwarp.h"
+#include <transwarp.h>
 #include <chrono>
 #include <fstream>
 

@@ -19,5 +19,5 @@ class TranswarpConan(ConanFile):
         os.unlink(zip_name)
 
     def package(self):
-        include_folder = "%s-%s/src" % (self.name, self.version)
+        include_folder = "%s-%s/include" % (self.name, self.version)
         self.copy("transwarp.h", dst="include", src=include_folder)

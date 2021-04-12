@@ -1,5 +1,5 @@
 #include "basic_with_three_tasks.h"
-#include "../src/transwarp.h"
+#include <transwarp.h>
 #include <fstream>
 #include <iostream>
 

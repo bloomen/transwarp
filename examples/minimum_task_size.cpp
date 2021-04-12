@@ -1,7 +1,7 @@
 #ifndef TRANSWARP_MINIMUM_TASK_SIZE
 #define TRANSWARP_MINIMUM_TASK_SIZE
 #endif
-#include "../src/transwarp.h"
+#include <transwarp.h>
 #include <iostream>
 
 namespace tw = transwarp;
