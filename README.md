@@ -404,5 +404,6 @@ please submit a pull request and keep in mind that:
 
 ## Contributors
 
-- [Christian Blume](https://github.com/bloomen) (`chr.blume@gmail.com`)
-- [Guan Wang](https://github.com/guancodes) (`ggwangguan@gmail.com`)
+- @[bloomen](https://github.com/bloomen)
+- @[guancodes](https://github.com/guancodes)
+- @[acdemiralp](https://github.com/acdemiralp)
