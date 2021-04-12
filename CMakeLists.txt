@@ -25,7 +25,6 @@ if (transwarp_build_tests)
         if (CMAKE_COMPILER_IS_GNUCC)
             add_compile_options(-pthread)
         endif()
-        add_link_options(-pthread)
     endif()
 
     include_directories(include)
@@ -94,6 +93,19 @@ if (transwarp_build_tests)
 
     add_executable(minimum_task_size
         examples/minimum_task_size.cpp)
+
+    if (MSVC)
+    else()
+        target_link_libraries(transwarp_test -pthread)
+        target_link_libraries(transwarp_minsize_test -pthread)
+        target_link_libraries(basic_with_three_tasks -pthread)
+        target_link_libraries(benchmark_simple -pthread)
+        target_link_libraries(benchmark_statistical -pthread)
+        target_link_libraries(single_thread_lock_free -pthread)
+        target_link_libraries(statistical_key_facts -pthread)
+        target_link_libraries(wide_graph_with_pool -pthread)
+        target_link_libraries(minimum_task_size -pthread)
+    endif()
 
     add_test(transwarp_test transwarp_test --use-colour no)
     add_test(transwarp_minsize_test transwarp_minsize_test --use-colour no)
