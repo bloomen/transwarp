@@ -1,3 +1,8 @@
+2.2.2
+
+- update cmake and directory structure
+- remove deprecated use of std::result_of
+
 2.2.1
 
 - added support for C++11 via TRANSWARP_CPP11
