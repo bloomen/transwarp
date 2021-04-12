@@ -18,8 +18,6 @@ if (transwarp_build_tests)
     endif()
     set(CMAKE_CXX_EXTENSIONS OFF)
 
-    find_package(Threads)
-
     if (MSVC)
         add_compile_options(/W4 /bigobj /EHsc /wd4503 /wd4996 /wd4702 /wd4100)
     else()
@@ -27,7 +25,7 @@ if (transwarp_build_tests)
         if (CMAKE_COMPILER_IS_GNUCC)
             add_compile_options(-pthread)
         endif()
-        link_libraries(${CMAKE_THREAD_LIBS_INIT})
+        add_link_options(-pthread)
     endif()
 
     include_directories(include)
