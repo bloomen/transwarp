@@ -391,6 +391,16 @@ auto result = task->get(); // The final task's result remains valid
 The `releaser` also accepts an executor that gives control over _where_ a task's
 result is released.
 
+## Using transwarp with tipi.build
+
+`transwarp` can be easily used in [tipi.build](https://tipi.build) projects simply by adding the following entry to your `.tipi/deps`:
+
+```json
+{
+    "bloomen/transwarp": { }
+}
+```
+
 ## Feedback
 
 Get in touch if you have any questions or suggestions to make this a better library!
