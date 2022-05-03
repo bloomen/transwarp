@@ -168,9 +168,9 @@ auto task = tw::make_task(tw::wait_any, []{ return 42; }, parent1, parent2);
 
 Generally, tasks are created using `make_task` which allows for any number 
 of parents. However, it is a common use case for a child to only have one parent.
-For this, `next()` can be directly called on the parent object to create a _continuation_:
+For this, `then()` can be directly called on the parent object to create a _continuation_:
 ```cpp
-auto child = tw::make_task(tw::root, []{ return 42; })->next(tw::consume, functor);
+auto child = tw::make_task(tw::root, []{ return 42; })->then(tw::consume, functor);
 ```
 `child` is now a single-parent task whose functor consumes an integer.
 
@@ -401,9 +401,3 @@ If you're serious about contributing code to transwarp (which would be awesome!)
 please submit a pull request and keep in mind that:
 - unit tests should be added for all new code by extending the existing unit test suite
 - C++ code uses spaces throughout 
-
-## Contributors
-
-- @[bloomen](https://github.com/bloomen)
-- @[guancodes](https://github.com/guancodes)
-- @[acdemiralp](https://github.com/acdemiralp)
