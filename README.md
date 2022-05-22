@@ -7,7 +7,7 @@
 transwarp is a header-only C++ library for task concurrency. It
 allows you to easily create a graph of tasks where every task can be executed
 asynchronously. transwarp is written in C++17 and only depends on the standard
-library. Just copy `src/transwarp.h` to your project and off you go!
+library. Just copy `include/transwarp.h` to your project and off you go!
 Tested with GCC, Clang, ICC, and Visual Studio.
 
 C++11 support can be enabled by defining `TRANSWARP_CPP11` at compile time.
