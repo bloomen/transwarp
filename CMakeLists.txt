@@ -84,7 +84,7 @@ if (transwarp_build_tests)
     add_executable(transwarp_minsize_test ${TRANSWARP_TEST_SOURCES})
 
     target_compile_definitions(transwarp_test PRIVATE UNITTEST)
-    target_compile_definitions(transwarp_minsize_test PRIVATE UNITTEST)
+    target_compile_definitions(transwarp_minsize_test PRIVATE UNITTEST TRANSWARP_MINIMUM_TASK_SIZE)
 
     add_executable(basic_with_three_tasks
         examples/basic_with_three_tasks.h
