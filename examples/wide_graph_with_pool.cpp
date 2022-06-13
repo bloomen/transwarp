@@ -74,7 +74,7 @@ void wide_graph_with_pool(std::ostream& os, std::size_t iterations, std::size_t 
         auto data = std::make_shared<std::vector<double>>(dist(gen), 1); // New data arrive
         auto task = pool.wait_for_next_task(); // Get the next available task
         auto input = task->tasks()[0];
-        static_cast<tw::task<std::shared_ptr<std::vector<double>>>*>(input)->set_value(data);
+        tw::cast<std::shared_ptr<std::vector<double>>>(input)->set_value(data);
         task->schedule_all(exec); // Schedule the graph
         futures.push_back(task->future()); // Collect the future
         if (i % 10 == 0) {

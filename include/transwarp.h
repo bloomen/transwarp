@@ -3330,6 +3330,28 @@ auto make_value_task(Value&& value) -> std::shared_ptr<transwarp::value_task<typ
 }
 
 
+/// Casts from task interface to sub-class task
+template<typename Value>
+transwarp::task<Value>* cast(transwarp::itask* task) {
+    auto casted = dynamic_cast<transwarp::task<Value>*>(task);
+    if (!casted) {
+       throw transwarp::invalid_parameter{"invalid cast"};
+    }
+    return casted;
+}
+
+
+/// Casts from task interface to sub-class task
+template<typename Value>
+const transwarp::task<Value>* cast(const transwarp::itask* task) {
+    auto casted = dynamic_cast<const transwarp::task<Value>*>(task);
+    if (!casted) {
+        throw transwarp::invalid_parameter{"invalid cast"};
+    }
+    return casted;
+}
+
+
 /// A function similar to std::for_each but returning a transwarp task for
 /// deferred, possibly asynchronous execution. This function creates a graph
 /// with std::distance(first, last) root tasks
