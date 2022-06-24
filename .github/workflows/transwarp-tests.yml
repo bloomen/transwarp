@@ -1,0 +1,29 @@
+name: transwarp
+on: [push]
+jobs:
+  tests:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-11, windows-latest]
+        config: [Debug, Release]
+        cpp11: [ON, OFF]
+        asan: [ON, OFF]
+        tsan: [ON, OFF]
+        exclude:
+          - asan: ON
+            tsan: ON
+          - asan: ON
+            os: windows-latest
+          - tsan: ON
+            os: windows-latest
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: checkout repo
+        uses: actions/checkout@v2
+      - name: use msvc
+        uses: ilammy/msvc-dev-cmd@v1
+      - name: run tests
+        run: |
+          cmake -DCMAKE_BUILD_TYPE=${{ matrix.config }} -Dtranswarp_build_tests=ON -Dtranswarp_use_cpp11=${{ matrix.cpp11 }} -Dtranswarp_enable_asan=${{ matrix.asan }} -Dtranswarp_enable_tsan=${{ matrix.tsan }} .
+          cmake --build . -j 4
+          ctest --verbose
