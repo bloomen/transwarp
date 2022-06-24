@@ -1,3 +1,10 @@
+2.2.3
+
+- add tw::cast to cast from tw::itask to tw::task
+- add sanitizer support
+- add support for tipi build
+- switch to github actions
+
 2.2.2
 
 - update cmake and directory structure
