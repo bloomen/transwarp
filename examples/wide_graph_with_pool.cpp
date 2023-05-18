@@ -38,7 +38,7 @@ std::shared_ptr<tw::task<double>> make_graph() {
     }
     auto final = tw::make_task(tw::consume, [](const std::vector<data_t>& parents) {
                                                 double res = 0;
-                                                for (const auto p : parents) {
+                                                for (const auto& p : parents) {
                                                     res += mean(p);
                                                 }
                                                 return res / static_cast<double>(parents.size());
