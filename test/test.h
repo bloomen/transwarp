@@ -1,4 +1,11 @@
-#include "catch.hpp"
+#if __clang__ || __GNUC__
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wconversion"
+#endif
+#include "catch_amalgamated.hpp"
+#if __clang__ || __GNUC__
+#pragma GCC diagnostic pop
+#endif
 #include <transwarp.h>
 #include <array>
 #include <sstream>

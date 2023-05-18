@@ -1,5 +1,6 @@
 #define CATCH_CONFIG_MAIN
 #include "test.h"
+#include <fstream>
 
 void make_test_one_task(std::size_t threads) {
     const int value = 42;

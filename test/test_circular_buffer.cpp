@@ -137,11 +137,6 @@ TEST_CASE("circular_buffer_buffer_of_capacity_three_push_and_pop") {
     const double value1 = 42;
     const double value2 = 46;
     const double value3 = 14;
-    const double value4 = 7;
-    const double value5 = 8;
-    const double value6 = 9;
-    const double value7 = 10;
-    const double value8 = 11;
     REQUIRE(buffer.empty());
     buffer.push(value1);
     REQUIRE(value1 == buffer.front());

@@ -32,7 +32,7 @@ if (transwarp_build_tests)
             endif()
         endif()
     else()
-        add_compile_options(-Wpedantic -Wall -Wextra -Wconversion)
+        add_compile_options(-Wpedantic -Wall -Wextra -Wconversion -Wno-parentheses)
         if (CMAKE_COMPILER_IS_GNUCC)
             add_compile_options(-pthread)
         endif()
@@ -49,6 +49,8 @@ if (transwarp_build_tests)
     include_directories(include)
 
     set(TRANSWARP_TEST_SOURCES
+        test/catch_amalgamated.hpp
+        test/catch_amalgamated.cpp
         test/test.h
         test/test.cpp
         test/test_accept_type.cpp
