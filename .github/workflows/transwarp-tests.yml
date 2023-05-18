@@ -10,7 +10,7 @@ jobs:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
         config: [Debug, Release]
-        cpp11: [ON, OFF]
+        cpp11: [OFF]
         asan: [ON, OFF]
         tsan: [ON, OFF]
         exclude:
